@@ -1,0 +1,21 @@
+{
+  "name": "parthhub-app",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:client": "npm run dev --workspace=@parthhub/client",
+    "dev:server": "npm run start:dev --workspace=@parthhub/server",
+    "build:shared": "npm run build --workspace=@parthhub/shared",
+    "build:client": "npm run build --workspace=@parthhub/client",
+    "build:server": "npm run build --workspace=@parthhub/server",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,scss,css}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  }
+}

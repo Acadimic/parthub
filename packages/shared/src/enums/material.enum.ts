@@ -1,0 +1,21 @@
+export enum DocumentType {
+  FILE = 'file',
+  VIDEO = 'video',
+  AUDIO = 'audio',
+  LINK = 'link',
+}
+
+export enum FileExtension {
+  PNG = 'png',
+  JPEG = 'jpeg',
+  JPG = 'jpg',
+  PDF = 'pdf',
+  DOC = 'doc',
+  DOCX = 'docx',
+  OTHER = 'other',
+}
+
+export enum MaterialType {
+  VIDEO = 'video',
+  READING = 'reading',
+}

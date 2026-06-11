@@ -1,0 +1,60 @@
+import axios, { AxiosError } from 'axios';
+import { API, Permission, StorageKey } from '../enums';
+import { generateAndSetNewToken } from '../utils/firebase';
+import { getToken, handleError } from '../utils/helpers';
+
+const createAxiosInstance = (isUnAuth: boolean) => {
+  const axiosInstance = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_BASE_URL,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (isUnAuth) return axiosInstance;
+
+  axiosInstance.interceptors.request.use(async (config) => {
+    await generateAndSetNewToken();
+    try {
+      const token = getToken();
+      if (config.headers && token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        config.headers.permission = Permission.STUDENT;
+        config.headers.organization = localStorage.getItem(StorageKey.ORGANIZATION);
+      }
+      return config;
+    } catch (error) {
+      console.log('Axios req error: ', error);
+      return config;
+    }
+  });
+
+  axiosInstance.interceptors.response.use(
+    (response) => response,
+    (error) => Promise.reject(error),
+  );
+
+  return axiosInstance;
+};
+
+export const callAuthApi = async (url: string, method: API, data?: object | null, shouldNotThrowError?: boolean) => {
+  try {
+    const axiosInstance = createAxiosInstance(false);
+    const response =
+      method === API.POST ? await axiosInstance.post(url, data) : await axiosInstance.get(url, { params: data });
+    return response.data;
+  } catch (error) {
+    return handleError(error as AxiosError, shouldNotThrowError);
+  }
+};
+
+export const callUnAuthApi = async (url: string, method: API, data?: object | null, shouldNotThrowError?: boolean) => {
+  try {
+    const axiosInstance = createAxiosInstance(true);
+    const response =
+      method === API.POST ? await axiosInstance.post(url, data) : await axiosInstance.get(url, { params: data });
+    return response.data;
+  } catch (error) {
+    return handleError(error as AxiosError, shouldNotThrowError);
+  }
+};
