@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
+import NextLink from 'next/link';
+import { Button, TextInput } from '@components/core';
 
 export const SignIn = () => {
   const [email, setEmail] = useState('');
@@ -15,33 +15,24 @@ export const SignIn = () => {
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-color-primary">Sign In</h1>
       <p className="text-color-secondary">Welcome to ParthHub</p>
-      <TextField
-        label="Email"
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        fullWidth
-      />
-      <TextField
-        label="Password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        fullWidth
-      />
-      <Button variant="contained" onClick={handleSignIn} fullWidth>
+      <TextInput label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <TextInput label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <Button onClick={handleSignIn} isFull>
         Sign In
       </Button>
       <div className="flex flex-col gap-2">
-        <Button variant="outlined" fullWidth>
+        <Button isSecondary isFull>
           Sign in with Google
         </Button>
-        <Button variant="outlined" fullWidth>
+        <Button isSecondary isFull>
           Sign in with Microsoft
         </Button>
       </div>
       <p className="text-center text-color-secondary">
-        Don&apos;t have an account? <a href="/sign-up" className="text-blue-primary">Sign Up</a>
+        Don&apos;t have an account?{' '}
+        <NextLink href="/sign-up" className="text-blue-primary">
+          Sign Up
+        </NextLink>
       </p>
     </div>
   );

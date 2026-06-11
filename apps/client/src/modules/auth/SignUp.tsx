@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
+import NextLink from 'next/link';
+import { Button, TextInput } from '@components/core';
 
 export const SignUp = () => {
   const [name, setName] = useState('');
@@ -15,14 +15,17 @@ export const SignUp = () => {
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-color-primary">Sign Up</h1>
       <p className="text-color-secondary">Create your ParthHub account</p>
-      <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
-      <TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} fullWidth />
-      <TextField label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} fullWidth />
-      <Button variant="contained" onClick={handleSignUp} fullWidth>
+      <TextInput label="Name" value={name} onChange={(e) => setName(e.target.value)} />
+      <TextInput label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <TextInput label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <Button onClick={handleSignUp} isFull>
         Sign Up
       </Button>
       <p className="text-center text-color-secondary">
-        Already have an account? <a href="/sign-in" className="text-blue-primary">Sign In</a>
+        Already have an account?{' '}
+        <NextLink href="/sign-in" className="text-blue-primary">
+          Sign In
+        </NextLink>
       </p>
     </div>
   );
