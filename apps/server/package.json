@@ -20,7 +20,7 @@
     "@nestjs/mongoose": "^10.0.10",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-fastify": "^10.4.4",
-    "@parthhub/shared": "*",
+    "@parthhub/shared": "workspace:*",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "firebase-admin": "^12.5.0",

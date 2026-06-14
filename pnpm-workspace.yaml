@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+  - packages/*
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - protobufjs
+  - sharp
+  - unrs-resolver
