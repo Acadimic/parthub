@@ -8,7 +8,7 @@ export class ChapterService {
   constructor(@InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>) {}
 
   async findByCourse(courseId: string) {
-    return this.chapterModel.find({ course: courseId, isDeleted: false }).sort({ order: 1 });
+    return this.chapterModel.find({ course: courseId, _deleted: false }).sort({ order: 1 });
   }
 
   async findById(id: string) {

@@ -8,7 +8,7 @@ export class MaterialService {
   constructor(@InjectModel(Material.name) private materialModel: Model<MaterialDocument>) {}
 
   async findAll(org: string) {
-    return this.materialModel.find({ org, isDeleted: false });
+    return this.materialModel.find({ orgId: org, _deleted: false });
   }
 
   async findById(id: string) {
@@ -16,6 +16,6 @@ export class MaterialService {
   }
 
   async findByCourse(courseId: string) {
-    return this.materialModel.find({ course: courseId, isDeleted: false });
+    return this.materialModel.find({ course: courseId, _deleted: false });
   }
 }

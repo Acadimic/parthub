@@ -1,16 +1,13 @@
-import { BaseOwnerSchema } from '@base-schemas';
+import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 
-export type SubjectDocument = Subject & Document;
+export type SubjectDocument = HydratedDocument<Subject>;
 
 @Schema({ timestamps: true })
-export class Subject extends BaseOwnerSchema {
+export class Subject extends BaseSchema {
   @Prop({ required: true })
   name: string;
-
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Org', required: true })
-  org: string;
 }
 
 export const SubjectSchema = SchemaFactory.createForClass(Subject);

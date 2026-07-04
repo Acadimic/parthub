@@ -8,7 +8,7 @@ export class QuestionService {
   constructor(@InjectModel(Question.name) private questionModel: Model<QuestionDocument>) {}
 
   async findAll() {
-    return this.questionModel.find({ isDeleted: false });
+    return this.questionModel.find({ _deleted: false });
   }
 
   async findById(id: string) {
@@ -16,6 +16,6 @@ export class QuestionService {
   }
 
   async findByTestPaper(testPaperId: string) {
-    return this.questionModel.find({ testPaper: testPaperId, isDeleted: false });
+    return this.questionModel.find({ testPaper: testPaperId, _deleted: false });
   }
 }

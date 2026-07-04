@@ -71,13 +71,29 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   const getLayout = () => {
     switch (layout) {
       case Layout.AUTH:
-        return <AuthLayout><Component {...pageProps} /></AuthLayout>;
+        return (
+          <AuthLayout>
+            <Component {...pageProps} />
+          </AuthLayout>
+        );
       case Layout.SIDEBAR:
-        return <SidebarLayout><Component {...pageProps} /></SidebarLayout>;
+        return (
+          <SidebarLayout>
+            <Component {...pageProps} />
+          </SidebarLayout>
+        );
       case Layout.PAGE:
-        return <PageLayout><Component {...pageProps} /></PageLayout>;
+        return (
+          <PageLayout>
+            <Component {...pageProps} />
+          </PageLayout>
+        );
       case Layout.PUBLIC:
-        return <PublicLayout><Component {...pageProps} /></PublicLayout>;
+        return (
+          <PublicLayout>
+            <Component {...pageProps} />
+          </PublicLayout>
+        );
       default:
         return <Component {...pageProps} />;
     }

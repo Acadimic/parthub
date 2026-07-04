@@ -1,12 +1,19 @@
-import { Global, Module } from '@nestjs/common';
+import { InviteModule } from '@modules/invite/invite.module';
+import { OrgModule } from '@modules/org/org.module';
+import { RoleModule } from '@modules/role/role.module';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from './user.schema';
 import { UserController } from './user.controller';
+import { User, UserSchema } from './user.schema';
 import { UserService } from './user.service';
 
-@Global()
 @Module({
-  imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])],
+  imports: [
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    OrgModule,
+    RoleModule,
+    forwardRef(() => InviteModule),
+  ],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService],

@@ -1,31 +1,56 @@
-import { AppConfigModule, AppConfigService } from '@config';
-import { FirebaseAuthGuard } from '@guards';
-import { AuthModule } from '@modules/auth/auth.module';
+import { ActivityLogModule } from '@modules/activity-log/activity-log.module';
 import { ChapterModule } from '@modules/chapter/chapter.module';
 import { CourseModule } from '@modules/course/course.module';
 import { FirebaseModule } from '@modules/firebase/firebase.module';
+import { InviteModule } from '@modules/invite/invite.module';
 import { MaterialModule } from '@modules/material/material.module';
 import { OrgModule } from '@modules/org/org.module';
+import { PermissionModule } from '@modules/permissions/permission.module';
 import { QuestionModule } from '@modules/question/question.module';
+import { RoleModule } from '@modules/role/role.module';
 import { SubjectModule } from '@modules/subject/subject.module';
 import { TestPaperModule } from '@modules/test-paper/test-paper.module';
 import { UserModule } from '@modules/user/user.module';
 import { Module } from '@nestjs/common';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
+import { Secrets } from '@secrets/secrets';
+import { Connection } from 'mongoose';
+import { ClsModule } from 'nestjs-cls';
 import { LoggerModule } from 'nestjs-pino';
 import pino from 'pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { LoggingInterceptor } from './interceptor/logging.interceptor';
+import { ContextModule } from './context/context.module';
+import { RequestContextService } from './context/request-context.service';
+import { registerGlobalPlugins } from './database/plugins/register-plugins';
+import { AuthGuard } from './guards/auth.guard';
+import { ActivityLogCoreModule } from './modules/activity-log/activity-log-core.module';
+import { ActivityLogCoreService } from './modules/activity-log/activity-log-core.service';
+import { SecretsModule } from './secrets/secrets.module';
+import { SecretsService } from './secrets/secrets.service';
 
 @Module({
   imports: [
-    AppConfigModule,
+    SecretsModule,
+    ClsModule.forRoot({
+      global: true,
+      middleware: { mount: true },
+    }),
+    ContextModule,
+    ActivityLogCoreModule,
     MongooseModule.forRootAsync({
-      inject: [AppConfigService],
-      useFactory: (configService: AppConfigService) => ({
-        uri: configService.dbUrl,
+      inject: [SecretsService, RequestContextService, ActivityLogCoreService],
+      useFactory: (
+        secretsService: SecretsService,
+        contextService: RequestContextService,
+        activityLogCoreService: ActivityLogCoreService,
+      ) => ({
+        uri: secretsService.get(Secrets.DB_URL) as string,
+        connectionFactory: (connection: Connection): Connection => {
+          registerGlobalPlugins(connection, contextService, activityLogCoreService);
+          return connection;
+        },
       }),
     }),
     LoggerModule.forRoot({
@@ -57,10 +82,13 @@ import { LoggingInterceptor } from './interceptor/logging.interceptor';
             : undefined,
       },
     }),
-    UserModule,
-    AuthModule,
-    FirebaseModule,
+    PermissionModule,
     OrgModule,
+    UserModule,
+    FirebaseModule,
+    ActivityLogModule,
+    RoleModule,
+    InviteModule,
     SubjectModule,
     CourseModule,
     MaterialModule,
@@ -70,15 +98,11 @@ import { LoggingInterceptor } from './interceptor/logging.interceptor';
   ],
   controllers: [AppController],
   providers: [
-    AppService,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: LoggingInterceptor,
-    },
     {
       provide: APP_GUARD,
-      useClass: FirebaseAuthGuard,
+      useClass: AuthGuard,
     },
+    AppService,
   ],
 })
 export class AppModule {}

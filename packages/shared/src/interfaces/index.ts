@@ -5,3 +5,4 @@ export * from './question.interface';
 export * from './test-paper.interface';
 export * from './common.interface';
 export * from './app.interface';
+export * from './permission.interface';

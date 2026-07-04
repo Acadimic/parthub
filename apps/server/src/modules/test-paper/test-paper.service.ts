@@ -8,7 +8,7 @@ export class TestPaperService {
   constructor(@InjectModel(TestPaper.name) private testPaperModel: Model<TestPaperDocument>) {}
 
   async findAll(org: string) {
-    return this.testPaperModel.find({ org, isDeleted: false });
+    return this.testPaperModel.find({ orgId: org, _deleted: false });
   }
 
   async findById(id: string) {

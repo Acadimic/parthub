@@ -1,11 +1,11 @@
-import { BaseOwnerSchema } from '@base-schemas';
+import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 
-export type CourseDocument = Course & Document;
+export type CourseDocument = HydratedDocument<Course>;
 
 @Schema({ timestamps: true })
-export class Course extends BaseOwnerSchema {
+export class Course extends BaseSchema {
   @Prop({ required: true })
   name: string;
 
@@ -14,9 +14,6 @@ export class Course extends BaseOwnerSchema {
 
   @Prop()
   thumbnail: string;
-
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Org', required: true })
-  org: string;
 
   @Prop()
   status: string;

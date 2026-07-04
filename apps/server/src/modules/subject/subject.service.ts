@@ -8,7 +8,7 @@ export class SubjectService {
   constructor(@InjectModel(Subject.name) private subjectModel: Model<SubjectDocument>) {}
 
   async findAll(org: string) {
-    return this.subjectModel.find({ org, isDeleted: false });
+    return this.subjectModel.find({ orgId: org, _deleted: false });
   }
 
   async findById(id: string) {

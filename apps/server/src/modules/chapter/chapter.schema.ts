@@ -1,11 +1,11 @@
-import { BaseOwnerSchema } from '@base-schemas';
+import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
-export type ChapterDocument = Chapter & Document;
+export type ChapterDocument = HydratedDocument<Chapter>;
 
 @Schema({ timestamps: true })
-export class Chapter extends BaseOwnerSchema {
+export class Chapter extends BaseSchema {
   @Prop({ required: true })
   name: string;
 

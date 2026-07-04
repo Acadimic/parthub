@@ -1,1 +1,1 @@
-export * from './firebase-auth.guard';
+export * from './auth.guard';

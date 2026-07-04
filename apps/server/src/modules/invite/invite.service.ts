@@ -1,0 +1,128 @@
+import { UserDocument } from '@modules/user/user.schema';
+import { UserService } from '@modules/user/user.service';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { InviteStatus } from '@parthhub/shared';
+import { InviteLookupDto, InviteDto, InviteUserDto } from '@parthhub/shared/dist/dtos/validations';
+import { Model } from 'mongoose';
+import { RequestContextService } from '../../context/request-context.service';
+import { Invite, InviteDocument } from './invite.schema';
+
+@Injectable()
+export class InviteService {
+  constructor(
+    @InjectModel(Invite.name) private readonly inviteModel: Model<InviteDocument>,
+    private readonly requestContextService: RequestContextService,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
+  ) {}
+
+  getTransformedInvite(invite: InviteDocument): InviteDto {
+    return {
+      ...invite,
+      _id: invite._id.toString(),
+      role: invite.role.toString(),
+      invitedBy: invite.invitedBy.toString(),
+      acceptedDate: invite.acceptedDate?.toISOString(),
+    };
+  }
+
+  async upsert(payload: InviteUserDto): Promise<InviteDto> {
+    const { email } = payload;
+    const orgId = this.requestContextService.getOrgId();
+    const invite: InviteDocument = await this.inviteModel
+      .findOneAndUpdate({ email, orgId, status: InviteStatus.PENDING }, { ...payload }, { new: true, upsert: true })
+      .select(Object.keys(new InviteDto()).join(' '))
+      .lean<InviteDocument>()
+      .exec();
+    return this.getTransformedInvite(invite);
+  }
+
+  async upsertBulk(payloads: InviteUserDto[]): Promise<InviteDto[]> {
+    const orgId = this.requestContextService.getOrgId().toString();
+    const emails = payloads.map((p) => p.email);
+    const users = await this.userService.getOrgUsersByEmails(orgId, emails);
+    const filteredPayloads = payloads.filter(
+      (p) => !users.find((u: UserDocument) => u.email.toLowerCase() === p.email.toLowerCase()),
+    );
+    const bulkOps = filteredPayloads.map((payload) => this.upsert(payload));
+    const result = await Promise.all(bulkOps);
+    return result;
+  }
+
+  async getInvites(): Promise<InviteDto[]> {
+    const orgId = this.requestContextService.getOrgId();
+    const result = await this.inviteModel
+      .find({ orgId })
+      .select(Object.keys(new InviteDto()).join(' '))
+      .sort({ updatedAt: -1 })
+      .lean<InviteDocument[]>()
+      .exec();
+    return result.map((invite) => this.getTransformedInvite(invite));
+  }
+
+  async getPendingInviteByEmail(email: string): Promise<InviteDocument | null> {
+    return await this.inviteModel
+      .findOne({ email, status: InviteStatus.PENDING })
+      .sort({ createdAt: 1 })
+      .lean<InviteDocument>()
+      .exec();
+  }
+
+  async getPendingInviteById(inviteId: string): Promise<InviteDocument | null> {
+    return await this.inviteModel.findOne({ _id: inviteId, status: InviteStatus.PENDING }).lean<InviteDocument>().exec();
+  }
+
+  async acceptPendingInvite(inviteId: string): Promise<InviteDocument | null> {
+    return await this.inviteModel
+      .findOneAndUpdate(
+        { _id: inviteId, status: InviteStatus.PENDING },
+        { status: InviteStatus.ACCEPTED, acceptedDate: new Date() },
+      )
+      .lean<InviteDocument>()
+      .exec();
+  }
+
+  async lookupInvite(inviteId: string): Promise<InviteLookupDto> {
+    const invite = await this.inviteModel.findById(inviteId).populate('role', 'role').populate('orgId', 'name').lean().exec();
+    if (!invite) {
+      throw new NotFoundException('Invite not found.');
+    }
+    const role = invite.role as unknown as { role: string };
+    const org = invite.orgId as unknown as { name: string };
+    return {
+      _id: invite._id.toString(),
+      email: invite.email,
+      status: invite.status,
+      roleName: role?.role || '',
+      orgName: org?.name,
+    };
+  }
+
+  async declineInvite(inviteId: string): Promise<void> {
+    const result = await this.inviteModel
+      .findOneAndUpdate({ _id: inviteId, status: InviteStatus.PENDING }, { status: InviteStatus.DECLINED })
+      .exec();
+    if (!result) {
+      throw new NotFoundException('Pending invite not found.');
+    }
+  }
+
+  async deleteInvite(inviteId: string): Promise<void> {
+    const result = await this.inviteModel.deleteOne({ _id: inviteId, status: InviteStatus.PENDING }).exec();
+    if (result.deletedCount === 0) {
+      throw new NotFoundException('Pending invite not found.');
+    }
+  }
+
+  async resendInvite(inviteId: string): Promise<InviteDto> {
+    const invite = await this.inviteModel
+      .findOneAndUpdate({ _id: inviteId, status: InviteStatus.PENDING }, { updatedAt: new Date() }, { new: true })
+      .lean<InviteDocument>()
+      .exec();
+    if (!invite) {
+      throw new NotFoundException('Pending invite not found.');
+    }
+    return this.getTransformedInvite(invite);
+  }
+}

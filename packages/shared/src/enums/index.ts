@@ -11,3 +11,6 @@ export * from './question.enum';
 export * from './test-paper.enum';
 export * from './standard.enum';
 export * from './course.enum';
+export * from './activity-log.enum';
+export * from './invite.enum';
+export * from './role.enum';

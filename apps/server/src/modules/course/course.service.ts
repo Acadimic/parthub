@@ -8,7 +8,7 @@ export class CourseService {
   constructor(@InjectModel(Course.name) private courseModel: Model<CourseDocument>) {}
 
   async findAll(org: string) {
-    return this.courseModel.find({ org, isDeleted: false });
+    return this.courseModel.find({ orgId: org, _deleted: false });
   }
 
   async findById(id: string) {
