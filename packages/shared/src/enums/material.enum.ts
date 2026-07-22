@@ -12,6 +12,19 @@ export enum FileExtension {
   PDF = 'pdf',
   DOC = 'doc',
   DOCX = 'docx',
+  PPT = 'ppt',
+  PPTX = 'pptx',
+  XLS = 'xls',
+  XLSX = 'xlsx',
+  TXT = 'txt',
+  OTHER = 'other',
+}
+
+export enum LinkType {
+  YOUTUBE = 'youtube',
+  VIMEO = 'vimeo',
+  DRIVE = 'drive',
+  EXTERNAL = 'external',
   OTHER = 'other',
 }
 

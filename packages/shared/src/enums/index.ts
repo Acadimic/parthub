@@ -14,3 +14,6 @@ export * from './course.enum';
 export * from './activity-log.enum';
 export * from './invite.enum';
 export * from './role.enum';
+export * from './meet.enum';
+export * from './plan.enum';
+export * from './subdomain.enum';

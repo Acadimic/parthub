@@ -8,7 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { Secrets } from '@secrets/secrets';
 import { SecretsService } from '@secrets/secrets.service';
 import { AccessType } from '@parthhub/shared';
-import { RegisterUserDto, UserDto } from '@parthhub/shared/dist/dtos/validations';
+import { RegisterUserDto, UserDto } from '@parthhub/shared/validations';
 import { INITIAL_LOGIN_DATA_URL } from '@utils/constants';
 import { getRegisterPayload } from '@utils/util';
 import { DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';

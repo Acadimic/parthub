@@ -2,7 +2,7 @@ import { Public } from '@decorators/public.decorator';
 import { PermissionService } from '@modules/permissions/permission.service';
 import { Body, Controller, Get, Param, ParseArrayPipe, Post } from '@nestjs/common';
 import { PermissionItem } from '@parthhub/shared';
-import { InviteLookupDto, InviteDto, InviteUserDto } from '@parthhub/shared/dist/dtos/validations';
+import { InviteLookupDto, InviteDto, InviteUserDto } from '@parthhub/shared/validations';
 import { InviteService } from './invite.service';
 
 @Controller('invite')

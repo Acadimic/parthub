@@ -6,8 +6,20 @@ export type SubjectDocument = HydratedDocument<Subject>;
 
 @Schema({ timestamps: true })
 export class Subject extends BaseSchema {
-  @Prop({ required: true })
+  @Prop({ type: String, trim: true, required: true })
   name: string;
+
+  @Prop({ type: String, trim: true })
+  slug: string;
+
+  @Prop({ type: String, trim: true })
+  description: string;
+
+  @Prop({ type: String, trim: true })
+  logo: string;
 }
 
 export const SubjectSchema = SchemaFactory.createForClass(Subject);
+
+SubjectSchema.index({ name: 1 }, { unique: true });
+SubjectSchema.index({ slug: 1 }, { unique: true, sparse: true });

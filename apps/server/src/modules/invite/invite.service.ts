@@ -3,7 +3,7 @@ import { UserService } from '@modules/user/user.service';
 import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { InviteStatus } from '@parthhub/shared';
-import { InviteLookupDto, InviteDto, InviteUserDto } from '@parthhub/shared/dist/dtos/validations';
+import { InviteLookupDto, InviteDto, InviteUserDto } from '@parthhub/shared/validations';
 import { Model } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
 import { Invite, InviteDocument } from './invite.schema';

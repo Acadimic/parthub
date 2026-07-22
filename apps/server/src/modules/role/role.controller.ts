@@ -1,7 +1,7 @@
 import { PermissionService } from '@modules/permissions/permission.service';
 import { Body, Controller, ParseArrayPipe, Post } from '@nestjs/common';
 import { PermissionItem } from '@parthhub/shared';
-import { DeleteRoleDto, RoleDto } from '@parthhub/shared/dist/dtos/validations';
+import { DeleteRoleDto, RoleDto } from '@parthhub/shared/validations';
 import { RoleService } from './role.service';
 
 @Controller('role')

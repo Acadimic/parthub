@@ -1,0 +1,39 @@
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Follower, FollowerDocument } from './follower.schema';
+import { UpsertFollowerDto } from './dto/upsert-follower.dto';
+
+@Injectable()
+export class FollowerService {
+  constructor(@InjectModel(Follower.name) private followerModel: Model<FollowerDocument>) {}
+
+  async upsert(userId: Types.ObjectId, orgId: Types.ObjectId, payload: UpsertFollowerDto): Promise<FollowerDocument> {
+    return this.followerModel
+      .findOneAndUpdate(
+        { follower: userId, following: payload.following },
+        { ...payload, follower: userId, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { new: true, upsert: true, runValidators: true },
+      )
+      .lean<FollowerDocument>();
+  }
+
+  async getFollowers(userId: Types.ObjectId): Promise<FollowerDocument[]> {
+    return this.followerModel
+      .find({ following: userId, _deleted: { $ne: true } })
+      .lean<FollowerDocument[]>();
+  }
+
+  async getFollowings(userId: Types.ObjectId): Promise<FollowerDocument[]> {
+    return this.followerModel
+      .find({ follower: userId, _deleted: { $ne: true } })
+      .lean<FollowerDocument[]>();
+  }
+
+  async getFollowersCount(userId: Types.ObjectId): Promise<number> {
+    return this.followerModel.countDocuments({
+      following: userId,
+      _deleted: { $ne: true },
+    });
+  }
+}

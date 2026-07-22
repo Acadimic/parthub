@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { DeleteRoleDto, RoleDto } from '@parthhub/shared/dist/dtos/validations';
+import { DeleteRoleDto, RoleDto } from '@parthhub/shared/validations';
 import { Model, Types } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
 import { Role, RoleDocument } from './role.schema';

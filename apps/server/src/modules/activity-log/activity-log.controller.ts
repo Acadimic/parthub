@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ActivityAction } from '@parthhub/shared';
-import { ActivityLogQueryDto } from '@parthhub/shared/dist/dtos/validations';
+import { ActivityLogQueryDto } from '@parthhub/shared/validations';
 import { Types } from 'mongoose';
 import { ActivityLog } from './activity-log.schema';
 import { ActivityLogService } from './activity-log.service';

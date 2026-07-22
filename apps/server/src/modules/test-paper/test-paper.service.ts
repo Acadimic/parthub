@@ -1,17 +1,71 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { TestPaper, TestPaperDocument } from './test-paper.schema';
+import { UpsertTestPaperDto } from '@parthhub/shared/validations';
 
 @Injectable()
 export class TestPaperService {
   constructor(@InjectModel(TestPaper.name) private testPaperModel: Model<TestPaperDocument>) {}
 
+  async upsert(userId: Types.ObjectId, orgId: Types.ObjectId, payload: UpsertTestPaperDto): Promise<TestPaperDocument> {
+    const { _id } = payload;
+    return this.testPaperModel
+      .findOneAndUpdate(
+        { _id },
+        { ...payload, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { new: true, upsert: true, runValidators: true },
+      )
+      .lean<TestPaperDocument>();
+  }
+
+  async getOrgTestPapers(orgId: Types.ObjectId): Promise<TestPaperDocument[]> {
+    return this.testPaperModel.find({ orgId, _deleted: { $ne: true } }).lean<TestPaperDocument[]>();
+  }
+
+  async getTestPaperById(id: string): Promise<TestPaperDocument> {
+    return this.testPaperModel.findOne({ _id: id }).lean<TestPaperDocument>();
+  }
+
+  async updateTotalQuestionsAndMarks(
+    testPaperId: string,
+    totalQuestions: number,
+    maxMarks: number,
+  ): Promise<TestPaperDocument> {
+    return this.testPaperModel
+      .findOneAndUpdate({ _id: testPaperId }, { totalQuestions, maxMarks }, { new: true })
+      .lean<TestPaperDocument>();
+  }
+
+  async mergeTestPapers(primaryTestPaperId: string, secondaryTestPaperId: string): Promise<TestPaperDocument> {
+    const secondaryTestPaper = await this.getTestPaperById(secondaryTestPaperId);
+    if (!secondaryTestPaper) throw new Error('Secondary test paper not found');
+    return this.testPaperModel
+      .findOneAndUpdate(
+        { _id: primaryTestPaperId },
+        {
+          $inc: {
+            totalQuestions: secondaryTestPaper.totalQuestions,
+            maxMarks: secondaryTestPaper.maxMarks,
+            durationMins: secondaryTestPaper.durationMins,
+          },
+          $addToSet: {
+            sections: secondaryTestPaper.sections,
+            standards: secondaryTestPaper.standards,
+            subjects: secondaryTestPaper.subjects,
+            mergedTestPapers: secondaryTestPaperId,
+          },
+        },
+        { new: true, runValidators: true },
+      )
+      .lean<TestPaperDocument>();
+  }
+
   async findAll(org: string) {
-    return this.testPaperModel.find({ orgId: org, _deleted: false });
+    return this.testPaperModel.find({ orgId: org, _deleted: false }).lean<TestPaperDocument[]>();
   }
 
   async findById(id: string) {
-    return this.testPaperModel.findById(id);
+    return this.testPaperModel.findById(id).lean<TestPaperDocument>();
   }
 }

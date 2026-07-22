@@ -40,6 +40,33 @@ export enum PermissionItem {
   MANAGE_QUESTION = 'manageQuestion',
   VIEW_QUESTION = 'viewQuestion',
 
+  // Standard
+  MANAGE_STANDARD = 'manageStandard',
+
+  // Plan
+  MANAGE_PLAN = 'managePlan',
+  VIEW_PLAN = 'viewPlan',
+
+  // Meet
+  MANAGE_MEET = 'manageMeet',
+  VIEW_MEET = 'viewMeet',
+
+  // Batch
+  MANAGE_BATCH = 'manageBatch',
+  VIEW_BATCH = 'viewBatch',
+
+  // Mapping
+  MANAGE_MAPPING = 'manageMapping',
+
+  // Bookmark
+  MANAGE_BOOKMARK = 'manageBookmark',
+
+  // Reaction
+  MANAGE_REACTION = 'manageReaction',
+
+  // Follower
+  MANAGE_FOLLOWER = 'manageFollower',
+
   // Student
   STUDENT = 'student',
 }

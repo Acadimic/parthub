@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { OrgDto } from '@parthhub/shared/dist/dtos/validations';
+import { OrgDto } from '@parthhub/shared/validations';
 import { Model } from 'mongoose';
 import { CreateOrgDto } from './org.dto';
 import { Org, OrgDocument } from './org.schema';

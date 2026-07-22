@@ -42,7 +42,7 @@ async function bootstrap() {
 
   app.useLogger(app.get(Logger));
 
-  await app.listen(process.env.PORT ?? 3001, '0.0.0.0');
+  await app.listen(process.env.PORT ?? 9000, '0.0.0.0');
 }
 
 bootstrap();

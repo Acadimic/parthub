@@ -1,5 +1,5 @@
 import { FirebaseUserDto } from '@modules/firebase/firebase.dto';
-import { RegisterUserDto } from '@parthhub/shared/dist/dtos/validations';
+import { RegisterUserDto } from '@parthhub/shared/validations';
 import ObjectID from 'bson-objectid';
 
 export const getObjectId = () => {

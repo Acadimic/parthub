@@ -2,7 +2,7 @@ import { User } from '@decorators/user.decorator';
 import { PermissionService } from '@modules/permissions/permission.service';
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { PermissionItem } from '@parthhub/shared';
-import { AcceptInviteDto, InitialDataDto, UserDto } from '@parthhub/shared/dist/dtos/validations';
+import { AcceptInviteDto, InitialDataDto, UserDto } from '@parthhub/shared/validations';
 import { INITIAL_LOGIN_DATA_URL } from '@utils/constants';
 import { UserService } from './user.service';
 

@@ -7,9 +7,24 @@ export enum PaperType {
   EXAM = 'exam',
 }
 
+export enum PaperCategoryType {
+  JEE_MAIN = 'jee main',
+  JEE_ADVANCED = 'jee advanced',
+  NEET = 'neet',
+  CUSTOM = 'custom',
+}
+
 export enum SectionType {
   SECTION = 'section',
   SUBSECTION = 'subsection',
+}
+
+export enum SectionCategoryType {
+  PHYSICS = 'physics',
+  CHEMISTRY = 'chemistry',
+  MATHEMATICS = 'mathematics',
+  BIOLOGY = 'biology',
+  CUSTOM = 'custom',
 }
 
 export enum Marking {

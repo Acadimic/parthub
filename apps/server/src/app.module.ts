@@ -1,13 +1,26 @@
 import { ActivityLogModule } from '@modules/activity-log/activity-log.module';
+import { BatchModule } from '@modules/batch/batch.module';
+import { BookmarkModule } from '@modules/bookmark/bookmark.module';
 import { ChapterModule } from '@modules/chapter/chapter.module';
+import { CommonModule } from '@modules/common/common.module';
 import { CourseModule } from '@modules/course/course.module';
 import { FirebaseModule } from '@modules/firebase/firebase.module';
+import { FollowerModule } from '@modules/follower/follower.module';
 import { InviteModule } from '@modules/invite/invite.module';
+import { MappingsModule } from '@modules/mappings/mappings.module';
 import { MaterialModule } from '@modules/material/material.module';
+import { MeetModule } from '@modules/meet/meet.module';
 import { OrgModule } from '@modules/org/org.module';
+import { OtpModule } from '@modules/otp/otp.module';
 import { PermissionModule } from '@modules/permissions/permission.module';
+import { PlanModule } from '@modules/plan/plan.module';
 import { QuestionModule } from '@modules/question/question.module';
+import { RazorpayModule } from '@modules/razorpay/razorpay.module';
+import { ReactionModule } from '@modules/reaction/reaction.module';
 import { RoleModule } from '@modules/role/role.module';
+import { S3Module } from '@modules/s3/s3.module';
+import { SendGridModule } from '@modules/sendgrid/sendgrid.module';
+import { StandardModule } from '@modules/standard/standard.module';
 import { SubjectModule } from '@modules/subject/subject.module';
 import { TestPaperModule } from '@modules/test-paper/test-paper.module';
 import { UserModule } from '@modules/user/user.module';
@@ -83,18 +96,31 @@ import { SecretsService } from './secrets/secrets.service';
       },
     }),
     PermissionModule,
+    MappingsModule,
     OrgModule,
     UserModule,
     FirebaseModule,
     ActivityLogModule,
     RoleModule,
     InviteModule,
+    StandardModule,
     SubjectModule,
     CourseModule,
     MaterialModule,
     ChapterModule,
     TestPaperModule,
     QuestionModule,
+    BatchModule,
+    MeetModule,
+    PlanModule,
+    BookmarkModule,
+    ReactionModule,
+    FollowerModule,
+    OtpModule,
+    S3Module,
+    SendGridModule,
+    RazorpayModule,
+    CommonModule,
   ],
   controllers: [AppController],
   providers: [

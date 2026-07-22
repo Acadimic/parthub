@@ -14,6 +14,11 @@
       "default": "./dist/dtos/validations/index.js"
     }
   },
+  "typesVersions": {
+    "*": {
+      "validations": ["dist/dtos/validations/index.d.ts"]
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch"

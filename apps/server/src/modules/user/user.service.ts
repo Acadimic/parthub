@@ -16,7 +16,7 @@ import {
   RegisterUserDto,
   RoleDto,
   UserDto,
-} from '@parthhub/shared/dist/dtos/validations';
+} from '@parthhub/shared/validations';
 import { getObjectId } from '@utils/util';
 import { Model, Types } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
