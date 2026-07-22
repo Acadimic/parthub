@@ -3,6 +3,8 @@ export interface ISelectItem {
   value: string;
   description?: string;
   group?: string;
+  color?: string;
+  icon?: unknown;
 }
 
 export interface IDynamicObject {

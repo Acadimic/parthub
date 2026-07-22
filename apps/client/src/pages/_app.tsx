@@ -1,18 +1,14 @@
 import { ErrorBoundaryFallback, FullScreenLoader } from '@components/app';
-import { ColorModeContext } from '@components/contexts/color-mode-context';
+import { ColorModeContext } from '@components/contexts';
 import { InternetStatus } from '@components/others';
 import { Layout, StorageKey, Theme } from '@enums';
-import { AuthLayout, PageLayout, PublicLayout, SidebarLayout } from '@layouts';
+import { AuthLayout, PageLayout, PageNavigationLayout, PublicLayout, SidebarLayout } from '@layouts';
 import { ToastContainer } from '@modules/toasts';
-import { PaletteMode } from '@mui/material';
-import { AppCacheProvider } from '@mui/material-nextjs/v14-pagesRouter';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import { useStores } from '@stores';
 import '@styles/globals.scss';
-import { getTheme } from '@themes';
 import { loadFirebaseUser } from '@utils/firebase';
 import { getToken, IS_WINDOW_UNDEFINED } from '@utils/helpers';
+import { MathJaxContext } from 'better-react-mathjax';
 import { observer } from 'mobx-react-lite';
 import type { NextPage } from 'next';
 import type { AppProps } from 'next/app';
@@ -21,13 +17,28 @@ import { useRouter } from 'next/router';
 import { ErrorInfo, useEffect, useMemo, useState } from 'react';
 import { withErrorBoundary } from 'react-error-boundary';
 
-export type NextPageWithLayout<P = any, IP = P> = NextPage<P, IP> & {
+export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<P, IP> & {
   layout: string;
 };
 
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
 };
+
+const config = {
+  tex: {
+    inlineMath: [
+      ['$', '$'],
+      ['\\(', '\\)'],
+    ],
+    displayMath: [
+      ['$$', '$$'],
+      ['\\[', '\\]'],
+    ],
+  },
+};
+
+type ThemeMode = 'light' | 'dark';
 
 function App({ Component, pageProps }: AppPropsWithLayout) {
   const {
@@ -38,35 +49,30 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     isLoadingPublicData,
     loadInitialData,
     loadPublicData,
+    courseStore,
   } = useStores();
   const { isLoadingLoggedInUsers, isLoadedLoggedInUsers, loadLoggedInUsers } = userStore;
-  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const { route, push } = useRouter();
   const { layout } = Component;
   const [isReady, setIsReady] = useState(false);
+  const [mode, setMode] = useState<ThemeMode>();
 
-  const setThemeMode = (currentTheme: PaletteMode) => {
+  const setTheme = (currentTheme: ThemeMode) => {
     setMode(currentTheme);
     if (currentTheme === Theme.DARK) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   };
-
-  const [mode, setMode] = useState<PaletteMode>();
 
   const colorMode = useMemo(
     () => ({
       toggleColorMode: () => {
         const newMode = mode === Theme.DARK ? Theme.LIGHT : Theme.DARK;
         localStorage.setItem(StorageKey.THEME, newMode);
-        setThemeMode(newMode);
+        setTheme(newMode);
       },
     }),
     [mode],
   );
-
-  const theme = useMemo(() => {
-    if (mode) return createTheme(getTheme(mode));
-  }, [mode]);
 
   const getLayout = () => {
     switch (layout) {
@@ -87,6 +93,12 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
           <PageLayout>
             <Component {...pageProps} />
           </PageLayout>
+        );
+      case Layout.PAGE_NAVIGATION:
+        return (
+          <PageNavigationLayout>
+            <Component {...pageProps} />
+          </PageNavigationLayout>
         );
       case Layout.PUBLIC:
         return (
@@ -111,11 +123,22 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   };
 
   useEffect(() => {
-    const selectedTheme = localStorage.getItem(StorageKey.THEME) as PaletteMode;
-    const systemMode: PaletteMode = prefersDarkMode ? Theme.DARK : Theme.LIGHT;
-    const currentTheme: PaletteMode = selectedTheme || systemMode;
-    setThemeMode(currentTheme);
-  }, [prefersDarkMode]);
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const selectedTheme = localStorage.getItem(StorageKey.THEME) as ThemeMode | null;
+    const systemMode: ThemeMode = prefersDarkMode ? Theme.DARK : Theme.LIGHT;
+    const currentTheme: ThemeMode = selectedTheme || systemMode;
+    setTheme(currentTheme);
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      const stored = localStorage.getItem(StorageKey.THEME) as ThemeMode | null;
+      if (!stored) {
+        setTheme(e.matches ? Theme.DARK : Theme.LIGHT);
+      }
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   useEffect(() => {
     if (!IS_WINDOW_UNDEFINED) loadCurrentUser();
@@ -146,31 +169,29 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     if (!isLoadedPublicData && !isLoadingPublicData) loadPublicData();
   }, [isLoadedPublicData, isLoadingPublicData]);
 
-  if (!theme || !isReady || (isLoadedLoggedInUsers && !isLoadedInitialData)) return null;
+  if (!mode || !isReady || (isLoadedLoggedInUsers && !isLoadedInitialData)) return null;
 
   return (
     <>
       <Head>
-        <title>ParthHub</title>
+        <title>Acadimic App</title>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
-        <meta name="description" content="ParthHub - Learn, Grow, Succeed" />
+        <meta name="description" content="Acadimic Learning App | Learn, Grow, Succeed | By Academic Courses" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <AppCacheProvider {...pageProps}>
-        <ColorModeContext.Provider value={colorMode}>
-          <ThemeProvider theme={theme}>
-            {isLoadingLoggedInUsers || !isReady ? (
-              <FullScreenLoader loading={true} />
-            ) : (
-              <>
-                <InternetStatus />
-                <div data-theme={mode}>{getLayout()}</div>
-              </>
-            )}
-            <ToastContainer />
-          </ThemeProvider>
-        </ColorModeContext.Provider>
-      </AppCacheProvider>
+      <ColorModeContext.Provider value={colorMode}>
+        <MathJaxContext config={config}>
+          {isLoadingLoggedInUsers || !isReady ? (
+            <FullScreenLoader loading={true} />
+          ) : (
+            <>
+              <InternetStatus />
+              <div data-theme={mode}>{getLayout()}</div>
+            </>
+          )}
+          <ToastContainer />
+        </MathJaxContext>
+      </ColorModeContext.Provider>
     </>
   );
 }

@@ -1,4 +1,6 @@
-const Home = () => {
+import { NextPageWithLayout } from './_app';
+
+const Home: NextPageWithLayout = () => {
   return (
     <div>
       <h1 className="text-2xl font-bold text-color-primary">Dashboard</h1>
@@ -21,5 +23,5 @@ const Home = () => {
   );
 };
 
-(Home as any).layout = 'sidebar';
+Home.layout = 'sidebar';
 export default Home;

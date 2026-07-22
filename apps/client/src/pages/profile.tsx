@@ -1,4 +1,6 @@
-const ProfilePage = () => {
+import { NextPageWithLayout } from './_app';
+
+const ProfilePage: NextPageWithLayout = () => {
   return (
     <div>
       <h1 className="text-2xl font-bold text-color-primary">Profile</h1>
@@ -7,5 +9,5 @@ const ProfilePage = () => {
   );
 };
 
-(ProfilePage as any).layout = 'page';
+ProfilePage.layout = 'page';
 export default ProfilePage;

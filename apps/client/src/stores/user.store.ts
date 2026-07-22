@@ -1,42 +1,191 @@
-import { Instance, flow, types as t } from 'mobx-state-tree';
-import UserService from '../services/user.service';
-
-const UserModel = t.model('UserModel', {
-  _id: t.identifier,
-  name: t.optional(t.string, ''),
-  email: t.optional(t.string, ''),
-  permission: t.optional(t.string, ''),
-  org: t.optional(t.string, ''),
-});
+import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { AccountType, Gender, Permission, StorageKey } from '../enums';
+import { MappingService, UserService } from '../services';
+import { getObjectId } from '../utils/helpers';
+import { IOrg, IStandard, IStudentStandardMapping, IUser, Org, StudentStandardMapping, User } from './models';
+import { IStore } from './root.store';
 
 export const UserStore = t
-  .model('UserStore', {
-    userMaps: t.map(UserModel),
-    loggedInUser: t.maybe(t.reference(UserModel)),
+  .model({
+    userMaps: t.map(User),
+    orgMaps: t.map(Org),
+    studentStandardMaps: t.map(StudentStandardMapping),
+    loggedInUserIds: t.optional(t.array(t.string), []),
+    isLoadingUsers: t.optional(t.boolean, false),
+    isLoadedUsers: t.optional(t.boolean, false),
     isLoadingLoggedInUsers: t.optional(t.boolean, false),
     isLoadedLoggedInUsers: t.optional(t.boolean, false),
   })
-  .actions((self) => ({
-    addUsers: (users: any[]) => {
-      users?.forEach((u: any) => {
-        if (u?._id) self.userMaps.set(u._id, u);
-      });
+  .views((self) => ({
+    get rootStore() {
+      return getRoot<IStore>(self);
     },
+
+    getUserById(userId: string): IUser | undefined {
+      return userId ? self.userMaps.get(userId) : undefined;
+    },
+
+    getOrgById(orgId: string): IOrg | undefined {
+      return orgId ? self.orgMaps.get(orgId) : undefined;
+    },
+
+    get users(): IUser[] {
+      return Array.from(self.userMaps.values());
+    },
+
+    get studentStandardMappings(): IStudentStandardMapping[] {
+      return Array.from(self.studentStandardMaps.values());
+    },
+
+    removeUserByUserId(userId: string) {
+      return self.userMaps.delete(userId);
+    },
+  }))
+  .views((self) => ({
+    getUsersByIds(userIds: string[]): IUser[] {
+      const users: IUser[] = [];
+      userIds.forEach((userId) => {
+        const user = self.getUserById(userId);
+        if (user) users.push(user);
+      });
+      return users;
+    },
+
+    getStudentStandardMappingsByStudentId(studentId: string): IStudentStandardMapping[] {
+      return self.studentStandardMappings.filter((item) => item.student === studentId);
+    },
+  }))
+  .views((self) => ({
+    get loggedInUsers(): IUser[] {
+      return self.getUsersByIds(self.loggedInUserIds);
+    },
+  }))
+  .actions((self) => ({
+    addUser: (user: IUser) => {
+      if (!user) return;
+      const userId = user._id;
+      const isUser = self.userMaps.has(userId);
+      if (isUser) self.userMaps.set(userId, user);
+      else self.userMaps.put(user);
+    },
+
+    addOrg: (org: IOrg) => {
+      if (!org) return;
+      const orgId = org._id;
+      const isOrg = self.orgMaps.has(orgId);
+      if (isOrg) self.orgMaps.set(orgId, org);
+      else self.orgMaps.put(org);
+    },
+
+    addStudentStandardMap: (obj: IStudentStandardMapping) => {
+      if (!obj) return;
+      const id = obj._id;
+      const isPresent = self.studentStandardMaps.has(id);
+      if (isPresent) self.studentStandardMaps.set(id, obj);
+      else self.studentStandardMaps.put(obj);
+    },
+
+    removeNewUsers: () => {
+      const newUsers = self.users.filter((user) => user.isNew);
+      newUsers.forEach((user) => self.removeUserByUserId(user._id));
+    },
+  }))
+  .actions((self) => ({
+    addUsers: (users: IUser[]) => {
+      users.forEach((user) => self.addUser(user));
+    },
+
+    addOrgs: (orgs: IOrg[]) => {
+      orgs.forEach((org) => self.addOrg(org));
+    },
+
+    addStudentStandardMaps: (mapItems: IStudentStandardMapping[]) => {
+      mapItems.forEach((mapItem) => self.addStudentStandardMap(mapItem));
+    },
+
+    getNewUser: (permission: Permission) => {
+      const user = User.create({
+        _id: getObjectId(),
+        firstName: '',
+        lastName: '',
+        name: '',
+        uid: '',
+        email: '',
+        gender: Gender.OTHER,
+        role: permission,
+        permission,
+        accountType: AccountType.INVITED,
+        isUpdated: false,
+        isNew: true,
+        ...self.rootStore.selectorStore.selectedData,
+      });
+      self.addUser(user);
+      return user;
+    },
+  }))
+  .actions((self) => ({
     loadLoggedInUsers: flow(function* () {
       self.isLoadingLoggedInUsers = true;
       try {
         const result = yield UserService.getInitialLoginData();
-        const data = result?.data;
-        if (data?.user) {
-          self.userMaps.set(data.user._id, data.user);
-          self.loggedInUser = data.user._id;
+        if (!result?.data) {
+          self.isLoadingLoggedInUsers = false;
+          return;
         }
-      } catch (e) {
-        console.error(e);
+        self.addUsers(result.data.users);
+        self.addOrgs(result.data.orgs);
+        self.loggedInUserIds = result.data.users.map((user: IUser) => user._id);
+        const org = localStorage.getItem(StorageKey.ORGANIZATION);
+        let user = org ? self.loggedInUsers.find((u) => u.org === org) : self.loggedInUsers[0];
+        user = user || self.loggedInUsers[0];
+        self.rootStore.selectorStore.selectUserAndOrgLeader(user);
+        self.isLoadedLoggedInUsers = true;
+      } catch (error: unknown) {
+        console.error('Error:', error);
+      } finally {
+        self.isLoadingLoggedInUsers = false;
       }
-      self.isLoadedLoggedInUsers = true;
-      self.isLoadingLoggedInUsers = false;
     }),
+
+    loadStudentStandardMappings: flow(function* () {
+      try {
+        const result = yield MappingService.getOrgStudentStandardMappings();
+        if (result?.data) self.addStudentStandardMaps(result.data);
+      } catch {}
+    }),
+  }))
+  .actions((self) => ({
+    createStudent: () => {
+      const student = self.getNewUser(Permission.STUDENT);
+      self.rootStore.selectorStore.setSelectedStudentId(student._id);
+      return student;
+    },
+
+    createCollaborator: (permission: Permission) => {
+      const collaborator = self.getNewUser(permission);
+      self.rootStore.selectorStore.setSelectedCollaboratorId(collaborator._id);
+      return collaborator;
+    },
+  }))
+  .views((self) => ({
+    get students() {
+      return self.users.filter((user) => user.permission === Permission.STUDENT);
+    },
+
+    get collaborators() {
+      return self.users.filter((user) => user.permission !== Permission.STUDENT);
+    },
+
+    getStudentStandardsByStudentId(studentId: string): IStandard[] {
+      const filteredMaps = self.getStudentStandardMappingsByStudentId(studentId);
+      const standardIds = filteredMaps.map((item) => item.standard);
+      return self.rootStore.standardStore.getStandardsByIds(standardIds);
+    },
+
+    getStudentEnrolledDateByStudentId(studentId: string): string {
+      const filteredMaps = self.getStudentStandardMappingsByStudentId(studentId);
+      return filteredMaps[0]?.enrolledAt || '';
+    },
   }));
 
 export type IUserStore = Instance<typeof UserStore>;

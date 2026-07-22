@@ -1,19 +1,55 @@
+// import makeInspectable from 'mobx-devtools-mst';
 import { Instance, applySnapshot, destroy, flow, types as t } from 'mobx-state-tree';
 import { useMemo } from 'react';
 import { CommonService } from '../services';
+import { BatchStore, IBatchStore } from './batch.store';
 import { CourseStore, ICourseStore } from './course.store';
 import { IMaterialStore, MaterialStore } from './material.store';
+import { IMeetStore, MeetStore } from './meet.store';
+import { IQuestionStore, QuestionStore } from './question.store';
+import { IResourceStore, ResourceStore } from './resource.store';
 import { ISelectorStore, SelectorStore } from './selector.store';
-import { IToastStore, ToastStore } from './toast.store';
+import { IStandardStore, StandardStore } from './standard.store';
+import { ITestPaperStore, TestPaperStore } from './test-paper.store';
 import { IUserStore, UserStore } from './user.store';
 
 export const RootStore = t
   .model('RootStore', {
-    userStore: t.optional(UserStore, { userMaps: {} }),
-    courseStore: t.optional(CourseStore, { courseMaps: {} }),
-    materialStore: t.optional(MaterialStore, { materialMaps: {} }),
+    userStore: t.optional(UserStore, {
+      userMaps: {},
+    }),
+    standardStore: t.optional(StandardStore, {
+      standardMaps: {},
+      subjectMaps: {},
+      standardSubjectMappingMaps: {},
+    }),
+    testPaperStore: t.optional(TestPaperStore, {
+      testPaperMaps: {},
+      testPaperSectionMaps: {},
+    }),
+    questionStore: t.optional(QuestionStore, {
+      questionMaps: {},
+      optionMaps: {},
+    }),
+    courseStore: t.optional(CourseStore, {
+      courseMaps: {},
+    }),
+    materialStore: t.optional(MaterialStore, {
+      materialMaps: {},
+    }),
+    batchStore: t.optional(BatchStore, {
+      batchMaps: {},
+      userBatchMaps: {},
+    }),
+    resourceStore: t.optional(ResourceStore, {
+      bookmarkMaps: {},
+      reactionMaps: {},
+      followingMaps: {},
+    }),
+    meetStore: t.optional(MeetStore, {
+      meetMaps: {},
+    }),
     selectorStore: t.optional(SelectorStore, {}),
-    toastStore: t.optional(ToastStore, { toasts: [] }),
     isLoading: t.optional(t.boolean, false),
     isLoaded: t.optional(t.boolean, false),
     isError: t.optional(t.boolean, false),
@@ -25,49 +61,61 @@ export const RootStore = t
   .actions((self) => ({
     reset: () => {
       destroy(self.userStore);
+      destroy(self.standardStore);
       destroy(self.courseStore);
-      destroy(self.materialStore);
       destroy(self.selectorStore);
+      destroy(self.testPaperStore);
+      destroy(self.questionStore);
+      destroy(self.materialStore);
+      destroy(self.batchStore);
+      destroy(self.resourceStore);
+      destroy(self.meetStore);
       self.isLoadedInitialData = false;
     },
+
     setLoading: () => {
       self.isLoading = true;
       self.isError = false;
     },
+
     resetLoading: flow(function* () {
       self.isLoading = false;
       self.isLoaded = true;
       yield new Promise((resolve) => setTimeout(() => resolve(null), 2000));
       self.isLoaded = false;
     }),
+
     setError: () => {
       self.isError = true;
       self.isLoading = false;
     },
+
     loadInitialData: flow(function* () {
       self.isLoadingInitialData = true;
-      try {
-        const result = yield Promise.all([CommonService.getInitialData()]);
-        const data = result[0]?.data;
-        if (data) {
-          self.userStore.addUsers(data.collaborators || []);
-        }
-      } catch (e) {
-        console.error(e);
+      const result = yield Promise.all([CommonService.getInitialData()]);
+      const data = result[0]?.data;
+      if (data) {
+        self.userStore.addUsers(data.collaborators);
+        self.userStore.addStudentStandardMaps(data.studentStandardMaps);
       }
       self.isLoadedInitialData = true;
       self.isLoadingInitialData = false;
+      Promise.all([
+        self.resourceStore.loadBookmarks(),
+        self.resourceStore.loadFollowings(),
+        self.resourceStore.loadReactions(),
+      ]);
     }),
+
     loadPublicData: flow(function* () {
       self.isLoadingPublicData = true;
-      try {
-        const result = yield Promise.all([CommonService.getPublicData()]);
-        const data = result[0]?.data;
-        if (data) {
-          self.courseStore.addCourses(data.courses || []);
-        }
-      } catch (e) {
-        console.error(e);
+      const result = yield Promise.all([CommonService.getPublicData()]);
+      const data = result[0]?.data;
+      if (data) {
+        self.standardStore.addStandards(data.standards);
+        self.standardStore.addSubjects(data.subjects);
+        self.standardStore.addStandardSubjectMappings(data.standardSubjectMappings);
+        self.courseStore.addCourses(data.courses);
       }
       self.isLoadedPublicData = true;
       self.isLoadingPublicData = false;
@@ -76,10 +124,15 @@ export const RootStore = t
 
 export interface IStore {
   userStore: IUserStore;
+  standardStore: IStandardStore;
+  testPaperStore: ITestPaperStore;
+  questionStore: IQuestionStore;
   courseStore: ICourseStore;
   materialStore: IMaterialStore;
   selectorStore: ISelectorStore;
-  toastStore: IToastStore;
+  batchStore: IBatchStore;
+  resourceStore: IResourceStore;
+  meetStore: IMeetStore;
   isLoading: boolean;
   isLoaded: boolean;
   isError: boolean;
@@ -96,17 +149,25 @@ let store: IRootStore | undefined;
 
 export function initializeStore(snapshot = null) {
   const _store = store ?? RootStore.create({});
+
+  // If your page has Next.js data fetching methods that use a Mobx store, it will
+  // get hydrated here, check `pages/ssg.tsx` and `pages/ssr.tsx` for more details
   if (snapshot) {
     applySnapshot(_store, snapshot);
   }
+  // For SSG and SSR always create a new store
   if (typeof window === 'undefined') return _store;
+  // Create the store once in the client
   if (!store) store = _store;
+
   return store;
 }
 
-export function useStores(initialState?: any) {
+export function useStores(initialState?: null) {
   const store = useMemo(() => initializeStore(initialState), [initialState]);
+  // makeInspectable(store);
   return store;
 }
 
+// Access store outside of react component
 export const appStores = initializeStore();

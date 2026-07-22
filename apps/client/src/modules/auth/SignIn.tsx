@@ -1,39 +1,159 @@
+import { Button, TextInput, ToggleTheme } from '@components/app';
+import { HorizontalLineWithText, Policy } from '@components/others';
+import { ILoginUser } from '@interfaces';
+import { ArrowCircleLeft, Eye, EyeSlash } from '@phosphor-icons/react';
+import { fetchSignInMethods, FirebaseError, getFirebaseErrorMessage, signIn } from '@utils/firebase';
+import { errorToast, getRedirectUri, isValidEmail } from '@utils/helpers';
+import { observer } from 'mobx-react-lite';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useState } from 'react';
-import NextLink from 'next/link';
-import { Button, TextInput } from '@components/core';
+import { useSetState } from 'react-use';
+import { SignInWithGoogleButton, SignInWithMicrosoftButton } from './components';
+import { OnboardingBanner } from './OnboardingBanner';
 
-export const SignIn = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export const SignIn = observer(() => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [isShowPassword, setIsShowPassword] = useState(false);
+  const router = useRouter();
 
-  const handleSignIn = async () => {
-    // TODO: Implement sign in
-    console.log('Sign in', email, password);
+  const [state, setState] = useSetState<ILoginUser>({
+    email: '',
+    password: '',
+  });
+
+  const loginHandler = async ({ email, password }: ILoginUser) => {
+    try {
+      email = email?.trim()?.toLowerCase();
+      const result = await signIn(email, password);
+      const firebaseUser = result.user;
+      const uid = firebaseUser?.uid;
+      if (uid) router.push(getRedirectUri(router.query.redirectUri as string));
+    } catch (error) {
+      errorToast({ message: getFirebaseErrorMessage(error as FirebaseError) });
+    }
+  };
+
+  const togglePassword = () => {
+    setIsShowPassword(!isShowPassword);
+  };
+
+  const handleSubmit = async () => {
+    const { email, password } = state;
+    try {
+      if (!email || !isValidEmail(email)) {
+        errorToast({ message: 'Invalid email address.' });
+        return;
+      }
+      if (!password || password.trim().length < 8) {
+        errorToast({ message: 'Invalid password. Password length should not be less than 8 chars.' });
+        return;
+      }
+      setIsLoading(true);
+      const result = await Promise.all([fetchSignInMethods(email?.trim()?.toLowerCase())]);
+      const signInMethods = result[0];
+      if (signInMethods.length === 0) {
+        errorToast({ message: 'User not found!' });
+        return;
+      }
+      await loginHandler({ email, password });
+    } catch (err) {
+      errorToast({ message: getFirebaseErrorMessage(err as FirebaseError) });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setState({ [name]: value });
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-color-primary">Sign In</h1>
-      <p className="text-color-secondary">Welcome to ParthHub</p>
-      <TextInput label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <TextInput label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      <Button onClick={handleSignIn} isFull>
-        Sign In
-      </Button>
-      <div className="flex flex-col gap-2">
-        <Button isSecondary isFull>
-          Sign in with Google
-        </Button>
-        <Button isSecondary isFull>
-          Sign in with Microsoft
-        </Button>
+    <div className="w-full flex h-full">
+      <div className="lg:w-[50%] hidden lg:block bg-black">
+        <OnboardingBanner />
       </div>
-      <p className="text-center text-color-secondary">
-        Don&apos;t have an account?{' '}
-        <NextLink href="/sign-up" className="text-blue-primary">
-          Sign Up
-        </NextLink>
-      </p>
+      <div className="w-full lg:w-[50%] relative">
+        <div className="absolute -top-16 justify-end items-center w-full px-8 hidden lg:flex h-16">
+          <ToggleTheme />
+        </div>
+        <div className={`mx-auto max-w-xs lg:max-w-md px-2 md:px-4 py-2 md:pt-10`}>
+          <h1 className="pb-6 lg:pb-4 text-center font-medium text-2xl lg:text-2xl text-color-primary">
+            Welcome Back 👋
+          </h1>
+          <div>
+            <Link
+              className="flex items-center space-x-1.5 text-blue-primary font-medium text-sm mb-3 md:my-6"
+              href={'/'}
+            >
+              <ArrowCircleLeft className="h-5 w-5" />
+              <span>Go Back</span>
+            </Link>
+            <div>
+              <div className="flex flex-col gap-y-3">
+                <TextInput label="Email" name="email" placeholder="user@example.com" onChange={handleInputChange} />
+                <TextInput
+                  type={isShowPassword ? 'text' : 'password'}
+                  label="Password"
+                  name="password"
+                  placeholder="Enter password"
+                  rightsection={
+                    <div className="" onClick={togglePassword}>
+                      {isShowPassword ? (
+                        <EyeSlash weight="thin" className="text-[#929499]" />
+                      ) : (
+                        <Eye weight="thin" className="text-[#929499]" />
+                      )}
+                    </div>
+                  }
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="flex justify-end text-sm font-medium pt-3">
+                <div
+                  className="cursor-pointer text-blue-primary hover:underline hover:decoration-blue-primary"
+                  onClick={() => router.push('/forgot-password')}
+                >
+                  Forgot Password?
+                </div>
+              </div>
+              <div className="pt-4 flex justify-center">
+                <Button
+                  isLoading={isLoading}
+                  text="Sign In"
+                  type="submit"
+                  disabled={isDisabled}
+                  onClick={handleSubmit}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col justify-center items-center gap-4 px-4 mt-3">
+          <div className="w-full md:w-[500px]">
+            <HorizontalLineWithText text="or continue with" />
+          </div>
+          <div className="flex flex-col md:flex-row justify-start gap-3 items-center md:gap-4">
+            <div className="flex space-x-3">
+              <SignInWithGoogleButton isDisabled={isDisabled} setLoading={setIsDisabled} />
+              <SignInWithMicrosoftButton isDisabled={isDisabled} setLoading={setIsDisabled} />
+            </div>
+          </div>
+          <Policy />
+        </div>
+        <div className="text-sm text-center text-color-secondary my-4 md:my-6">
+          Don&#39;t have an account?&nbsp;
+          <Link
+            href="/sign-up"
+            className="text-blue-primary font-medium cursor-pointer hover:underline hover:decoration-blue-primary"
+          >
+            Sign Up
+          </Link>
+        </div>
+      </div>
     </div>
   );
-};
+});
