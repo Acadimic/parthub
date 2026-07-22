@@ -1,12 +1,9 @@
-import { DocumentHeadTags, DocumentHeadTagsProps } from '@mui/material-nextjs/v14-pagesRouter';
-import { DocumentProps, Head, Html, Main, NextScript } from 'next/document';
+import { Head, Html, Main, NextScript } from 'next/document';
 
-export default function Document(props: DocumentProps & DocumentHeadTagsProps) {
+export default function Document() {
   return (
     <Html lang="en">
-      <Head>
-        <DocumentHeadTags {...props} />
-      </Head>
+      <Head />
       <body className="bg-background-secondary">
         <Main />
         <NextScript />

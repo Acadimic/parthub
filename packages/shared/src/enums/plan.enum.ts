@@ -20,4 +20,5 @@ export enum CollectionType {
   MATERIAL = 'Material',
   TEST_PAPER = 'TestPaper',
   MEET = 'Meet',
+  QUESTION = 'Question',
 }

@@ -1,6 +1,10 @@
+import { Layout } from '@enums';
 import { SignUp } from '@modules/auth';
 
-const SignUpPage = () => <SignUp />;
+function SignUpPage() {
+  return <SignUp />;
+}
 
-(SignUpPage as any).layout = 'auth';
+SignUpPage.layout = Layout.AUTH;
+
 export default SignUpPage;

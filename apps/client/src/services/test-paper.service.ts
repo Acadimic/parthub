@@ -5,6 +5,12 @@ class TestPaperService {
   getTestPapers = async () => {
     return await callAuthApi('test-paper', API.GET);
   };
+
+  getTestPaperSectionsWithQuestions = async (testPaperId: string) => {
+    const url = `test-paper/sections-with-questions/${testPaperId}`;
+    const resData = await callAuthApi(url, API.GET);
+    return resData;
+  };
 }
 
 export default new TestPaperService();

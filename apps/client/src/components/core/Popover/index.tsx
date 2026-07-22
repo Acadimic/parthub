@@ -1,52 +1,47 @@
-import MuiPopover, { PopoverOrigin } from '@mui/material/Popover';
+import { Popover as ShadcnPopover, PopoverContent, PopoverTrigger } from '@components/ui/popover';
+import { cn } from '@utils/cn';
 import * as React from 'react';
 
 interface IPopoverProps {
-  children: React.ReactNode;
+  children: React.ReactNode | ((props: { handleClose: () => void }) => React.ReactNode);
   trigger: React.ReactElement;
-  anchorOrigin?: PopoverOrigin;
-  transformOrigin?: PopoverOrigin;
+  anchorOrigin?: { vertical: 'top' | 'bottom'; horizontal: 'left' | 'right' | 'center' };
+  transformOrigin?: { vertical: 'top' | 'bottom'; horizontal: 'left' | 'right' | 'center' };
+  className?: string;
 }
 
-export const Popover = ({ children, trigger, anchorOrigin, transformOrigin }: IPopoverProps) => {
-  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+export const Popover = ({ children, trigger, anchorOrigin, className }: IPopoverProps) => {
+  const [open, setOpen] = React.useState(false);
 
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handleClose = () => setOpen(false);
+
+  const sideMap: Record<string, 'top' | 'bottom' | 'left' | 'right'> = {
+    top: 'bottom',
+    bottom: 'top',
   };
 
-  const handleClose = () => {
-    setAnchorEl(null);
+  const alignMap: Record<string, 'start' | 'center' | 'end'> = {
+    left: 'start',
+    center: 'center',
+    right: 'end',
   };
 
-  const open = Boolean(anchorEl);
-  const id = open ? 'core-popover' : undefined;
+  const side = anchorOrigin ? sideMap[anchorOrigin.vertical] || 'bottom' : 'bottom';
+  const align = anchorOrigin ? alignMap[anchorOrigin.horizontal] || 'start' : 'start';
 
   return (
-    <div>
-      <div aria-describedby={id} className="cursor-pointer" onClick={handleClick}>
-        {trigger}
-      </div>
-      <MuiPopover
-        id={id}
-        open={open}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        anchorOrigin={anchorOrigin || { vertical: 'bottom', horizontal: 'left' }}
-        transformOrigin={transformOrigin}
-        elevation={0}
-        marginThreshold={16}
-        classes={{
-          paper: 'bg-background-primary border border-color-border rounded-sm mt-2',
-        }}
+    <ShadcnPopover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <div className="cursor-pointer">{trigger}</div>
+      </PopoverTrigger>
+      <PopoverContent
+        side={side}
+        align={align}
+        className={cn('bg-background-primary border border-color-border rounded-sm mt-2 p-0', className)}
       >
-        <div>
-          {typeof children === 'function'
-            ? (children as (props: { handleClose: () => void }) => React.ReactNode)({ handleClose })
-            : children}
-        </div>
-      </MuiPopover>
-    </div>
+        {typeof children === 'function' ? children({ handleClose }) : children}
+      </PopoverContent>
+    </ShadcnPopover>
   );
 };
 

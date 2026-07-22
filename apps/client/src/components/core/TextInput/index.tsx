@@ -1,14 +1,17 @@
-import InputBase, { InputBaseProps } from '@mui/material/InputBase';
+import { cn } from '@utils/cn';
 import { useEffect, useRef, useState } from 'react';
 import { Label } from '../Label';
 
-export interface ITextInputProps extends InputBaseProps {
+export interface ITextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   leftSection?: React.ReactNode;
   rightSection?: React.ReactNode;
   required?: boolean;
   helperText?: string;
   inputClassName?: string;
+  error?: boolean;
+  multiline?: boolean;
+  rows?: number;
 }
 
 export const TextInput = (props: ITextInputProps) => {
@@ -25,17 +28,17 @@ export const TextInput = (props: ITextInputProps) => {
     helperText,
     autoFocus,
     inputClassName,
-    size,
+    className,
     ...rest
   } = props;
   const [isFocused, setIsFocused] = useState(false);
 
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(true);
     if (onFocus) onFocus(e);
   };
 
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(false);
     if (onBlur) onBlur(e);
   };
@@ -44,36 +47,37 @@ export const TextInput = (props: ITextInputProps) => {
     if (autoFocus) ref.current?.focus();
   }, [autoFocus]);
 
-  const sizeClass = size === 'small' ? 'py-0' : 'py-0.5';
-
   return (
-    <div>
+    <div className={className}>
       {label && <Label label={label} required={required} />}
       <div
-        className={`bg-background-primary hover:bg-background-secondary flex items-center border rounded-none
-          ${isFocused ? 'border-blue-primary ring-1 ring-blue-primary bg-background-secondary' : error ? 'border-red-primary' : 'border-color-border'}
-        `}
+        className={cn(
+          'bg-background-primary hover:bg-background-secondary flex items-center border rounded-none',
+          isFocused
+            ? 'border-blue-primary ring-1 ring-blue-primary bg-background-secondary'
+            : error
+              ? 'border-red-primary'
+              : 'border-color-border',
+        )}
       >
         {leftSection ? (
-          <div className={`flex items-center ${isFocused ? 'text-blue-primary' : ''} pl-3`}>{leftSection}</div>
+          <div className={cn('flex items-center pl-3', isFocused && 'text-blue-primary')}>{leftSection}</div>
         ) : null}
-        <InputBase
+        <input
           {...rest}
           placeholder={placeholder || (label ? `Enter ${label}` : undefined)}
-          className={`flex-1 px-3 text-sm ${sizeClass} font-medium`}
+          className={cn('flex-1 px-3 text-sm py-0.5 font-medium bg-transparent outline-none w-full', inputClassName)}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          classes={{ input: inputClassName || '' }}
           ref={ref}
           autoFocus={autoFocus}
-          error={error}
         />
         {rightSection ? (
-          <div className={`flex items-center ${isFocused ? 'text-blue-primary' : ''} pr-3`}>{rightSection}</div>
+          <div className={cn('flex items-center pr-3', isFocused && 'text-blue-primary')}>{rightSection}</div>
         ) : null}
       </div>
       {helperText && (
-        <p className={`text-xs mt-1 ${error ? 'text-red-primary' : 'text-color-secondary'}`}>{helperText}</p>
+        <p className={cn('text-xs mt-1', error ? 'text-red-primary' : 'text-color-secondary')}>{helperText}</p>
       )}
     </div>
   );

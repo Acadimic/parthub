@@ -1,5 +1,5 @@
-import { Tabs as MuiTabs } from '@mui/material';
-import Tab from '@mui/material/Tab';
+import { Tabs as ShadcnTabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
+import { cn } from '@utils/cn';
 import * as React from 'react';
 
 export interface ITabItem {
@@ -15,19 +15,13 @@ interface ITabsProps {
   onChange?: (index: number) => void;
 }
 
-function a11yProps(index: number) {
-  return {
-    id: `core-tab-${index}`,
-    'aria-controls': `core-tabpanel-${index}`,
-  };
-}
-
 export const Tabs = ({ tabs, value, onChange }: ITabsProps) => {
   const [selectedTabIndex, setSelectedTabIndex] = React.useState(value || 0);
 
-  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setSelectedTabIndex(newValue);
-    if (onChange) onChange(newValue);
+  const handleChange = (val: string) => {
+    const index = parseInt(val, 10);
+    setSelectedTabIndex(index);
+    if (onChange) onChange(index);
   };
 
   React.useEffect(() => {
@@ -35,51 +29,30 @@ export const Tabs = ({ tabs, value, onChange }: ITabsProps) => {
   }, [value]);
 
   return (
-    <div>
-      <MuiTabs
-        value={selectedTabIndex}
-        onChange={handleChange}
-        variant="scrollable"
-        scrollButtons={false}
-        aria-label="scrollable-tabs"
-        sx={{
-          '& .MuiTab-root': {
-            textTransform: 'none',
-            fontWeight: 600,
-            fontSize: '0.875rem',
-          },
-          '& .Mui-selected': {
-            color: 'var(--tw-color-blue-primary, #009ef7) !important',
-          },
-          '& .MuiTabs-indicator': {
-            backgroundColor: 'var(--tw-color-blue-primary, #009ef7)',
-          },
-        }}
-      >
+    <ShadcnTabs value={String(selectedTabIndex)} onValueChange={handleChange}>
+      <TabsList className="bg-transparent border-b border-color-border rounded-none w-full justify-start h-auto p-0">
         {tabs.map((tab, index) => (
-          <Tab
+          <TabsTrigger
             key={index}
-            icon={tab.icon || undefined}
-            label={tab.label}
-            iconPosition={tab.iconPosition}
-            {...a11yProps(index)}
-          />
-        ))}
-      </MuiTabs>
-      <div>
-        {tabs.map((tab, index) => (
-          <div
-            key={index}
-            role="tabpanel"
-            hidden={selectedTabIndex !== index}
-            id={`core-tabpanel-${index}`}
-            aria-labelledby={`core-tab-${index}`}
+            value={String(index)}
+            className={cn(
+              'text-sm font-semibold rounded-none border-b-2 border-transparent px-4 py-2',
+              'data-[state=active]:border-blue-primary data-[state=active]:text-blue-primary data-[state=active]:shadow-none',
+            )}
           >
-            {selectedTabIndex === index && <div>{tab.component}</div>}
-          </div>
+            <div className={cn('flex items-center gap-1.5', tab.iconPosition === 'end' && 'flex-row-reverse')}>
+              {tab.icon}
+              <span>{tab.label}</span>
+            </div>
+          </TabsTrigger>
         ))}
-      </div>
-    </div>
+      </TabsList>
+      {tabs.map((tab, index) => (
+        <TabsContent key={index} value={String(index)}>
+          {tab.component}
+        </TabsContent>
+      ))}
+    </ShadcnTabs>
   );
 };
 

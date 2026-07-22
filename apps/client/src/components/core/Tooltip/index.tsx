@@ -1,19 +1,26 @@
-import MuiTooltip, { TooltipProps as MuiTooltipProps } from '@mui/material/Tooltip';
+import { Tooltip as ShadcnTooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@components/ui/tooltip';
+import { cn } from '@utils/cn';
 
-interface ITooltipProps extends Omit<MuiTooltipProps, 'children'> {
+interface ITooltipProps {
   children: React.ReactNode;
+  title?: React.ReactNode;
+  placement?: 'top' | 'bottom' | 'left' | 'right';
+  arrow?: boolean;
+  className?: string;
 }
 
-export const Tooltip = ({ children, title, ...rest }: ITooltipProps) => {
+export const Tooltip = ({ children, title, placement = 'top', className }: ITooltipProps) => {
   return (
-    <MuiTooltip
-      classes={{ tooltip: 'bg-color-primary text-color-opposite', arrow: 'text-color-primary' }}
-      title={title || children}
-      arrow
-      {...rest}
-    >
-      <span>{children}</span>
-    </MuiTooltip>
+    <TooltipProvider delayDuration={200}>
+      <ShadcnTooltip>
+        <TooltipTrigger asChild>
+          <span>{children}</span>
+        </TooltipTrigger>
+        <TooltipContent side={placement} className={cn('bg-color-primary text-color-opposite text-xs', className)}>
+          {title || children}
+        </TooltipContent>
+      </ShadcnTooltip>
+    </TooltipProvider>
   );
 };
 

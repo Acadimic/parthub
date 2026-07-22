@@ -1,24 +1,25 @@
-import Link from 'next/link';
-import React from 'react';
+import { AppSidebar, FullScreenLoader } from '@components/app';
+import { useStores } from '@stores';
+import { observer } from 'mobx-react-lite';
+import { useEffect } from 'react';
 
-export const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
+interface IProps {
+  children: React.ReactNode;
+}
+
+export const SidebarLayout = observer(({ children }: IProps) => {
+  const { isLoadingInitialData, isLoadedInitialData, loadInitialData, userStore } = useStores();
+  const { isLoadedLoggedInUsers } = userStore;
+
+  useEffect(() => {
+    if (!isLoadedInitialData && !isLoadingInitialData && isLoadedLoggedInUsers) loadInitialData();
+  }, [isLoadedInitialData, isLoadingInitialData, isLoadedLoggedInUsers]);
+
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-64 border-r border-color-border bg-background-paper p-4">
-        <div className="text-lg font-bold text-color-primary">ParthHub</div>
-        <nav className="mt-6 flex flex-col gap-2">
-          <Link href="/home" className="rounded p-2 text-color-primary hover:bg-background-secondary">
-            Home
-          </Link>
-          <Link href="/courses" className="rounded p-2 text-color-primary hover:bg-background-secondary">
-            Courses
-          </Link>
-          <Link href="/profile" className="rounded p-2 text-color-primary hover:bg-background-secondary">
-            Profile
-          </Link>
-        </nav>
-      </aside>
-      <main className="flex-1 bg-background-secondary p-6">{children}</main>
-    </div>
+    <>
+      <AppSidebar>
+        {isLoadingInitialData ? <FullScreenLoader loading={isLoadingInitialData} withHeader /> : children}
+      </AppSidebar>
+    </>
   );
-};
+});

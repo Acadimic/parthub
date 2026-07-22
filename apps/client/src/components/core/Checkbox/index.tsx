@@ -1,27 +1,40 @@
-import MuiCheckbox, { CheckboxProps as MuiCheckboxProps } from '@mui/material/Checkbox';
-import FormControlLabel from '@mui/material/FormControlLabel';
+import { Checkbox as ShadcnCheckbox } from '@components/ui/checkbox';
+import { cn } from '@utils/cn';
 
-interface ICheckboxProps extends MuiCheckboxProps {
+interface ICheckboxProps {
+  checked?: boolean;
+  onChange?: (checked: boolean) => void;
   label?: string;
+  className?: string;
+  disabled?: boolean;
+  id?: string;
 }
 
-export const Checkbox = ({ label, className, ...rest }: ICheckboxProps) => {
+export const Checkbox = ({ checked, onChange, label, className, disabled, id }: ICheckboxProps) => {
+  const checkboxId = id || `checkbox-${label?.replace(/\s+/g, '-').toLowerCase()}`;
+
   const checkbox = (
-    <MuiCheckbox
-      {...rest}
-      className={`text-color-secondary ${className || ''}`}
-      size="small"
-      sx={{
-        '&.Mui-checked': {
-          color: 'var(--tw-color-blue-primary, #009ef7)',
-        },
-        ...rest.sx,
-      }}
+    <ShadcnCheckbox
+      id={checkboxId}
+      checked={checked}
+      onCheckedChange={onChange}
+      disabled={disabled}
+      className={cn(
+        'border-color-border data-[state=checked]:bg-blue-primary data-[state=checked]:border-blue-primary',
+        className,
+      )}
     />
   );
 
   if (label) {
-    return <FormControlLabel control={checkbox} label={label} classes={{ label: 'text-sm text-color-primary' }} />;
+    return (
+      <div className="flex items-center space-x-2">
+        {checkbox}
+        <label htmlFor={checkboxId} className="text-sm text-color-primary cursor-pointer">
+          {label}
+        </label>
+      </div>
+    );
   }
 
   return checkbox;

@@ -1,16 +1,28 @@
-import Link from 'next/link';
+import { Button } from '@components/app';
+import { Layout } from '@enums';
+import { ArrowLeft } from '@phosphor-icons/react';
+import { useRouter } from 'next/router';
 
-const NotFoundPage = () => {
+const FourOhFour = () => {
+  const { push } = useRouter();
+
   return (
-    <div className="flex h-screen flex-col items-center justify-center">
-      <h1 className="text-6xl font-bold text-color-primary">404</h1>
-      <p className="mt-4 text-lg text-color-secondary">Page not found</p>
-      <Link href="/" className="mt-6 rounded bg-blue-primary px-6 py-3 text-white">
-        Go Home
-      </Link>
+    <div className="flex justify-center items-center h-screen gap-y-6 px-8 md:px-4 bg-background-primary">
+      <div className="flex flex-col justify-center items-center gap-y-4">
+        <div className="text-color-text font-bold text-4xl lg:text-5xl ">Page not found</div>
+        <div className="text-center text-color-secondary text-sm md:text-base font-medium">
+          Uh oh, we can&#39;t seem to find the page you&#39;re looking for. The link you{' '}
+          <br className="hidden md:block" />
+          clicked may be broken or removed for our space.
+        </div>
+        <div>
+          <Button text="Back" leftsection={<ArrowLeft weight="bold" className="w-4 h-4" />} onClick={() => push('/')} />
+        </div>
+      </div>
     </div>
   );
 };
 
-(NotFoundPage as any).layout = 'none';
-export default NotFoundPage;
+FourOhFour.layout = Layout.NONE;
+
+export default FourOhFour;

@@ -3,6 +3,8 @@ import { API, Permission, StorageKey } from '../enums';
 import { generateAndSetNewToken } from '../utils/firebase';
 import { getToken, handleError } from '../utils/helpers';
 
+export const callDefaultApi = () => axios.create();
+
 const createAxiosInstance = (isUnAuth: boolean) => {
   const axiosInstance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_BASE_URL,

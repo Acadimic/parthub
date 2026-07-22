@@ -1,23 +1,24 @@
-import { Instance, types as t } from 'mobx-state-tree';
+import { types } from 'mobx-state-tree';
+import { IToast, ToastModel } from './models';
 
-const ToastModel = t.model('ToastModel', {
-  _id: t.identifier,
-  message: t.string,
-  type: t.optional(t.enumeration(['success', 'error', 'info', 'warning']), 'info'),
-});
-
-export const ToastStore = t
+const ToastStore = types
   .model('ToastStore', {
-    toasts: t.array(ToastModel),
+    toasts: types.array(ToastModel),
   })
   .actions((self) => ({
-    addToast: (toast: { _id: string; message: string; type?: 'success' | 'error' | 'info' | 'warning' }) => {
-      self.toasts.push(toast as any);
+    addToast(toastData: IToast) {
+      self.toasts.push(toastData);
+
+      setTimeout(() => {
+        this.removeToast(toastData.id);
+      }, 3000);
     },
-    removeToast: (id: string) => {
-      const index = self.toasts.findIndex((t) => t._id === id);
-      if (index > -1) self.toasts.splice(index, 1);
+
+    removeToast(id: number) {
+      self.toasts.replace(self.toasts.filter((toast) => toast.id !== id));
     },
   }));
 
-export type IToastStore = Instance<typeof ToastStore>;
+export const toastStore = ToastStore.create({
+  toasts: [],
+});

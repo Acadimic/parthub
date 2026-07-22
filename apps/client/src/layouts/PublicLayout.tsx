@@ -1,12 +1,14 @@
-import React from 'react';
+import { PageFooter } from '@components/app';
+import { PageLayout } from './PageLayout';
 
-export const PublicLayout = ({ children }: { children: React.ReactNode }) => {
+interface IProps {
+  children: React.ReactNode;
+}
+
+export const PublicLayout = ({ children }: IProps) => {
   return (
-    <div className="min-h-screen bg-background-primary">
-      <header className="border-b border-color-border bg-background-paper px-6 py-4">
-        <div className="text-lg font-bold text-color-primary">ParthHub</div>
-      </header>
-      <main>{children}</main>
-    </div>
+    <PageLayout withNavigation={true}>
+      {children} <PageFooter />
+    </PageLayout>
   );
 };

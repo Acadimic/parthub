@@ -6,8 +6,8 @@ export enum MeetStatus {
 }
 
 export enum MeetFrequency {
-  ONCE = 'once',
+  ONE_TIME = 'oneTime',
   DAILY = 'daily',
+  THIS_WEEK = 'thisWeek',
   WEEKLY = 'weekly',
-  MONTHLY = 'monthly',
 }

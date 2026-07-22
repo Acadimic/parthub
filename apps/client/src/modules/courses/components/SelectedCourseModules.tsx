@@ -1,0 +1,71 @@
+import { Accordions } from '@components/app';
+import { DynamicSubtitle } from '@components/common';
+import { useStores } from '@stores';
+import { getPlural } from '@utils/helpers';
+import { observer } from 'mobx-react-lite';
+import { CourseContents } from './CourseContents';
+import { Sessions } from './course-contents';
+
+interface IProps {
+  isPreview: boolean;
+  closeCourseOverview: () => void;
+}
+
+export const SelectedCourseModules = observer(({ isPreview, closeCourseOverview }: IProps) => {
+  const { selectorStore, courseStore, meetStore } = useStores();
+  const { getCoursesByIds } = courseStore;
+  const { getMeetsByIds } = meetStore;
+  const { selectedCourse } = selectorStore;
+  const { getCourseModuleByCourseId } = courseStore;
+
+  if (!selectedCourse) return <></>;
+
+  const courses = getCoursesByIds(selectedCourse.courses);
+  const courseModules = getCourseModuleByCourseId(selectedCourse._id);
+
+  return (
+    <div>
+      {courses.map((courseItem) => {
+        const meets = getMeetsByIds(courseItem.meets);
+        return (
+          <div key={courseItem._id} id={courseItem._id}>
+            <Accordions
+              openIndexes={[...courses.map((_, index) => index), courses.length]}
+              items={[
+                {
+                  title: <DynamicSubtitle title={courseItem.name} subtitle="Module" count={courseModules.length} />,
+                  component: (
+                    <CourseContents
+                      closeCourseOverview={closeCourseOverview}
+                      courseId={selectedCourse._id}
+                      course={courseItem}
+                      isPreview={isPreview}
+                    />
+                  ),
+                },
+                ...(meets.length
+                  ? [
+                      {
+                        title: (
+                          <DynamicSubtitle
+                            title={getPlural(meets.length, 'Session')}
+                            subtitle="Schedule"
+                            count={meets.length}
+                          />
+                        ),
+                        component: (
+                          <div className="pt-1 pb-6 px-10">
+                            <Sessions meets={meets} isSmallJoinable={true} isCopyIconOnly={true} />
+                          </div>
+                        ),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+});

@@ -1,9 +1,24 @@
-import React from 'react';
+import { AuthHeader } from '@components/app';
+import { BannerImg } from '@components/images';
 
-export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
+interface IProps {
+  children: React.ReactNode;
+}
+
+export const AuthLayout = ({ children }: IProps) => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background-primary">
-      <div className="w-full max-w-md p-6">{children}</div>
-    </div>
+    <>
+      <div className={`bg-background-secondary relative`}>
+        <div className="fixed top-0 z-10 w-full">
+          <AuthHeader />
+        </div>
+        <div className="overflow-auto h-screen">
+          <div className="md:h-[90vh] mt-16 sm:mt-16 relative">
+            <BannerImg />
+            {children}
+          </div>
+        </div>
+      </div>
+    </>
   );
 };

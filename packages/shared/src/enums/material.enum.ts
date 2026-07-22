@@ -22,6 +22,7 @@ export enum FileExtension {
 
 export enum LinkType {
   YOUTUBE = 'youtube',
+  VIDEO = 'video',
   VIMEO = 'vimeo',
   DRIVE = 'drive',
   EXTERNAL = 'external',
