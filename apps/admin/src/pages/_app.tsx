@@ -1,0 +1,155 @@
+import { ErrorBoundaryFallback, FullScreenLoader } from '@components/app';
+import { ColorModeContext } from '@components/contexts';
+import { InternetStatus } from '@components/others';
+import { Layout, StorageKey, Theme } from '@enums';
+import { AuthLayout, SidebarLayout } from '@layouts';
+import { ToastContainer } from '@modules/toasts';
+import { useStores } from '@stores';
+import '@styles/globals.scss';
+import { loadFirebaseUser } from '@utils/firebase';
+import { getToken, IS_WINDOW_UNDEFINED } from '@utils/helpers';
+import { observer } from 'mobx-react-lite';
+import type { NextPage } from 'next';
+import type { AppProps } from 'next/app';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { ErrorInfo, useEffect, useMemo, useState } from 'react';
+import { withErrorBoundary } from 'react-error-boundary';
+
+export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<P, IP> & {
+  layout: string;
+};
+
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithLayout;
+};
+
+type ThemeMode = 'light' | 'dark';
+
+function App({ Component, pageProps }: AppPropsWithLayout) {
+  const { isLoadingInitialData, isLoadedInitialData, loadInitialData } = useStores();
+  const { route, push } = useRouter();
+  const { layout } = Component;
+  const [isReady, setIsReady] = useState(false);
+  const [mode, setMode] = useState<ThemeMode>();
+
+  const setTheme = (currentTheme: ThemeMode) => {
+    setMode(currentTheme);
+    if (currentTheme === Theme.DARK) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  };
+
+  const colorMode = useMemo(
+    () => ({
+      toggleColorMode: () => {
+        const newMode = mode === Theme.DARK ? Theme.LIGHT : Theme.DARK;
+        localStorage.setItem(StorageKey.THEME, newMode);
+        setTheme(newMode);
+      },
+    }),
+    [mode],
+  );
+
+  const getLayout = () => {
+    switch (layout) {
+      case Layout.AUTH:
+        return (
+          <AuthLayout>
+            <Component {...pageProps} />
+          </AuthLayout>
+        );
+      case Layout.SIDEBAR:
+        return (
+          <SidebarLayout>
+            <Component {...pageProps} />
+          </SidebarLayout>
+        );
+      default:
+        return <Component {...pageProps} />;
+    }
+  };
+
+  const loadCurrentUser = async () => {
+    await loadFirebaseUser();
+    setIsReady(true);
+  };
+
+  const pushRoute = (url: string, obj = {}) => {
+    setTimeout(() => {
+      push({ pathname: url, query: { ...obj } }, undefined, { shallow: true });
+    }, 200);
+  };
+
+  useEffect(() => {
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const selectedTheme = localStorage.getItem(StorageKey.THEME) as ThemeMode | null;
+    const systemMode: ThemeMode = prefersDarkMode ? Theme.DARK : Theme.LIGHT;
+    const currentTheme: ThemeMode = selectedTheme || systemMode;
+    setTheme(currentTheme);
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      const stored = localStorage.getItem(StorageKey.THEME) as ThemeMode | null;
+      if (!stored) {
+        setTheme(e.matches ? Theme.DARK : Theme.LIGHT);
+      }
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  useEffect(() => {
+    if (!IS_WINDOW_UNDEFINED) loadCurrentUser();
+  }, []);
+
+  useEffect(() => {
+    if (!isReady) return;
+    const token = getToken();
+    const redirectUri = encodeURIComponent(window.location.pathname + window.location.search);
+    if (token) {
+      if (layout === Layout.AUTH) {
+        pushRoute('/home');
+      } else if (!isLoadingInitialData && !isLoadedInitialData) {
+        loadInitialData();
+      }
+    } else {
+      if (!Object.values([Layout.AUTH, Layout.ERROR, Layout.NONE]).includes(layout as Layout)) {
+        pushRoute('/signin', { redirectUri });
+      }
+    }
+    console.log('###route: ', route, isReady);
+  }, [route, isReady]);
+
+  if (!mode || !isReady) return null;
+
+  return (
+    <>
+      <Head>
+        <title>Acadimic Admin App</title>
+        <meta name="viewport" content="initial-scale=1, width=device-width" />
+        <meta name="description" content="Acadimic Admin App" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <ColorModeContext.Provider value={colorMode}>
+        {isLoadingInitialData || !isReady ? (
+          <FullScreenLoader loading={true} />
+        ) : (
+          <>
+            <InternetStatus />
+            <div data-theme={mode}>{getLayout()}</div>
+          </>
+        )}
+        <ToastContainer />
+      </ColorModeContext.Provider>
+    </>
+  );
+}
+
+const AppWithErrorBoundary = withErrorBoundary(observer(App), {
+  FallbackComponent: ErrorBoundaryFallback,
+  onError(error: Error, info: ErrorInfo) {
+    console.log(error, info);
+  },
+});
+
+export default AppWithErrorBoundary;

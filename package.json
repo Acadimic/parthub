@@ -11,6 +11,8 @@
     "build:server": "pnpm --filter @parthhub/server build",
     "dev:teaching": "pnpm --filter @parthhub/teaching dev",
     "build:teaching": "pnpm --filter @parthhub/teaching build",
+    "dev:admin": "pnpm --filter @parthhub/admin dev",
+    "build:admin": "pnpm --filter @parthhub/admin build",
     "lint": "pnpm -r --if-present run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,scss,css}\""
   },
