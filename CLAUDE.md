@@ -9,12 +9,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 pnpm install
 
 # Development
-pnpm dev:client          # Next.js dev server
+pnpm dev:learning        # Next.js dev server
 pnpm dev:server          # NestJS dev server (uses .env.development via env-cmd)
 
 # Build
 pnpm build:shared        # Build shared package (run first if shared types changed)
-pnpm build:client        # Build Next.js app
+pnpm build:learning      # Build Next.js app
 pnpm build:server        # Build NestJS app (nest build)
 
 # Lint & Format
@@ -22,16 +22,16 @@ pnpm lint                # Run ESLint across all workspaces
 pnpm format              # Prettier across all workspaces
 
 # Single workspace commands
-pnpm --filter @parthhub/client <script>
+pnpm --filter @parthhub/learning <script>
 pnpm --filter @parthhub/server <script>
 pnpm --filter @parthhub/shared <script>
 ```
 
 ## Architecture
 
-**Monorepo** with pnpm workspaces: `apps/client`, `apps/server`, `packages/shared`.
+**Monorepo** with pnpm workspaces: `apps/learning`, `apps/server`, `packages/shared`.
 
-### Client (`apps/client`) — Next.js 15 Pages Router
+### Learning (`apps/learning`) — Next.js 15 Pages Router
 
 - **State management:** MobX State Tree. Root store in `src/stores/root.store.ts` with sub-stores (user, course, material, selector, toast). Access via `useStores()` hook. Async actions use MST `flow(function*(...) { ... })`.
 - **Layouts:** Pages declare their layout via `Component.layout = Layout.AUTH | Layout.SIDEBAR | ...`. Layout components live in `src/layouts/`.
@@ -58,7 +58,7 @@ Enums, DTOs, and interfaces consumed by both client and server. Compiled with `t
 
 ## Path Aliases
 
-**Client** (`apps/client/tsconfig.json`):
+**Learning** (`apps/learning/tsconfig.json`):
 `@pages/*`, `@components/*`, `@modules/*`, `@enums`, `@utils/*`, `@interfaces`, `@services`, `@stores`, `@layouts`, `@themes`, `@styles/*`, `@hooks/*`
 
 **Server** (`apps/server/tsconfig.json`):
@@ -67,5 +67,5 @@ Enums, DTOs, and interfaces consumed by both client and server. Compiled with `t
 ## Code Style
 
 - Prettier: 120 char width, single quotes, trailing commas, 2-space indent, LF line endings
-- Client ESLint: next/core-web-vitals + prettier
+- Learning ESLint: next/core-web-vitals + prettier
 - Server ESLint: @typescript-eslint/recommended + prettier (loose — `noImplicitAny: false`, `strictNullChecks: false`)
