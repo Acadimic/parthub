@@ -1,0 +1,232 @@
+import { Label, Modal, ModalFooter, Select, TextArea, TextInput, UploadFiles } from '@components/app';
+import { PositionType } from '@enums';
+import { useAttachment } from '@hooks/attachment.hook';
+import { ISelectItem } from '@interfaces';
+import { CourseService } from '@services';
+import { useStores } from '@stores';
+import { ALL } from '@utils/constants';
+import { errorToast, successToast } from '@utils/helpers';
+import { observer } from 'mobx-react-lite';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+
+interface IProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
+  const { push } = useRouter();
+  const { selectorStore, standardStore, courseStore } = useStores();
+  const { selectedCourseId, selectedCourse, removeSelectedCourseId, selectedCoursePlans } = selectorStore;
+  const { standardItems } = standardStore;
+  const { removeCourseById, loadCoursePlans, calculateAndSetCourseStatsByCourseId } = courseStore;
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const { uploadFilesToS3 } = useAttachment();
+
+  const closeModal = async () => {
+    if (!selectedCourse) return;
+    if (selectedCourse.isNew) removeCourseById(selectedCourse._id);
+    removeSelectedCourseId();
+    setSelectedFiles([]);
+    onClose();
+  };
+
+  const handleStandardsChange = (values: ISelectItem[]) => {
+    if (!selectedCourse) return;
+    selectedCourse.setStandards(values.map((value) => value.value));
+  };
+
+  const handleSubjectsChange = (values: ISelectItem[]) => {
+    if (!selectedCourse) return;
+    selectedCourse.setSubjects(values.map((value) => value.value));
+  };
+
+  const saveCourse = async () => {
+    if (!selectedCourse) return;
+    try {
+      if (selectedCourse.name.trim() === '') {
+        errorToast({ message: 'Please enter a valid course name.' });
+        return;
+      }
+      if (selectedCourse.standards.length === 0) {
+        errorToast({ message: 'Please select at least one standard.' });
+        return;
+      }
+      if (selectedCourse.attachments.length === 0 && selectedFiles.length === 0) {
+        errorToast({ message: 'Please add at least one course image.' });
+        return;
+      }
+      for (const plan of selectedCoursePlans) {
+        if (plan.amount === 0 || plan.realAmount === 0) {
+          errorToast({ message: 'Please enter valid amount for each plan.' });
+          return;
+        }
+        if (plan.amount > plan.realAmount) {
+          errorToast({ message: 'Real amount should be greater than or equal to amount.' });
+          return;
+        }
+        if (plan.name.trim() === '') {
+          errorToast({ message: 'Please enter a valid plan name.' });
+          return;
+        }
+      }
+      if (selectedCoursePlans.length === 0) {
+        errorToast({ message: 'Please add at least one plan.' });
+        return;
+      }
+      setIsLoading(true);
+      const attachments = await uploadFilesToS3(selectedCourse._id, selectedFiles);
+      attachments && selectedCourse.setAttachments(attachments);
+      calculateAndSetCourseStatsByCourseId(selectedCourse._id);
+      await CourseService.upsertCourseAndPlans({ course: selectedCourse, plans: selectedCoursePlans });
+      selectedCourse.resetIsNew();
+      selectedCoursePlans.forEach((plan) => plan.resetIsNew());
+      successToast({ message: 'Course and plans created successfully.' });
+      setTimeout(() => {
+        push(
+          { pathname: `/courses/${selectedCourse._id}`, query: { name: selectedCourse.name } },
+          `/courses/${selectedCourse._id}`,
+        );
+      }, 500);
+      setSelectedFiles([]);
+      onClose();
+    } catch {
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    const files = [...selectedFiles];
+    files.splice(index, 1);
+    setSelectedFiles(files);
+  };
+
+  useEffect(() => {
+    if (selectedCourse && !selectedCourse.isNew) loadCoursePlans(selectedCourse._id);
+  }, [selectedCourseId]);
+
+  return (
+    <>
+      <Modal
+        position={PositionType.RIGHT}
+        title="Create Course"
+        isOpen={isOpen}
+        isLoading={isLoading}
+        onClose={closeModal}
+        component={
+          selectedCourse && (
+            <div className="min-h-[60vh] pb-4">
+              <div className="flex flex-col space-y-3">
+                <TextInput
+                  label="Course Name"
+                  value={selectedCourse.name}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => selectedCourse.setName(e.target.value)}
+                  required
+                />
+                <TextArea
+                  label="Course Description"
+                  value={selectedCourse.description || ''}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    selectedCourse.setDescription(e.target.value)
+                  }
+                />
+                <Select
+                  label="Standards"
+                  items={standardItems}
+                  required
+                  isGrouped
+                  values={selectedCourse.standards}
+                  onChange={handleStandardsChange}
+                  isCloseOnSelect={true}
+                />
+                <Select
+                  label="Subjects"
+                  items={[...selectedCourse.subjectItems, { label: 'All', value: ALL }]}
+                  values={selectedCourse.subjects.length || selectedCourse.isNew ? selectedCourse.subjects : [ALL]}
+                  onChange={handleSubjectsChange}
+                />
+                <div>
+                  <Label label="Course Image" required />
+                  <div className="flex justify-center mt-1 w-full">
+                    <div className="w-full border border-dotted border-color-border py-2 px-2">
+                      <UploadFiles
+                        selectedFiles={selectedFiles}
+                        setSelectedFiles={setSelectedFiles}
+                        removeFile={removeFile}
+                        isImage
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div>
+                    <Label label="Plans" required />
+                  </div>
+                  <div className="flex flex-col gap-2.5">
+                    {selectedCoursePlans.map((plan) => {
+                      return (
+                        <div key={plan._id} className="">
+                          <div className="flex flex-col md:flex-row gap-2.5">
+                            <div className="w-full md:w-[33.33%]">
+                              <TextInput
+                                label="Plan Name"
+                                value={plan.name}
+                                className="w-32"
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => plan.setName(e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className="w-full md:w-[33.33%]">
+                              <TextInput
+                                type="number"
+                                label="Amount"
+                                value={plan.amount === 0 ? '' : plan.amount}
+                                className="w-32"
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                  const intValue = parseInt(e.target.value);
+                                  if (!isNaN(intValue)) plan.setAmount(Math.abs(intValue));
+                                  else plan.setAmount(0);
+                                }}
+                                required
+                              />
+                            </div>
+                            <div className="w-full md:w-[33.33%]">
+                              <TextInput
+                                type="number"
+                                label="Real Amount"
+                                className="w-32"
+                                value={plan.realAmount === 0 ? '' : plan.realAmount}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                  const intValue = parseInt(e.target.value);
+                                  if (!isNaN(intValue)) plan.setRealAmount(Math.abs(intValue));
+                                  else plan.setRealAmount(0);
+                                }}
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        }
+        footer={
+          <ModalFooter
+            saveText="Save"
+            cancelText="Cancel"
+            onSave={saveCourse}
+            onCancel={closeModal}
+            isLoading={isLoading}
+          />
+        }
+      />
+    </>
+  );
+});

@@ -1,0 +1,160 @@
+import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { PaperType, SectionCategoryType, SectionType } from '../enums';
+import { TestPaperService } from '../services';
+import { getObjectId } from '../utils/helpers';
+import { DefaultMarkingType, ITestPaper, ITestPaperSection, TestPaper, TestPaperSection } from './models';
+import { IStore } from './root.store';
+
+export const TestPaperStore = t
+  .model({
+    testPaperMaps: t.map(TestPaper),
+    testPaperSectionMaps: t.map(TestPaperSection),
+    isLoadingTestPapers: t.optional(t.boolean, false),
+    isLoadedTestPapers: t.optional(t.boolean, false),
+    isLoadingTestPaperSections: t.optional(t.boolean, false),
+    isLoadedTestPaperSections: t.optional(t.boolean, false),
+  })
+  .views((self) => ({
+    get rootStore() {
+      return getRoot<IStore>(self);
+    },
+
+    getTestPaperById(testPaperId: string): ITestPaper | undefined {
+      return testPaperId ? self.testPaperMaps.get(testPaperId) : undefined;
+    },
+
+    getTestPaperSectionById(testPaperSectionId: string): ITestPaperSection | undefined {
+      return testPaperSectionId ? self.testPaperSectionMaps.get(testPaperSectionId) : undefined;
+    },
+
+    get testPapers(): ITestPaper[] {
+      return Array.from(self.testPaperMaps.values());
+    },
+
+    get testPaperSections(): ITestPaperSection[] {
+      return Array.from(self.testPaperSectionMaps.values());
+    },
+  }))
+  .views((self) => ({
+    getTestPapersByIds(ids: string[]): ITestPaper[] {
+      const items: ITestPaper[] = [];
+      ids.forEach((id) => {
+        const item = self.getTestPaperById(id);
+        if (item) items.push(item);
+      });
+      return items;
+    },
+
+    getTestPaperSectionsByIds(ids: string[]): ITestPaperSection[] {
+      const items: ITestPaperSection[] = [];
+      ids.forEach((id) => {
+        const item = self.getTestPaperSectionById(id);
+        if (item) items.push(item);
+      });
+      return items;
+    },
+
+    getTestPapersByStandardIds(standardIds: string[]): ITestPaper[] {
+      const items: ITestPaper[] = [];
+      self.testPapers.forEach((item) => {
+        if (item.standards.some((standardId) => standardIds.includes(standardId))) items.push(item);
+      });
+      return items;
+    },
+  }))
+  .actions((self) => ({
+    addTestPaper: (obj: ITestPaper) => {
+      if (!obj) return;
+      const objId = obj._id;
+      const isObj = self.testPaperMaps.has(objId);
+      if (isObj) self.testPaperMaps.set(objId, obj);
+      else self.testPaperMaps.put(obj);
+    },
+
+    addTestPaperSection: (obj: ITestPaperSection) => {
+      if (!obj) return;
+      const objId = obj._id;
+      const isObj = self.testPaperSectionMaps.has(objId);
+      if (isObj) self.testPaperSectionMaps.set(objId, obj);
+      else self.testPaperSectionMaps.put(obj);
+    },
+
+    removeTestPaper: (id: string) => {
+      self.testPaperMaps.delete(id);
+    },
+
+    removeTestPaperCategry: (id: string) => {
+      self.testPaperSectionMaps.delete(id);
+    },
+  }))
+  .actions((self) => ({
+    addTestPapers: (objects: ITestPaper[]) => {
+      objects.forEach((obj) => self.addTestPaper(obj));
+    },
+
+    addTestPaperSections: (objects: ITestPaperSection[]) => {
+      objects.forEach((obj) => self.addTestPaperSection(obj));
+    },
+  }))
+  .actions((self) => ({
+    loadTestPapers: flow(function* () {
+      if (self.isLoadingTestPapers) return;
+      self.isLoadingTestPapers = true;
+      const result = yield TestPaperService.getTestPapers();
+      if (result?.data) self.addTestPapers(result.data);
+      self.isLoadingTestPapers = false;
+      self.isLoadedTestPapers = true;
+    }),
+
+    loadTestPaperSectionsWithQuestions: flow(function* (testPaperId: string) {
+      self.isLoadingTestPaperSections = true;
+      const result = yield TestPaperService.getTestPaperSectionsWithQuestions(testPaperId);
+      if (result?.data) {
+        const { sections, questions, options, solutions } = result.data;
+        self.addTestPaperSections(sections);
+        self.rootStore.questionStore.addQuestions(questions);
+        self.rootStore.questionStore.addOptions(options);
+        self.rootStore.questionStore.addSolutions(solutions);
+      }
+      self.isLoadingTestPaperSections = false;
+      self.isLoadedTestPaperSections = true;
+    }),
+  }))
+  .actions((self) => ({
+    createTestPaper: () => {
+      const testPaper = TestPaper.create({
+        _id: getObjectId(),
+        name: '',
+        slug: '',
+        isNew: true,
+        standards: [],
+        sections: [],
+        paperType: PaperType.QUIZ,
+        ...self.rootStore.selectorStore.selectedData,
+      });
+      self.addTestPaper(testPaper);
+      self.rootStore.selectorStore.setSelectedTestPaperId(testPaper._id);
+      return testPaper;
+    },
+
+    createTestPaperSection: (
+      sectionType: SectionType,
+      sectionCategory: SectionCategoryType,
+      defaultMarkings: DefaultMarkingType,
+    ) => {
+      const testPaperSection = TestPaperSection.create({
+        _id: getObjectId(),
+        name: '',
+        isNew: true,
+        sectionType,
+        sectionCategory,
+        defaultMarkings,
+        ...self.rootStore.selectorStore.selectedData,
+      });
+      self.addTestPaperSection(testPaperSection);
+      self.rootStore.selectorStore.setSelectedTestPaperSectionId(testPaperSection._id);
+      return testPaperSection;
+    },
+  }));
+
+export type ITestPaperStore = Instance<typeof TestPaperStore>;

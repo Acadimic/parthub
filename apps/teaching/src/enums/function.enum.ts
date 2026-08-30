@@ -1,0 +1,36 @@
+export enum DirectionType {
+  UP = 'up',
+  DOWN = 'down',
+  LEFT = 'left',
+  RIGHT = 'right',
+}
+
+export enum IconPosition {
+  START = 'start',
+  END = 'end',
+  TOP = 'top',
+  BOTTOM = 'bottom',
+}
+
+export enum FunctionType {
+  FRACTION = 'Fraction (A/B)',
+  SYMBOLS = 'Symbols',
+  DRAW_IMAGE = 'Draw Image',
+  UPLOAD_IMAGE = 'Upload Image',
+  SQUARE_ROOT = 'Square Root',
+  DETERMINANT = 'Determinant',
+  METRICS = 'Metrics',
+  TABLE = 'Table',
+  TRANSPARENT_TABLE = 'Transparent Table',
+  BRACKETS = 'Brackets',
+  LIMIT = 'Limit',
+  INTEGRATION = 'Integration',
+  SUM = 'Sum',
+  UNIT_VECTOR = 'Unit Vector',
+  VECTOR = 'Vector',
+  CHEMICAL_EQUATION = 'Chemical Equation',
+  SUPERSCRIPT = 'Superscript',
+  SUBSCRIPT = 'Subscript',
+  OVERLINE = 'Overline',
+  CUBE_ROOT = 'Cube Root',
+}

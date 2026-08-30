@@ -9,6 +9,8 @@
     "build:shared": "pnpm --filter @parthhub/shared build",
     "build:client": "pnpm --filter @parthhub/client build",
     "build:server": "pnpm --filter @parthhub/server build",
+    "dev:teaching": "pnpm --filter @parthhub/teaching dev",
+    "build:teaching": "pnpm --filter @parthhub/teaching build",
     "lint": "pnpm -r --if-present run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,scss,css}\""
   },

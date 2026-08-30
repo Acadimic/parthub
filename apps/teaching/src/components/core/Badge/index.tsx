@@ -1,0 +1,25 @@
+import { Badge as ShadcnBadge } from '@components/ui/badge';
+import { cn } from '@utils/cn';
+
+interface IBadgeProps {
+  children: React.ReactNode;
+  variant?: 'default' | 'secondary' | 'destructive' | 'outline';
+  className?: string;
+}
+
+export const Badge = ({ children, variant = 'default', className }: IBadgeProps) => {
+  return (
+    <ShadcnBadge
+      variant={variant}
+      className={cn(
+        'text-xs font-medium',
+        variant === 'default' && 'bg-blue-primary hover:bg-blue-primary/90',
+        className,
+      )}
+    >
+      {children}
+    </ShadcnBadge>
+  );
+};
+
+export type { IBadgeProps };
