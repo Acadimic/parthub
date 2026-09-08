@@ -86,3 +86,11 @@ export class GetByMeetIdsDto {
   @IsMongoId({ each: true })
   ids: string[];
 }
+
+/** Body of `meet/add-attendees/:meetId` and `meet/remove-attendees/:meetId`. */
+export class MeetAttendeesDto {
+  @IsNotEmpty()
+  @IsArray()
+  @IsMongoId({ each: true })
+  attendeeIds: string[];
+}

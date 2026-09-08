@@ -21,7 +21,6 @@
       "@enums": ["./src/enums"],
       "@utils": ["./src/utils"],
       "@utils/*": ["./src/utils/*"],
-      "@pipes": ["./src/pipes"],
       "@database/*": ["./src/database/*"],
       "@dtos": ["./src/dtos"],
       "@constants": ["./src/constants"]

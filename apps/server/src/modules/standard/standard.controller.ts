@@ -1,7 +1,7 @@
 import { PermissionItem, Subdomain } from '@repo/shared';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, ParseArrayPipe } from '@nestjs/common';
 import { StandardService } from './standard.service';
 import { StandardSubjectMappingService } from './standard-subject-mapping.service';
 import { StandardDto, StandardSubjectMappingDto } from '@repo/shared/validations';
@@ -24,7 +24,10 @@ export class StandardController {
   @Post('bulk-upsert')
   @Subdomains(Subdomain.ADMIN)
   @Permissions(PermissionItem.MANAGE_STANDARD)
-  async bulkUpsertStandards(@Body() payloads: StandardDto[]) {
+  async bulkUpsertStandards(
+    @Body(new ParseArrayPipe({ items: StandardDto, whitelist: true, forbidNonWhitelisted: true }))
+    payloads: StandardDto[],
+  ) {
     const data = await this.standardService.bulkUpsert(payloads);
     return data;
   }
@@ -48,7 +51,10 @@ export class StandardController {
   @Post('mapping/bulk-upsert')
   @Subdomains(Subdomain.ADMIN)
   @Permissions(PermissionItem.MANAGE_STANDARD)
-  async bulkUpsertMappings(@Body() payloads: StandardSubjectMappingDto[]) {
+  async bulkUpsertMappings(
+    @Body(new ParseArrayPipe({ items: StandardSubjectMappingDto, whitelist: true, forbidNonWhitelisted: true }))
+    payloads: StandardSubjectMappingDto[],
+  ) {
     const data = await this.standardSubjectMappingService.upsertMany(payloads);
     return data;
   }

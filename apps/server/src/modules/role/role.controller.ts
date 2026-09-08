@@ -14,7 +14,10 @@ export class RoleController {
 
   @Post('/bulk/upsert')
   @Permissions(PermissionItem.EDIT_ROLE)
-  async upsertRole(@Body(new ParseArrayPipe({ items: RoleDto })) payloads: RoleDto[]): Promise<RoleDto[]> {
+  async upsertRole(
+    @Body(new ParseArrayPipe({ items: RoleDto, whitelist: true, forbidNonWhitelisted: true }))
+    payloads: RoleDto[],
+  ): Promise<RoleDto[]> {
     return await this.roleService.upsertBulk(payloads);
   }
 

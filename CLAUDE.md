@@ -109,7 +109,7 @@ Shared React layer for the apps (see "Where shared code lives"). No build step; 
 `@pages/*`, `@components/*`, `@modules/*`, `@enums`, `@utils/*`, `@interfaces`, `@services`, `@stores`, `@layouts`, `@themes`, `@styles/*`, `@hooks/*`
 
 **Server** (`apps/server/tsconfig.json`):
-`@modules/*`, `@config`, `@strategies`, `@decorators`, `@guards`, `@interfaces`, `@enums`, `@utils`, `@pipes`, `@base-schemas`, `@dtos`, `@constants`
+`@modules/*`, `@config`, `@strategies`, `@decorators`, `@guards`, `@interfaces`, `@enums`, `@utils`, `@base-schemas`, `@dtos`, `@constants`
 
 ## Code Style
 

@@ -300,3 +300,17 @@ export class InitialDataDto {
   users: UserDto[];
   orgs: OrgDto[];
 }
+
+/** Body of `user/revoke` and `user/restore`. */
+export class UserIdDto {
+  @IsNotEmpty()
+  @IsMongoId()
+  userId: string;
+}
+
+/** Body of `user/update-role`. */
+export class UpdateUserRoleDto extends UserIdDto {
+  @IsNotEmpty()
+  @IsMongoId()
+  roleId: string;
+}

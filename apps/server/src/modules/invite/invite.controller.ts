@@ -4,7 +4,7 @@ import { Public } from '@decorators/public.decorator';
 import { PermissionService } from '@modules/permissions/permission.service';
 import { Body, Controller, Get, Param, ParseArrayPipe, Post } from '@nestjs/common';
 import { PermissionItem, Subdomain } from '@repo/shared';
-import { InviteLookupDto, InviteDto, InviteUserDto } from '@repo/shared/validations';
+import { InviteIdDto, InviteLookupDto, InviteDto, InviteUserDto } from '@repo/shared/validations';
 import { InviteService } from './invite.service';
 
 @Controller('invite')
@@ -24,7 +24,8 @@ export class InviteController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_STAFF)
   async upsertInvite(
-    @Body(new ParseArrayPipe({ items: InviteUserDto })) payloads: InviteUserDto[],
+    @Body(new ParseArrayPipe({ items: InviteUserDto, whitelist: true, forbidNonWhitelisted: true }))
+    payloads: InviteUserDto[],
   ): Promise<InviteDto[]> {
     return await this.inviteService.upsertBulk(payloads);
   }
@@ -39,14 +40,14 @@ export class InviteController {
   @Post('/delete')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_STAFF)
-  async deleteInvite(@Body() body: { inviteId: string }): Promise<void> {
+  async deleteInvite(@Body() body: InviteIdDto): Promise<void> {
     await this.inviteService.deleteInvite(body.inviteId);
   }
 
   @Post('/resend')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_STAFF)
-  async resendInvite(@Body() body: { inviteId: string }): Promise<InviteDto> {
+  async resendInvite(@Body() body: InviteIdDto): Promise<InviteDto> {
     return await this.inviteService.resendInvite(body.inviteId);
   }
 }

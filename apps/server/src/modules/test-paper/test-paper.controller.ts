@@ -4,7 +4,7 @@ import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { TestPaperService } from './test-paper.service';
 import { RequestContextService } from '../../context/request-context.service';
-import { TestPaperDto } from '@repo/shared/validations';
+import { MergeTestPapersDto, TestPaperDto } from '@repo/shared/validations';
 
 @Controller('test-paper')
 export class TestPaperController {
@@ -42,7 +42,7 @@ export class TestPaperController {
   @Post('merge')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_TEST_PAPER)
-  async mergeTestPapers(@Body() payload: { primaryTestPaperId: string; secondaryTestPaperId: string }) {
+  async mergeTestPapers(@Body() payload: MergeTestPapersDto) {
     const data = await this.testPaperService.mergeTestPapers(
       this.requestContextService.getOrgId(),
       payload.primaryTestPaperId,

@@ -51,3 +51,10 @@ export class InviteDto {
   @IsNotEmpty()
   acceptedDate?: string;
 }
+
+/** Body of `invite/delete` and `invite/resend`. */
+export class InviteIdDto {
+  @IsNotEmpty()
+  @IsMongoId()
+  inviteId: string;
+}

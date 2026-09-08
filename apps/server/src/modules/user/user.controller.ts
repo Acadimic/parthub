@@ -4,7 +4,15 @@ import { User } from '@decorators/user.decorator';
 import { PermissionService } from '@modules/permissions/permission.service';
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { PermissionItem, Subdomain } from '@repo/shared';
-import { AcceptInviteDto, InitialDataDto, UpdateOrgUserDto, UpdateProfileDto, UserDto } from '@repo/shared/validations';
+import {
+  AcceptInviteDto,
+  InitialDataDto,
+  UpdateOrgUserDto,
+  UpdateProfileDto,
+  UpdateUserRoleDto,
+  UserDto,
+  UserIdDto,
+} from '@repo/shared/validations';
 import { INITIAL_LOGIN_DATA_URL } from '@utils/constants';
 import { UserService } from './user.service';
 
@@ -47,21 +55,21 @@ export class UserController {
   @Post('revoke')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_STAFF)
-  async revokeAccess(@Body() body: { userId: string }): Promise<void> {
+  async revokeAccess(@Body() body: UserIdDto): Promise<void> {
     await this.userService.revokeAccess(body.userId);
   }
 
   @Post('restore')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_STAFF)
-  async restoreAccess(@Body() body: { userId: string }): Promise<void> {
+  async restoreAccess(@Body() body: UserIdDto): Promise<void> {
     await this.userService.restoreAccess(body.userId);
   }
 
   @Post('update-role')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_STAFF)
-  async updateUserRole(@Body() body: { userId: string; roleId: string }): Promise<void> {
+  async updateUserRole(@Body() body: UpdateUserRoleDto): Promise<void> {
     await this.userService.updateUserRole(body.userId, body.roleId);
   }
 

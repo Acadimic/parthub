@@ -103,3 +103,14 @@ export class TestPaperDto extends BaseOwnedDto {
   @IsEnum(PaperCategoryType)
   paperCategory?: PaperCategoryType;
 }
+
+/** Body of `test-paper/merge`. The secondary paper's sections move onto the primary. */
+export class MergeTestPapersDto {
+  @IsNotEmpty()
+  @IsMongoId()
+  primaryTestPaperId: string;
+
+  @IsNotEmpty()
+  @IsMongoId()
+  secondaryTestPaperId: string;
+}

@@ -4,7 +4,7 @@ import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { MaterialService } from './material.service';
 import { RequestContextService } from '../../context/request-context.service';
-import { MaterialDto } from '@repo/shared/validations';
+import { MaterialDto, StandardSubjectQueryDto } from '@repo/shared/validations';
 
 @Controller('material')
 export class MaterialController {
@@ -34,7 +34,7 @@ export class MaterialController {
   @Post('standard/subject/all')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.VIEW_MATERIAL)
-  async getStandardAndSubjectMaterials(@Body() body: { standard: string; subject: string }) {
+  async getStandardAndSubjectMaterials(@Body() body: StandardSubjectQueryDto) {
     const org = this.requestContextService.getOrgId();
     const data = await this.materialService.getStandardAndSubjectMaterials(org, body.standard, body.subject);
     return data;
