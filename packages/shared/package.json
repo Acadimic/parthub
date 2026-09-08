@@ -20,6 +20,10 @@
     "./interfaces": {
       "types": "./dist/interfaces/index.d.ts",
       "default": "./dist/interfaces/index.js"
+    },
+    "./contracts": {
+      "types": "./dist/contracts/index.d.ts",
+      "default": "./dist/contracts/index.js"
     }
   },
   "typesVersions": {
@@ -32,6 +36,9 @@
       ],
       "interfaces": [
         "dist/interfaces/index.d.ts"
+      ],
+      "contracts": [
+        "dist/contracts/index.d.ts"
       ]
     }
   },
