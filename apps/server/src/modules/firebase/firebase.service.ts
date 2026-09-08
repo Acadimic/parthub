@@ -1,34 +1,42 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Secrets } from '@secrets/secrets';
 import { SecretsService } from '@secrets/secrets.service';
-import * as firebase from 'firebase-admin';
-import { DecodedIdToken } from 'firebase-admin/auth';
+import { type App, cert, initializeApp } from 'firebase-admin/app';
+import { type Auth, type DecodedIdToken, getAuth, type UserRecord } from 'firebase-admin/auth';
 import { isEmpty, isNil } from 'lodash';
 import { CreateFirebaseUserDto, FirebaseUserUpdatePayloadDto, UpdateFirebaseUserDto } from './firebase.dto';
 
 @Injectable()
 export class FirebaseService {
-  private defaultApp: firebase.app.App | undefined;
+  private defaultApp: App | undefined;
+
   constructor(private secretsService: SecretsService) {
     const base64 = secretsService.get(Secrets.FIREBASE_AUTH_BASE_64) as string;
     const firebaseParams = base64 && (JSON.parse(Buffer.from(base64, 'base64').toString()) as string);
-    this.defaultApp = firebaseParams
-      ? firebase.initializeApp({
-          credential: firebase.credential.cert(firebaseParams),
-        })
-      : undefined;
+    this.defaultApp = firebaseParams ? initializeApp({ credential: cert(firebaseParams) }) : undefined;
+  }
+
+  /**
+   * The Auth service, or undefined when no credentials were configured.
+   *
+   * firebase-admin 14 removed the legacy namespace, so `app.auth()` is gone and the modular
+   * `getAuth(app)` is the entry point. Kept optional so a server without FIREBASE_AUTH_BASE_64
+   * still boots — every caller already handles the undefined case.
+   */
+  private auth(): Auth | undefined {
+    return this.defaultApp ? getAuth(this.defaultApp) : undefined;
   }
 
   async getUser(uid: string) {
-    return await this.defaultApp?.auth().getUser(uid);
+    return await this.auth()?.getUser(uid);
   }
 
-  async getUserByEmail(email: string): Promise<firebase.auth.UserRecord | undefined> {
-    return await this.defaultApp?.auth().getUserByEmail(email);
+  async getUserByEmail(email: string): Promise<UserRecord | undefined> {
+    return await this.auth()?.getUserByEmail(email);
   }
 
   async createCustomToken(uid: string): Promise<string | undefined> {
-    return await this.defaultApp?.auth().createCustomToken(uid);
+    return await this.auth()?.createCustomToken(uid);
   }
 
   async updateUser(payload: FirebaseUserUpdatePayloadDto) {
@@ -41,25 +49,25 @@ export class FirebaseService {
     }
     if (!isNil(isEmailVerified)) firebasePayload.emailVerified = isEmailVerified;
     if (isEmpty(firebasePayload)) return;
-    return await this.defaultApp?.auth().updateUser(uid, firebasePayload);
+    return await this.auth()?.updateUser(uid, firebasePayload);
   }
 
   async updatePassword(uid: string, password: string) {
     const firebaseUser = await this.getUser(uid);
     if (!firebaseUser) throw new NotFoundException('Firebase user not found!');
-    return await this.defaultApp?.auth().updateUser(uid, { password });
+    return await this.auth()?.updateUser(uid, { password });
   }
 
   async generateEmailVerificationLink(email: string): Promise<string> {
-    return (await this.defaultApp?.auth().generateEmailVerificationLink(email)) as string;
+    return (await this.auth()?.generateEmailVerificationLink(email)) as string;
   }
 
   async generatePasswordResetLink(email: string): Promise<string> {
-    return (await this.defaultApp?.auth().generatePasswordResetLink(email)) as string;
+    return (await this.auth()?.generatePasswordResetLink(email)) as string;
   }
 
   async createUser(firebaseUser: CreateFirebaseUserDto) {
-    return await this.defaultApp?.auth().createUser(firebaseUser);
+    return await this.auth()?.createUser(firebaseUser);
   }
 
   async upsertUser(firebaseUser: CreateFirebaseUserDto) {
@@ -71,7 +79,7 @@ export class FirebaseService {
   }
 
   async deleteFirebaseUser(uid: string) {
-    return await this.defaultApp?.auth().deleteUser(uid);
+    return await this.auth()?.deleteUser(uid);
   }
 
   async deleteFirebaseUserByEmail(email: string) {
@@ -81,12 +89,10 @@ export class FirebaseService {
   }
 
   async validateToken(token: string): Promise<DecodedIdToken | void> {
-    const firebaseUser = await this.defaultApp
-      ?.auth()
-      .verifyIdToken(token, true)
-      .catch((err) => {
-        console.error(err);
+    return await this.auth()
+      ?.verifyIdToken(token, true)
+      .catch((error: unknown) => {
+        console.error(error);
       });
-    return firebaseUser;
   }
 }
