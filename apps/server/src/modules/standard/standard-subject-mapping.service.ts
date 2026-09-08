@@ -14,7 +14,7 @@ export class StandardSubjectMappingService {
   async upsert(payload: StandardSubjectMappingDto): Promise<StandardSubjectMappingDocument> {
     const { _id } = payload;
     return this.mappingModel
-      .findOneAndUpdate({ _id }, { ...payload }, { new: true, upsert: true, runValidators: true })
+      .findOneAndUpdate({ _id }, { ...payload }, { returnDocument: 'after', upsert: true, runValidators: true })
       .lean<StandardSubjectMappingDocument>();
   }
 

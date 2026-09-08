@@ -18,7 +18,7 @@ export class StudentStandardMappingService {
       .findOneAndUpdate(
         { student: payload.student, standard: payload.standard, org },
         { ...payload, $setOnInsert: { enrolledAt: new Date() } },
-        { new: true, upsert: true, runValidators: true },
+        { returnDocument: 'after', upsert: true, runValidators: true },
       )
       .lean<StudentStandardMappingDocument>();
   }

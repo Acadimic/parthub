@@ -13,7 +13,7 @@ export class BookmarkService {
       .findOneAndUpdate(
         { createdBy: userId, collectionItem: payload.collectionItem, collectionRef: payload.collectionRef },
         { ...payload },
-        { new: true, upsert: true, runValidators: true },
+        { returnDocument: 'after', upsert: true, runValidators: true },
       )
       .lean<BookmarkDocument>();
   }

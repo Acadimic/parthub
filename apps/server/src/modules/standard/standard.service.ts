@@ -11,7 +11,7 @@ export class StandardService {
   async upsert(payload: StandardDto): Promise<StandardDocument> {
     const { _id } = payload;
     return this.standardModel
-      .findOneAndUpdate({ _id }, { ...payload }, { new: true, upsert: true, runValidators: true })
+      .findOneAndUpdate({ _id }, { ...payload }, { returnDocument: 'after', upsert: true, runValidators: true })
       .lean<StandardDocument>();
   }
 

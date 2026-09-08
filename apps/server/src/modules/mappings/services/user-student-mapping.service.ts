@@ -15,7 +15,7 @@ export class UserStudentMappingService {
       .findOneAndUpdate(
         { user: payload.user, student: payload.student, org },
         { ...payload },
-        { new: true, upsert: true, runValidators: true },
+        { returnDocument: 'after', upsert: true, runValidators: true },
       )
       .lean<UserStudentMappingDocument>();
   }

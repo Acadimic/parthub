@@ -15,7 +15,7 @@ export class TestPaperService {
         // org in the filter so an upsert cannot reach another organization's document
         { _id, org },
         { ...payload },
-        { new: true, upsert: true, runValidators: true },
+        { returnDocument: 'after', upsert: true, runValidators: true },
       )
       .lean<TestPaperDocument>();
   }
@@ -31,7 +31,7 @@ export class TestPaperService {
     maxMarks: number,
   ): Promise<TestPaperDocument | null> {
     return this.testPaperModel
-      .findOneAndUpdate({ _id: testPaperId, org }, { totalQuestions, maxMarks }, { new: true })
+      .findOneAndUpdate({ _id: testPaperId, org }, { totalQuestions, maxMarks }, { returnDocument: 'after' })
       .lean<TestPaperDocument>();
   }
 
@@ -58,7 +58,7 @@ export class TestPaperService {
             mergedTestPapers: secondaryTestPaperId,
           },
         },
-        { new: true, runValidators: true },
+        { returnDocument: 'after', runValidators: true },
       )
       .lean<TestPaperDocument>();
   }

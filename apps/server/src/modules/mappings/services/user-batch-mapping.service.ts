@@ -15,7 +15,7 @@ export class UserBatchMappingService {
       .findOneAndUpdate(
         { user: payload.user, batch: payload.batch, org },
         { ...payload },
-        { new: true, upsert: true, runValidators: true },
+        { returnDocument: 'after', upsert: true, runValidators: true },
       )
       .lean<UserBatchMappingDocument>();
   }

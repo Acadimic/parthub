@@ -15,7 +15,7 @@ export class MeetService {
         // org in the filter so an upsert cannot reach another organization's document
         { _id, org },
         { ...payload },
-        { new: true, upsert: true, runValidators: true },
+        { returnDocument: 'after', upsert: true, runValidators: true },
       )
       .lean<MeetDocument>();
   }
@@ -31,19 +31,27 @@ export class MeetService {
 
   async addAttendees(org: Types.ObjectId, meetId: string, attendeeIds: string[]): Promise<MeetDocument | null> {
     return this.meetModel
-      .findOneAndUpdate({ _id: meetId, org }, { $addToSet: { attendees: { $each: attendeeIds } } }, { new: true })
+      .findOneAndUpdate(
+        { _id: meetId, org },
+        { $addToSet: { attendees: { $each: attendeeIds } } },
+        { returnDocument: 'after' },
+      )
       .lean<MeetDocument>();
   }
 
   async removeAttendees(org: Types.ObjectId, meetId: string, attendeeIds: string[]): Promise<MeetDocument | null> {
     return this.meetModel
-      .findOneAndUpdate({ _id: meetId, org }, { $pull: { attendees: { $in: attendeeIds } } }, { new: true })
+      .findOneAndUpdate(
+        { _id: meetId, org },
+        { $pull: { attendees: { $in: attendeeIds } } },
+        { returnDocument: 'after' },
+      )
       .lean<MeetDocument>();
   }
 
   async delete(org: Types.ObjectId, meetId: string): Promise<MeetDocument | null> {
     return this.meetModel
-      .findOneAndUpdate({ _id: meetId, org }, { _deleted: true }, { new: true })
+      .findOneAndUpdate({ _id: meetId, org }, { _deleted: true }, { returnDocument: 'after' })
       .lean<MeetDocument>();
   }
 

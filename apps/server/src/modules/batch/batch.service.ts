@@ -15,7 +15,7 @@ export class BatchService {
         // org in the filter so an upsert cannot reach another organization's document
         { _id, org },
         { ...payload },
-        { new: true, upsert: true, runValidators: true },
+        { returnDocument: 'after', upsert: true, runValidators: true },
       )
       .lean<BatchDocument>();
   }

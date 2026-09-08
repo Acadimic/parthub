@@ -17,7 +17,7 @@ export class FollowerService {
       .findOneAndUpdate(
         { follower, following: payload.following },
         { ...payload, follower },
-        { new: true, upsert: true, runValidators: true },
+        { returnDocument: 'after', upsert: true, runValidators: true },
       )
       .lean<FollowerDocument>();
   }

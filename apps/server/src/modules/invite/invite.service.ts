@@ -55,7 +55,7 @@ export class InviteService {
           acceptedDate: null,
           $setOnInsert: { _id },
         },
-        { new: true, upsert: true },
+        { returnDocument: 'after', upsert: true },
       )
       .select(Object.keys(new InviteDto()).join(' '))
       .lean<InviteDocument>()
@@ -169,7 +169,11 @@ export class InviteService {
   async resendInvite(inviteId: string): Promise<InviteDto> {
     const org = this.requestContextService.getOrgId();
     const invite = await this.inviteModel
-      .findOneAndUpdate({ _id: inviteId, org, status: InviteStatus.PENDING }, { updatedAt: new Date() }, { new: true })
+      .findOneAndUpdate(
+        { _id: inviteId, org, status: InviteStatus.PENDING },
+        { updatedAt: new Date() },
+        { returnDocument: 'after' },
+      )
       .lean<InviteDocument>()
       .exec();
     if (!invite) {

@@ -17,6 +17,6 @@ export class OtpService {
   }
 
   async update(id: string, update: Partial<Otp>): Promise<OtpDocument | null> {
-    return this.otpModel.findByIdAndUpdate(id, update, { new: true }).lean<OtpDocument>();
+    return this.otpModel.findByIdAndUpdate(id, update, { returnDocument: 'after' }).lean<OtpDocument>();
   }
 }

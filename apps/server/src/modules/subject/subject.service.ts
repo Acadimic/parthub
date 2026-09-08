@@ -11,7 +11,7 @@ export class SubjectService {
   async upsert(payload: SubjectDto): Promise<SubjectDocument> {
     const { _id } = payload;
     return this.subjectModel
-      .findOneAndUpdate({ _id }, { ...payload }, { new: true, upsert: true, runValidators: true })
+      .findOneAndUpdate({ _id }, { ...payload }, { returnDocument: 'after', upsert: true, runValidators: true })
       .lean<SubjectDocument>();
   }
 

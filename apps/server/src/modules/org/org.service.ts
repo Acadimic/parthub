@@ -23,13 +23,13 @@ export class OrgService {
 
   async upsert(payload: CreateOrgDto): Promise<OrgDocument> {
     return this.orgModel
-      .findByIdAndUpdate(payload._id, { ...payload }, { upsert: true, new: true, runValidators: true })
+      .findByIdAndUpdate(payload._id, { ...payload }, { upsert: true, returnDocument: 'after', runValidators: true })
       .lean<OrgDocument>();
   }
 
   async update(id: string | Types.ObjectId, payload: UpdateOrgDto): Promise<OrgDto> {
     const org = await this.orgModel
-      .findByIdAndUpdate(id, { ...payload }, { new: true, runValidators: true })
+      .findByIdAndUpdate(id, { ...payload }, { returnDocument: 'after', runValidators: true })
       .lean<OrgDocument>();
     if (!org) throw new NotFoundException('Organization not found.');
     return this.transformOrg(org);

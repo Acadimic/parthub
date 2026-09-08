@@ -27,7 +27,7 @@ export class RoleService {
     }
     const role: RoleDocument = await this.roleModel
       // org in the filter so an upsert cannot reach another organization's role
-      .findOneAndUpdate({ _id: payload._id, org }, { ...payload }, { new: true, upsert: true })
+      .findOneAndUpdate({ _id: payload._id, org }, { ...payload }, { returnDocument: 'after', upsert: true })
       .lean<RoleDocument>()
       .exec();
     return this.getTransformedRole(role);

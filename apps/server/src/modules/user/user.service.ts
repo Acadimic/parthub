@@ -123,7 +123,7 @@ export class UserService {
     const name = payload.name || '';
     const { _id } = payload;
     const user = await this.userModel
-      .findOneAndUpdate({ _id }, { ...payload, name }, { upsert: true, new: true, runValidators: true })
+      .findOneAndUpdate({ _id }, { ...payload, name }, { upsert: true, returnDocument: 'after', runValidators: true })
       .select(Object.values(new UserDto()).join(' '))
       .lean<UserDocument>()
       .exec();
@@ -161,7 +161,7 @@ export class UserService {
         userId,
         { lastActive },
         {
-          new: true,
+          returnDocument: 'after',
           runValidators: true,
           skipActivityLog: true,
         },
@@ -189,7 +189,7 @@ export class UserService {
   /** A user completing or editing their own profile; marks onboarding as done. */
   async updateProfile(userId: string | Types.ObjectId, payload: UpdateProfileDto): Promise<UserDto> {
     const user = await this.userModel
-      .findByIdAndUpdate(userId, { ...payload, isUpdated: true }, { new: true, runValidators: true })
+      .findByIdAndUpdate(userId, { ...payload, isUpdated: true }, { returnDocument: 'after', runValidators: true })
       .lean<UserDocument>()
       .exec();
     if (!user) throw new NotFoundException('User not found.');
@@ -207,7 +207,7 @@ export class UserService {
       .exec();
     if (!member) throw new ForbiddenException('User does not belong to your organization.');
     const user = await this.userModel
-      .findByIdAndUpdate(_id, { ...fields }, { new: true, runValidators: true })
+      .findByIdAndUpdate(_id, { ...fields }, { returnDocument: 'after', runValidators: true })
       .lean<UserDocument>()
       .exec();
     const [withPermission] = await this.withPermissions([this.transformUser(user!)]);
