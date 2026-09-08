@@ -10,7 +10,7 @@ const IMMUTABLE_FIELDS = ['org', 'createdBy'] as const;
 /**
  * Fills the `BaseSchema` ownership fields from the request context on every write:
  *
- * | operation                                            | org / createdBy | updatedBy | createdAt / updatedAt | _deleted |
+ * | operation                                            | org / createdBy | updatedBy | createdAt / updatedAt | isDeleted |
  * | ---------------------------------------------------- | --------------- | --------- | --------------------- | -------- |
  * | `save` (incl. `create`, `new Model()`)               | plugin, if new  | plugin    | `timestamps: true`    | default  |
  * | `insertMany`                                         | plugin          | plugin    | plugin                | default  |
@@ -19,7 +19,7 @@ const IMMUTABLE_FIELDS = ['org', 'createdBy'] as const;
  * | `replaceOne` / `findOneAndReplace`                   | plugin          | plugin    | `timestamps: true`    | default  |
  * | `bulkWrite`                                          | plugin, per op  | plugin    | mongoose / plugin     | mongoose |
  *
- * `createdAt`/`updatedAt` come from each schema's `timestamps: true`, and `_deleted` from its own
+ * `createdAt`/`updatedAt` come from each schema's `timestamps: true`, and `isDeleted` from its own
  * default (Mongoose applies defaults on upsert-insert via `setDefaultsOnInsert`, on by default).
  */
 export function createChangeTrackingPlugin(contextService: RequestContextService) {

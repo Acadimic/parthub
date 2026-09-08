@@ -20,7 +20,7 @@ export class MaterialService {
   }
 
   async getOrgMaterials(org: Types.ObjectId): Promise<MaterialDocument[]> {
-    return this.materialModel.find({ org, _deleted: { $ne: true } }).lean<MaterialDocument[]>();
+    return this.materialModel.find({ org, isDeleted: { $ne: true } }).lean<MaterialDocument[]>();
   }
 
   async getStandardAndSubjectMaterials(
@@ -29,20 +29,20 @@ export class MaterialService {
     subject: string,
   ): Promise<MaterialDocument[]> {
     return this.materialModel
-      .find({ org, standard, subject, _deleted: { $ne: true } })
+      .find({ org, standard, subject, isDeleted: { $ne: true } })
       .sort({ order: 1 })
       .lean<MaterialDocument[]>();
   }
 
   async findAll(org: string) {
-    return this.materialModel.find({ org, _deleted: false }).lean<MaterialDocument[]>();
+    return this.materialModel.find({ org, isDeleted: { $ne: true } }).lean<MaterialDocument[]>();
   }
 
   async findById(org: Types.ObjectId, id: string) {
-    return this.materialModel.findOne({ _id: id, org, _deleted: { $ne: true } }).lean<MaterialDocument>();
+    return this.materialModel.findOne({ _id: id, org, isDeleted: { $ne: true } }).lean<MaterialDocument>();
   }
 
   async findByCourse(org: Types.ObjectId, courseId: string) {
-    return this.materialModel.find({ course: courseId, org, _deleted: { $ne: true } }).lean<MaterialDocument[]>();
+    return this.materialModel.find({ course: courseId, org, isDeleted: { $ne: true } }).lean<MaterialDocument[]>();
   }
 }

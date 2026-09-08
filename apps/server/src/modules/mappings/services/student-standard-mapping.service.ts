@@ -25,16 +25,16 @@ export class StudentStandardMappingService {
   }
 
   async getOrgStudentMaps(org: Types.ObjectId): Promise<StudentStandardMappingDocument[]> {
-    return this.mappingModel.find({ org, _deleted: { $ne: true } }).lean<StudentStandardMappingDocument[]>();
+    return this.mappingModel.find({ org, isDeleted: { $ne: true } }).lean<StudentStandardMappingDocument[]>();
   }
 
   async getStudentStandards(studentId: string): Promise<StudentStandardMappingDocument[]> {
     return this.mappingModel
-      .find({ student: studentId, _deleted: { $ne: true } })
+      .find({ student: studentId, isDeleted: { $ne: true } })
       .lean<StudentStandardMappingDocument[]>();
   }
 
   async getOrgMaps(org: Types.ObjectId): Promise<StudentStandardMappingDocument[]> {
-    return this.mappingModel.find({ org, _deleted: { $ne: true } }).lean<StudentStandardMappingDocument[]>();
+    return this.mappingModel.find({ org, isDeleted: { $ne: true } }).lean<StudentStandardMappingDocument[]>();
   }
 }

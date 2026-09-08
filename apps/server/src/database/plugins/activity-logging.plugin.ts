@@ -88,8 +88,8 @@ export function createActivityLoggingPlugin(activityLogCoreService: ActivityLogC
       if (!modelName || EXCLUDED_MODELS.has(modelName)) return;
 
       const update = this.getUpdate() as UpdateQuery;
-      const isSoftDelete = update?.$set?._deleted === true;
-      const isRestore = update?.$set?._deleted === false;
+      const isSoftDelete = update?.$set?.isDeleted === true;
+      const isRestore = update?.$set?.isDeleted === false;
       const isUpsert = options?.upsert === true;
 
       const originalDoc = await this.model.findOne(this.getFilter()).lean();

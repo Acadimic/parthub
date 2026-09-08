@@ -31,4 +31,4 @@ export class TestPaperSection extends BaseSchema {
 
 export const TestPaperSectionSchema = SchemaFactory.createForClass(TestPaperSection);
 
-TestPaperSectionSchema.index({ org: 1, _deleted: 1 });
+TestPaperSectionSchema.index({ org: 1, isDeleted: 1 });

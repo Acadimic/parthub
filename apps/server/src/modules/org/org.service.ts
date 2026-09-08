@@ -37,14 +37,14 @@ export class OrgService {
 
   async getOrgsByIds(ids: string[]): Promise<OrgDto[]> {
     const orgs = await this.orgModel
-      .find({ _id: { $in: ids } })
+      .find({ _id: { $in: ids }, isDeleted: { $ne: true } })
       .select('_id name displayId logo orgType createdBy updatedBy createdAt updatedAt')
       .lean<OrgDocument[]>();
     return orgs.map((org) => this.transformOrg(org));
   }
 
   async getOrgById(id: string): Promise<OrgDto | null> {
-    const org = await this.orgModel.findOne({ _id: id }).lean<OrgDocument>();
+    const org = await this.orgModel.findOne({ _id: id, isDeleted: { $ne: true } }).lean<OrgDocument>();
     return org ? this.transformOrg(org) : null;
   }
 }

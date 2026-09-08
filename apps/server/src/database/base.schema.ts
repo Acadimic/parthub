@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 @Schema()
 export abstract class BaseSchema {
   @Prop({ type: Boolean, default: false, required: true })
-  _deleted: boolean;
+  isDeleted: boolean;
 
   @Prop({ type: Types.ObjectId, ref: 'Org', required: true, immutable: true })
   org: Types.ObjectId;

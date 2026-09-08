@@ -42,7 +42,7 @@ export class RoleService {
   async getRoles(): Promise<RoleDto[]> {
     const org = this.requestContextService.getOrgId();
     const result = await this.roleModel
-      .find({ org })
+      .find({ org, isDeleted: { $ne: true } })
       .sort({ isAdmin: -1, updatedAt: -1 })
       .lean<RoleDocument[]>()
       .exec();
@@ -64,17 +64,23 @@ export class RoleService {
   }
 
   async findByName(org: string | Types.ObjectId, role: string): Promise<RoleDocument | null> {
-    return this.roleModel.findOne({ org, role: role.trim().toLowerCase() }).lean<RoleDocument>().exec();
+    return this.roleModel
+      .findOne({ org, role: role.trim().toLowerCase(), isDeleted: { $ne: true } })
+      .lean<RoleDocument>()
+      .exec();
   }
 
   async getRolesByIds(ids: (string | Types.ObjectId)[]): Promise<RoleDocument[]> {
     return this.roleModel
-      .find({ _id: { $in: ids } })
+      .find({ _id: { $in: ids }, isDeleted: { $ne: true } })
       .lean<RoleDocument[]>()
       .exec();
   }
 
   async findAdminByOrg(org: string | Types.ObjectId): Promise<RoleDocument | null> {
-    return this.roleModel.findOne({ org, isAdmin: true }).lean<RoleDocument>().exec();
+    return this.roleModel
+      .findOne({ org, isAdmin: true, isDeleted: { $ne: true } })
+      .lean<RoleDocument>()
+      .exec();
   }
 }

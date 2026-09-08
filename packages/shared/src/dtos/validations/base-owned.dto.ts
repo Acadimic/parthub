@@ -1,4 +1,4 @@
-import { IsDateString, IsMongoId, IsOptional } from 'class-validator';
+import { IsBoolean, IsDateString, IsMongoId, IsOptional } from 'class-validator';
 
 /**
  * Ownership fields present on every entity's response.
@@ -9,6 +9,14 @@ import { IsDateString, IsMongoId, IsOptional } from 'class-validator';
  * so a value sent by a client is stripped or overwritten rather than trusted.
  */
 export class BaseOwnedDto {
+  /**
+   * Soft delete. A client removes a document by sending `true` on an upsert or update; every
+   * read filters these out, so the row stays for auditing but disappears from the API.
+   */
+  @IsOptional()
+  @IsBoolean()
+  isDeleted?: boolean;
+
   @IsOptional()
   @IsMongoId()
   org?: string;

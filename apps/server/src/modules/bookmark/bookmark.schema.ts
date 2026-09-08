@@ -20,4 +20,4 @@ export class Bookmark extends BaseSchema {
 export const BookmarkSchema = SchemaFactory.createForClass(Bookmark);
 
 BookmarkSchema.index({ createdBy: 1, collectionItem: 1, collectionRef: 1 }, { unique: true });
-BookmarkSchema.index({ org: 1, _deleted: 1 });
+BookmarkSchema.index({ org: 1, isDeleted: 1 });

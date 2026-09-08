@@ -18,4 +18,4 @@ export class Batch extends BaseSchema {
 
 export const BatchSchema = SchemaFactory.createForClass(Batch);
 
-BatchSchema.index({ org: 1, _deleted: 1 });
+BatchSchema.index({ org: 1, isDeleted: 1 });

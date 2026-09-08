@@ -19,17 +19,17 @@ export class FollowerService {
   }
 
   async getFollowers(userId: Types.ObjectId): Promise<FollowerDocument[]> {
-    return this.followerModel.find({ following: userId, _deleted: { $ne: true } }).lean<FollowerDocument[]>();
+    return this.followerModel.find({ following: userId, isDeleted: { $ne: true } }).lean<FollowerDocument[]>();
   }
 
   async getFollowings(userId: Types.ObjectId): Promise<FollowerDocument[]> {
-    return this.followerModel.find({ follower: userId, _deleted: { $ne: true } }).lean<FollowerDocument[]>();
+    return this.followerModel.find({ follower: userId, isDeleted: { $ne: true } }).lean<FollowerDocument[]>();
   }
 
   async getFollowersCount(userId: Types.ObjectId): Promise<number> {
     return this.followerModel.countDocuments({
       following: userId,
-      _deleted: { $ne: true },
+      isDeleted: { $ne: true },
     });
   }
 }

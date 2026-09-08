@@ -132,17 +132,17 @@ export class UserService {
 
   async getUsersByUid(uid: string): Promise<UserDto[]> {
     if (!uid) throw new NotAcceptableException('UID is required!');
-    const users = await this.userModel.find({ uid }).lean<UserDocument[]>();
+    const users = await this.userModel.find({ uid, isDeleted: { $ne: true } }).lean<UserDocument[]>();
     return users.map((user) => this.transformUser(user));
   }
 
   async getUsersByEmail(email: string): Promise<UserDocument[]> {
     if (!email) throw new NotAcceptableException('Email is required!');
-    return this.userModel.find({ email }).lean<UserDocument[]>();
+    return this.userModel.find({ email, isDeleted: { $ne: true } }).lean<UserDocument[]>();
   }
 
   async getUserById(_id: string): Promise<UserDocument | null> {
-    return await this.userModel.findOne({ _id }).lean<UserDocument>();
+    return await this.userModel.findOne({ _id, isDeleted: { $ne: true } }).lean<UserDocument>();
   }
 
   async getUserByOrgIdAndUid(payload: FindByOrgIdAndUidDto): Promise<UserDocument | null> {
@@ -150,7 +150,7 @@ export class UserService {
     if (!org) throw new NotAcceptableException('Org ID is required!');
     if (!uid) throw new NotAcceptableException('UID is required!');
     return await this.userModel
-      .findOne({ org: new Types.ObjectId(org), uid })
+      .findOne({ org: new Types.ObjectId(org), uid, isDeleted: { $ne: true } })
       .lean<UserDocument>()
       .exec();
   }
@@ -201,7 +201,10 @@ export class UserService {
   async updateOrgUser(payload: UpdateOrgUserDto): Promise<UserDto> {
     const { _id, ...fields } = payload;
     const org = this.requestContextService.getOrgId();
-    const member = await this.userModel.findOne({ _id, org }).lean<UserDocument>().exec();
+    const member = await this.userModel
+      .findOne({ _id, org, isDeleted: { $ne: true } })
+      .lean<UserDocument>()
+      .exec();
     if (!member) throw new ForbiddenException('User does not belong to your organization.');
     const user = await this.userModel
       .findByIdAndUpdate(_id, { ...fields }, { new: true, runValidators: true })
@@ -212,17 +215,17 @@ export class UserService {
   }
 
   async getOrgUsers(org: string): Promise<UserDocument[]> {
-    return this.userModel.find({ org }).lean<UserDocument[]>();
+    return this.userModel.find({ org, isDeleted: { $ne: true } }).lean<UserDocument[]>();
   }
 
   async getOrgUsersByEmails(org: string, emails: string[]): Promise<UserDocument[]> {
-    return this.userModel.find({ org, email: { $in: emails } }).lean<UserDocument[]>();
+    return this.userModel.find({ org, email: { $in: emails }, isDeleted: { $ne: true } }).lean<UserDocument[]>();
   }
 
   async getOrgStaff(): Promise<UserDto[]> {
     const org = this.requestContextService.getOrgId();
     const users = await this.userModel
-      .find({ org })
+      .find({ org, isDeleted: { $ne: true } })
       .sort({ isInactive: 1, updatedAt: -1 })
       .lean<UserDocument[]>()
       .exec();
@@ -249,6 +252,9 @@ export class UserService {
     if (invite.email.toLowerCase() !== currentUser.email.toLowerCase()) {
       throw new BadRequestException('This invite was sent to a different email address.');
     }
+    // Deliberately not filtering soft-deleted rows: this guards the unique { uid, org } index,
+    // which counts them. Skipping them would let the insert fail with a duplicate-key error
+    // instead of this readable message.
     const existingUser = await this.userModel
       .findOne({ uid: currentUser.uid, org: invite.org })
       .lean<UserDocument>()

@@ -16,11 +16,11 @@ export class SubjectService {
   }
 
   async getAll(): Promise<SubjectDocument[]> {
-    return this.subjectModel.find({ _deleted: { $ne: true } }).lean<SubjectDocument[]>();
+    return this.subjectModel.find({ isDeleted: { $ne: true } }).lean<SubjectDocument[]>();
   }
 
   async findAll(org: string) {
-    return this.subjectModel.find({ org, _deleted: false }).lean<SubjectDocument[]>();
+    return this.subjectModel.find({ org, isDeleted: { $ne: true } }).lean<SubjectDocument[]>();
   }
 
   async findById(id: string) {

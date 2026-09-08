@@ -38,14 +38,14 @@ export class UserBatchMappingService {
   }
 
   async getUserMaps(userId: string): Promise<UserBatchMappingDocument[]> {
-    return this.mappingModel.find({ user: userId, _deleted: { $ne: true } }).lean<UserBatchMappingDocument[]>();
+    return this.mappingModel.find({ user: userId, isDeleted: { $ne: true } }).lean<UserBatchMappingDocument[]>();
   }
 
   async getBatchMaps(batchId: string): Promise<UserBatchMappingDocument[]> {
-    return this.mappingModel.find({ batch: batchId, _deleted: { $ne: true } }).lean<UserBatchMappingDocument[]>();
+    return this.mappingModel.find({ batch: batchId, isDeleted: { $ne: true } }).lean<UserBatchMappingDocument[]>();
   }
 
   async getOrgMaps(org: Types.ObjectId): Promise<UserBatchMappingDocument[]> {
-    return this.mappingModel.find({ org, _deleted: { $ne: true } }).lean<UserBatchMappingDocument[]>();
+    return this.mappingModel.find({ org, isDeleted: { $ne: true } }).lean<UserBatchMappingDocument[]>();
   }
 }

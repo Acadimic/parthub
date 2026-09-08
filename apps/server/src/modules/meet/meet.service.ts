@@ -20,11 +20,11 @@ export class MeetService {
   }
 
   async getByOrg(org: Types.ObjectId): Promise<MeetDocument[]> {
-    return this.meetModel.find({ org, _deleted: { $ne: true } }).lean<MeetDocument[]>();
+    return this.meetModel.find({ org, isDeleted: { $ne: true } }).lean<MeetDocument[]>();
   }
 
   async getByAttendee(userId: Types.ObjectId): Promise<MeetDocument[]> {
-    return this.meetModel.find({ attendees: userId, _deleted: { $ne: true } }).lean<MeetDocument[]>();
+    return this.meetModel.find({ attendees: userId, isDeleted: { $ne: true } }).lean<MeetDocument[]>();
   }
 
   async addAttendees(meetId: string, attendeeIds: string[]): Promise<MeetDocument> {
@@ -40,11 +40,11 @@ export class MeetService {
   }
 
   async delete(meetId: string): Promise<MeetDocument> {
-    return this.meetModel.findOneAndUpdate({ _id: meetId }, { _deleted: true }, { new: true }).lean<MeetDocument>();
+    return this.meetModel.findOneAndUpdate({ _id: meetId }, { isDeleted: true }, { new: true }).lean<MeetDocument>();
   }
 
   async getMeetsByIds(ids: string[]): Promise<MeetDocument[]> {
     if (!ids.length) return [];
-    return this.meetModel.find({ _id: { $in: ids }, _deleted: { $ne: true } }).lean<MeetDocument[]>();
+    return this.meetModel.find({ _id: { $in: ids }, isDeleted: { $ne: true } }).lean<MeetDocument[]>();
   }
 }

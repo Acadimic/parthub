@@ -20,6 +20,6 @@ export class BatchService {
   }
 
   async getOrgBatches(org: Types.ObjectId): Promise<BatchDocument[]> {
-    return this.batchModel.find({ org, _deleted: { $ne: true } }).lean<BatchDocument[]>();
+    return this.batchModel.find({ org, isDeleted: { $ne: true } }).lean<BatchDocument[]>();
   }
 }

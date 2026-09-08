@@ -5,10 +5,12 @@
  * - an ObjectId is always a `string`
  * - a timestamp is always an ISO 8601 `string`
  * - a calendar date with no time is a `YYYY-MM-DD` `string`
- * - `_deleted` and `__v` are never sent
+ * - `isDeleted` is always false on a read, because every read filters deleted rows out
+ * - `__v` is never sent
  */
 export interface BaseFields {
   _id: string;
+  isDeleted: boolean;
   org: string;
   createdBy: string;
   updatedBy: string;

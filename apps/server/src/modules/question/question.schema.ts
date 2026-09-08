@@ -79,4 +79,4 @@ export const QuestionSchema = SchemaFactory.createForClass(Question);
 
 QuestionSchema.index({ standard: 1 });
 QuestionSchema.index({ section: 1 });
-QuestionSchema.index({ section: 1, _deleted: 1 });
+QuestionSchema.index({ section: 1, isDeleted: 1 });

@@ -19,6 +19,6 @@ export class BookmarkService {
   }
 
   async getBookmarksByUserId(userId: Types.ObjectId): Promise<BookmarkDocument[]> {
-    return this.bookmarkModel.find({ createdBy: userId, _deleted: { $ne: true } }).lean<BookmarkDocument[]>();
+    return this.bookmarkModel.find({ createdBy: userId, isDeleted: { $ne: true } }).lean<BookmarkDocument[]>();
   }
 }
