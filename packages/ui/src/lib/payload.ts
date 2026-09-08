@@ -3,7 +3,11 @@
  *
  * The server's global validation pipe runs with `forbidNonWhitelisted`, so a single undeclared
  * property fails the whole request. Posting a store instance straight through therefore returns
- * 400 rather than saving anything, which is why every write goes through `toPayload` first.
+ * 400 rather than saving anything.
+ *
+ * Each app's `http.service.ts` applies this to every request body and query object, so a service
+ * method cannot forget it. It used to be each caller's job, and the one array endpoint that was
+ * missed went unnoticed because Nest skips validation on array bodies entirely.
  *
  * Three kinds of key end up here:
  *
@@ -55,9 +59,11 @@ const strip = (value: unknown): unknown => {
  * Turns a store instance into a request body.
  *
  * Takes a plain snapshot first, so a MobX State Tree instance and its nested instances are both
- * handled, then removes every client-only key at any depth. Use it for every write that sends a
- * model, including ones that nest models such as `{ course, plans }` or
- * `{ question, options, solution }`.
+ * handled, then removes every client-only key at any depth — including inside an array, which is
+ * how a bulk upsert of models is handled.
+ *
+ * `callAuthApi` and `callUnAuthApi` already call this on everything they send, so a service method
+ * does not. Call it directly only when building a body outside the HTTP layer.
  */
 export const toPayload = <T extends object>(source: T): ApiPayload<T> =>
   strip(JSON.parse(JSON.stringify(source))) as ApiPayload<T>;

@@ -218,15 +218,21 @@ export const callAuthApi = async <T>(
 getCourses = async () => await callAuthApi<CourseDto[]>('course/all', API.GET);
 ```
 
-**Strip client-only fields before posting.** The models add keys the API never accepts, and the
-validation pipe runs with `forbidNonWhitelisted`, so one undeclared property fails the whole
-request. Every write goes through `toPayload` from `@repo/ui/lib`, which snapshots the instance and
-removes those keys at any depth. The list lives in `packages/ui/src/lib/payload.ts` with a comment
-explaining each entry; adding a field to a schema and its DTO means removing it from that list.
+**Client-only fields are stripped in the HTTP layer.** The models add keys the API never accepts,
+and the validation pipe runs with `forbidNonWhitelisted`, so one undeclared property fails the
+whole request. Each app's `http.service.ts` passes every body and query object through `toPayload`
+from `@repo/ui/lib`, which snapshots the instance — arrays included — and removes those keys at any
+depth. A service method therefore just posts what it has:
 
 ```ts
-const resData = await callAuthApi<CourseDto>(url, API.POST, toPayload(payload));
+const resData = await callAuthApi<CourseDto>(url, API.POST, payload);
 ```
+
+The key list lives in `packages/ui/src/lib/payload.ts` with a comment explaining each entry; adding
+a field to a schema and its DTO means removing it from that list. This began as a `toPayload` call
+at each of the nineteen write sites, which is why it moved: the array writes were missed, and
+nothing failed loudly because Nest does not validate array bodies unless the handler asks it to
+with `ParseArrayPipe`.
 
 **Separate the wire shape from view state** in the models. Declare the server
 fields, then the UI-only fields under a comment, so it is obvious which is

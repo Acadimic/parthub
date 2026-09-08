@@ -1,4 +1,3 @@
-import { toPayload } from '@repo/ui/lib';
 import { type IStandardSubjectQuery } from '@interfaces';
 import { type IMaterial } from '@stores';
 import { API } from '../enums';
@@ -7,7 +6,7 @@ import { callAuthApi } from './http.service';
 class MaterialService {
   upsertMaterial = async (payload: IMaterial) => {
     const url = 'material/upsert';
-    const resData = await callAuthApi(url, API.POST, toPayload(payload));
+    const resData = await callAuthApi(url, API.POST, payload);
     return resData;
   };
 

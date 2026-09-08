@@ -3,6 +3,7 @@ import axios, { type AxiosError } from 'axios';
 import { API } from '../enums';
 import { generateAndSetNewToken } from '../utils/firebase';
 import { getToken, getUtcOffset, handleError } from '../utils/helpers';
+import { toPayload } from '@repo/ui/lib';
 
 const createAxiosInstance = (isUnAuth: boolean, url: string) => {
   const axiosInstance = axios.create({
@@ -54,8 +55,12 @@ export const callAuthApi = async <T = unknown>(
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
     const axiosInstance = createAxiosInstance(false, baseUrl);
+    // Strip UI-only keys here rather than at each call site: the server's validation pipe runs
+    // with `forbidNonWhitelisted`, so one `isNew` on a posted store instance fails the whole
+    // request. Binary uploads go through `callDefaultApi` and never reach this.
+    const body = data ? toPayload(data) : data;
     const response =
-      method === API.POST ? await axiosInstance.post(url, data) : await axiosInstance.get(url, { params: data });
+      method === API.POST ? await axiosInstance.post(url, body) : await axiosInstance.get(url, { params: body });
     return response.data;
   } catch (error) {
     // handleError throws unless the caller opted out, in which case there is nothing to return.
@@ -72,8 +77,9 @@ export const callUnAuthApi = async <T = unknown>(
 ): Promise<SuccessResponse<T>> => {
   try {
     const axiosInstance = createAxiosInstance(true, url);
+    const body = data ? toPayload(data) : data;
     const response =
-      method === API.POST ? await axiosInstance.post(url, data) : await axiosInstance.get(url, { params: data });
+      method === API.POST ? await axiosInstance.post(url, body) : await axiosInstance.get(url, { params: body });
     return response.data;
   } catch (error) {
     // handleError throws unless the caller opted out, in which case there is nothing to return.
