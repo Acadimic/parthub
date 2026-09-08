@@ -101,7 +101,7 @@ export function createActivityLoggingPlugin(activityLogCoreService: ActivityLogC
         const doc = Array.isArray(originalDoc) ? originalDoc[0] : originalDoc;
         if (hasId(doc)) {
           try {
-            const logData = activityLogCoreService.prepareDeleteLog(modelName, doc._id, doc as Record<string, unknown>);
+            const logData = activityLogCoreService.prepareDeleteLog(modelName, doc._id, doc);
             const connection = getConnection(this.model);
             await saveActivityLog(connection, logData);
           } catch (error) {

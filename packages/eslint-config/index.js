@@ -30,6 +30,10 @@ const shouldRules = {
   '@typescript-eslint/consistent-type-definitions': ['warn', 'interface'],
   '@typescript-eslint/array-type': ['warn', { default: 'array' }],
   '@typescript-eslint/no-inferrable-types': 'warn',
+  // Reports fine, but its *fixer* crashes inside TypeScript 6.0.3 (typescript-eslint 8.70 peers
+  // <6.1.0, yet the fix path is not fully compatible): `eslint --fix` dies with
+  // "Cannot read properties of undefined (reading 'includes')" while building the fix.
+  // Keep the repo at zero reports for this rule and lint:fix stays usable.
   '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
   // `x!.y` asserts away a case the types say can happen. Narrow, or handle the miss.
   '@typescript-eslint/no-non-null-assertion': 'warn',

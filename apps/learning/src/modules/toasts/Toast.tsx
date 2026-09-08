@@ -27,7 +27,7 @@ export const Toast = observer(({ toast }: { toast: IToast }) => {
       className="cursor-pointer rounded-sm bg-background-primary border border-color-border shadow-lg flex items-center gap-2 px-4 py-3 min-w-[280px] animate-in slide-in-from-right"
       onClick={onClose}
     >
-      {iconMap[type as keyof typeof iconMap] || iconMap.info}
+      {iconMap[type] || iconMap.info}
       <span className="text-sm font-medium">{message}</span>
     </div>
   );
