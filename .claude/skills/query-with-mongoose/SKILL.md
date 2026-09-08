@@ -15,7 +15,7 @@ argument-hint: '[the query or collection]'
 
 # Query with Mongoose
 
-Mongoose 8 on MongoDB, one model per module, thirty schemas all extending `BaseSchema`. The
+Mongoose 9 on MongoDB, one model per module, thirty schemas all extending `BaseSchema`. The
 tenancy and audit guarantees live in the query filters and two global plugins, not in a framework —
 which is why the filter is the thing to get right.
 
@@ -43,23 +43,28 @@ which is why the filter is the thing to get right.
    the server writes it through the normal update path. `deleteOne`, `deleteMany` and
    `findOneAndDelete` are not the delete mechanism here.
 
-4. **Only use operations the plugins hook.** `registerGlobalPlugins` attaches change tracking and
+4. **Plugin middleware is async — Mongoose 9 removed `next()`.** A pre hook is an `async function`
+   (or a plain one) that signals failure by throwing; there is no callback to call. `insertMany` and
+   `bulkWrite` hooks still fire at runtime but were dropped from Mongoose 9's exported middleware
+   unions, so `change-tracking.plugin.ts` registers those two through a small documented shim.
+
+5. **Only use operations the plugins hook.** `registerGlobalPlugins` attaches change tracking and
    activity logging to the connection, covering `save`, `updateOne`, `updateMany`,
    `findOneAndUpdate` (and `findByIdAndUpdate`, which routes to the same middleware), `replaceOne`,
    `findOneAndReplace`, `insertMany` and `bulkWrite`. An operation outside that list writes rows
    with no `org`, no `createdBy`, no `updatedBy` and no audit entry.
 
-5. **Never set `org`, `createdBy`, `updatedBy`, `createdAt` or `updatedAt` in a query.** The plugin
+6. **Never set `org`, `createdBy`, `updatedBy`, `createdAt` or `updatedAt` in a query.** The plugin
    stamps the first three from the CLS request context and Mongoose owns the timestamps. Writing
    them by hand is at best redundant and at worst lets a client claim ownership. To write into
    another org deliberately, wrap the call in `RequestContextService.withOrg()`.
 
-6. **`.lean<T>()` on every read.** All 92 reads do. It returns plain objects, which is what the
+7. **`.lean<T>()` on every read.** All 92 reads do. It returns plain objects, which is what the
    mappers expect, and skips hydration. The trade-off is real: a lean result has no document
    methods, no getters and no `save()`. If you need those, do not lean — and then you are working
    with a document, so type it as one.
 
-7. **The upsert shape is fixed:**
+8. **The upsert shape is fixed:**
 
    ```ts
    findOneAndUpdate({ _id, org }, { ...payload }, { new: true, upsert: true, runValidators: true })
@@ -68,7 +73,7 @@ which is why the filter is the thing to get right.
    `runValidators` matters: an upsert skips schema validation without it. `org` in the *filter*
    (not just the update) is what stops an upsert reaching into another organization.
 
-8. **ObjectId lives in the schema, string lives in the DTO.** `BaseSchema` stores `org`,
+9. **ObjectId lives in the schema, string lives in the DTO.** `BaseSchema` stores `org`,
    `createdBy` and `updatedBy` as `Types.ObjectId`; the DTOs carry strings; the mapper converts
    with `.toString()`. `new Types.ObjectId('')` throws, so use the non-throwing
    `getOrgIdSafe()` / `getUserIdSafe()` where a value may legitimately be absent.

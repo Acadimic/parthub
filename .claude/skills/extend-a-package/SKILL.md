@@ -4,7 +4,7 @@ description: >
   rather than consuming them: adding an export or a subpath, adding or upgrading a dependency,
   moving code in, and knowing which consumers break. The three packages have deliberately
   different mechanics: shared compiles to CommonJS for the server, ui is consumed as source with
-  no build, and eslint-config must stay CommonJS for two ESLint generations.
+  no build, and eslint-config must stay CommonJS because five of the six flat configs `require` it.
 when_to_use: >
   Trigger BEFORE editing any package.json, before adding or upgrading a dependency anywhere in the
   monorepo, before adding a subpath export or a barrel file in packages/*, before moving a
@@ -104,18 +104,17 @@ Eight workspaces: `apps/{learning,teaching,admin,server}` and
 
 ## must — packages/eslint-config
 
-14. **It stays CommonJS.** The three apps are on ESLint 8 with `.eslintrc.js`, while the server and
-    both packages are on ESLint 9 flat configs; `module.exports` is the only form all five can
-    read. `packages/ui`'s flat config is ESM and default-imports it, which works precisely because
-    the config is CJS.
+14. **It stays CommonJS.** All six workspaces are on ESLint 10 with flat configs, and five of them
+    `require()` this package — only `packages/ui`'s config is ESM, and it default-imports the CJS
+    module, which works. Converting to ESM would break the other five.
 
 15. **Pick the tier deliberately.** `mustRules` and `layerRules` are `error`: a violation is a
     defect. Everything stylistic is `warn` in `shouldRules`. Promoting a rule to `error` means
     fixing every existing violation in the same change, because `pnpm lint` must exit 0.
 
-16. **Keep the tool versions aligned:** `@typescript-eslint/*` at `^8.6.0`, prettier `^3.3.3` and
-    typescript `^5.6.2` in every workspace that lints; ESLint `^8` in the three apps and `^9.11.0`
-    on the server and the two packages. A split version silently changes which rules exist.
+16. **Keep the tool versions aligned** across every workspace that lints: ESLint `^10.10.0`,
+    `@typescript-eslint/*` `^8.70.0`, typescript `^6.0.3`, prettier `^3.9.6`. A split version
+    silently changes which rules exist and how code is formatted.
 
 ## should
 

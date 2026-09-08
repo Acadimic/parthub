@@ -43,7 +43,7 @@ they pass review, and they leak data across organizations at runtime.
    `@IsNotEmpty() @IsMongoId()` — the client generates it, so a write is idempotent.
 6. **A single-document lookup returns `| null`** and the caller handles the miss. A controller
    throws `NotFoundException`; a service that cannot continue throws too. The tsconfig has
-   `strictNullChecks`, so the compiler will ask.
+   `strict: true`, so the compiler will ask.
 7. **Every body is a DTO class, and an array body also needs `ParseArrayPipe`.** The global
    `ValidationPipe` only validates a body whose metatype is a class: it skips `Array` and `Object`
    entirely. So `@Body() payloads: XDto[]` and `@Body() body: { userId: string }` both accept

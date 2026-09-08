@@ -17,7 +17,7 @@ argument-hint: '[the domain, e.g. attendance]'
 
 # Add a server module
 
-NestJS 10 on Fastify, Mongoose 8, one module per domain. Read `apps/server/src/modules/batch` for
+NestJS 12 on Fastify 5, Mongoose 9, one module per domain. Read `apps/server/src/modules/batch` for
 the smallest complete example: four files, ninety lines, and every cross-cutting concern handled
 elsewhere.
 

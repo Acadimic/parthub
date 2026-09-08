@@ -42,7 +42,12 @@ disappears.
    - `mongoose` with `@nestjs/mongoose`.
    - `class-validator`, `class-transformer` and `reflect-metadata`: the decorators, the transformer
      that reads them and the polyfill that stores the metadata are one unit.
-   - `eslint` with `@typescript-eslint/*` and `eslint-config-next`.
+   - `eslint` with `@typescript-eslint/*`. (`eslint-config-next` is gone — see the note below.)
+   - `fastify` **tracks whatever `@nestjs/platform-fastify` depends on, exactly**, not npm's latest.
+     The adapter pins a precise version; a caret here resolves a different patch and the plugin
+     types stop matching the adapter's, so `app.register(compression)` fails to typecheck.
+   - `@types/node` **tracks the Node major in `volta.node`**, never npm's latest. Types ahead of the
+     runtime describe APIs that are not there: it compiles, then fails.
    - `mobx`, `mobx-react-lite`, `mobx-state-tree`.
 
 5. **`skipLibCheck: true` is set in all six tsconfigs.** Library type breakages are therefore
@@ -62,6 +67,14 @@ disappears.
 
 Each rung catches a class of failure the one above cannot see. Walk it in order and stop at the
 first failure — later rungs will only produce noise.
+
+Run all of it on the **pinned** runtime. Claude Code is itself installed through Volta, so a plain
+`node`/`pnpm` in its session reports the Node running Claude Code, not `volta.node`. Wrap every
+command:
+
+```bash
+env -u _VOLTA_TOOL_RECURSION volta run --node 24.20.0 -- pnpm exec tsc --noEmit
+```
 
 ```bash
 pnpm install                                     # resolution: peer conflicts, duplicate instances
@@ -108,8 +121,15 @@ This is the backend break that a green typecheck will not warn you about. The se
 `experimentalDecorators: true` and `emitDecoratorMetadata: true`, and both NestJS dependency
 injection and class-validator read that emitted metadata through `reflect-metadata` at runtime. A
 TypeScript major that changes decorator emit therefore breaks DI and request validation **at
-runtime while everything still compiles**. That is the reason TypeScript is last in the backlog
-below, and the reason its upgrade must end with the smoke run above rather than a build.
+runtime while everything still compiles**. It is why TypeScript goes last and why its upgrade ends
+with the smoke run above rather than a build.
+
+The TypeScript 5 to 6 upgrade proved the point twice over. Decorator emit itself survived — DI and
+validation both still work — but `esModuleInterop` can no longer be switched off in 6, and its
+`__importStar` helper copies only own enumerable properties. `import * as sgMail from '@sendgrid/mail'`
+therefore produced an object missing `setApiKey` and `send`, which live on the module's prototype.
+tsc, eslint and `nest build` were all green while the server could not start. A default import
+fixes it; check for `import * as` of any CommonJS package before upgrading TypeScript.
 
 ### The `dist` trap
 
@@ -132,6 +152,9 @@ incremental state. That combination has already produced a phantom `Cannot find 
 | Build passes, screen is blank                   | A default export or entry point moved. Check the release notes for renamed exports. |
 | Server compiles, then DI or validation fails at runtime | Decorator metadata. See the hazard above — suspect the TypeScript or `reflect-metadata` version, not your module. |
 | `Cannot find module 'dist/main'`                | Stale `dist`. Delete it and rebuild; see the `dist` trap above.        |
+| `X.someMethod is not a function` at boot, after a TypeScript upgrade | `import * as X` from a CommonJS package. TypeScript 6 forces `esModuleInterop` on, and its `__importStar` copies only own enumerable properties — methods on the module's prototype vanish. Use a default import. |
+| `eslint --fix` crashes while `eslint` is fine   | A rule's *fixer* is incompatible with the TypeScript version. Ours: `no-unnecessary-type-assertion` dies inside TS 6. Keep that rule at zero reports and `lint:fix` stays usable. |
+| A stale `.tsbuildinfo` inventing a dependency conflict | `tsc --noEmit` replays a previous resolution. `rm -rf dist` before believing any resolution error. |
 
 ## Renames and codemods
 
@@ -149,22 +172,47 @@ a blind find-and-replace also rewrote user-visible strings, turning "Copy Link" 
 
 ## The current backlog
 
-Taken on 2026-09-08 from `pnpm outdated -r`. **Re-run it rather than trusting this list**, and note
-that "latest" moves.
+The backend batch landed on 2026-09-08 and is done. **Re-run `pnpm outdated -r` rather than
+trusting any list here.**
 
-| Upgrade                                     | Hazard                                                                 |
-| ------------------------------------------- | ---------------------------------------------------------------------- |
-| Radix, `axios`, `@typescript-eslint`, `@firebase/auth` (patch/minor) | Low. Do these first, in one commit, to shrink the noise. |
-| `react` 19.0.0-rc → 19.2.x + `@types/react` 18 → 19 | Removes both the RC pin and the types mismatch. One commit, five manifests, then check the instance count. |
-| `class-validator` 0.14 → 0.15 with `class-transformer` | Every request body validates through it. Post an unknown property and confirm it still 400s, which is what `whitelist` / `forbidNonWhitelisted` guarantee. |
-| `mongoose` 8 → 9 with `@nestjs/mongoose`     | Query and `lean` typings, and the two global plugins hook `save`, `update*`, `replace*`, `insertMany` and `bulkWrite`. Do a real write and confirm the ownership fields were stamped. |
-| `@nestjs/*` 10 → 12, with `nestjs-cls` and `nestjs-pino` | Two majors. Fastify adapter, guard and interceptor signatures, `ParseArrayPipe` options, and the CLS middleware the request context depends on. |
+Already on their latest: NestJS 12.0.1 (core, common, platform-fastify, mongoose, config, cli,
+schematics), Mongoose 9.9.5, firebase-admin 14.3.0, class-validator 0.15.1, the pino stack
+(10.3.1 / 11 / 5.1.0 / 13.1.3), nestjs-cls 6.3, `@fastify/compress` 9.2, `@fastify/helmet` 13.1,
+AWS SDK 3.1127, env-cmd 11, ESLint 10.10, prettier 3.9.6, typescript-eslint 8.70, TypeScript 6.0.3.
+Node is pinned to 24.20.0 LTS via Volta.
+
+**Held back on purpose** — each waits on someone else's release, so re-check before "fixing" one:
+
+| Held | At | Blocked by |
+| ---- | -- | ---------- |
+| `fastify` | 5.12.1 | `@nestjs/platform-fastify@12.0.1` depends on that exact version |
+| `@types/node` | 24.x | the Node 24 LTS runtime |
+| `typescript` | 6.0.3 | `@typescript-eslint@8.70` peers `typescript <6.1.0`, and there is no 9.x |
+| `eslint-plugin-react` | removed | its latest release still peers `eslint ^9.7` |
+
+**Frontend, still pending**, in a sensible order:
+
+| Upgrade | Hazard |
+| ------- | ------ |
+| `react` 19.0.0-rc → 19.2.x with `@types/react` 18 → 19 | Removes both the RC pin and the types mismatch. One commit, five manifests, then check `ls node_modules/.pnpm \| grep -E '^react@'` prints one version. |
+| `next` 15 → 16 | Pages Router behaviour. `next lint` is already out of the path, so that part is done. |
 | `mobx` 7 / `mobx-state-tree` 8 / `mobx-react-lite` 5 | The stores are the apps' spine: `flow`, `observer`, snapshot types. Expect real work. |
-| `next` 15 → 16 with `eslint-config-next` 16 | Pages Router behaviour and the `next lint` entry point the apps' lint scripts use. |
-| `eslint` 8/9 → 10                           | The three apps are still on `.eslintrc.js`; this is also the flat-config migration. `@repo/eslint-config` must keep serving both until they land together. |
-| `tailwindcss` 3 → 4                         | Config moves into CSS. **Check `tw-colors` compatibility before starting** — the whole palette comes from that plugin. |
-| `typescript` 5 → 7                          | Last, and the riskiest for the server: decorator emit feeds NestJS DI and class-validator at runtime. Finish with the smoke run, not a build. |
-| `@fullcalendar/*` 6 → 7                     | Teaching only, and isolated to the calendar module. Safe to do out of order. |
+| `tailwindcss` 3 → 4 | Config moves into CSS. **Check `tw-colors` compatibility before starting** — the whole palette comes from that plugin. |
+| `@fullcalendar/*` 6 → 7 | Teaching only, isolated to the calendar module. |
+
+## Upgrading Node itself
+
+Pinned through Volta, which writes it into the root `package.json`:
+
+```bash
+volta install node@<version> && volta pin node@<version>
+```
+
+Take the latest **LTS**, not the newest release — a server is the wrong place for the Current line.
+Then move `@types/node` to the matching major, force a reinstall so native modules rebuild for the
+new ABI (`pnpm install --force`), and walk the whole ladder. Node's floor is what gates several
+upgrades: NestJS 12's CLI wants 22.22.3+, 24.15+ or 26+, Mongoose 9 wants 20.19+, firebase-admin 14
+wants 22+, and ESLint 10 wants 20.19+/22.13+/24+.
 
 ## Worth doing before any UI upgrade
 

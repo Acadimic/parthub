@@ -8,21 +8,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 having to be remembered. Each one is split into **must** (a violation is a defect) and **should**
 (convention), mirroring the two ESLint tiers. Invoke one with `/<name>`.
 
-| Skill                   | Use it before                                                         |
-| ----------------------- | --------------------------------------------------------------------- |
-| `use-ui-component`      | writing any UI in a feature — decides what already exists             |
-| `style-with-tailwind`   | writing a className, picking a colour, or editing a theme or config   |
-| `build-a-form`          | any form, edit dialog or upsert modal in an app                       |
-| `create-core-component` | adding a wrapper in `packages/ui/src/core/`, or a shadcn primitive    |
-| `add-app-screen`        | touching an app's `pages/`, `modules/`, `layouts/` or `stores/`       |
-| `add-api-endpoint`      | adding or changing a route in an existing server module               |
-| `add-server-module`     | creating a server module, a Mongoose schema, or editing `app.module`  |
-| `query-with-mongoose`   | any query, schema or index in `apps/server`                           |
-| `define-data-shape`     | declaring any interface, enum, DTO, MST model or Mongoose schema      |
-| `write-comments`        | writing comments, docblocks, or any suppression that needs a reason   |
-| `extend-a-package`      | editing a `packages/*` manifest, export, or adding a dependency       |
-| `upgrade-a-dependency`  | bumping any version, or recovering from a breaking upgrade            |
-| `verify-changes`        | reporting a change complete, and before every commit                  |
+| Skill                   | Use it before                                                        |
+| ----------------------- | -------------------------------------------------------------------- |
+| `use-ui-component`      | writing any UI in a feature — decides what already exists            |
+| `style-with-tailwind`   | writing a className, picking a colour, or editing a theme or config  |
+| `build-a-form`          | any form, edit dialog or upsert modal in an app                      |
+| `create-core-component` | adding a wrapper in `packages/ui/src/core/`, or a shadcn primitive   |
+| `add-app-screen`        | touching an app's `pages/`, `modules/`, `layouts/` or `stores/`      |
+| `add-api-endpoint`      | adding or changing a route in an existing server module              |
+| `add-server-module`     | creating a server module, a Mongoose schema, or editing `app.module` |
+| `query-with-mongoose`   | any query, schema or index in `apps/server`                          |
+| `define-data-shape`     | declaring any interface, enum, DTO, MST model or Mongoose schema     |
+| `write-comments`        | writing comments, docblocks, or any suppression that needs a reason  |
+| `extend-a-package`      | editing a `packages/*` manifest, export, or adding a dependency      |
+| `upgrade-a-dependency`  | bumping any version, or recovering from a breaking upgrade           |
+| `verify-changes`        | reporting a change complete, and before every commit                 |
 
 Longer-form reasoning lives in `.claude/plans/API_CONVENTIONS.md` and
 `.claude/plans/DATA_CONTRACTS.md`; the skills reference them rather than repeating them.
@@ -30,7 +30,8 @@ Longer-form reasoning lives in `.claude/plans/API_CONVENTIONS.md` and
 ## Build & Development Commands
 
 ```bash
-# Install dependencies (pnpm 10.12.1 required)
+# Node 24.20.0 LTS is pinned in the root package.json via Volta; pnpm 10.12.1 via packageManager.
+# With Volta installed, `node` in this repo is the pinned version automatically.
 pnpm install
 
 # Development
@@ -48,7 +49,8 @@ pnpm build:server        # Build NestJS app (nest build)
 pnpm typecheck:ui        # Typecheck the shared React package (packages/ui, no build step)
 
 # Lint & Format
-pnpm lint                # Run ESLint across all workspaces
+pnpm lint                # ESLint across all six lintable workspaces; must exit 0
+pnpm --filter @repo/server lint:fix   # every workspace also has lint:fix; `lint` never rewrites files
 pnpm format              # Prettier across all workspaces
 
 # Single workspace commands
@@ -62,11 +64,11 @@ pnpm --filter @repo/ui <script>
 
 ## Architecture
 
-**Monorepo** with pnpm workspaces: `apps/learning`, `apps/teaching`, `apps/admin`, `apps/server`, `packages/shared`, `packages/ui`, `packages/eslint-config`.
+**Monorepo** with pnpm workspaces: `apps/learning`, `apps/teaching`, `apps/admin`, `apps/server`, `packages/shared`, `packages/ui`, `packages/eslint-config` (the shared lint rules — see "Code Style").
 
 ### Where shared code lives
 
-- **`packages/shared` (`@repo/shared`)** — pure TypeScript, no React: enums, DTOs, interfaces, constants. Consumed by the server and all three apps. Compiled with `tsc`; run `pnpm build:shared` after changes. Subpath exports: `@repo/shared`, `@repo/shared/enums`, `@repo/shared/interfaces`, `@repo/shared/validations`.
+- **`packages/shared` (`@repo/shared`)** — pure TypeScript, no React: enums, DTOs, interfaces, constants. Consumed by the server and all three apps. Compiled with `tsc`; run `pnpm build:shared` after changes. Subpath exports: `@repo/shared`, `@repo/shared/enums`, `@repo/shared/interfaces`, `@repo/shared/validations`, `@repo/shared/contracts`. The validation DTOs are deliberately kept out of the root barrel so class-validator never reaches a browser bundle; `contracts/` re-exports their shapes as types only.
 - **`packages/ui` (`@repo/ui`)** — every shared React component, consumed as TS source via `transpilePackages` (no build): `ui/` shadcn primitives, `core/` wrappers over them, `app/` components composed from `core/`, plus `contexts/`, `hooks/`, `lib/` (cn, date-time, pure and browser helpers), `themes/` (light/dark used by every app's `tailwind.config.js`) and `types/` (React-aware item types such as `ISelectItem`, `IMenuItem`, `IColumnData`). Subpaths: `.`, `./core`, `./app`, `./ui/*`, `./contexts`, `./hooks`, `./lib`, `./themes`, `./types`. **`./app` is deliberately not in the root barrel**: fourteen names exist in both `core` and `app` with different APIs. See `packages/ui/README.md` for the layer rules and for which components stay in the apps and why.
 - **Components are imported straight from the package.** Feature code writes `from '@repo/ui/app'` or `from '@repo/ui/core'`; there are no pass-through component barrels. An app keeps an `index.ts` under `src/components` only where that folder still holds its own components, and it exports those alone.
 - **Non-component barrels remain**, because they mix shared and app-only values: `src/enums/index.ts` re-exports `@repo/shared/enums` plus app-only enums; `src/interfaces/index.ts` re-exports shared pure types and `@repo/ui/types` plus app-only interfaces; `src/themes`, `src/hooks/dimensions.hook.ts` and `src/utils/helpers/index.ts` re-export from `@repo/ui`. App `src/utils/helpers/util.ts` holds only helpers that depend on app stores/services.
@@ -105,10 +107,12 @@ pnpm --filter @repo/ui <script>
 - **Auth:** Firebase Authentication (same as Learning/Teaching).
 - **Pages:** Home, Standards, Subjects, Test Papers, Profile, Sign In.
 
-### Server (`apps/server`) — NestJS 10 + Fastify
+### Server (`apps/server`) — NestJS 12 + Fastify 5
 
 - **Module structure:** One NestJS module per domain (Auth, User, Firebase, Org, Subject, Course, Material, Chapter, TestPaper, Question). Each has controller → service → Mongoose schema.
-- **Database:** MongoDB via Mongoose 8. Base schemas in `src/base-schemas/`.
+- **Database:** MongoDB via Mongoose 9. Base schema in `src/database/base.schema.ts`, and two global
+  plugins attached to the connection (change tracking, activity logging). See the
+  `query-with-mongoose` skill — Mongoose 9 pre-middleware is async, with no `next()`.
 - **Auth:** Firebase Admin SDK validates JWTs via `passport-firebase-jwt`. Global `FirebaseAuthGuard` applied via `APP_GUARD`. Use `@Public()` decorator to exempt endpoints.
 - **HTTP:** Fastify adapter with Brotli compression and Helmet. Global `ValidationPipe` with whitelist/transform.
 - **Logging:** nestjs-pino with pino-pretty in dev. Authorization headers redacted.
@@ -121,6 +125,33 @@ Enums, DTOs, and pure interfaces consumed by the server and all apps. Compiled w
 ### UI (`packages/ui`)
 
 Shared React layer for the apps (see "Where shared code lives"). No build step; `pnpm typecheck:ui` typechecks it. Internal imports are relative (never app path aliases). `peerDependencies` pin the same React/Next versions the apps use so a single React instance is bundled.
+
+## Toolchain
+
+Pinned, and verified together as of 2026-09-08. Runtime versions come from the root
+`package.json` (`volta.node`, `packageManager`).
+
+|            |                                                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------------ |
+| Node       | **24.20.0 LTS**, pinned via Volta                                                                                  |
+| pnpm       | 10.12.1 via `packageManager`                                                                                       |
+| TypeScript | **6.0.3** everywhere                                                                                               |
+| ESLint     | **10.10.0** everywhere, flat config only                                                                           |
+| Server     | NestJS **12.0.1** on Fastify **5.12.1**, Mongoose **9.9.5**, firebase-admin **14.3.0**, class-validator **0.15.1** |
+| Apps       | Next.js 15.0.1, React 19 RC, MobX State Tree 6, TailwindCSS 3                                                      |
+
+Three dependencies are deliberately held back, each on someone else's release:
+
+- **`fastify` stays pinned exactly at 5.12.1**, because `@nestjs/platform-fastify@12.0.1` depends on
+  that exact version. A caret resolves a different patch and the plugin types stop matching the
+  adapter's — `app.register(compression)` fails to typecheck.
+- **`@types/node` stays on 24.x** to match the Node 24 runtime. Types ahead of the runtime describe
+  APIs that are not there.
+- **TypeScript stays on 6**, because `@typescript-eslint@8.70` is the newest release and peers
+  `typescript <6.1.0`. TypeScript 7 would break linting in all six workspaces.
+
+The frontend has its own pending majors (React 19 stable, Next 16, MobX 7, Tailwind 4). Read the
+`upgrade-a-dependency` skill before touching any version.
 
 ## Path Aliases
 
@@ -139,8 +170,13 @@ Shared React layer for the apps (see "Where shared code lives"). No build step; 
 ## Code Style
 
 - Prettier: 120 char width, single quotes, trailing commas, 2-space indent, LF line endings
-- App ESLint (learning, teaching, admin): `.eslintrc.js`, next/core-web-vitals + prettier
-- Server, shared and ui ESLint: `eslint.config.js` (ESLint 9 flat config), @typescript-eslint/recommended + prettier
+- **ESLint 10 with flat config in all six workspaces** — every one has its own `eslint.config.js`;
+  there is no `.eslintrc.js` left, because ESLint 10 does not read that format at all.
+- The three apps take Next's rules from `@next/eslint-plugin-next` directly, not from
+  `eslint-config-next` (which peers `eslint ^7 || ^8 || ^9` and would cap the repo below 10).
+  `next lint` is not used; every workspace lints with plain `eslint .`.
+- `eslint-plugin-react` is deliberately absent: its latest release still caps at `eslint ^9.7`,
+  and no rule from it was enabled. React checks come from `@next/eslint-plugin-next`.
 - **The rules themselves live in one place: `packages/eslint-config/index.js`** (`@repo/eslint-config`).
   All six workspaces spread the same `mustRules`, `shouldRules` and their own `layerRules` entry, so
   a rule change happens once. It is CommonJS because both ESLint generations consume it.
@@ -181,8 +217,10 @@ add a warning to a file you are editing, fix it before you finish.
   such as `debounce<T extends (...args: any[]) => void>`, where `unknown[]` would reject every
   concrete callback; it carries an inline disable and a comment saying why.
 - **No inline suppressions of that rule** without a comment giving the reason.
-- **Every tsconfig is strict.** The apps and both packages run `strict: true`; the server runs
-  `noImplicitAny` and `strictNullChecks`. A single-document Mongoose lookup therefore returns
+- **Every tsconfig is strict**, the server included: it sets `strict: true` explicitly, with
+  `strictBindCallApply` and `strictPropertyInitialization` the two deliberate exceptions — Mongoose
+  schema classes and Nest DTOs declare `@Prop() name: string` with no initializer because the value
+  arrives at runtime. A single-document Mongoose lookup therefore returns
   `Promise<XDocument | null>`, and the caller handles the miss (a controller throws
   `NotFoundException`).
 - Annotation style is left to the author: `explicit-function-return-type` is off, because

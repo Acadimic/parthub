@@ -2,8 +2,9 @@
 description: >
   The verification sequence for this monorepo, in the order that actually catches things: build
   packages/shared first if it changed, then typecheck each affected workspace, then lint, then
-  build. Six workspaces with two ESLint generations, one package consumed as source and one as
-  compiled output, so "it compiled" in one place proves nothing about the next. Use this before
+  build. Six workspaces, one package consumed as source and one as compiled output, so "it compiled"
+  in one place proves nothing about the next — and on the server, nothing proves it runs but running
+  it. Use this before
   reporting any change complete, and before asking to commit.
 when_to_use: >
   Trigger when a code change is finished and before saying it works; after editing packages/shared
