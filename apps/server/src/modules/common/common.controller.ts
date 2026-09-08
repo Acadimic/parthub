@@ -1,3 +1,6 @@
+import { Subdomain } from '@parthhub/shared';
+import { Subdomains } from '@decorators/subdomains.decorator';
+import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, HttpStatus } from '@nestjs/common';
 import { CommonService } from './common.service';
 import { PresignedGetUrlsDto, PresignedPutUrlsDto } from './dto/presigned-url.dto';
@@ -17,55 +20,36 @@ export class CommonController {
     private readonly standardSubjectMappingService: StandardSubjectMappingService,
   ) {}
 
-  @Get('admin/initial-data')
-  async getAdminInitialData() {
+  @Get('initial-data')
+  @Subdomains(Subdomain.ADMIN, Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions()
+  async getInitialData() {
     const [standards, subjects, mappings] = await Promise.all([
       this.standardService.getAll(),
       this.subjectService.getAll(),
       this.standardSubjectMappingService.getAll(),
     ]);
-    return { data: { standards, subjects, mappings }, status: HttpStatus.OK };
-  }
-
-  @Get('teach/initial-data')
-  async getTeachInitialData() {
-    const [standards, subjects, mappings] = await Promise.all([
-      this.standardService.getAll(),
-      this.subjectService.getAll(),
-      this.standardSubjectMappingService.getAll(),
-    ]);
-    return { data: { standards, subjects, mappings }, status: HttpStatus.OK };
-  }
-
-  @Get('learn/initial-data')
-  async getLearnInitialData() {
-    const [standards, subjects, mappings] = await Promise.all([
-      this.standardService.getAll(),
-      this.subjectService.getAll(),
-      this.standardSubjectMappingService.getAll(),
-    ]);
-    return { data: { standards, subjects, mappings }, status: HttpStatus.OK };
+    return { standards, subjects, mappings };
   }
 
   @Public()
-  @Get('learn/public-data')
+  @Get('public-data')
   async getPublicData() {
-    const [standards, subjects] = await Promise.all([
-      this.standardService.getAll(),
-      this.subjectService.getAll(),
-    ]);
-    return { data: { standards, subjects }, status: HttpStatus.OK };
+    const [standards, subjects] = await Promise.all([this.standardService.getAll(), this.subjectService.getAll()]);
+    return { standards, subjects };
   }
 
   @Post('presigned-PUT-urls')
+  @Permissions()
   async getPreSignedPUTUrls(@Body() payload: PresignedPutUrlsDto) {
     const data = await this.commonService.getPreSignedPUTUrls(payload.files, payload.isPublic);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
   @Post('presigned-GET-urls')
+  @Permissions()
   async getPreSignedGETUrls(@Body() payload: PresignedGetUrlsDto) {
     const data = await this.commonService.getPreSignedGETUrls(payload.keys, payload.isPublic);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 }

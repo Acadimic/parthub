@@ -38,11 +38,11 @@ export class MaterialService {
     return this.materialModel.find({ org, _deleted: false }).lean<MaterialDocument[]>();
   }
 
-  async findById(id: string) {
-    return this.materialModel.findById(id).lean<MaterialDocument>();
+  async findById(org: Types.ObjectId, id: string) {
+    return this.materialModel.findOne({ _id: id, org, _deleted: { $ne: true } }).lean<MaterialDocument>();
   }
 
-  async findByCourse(courseId: string) {
-    return this.materialModel.find({ course: courseId, _deleted: false }).lean<MaterialDocument[]>();
+  async findByCourse(org: Types.ObjectId, courseId: string) {
+    return this.materialModel.find({ course: courseId, org, _deleted: { $ne: true } }).lean<MaterialDocument[]>();
   }
 }

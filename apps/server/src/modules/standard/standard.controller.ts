@@ -1,3 +1,6 @@
+import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { Subdomains } from '@decorators/subdomains.decorator';
+import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, HttpStatus } from '@nestjs/common';
 import { StandardService } from './standard.service';
 import { StandardSubjectMappingService } from './standard-subject-mapping.service';
@@ -11,51 +14,51 @@ export class StandardController {
     private readonly standardSubjectMappingService: StandardSubjectMappingService,
   ) {}
 
-  @Post('admin/upsert')
+  @Post('upsert')
+  @Subdomains(Subdomain.ADMIN)
+  @Permissions(PermissionItem.MANAGE_STANDARD)
   async upsertStandard(@Body() payload: UpsertStandardDto) {
     const data = await this.standardService.upsert(payload);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Post('admin/bulk-upsert')
+  @Post('bulk-upsert')
+  @Subdomains(Subdomain.ADMIN)
+  @Permissions(PermissionItem.MANAGE_STANDARD)
   async bulkUpsertStandards(@Body() payloads: UpsertStandardDto[]) {
     const data = await this.standardService.bulkUpsert(payloads);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('admin/all')
+  @Get('all')
+  @Subdomains(Subdomain.ADMIN, Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions()
   async getAllStandards() {
     const data = await this.standardService.getAll();
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Post('admin/mapping/upsert')
+  @Post('mapping/upsert')
+  @Subdomains(Subdomain.ADMIN)
+  @Permissions(PermissionItem.MANAGE_STANDARD)
   async upsertMapping(@Body() payload: UpsertStandardSubjectMappingDto) {
     const data = await this.standardSubjectMappingService.upsert(payload);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Post('admin/mapping/bulk-upsert')
+  @Post('mapping/bulk-upsert')
+  @Subdomains(Subdomain.ADMIN)
+  @Permissions(PermissionItem.MANAGE_STANDARD)
   async bulkUpsertMappings(@Body() payloads: UpsertStandardSubjectMappingDto[]) {
     const data = await this.standardSubjectMappingService.upsertMany(payloads);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('admin/mapping/all')
+  @Get('mapping/all')
+  @Subdomains(Subdomain.ADMIN, Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions()
   async getAllMappings() {
     const data = await this.standardSubjectMappingService.getAll();
-    return { data, status: HttpStatus.OK };
-  }
-
-  @Get('teach/all')
-  async getStandardsForTeach() {
-    const data = await this.standardService.getAll();
-    return { data, status: HttpStatus.OK };
-  }
-
-  @Get('teach/mapping/all')
-  async getMappingsForTeach() {
-    const data = await this.standardSubjectMappingService.getAll();
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 }

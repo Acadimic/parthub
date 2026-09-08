@@ -1,3 +1,6 @@
+import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { Subdomains } from '@decorators/subdomains.decorator';
+import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Post, Body, HttpStatus, Get } from '@nestjs/common';
 import { RequestContextService } from '../../context/request-context.service';
 import { StudentStandardMappingService } from './services/student-standard-mapping.service';
@@ -16,48 +19,60 @@ export class MappingsController {
     private readonly userBatchMappingService: UserBatchMappingService,
   ) {}
 
-  @Post('teach/student-standard/upsert')
+  @Post('student-standard/upsert')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_MAPPING)
   async upsertStudentStandard(@Body() payload: UpsertStudentStandardMappingDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.studentStandardMappingService.upsert(userId, org, payload);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Post('teach/user-student/upsert')
+  @Post('user-student/upsert')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_MAPPING)
   async upsertUserStudent(@Body() payload: UpsertUserStudentMappingDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.userStudentMappingService.upsert(userId, org, payload);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Post('teach/user-batch/upsert')
+  @Post('user-batch/upsert')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_MAPPING)
   async upsertUserBatch(@Body() payload: UpsertUserBatchMappingDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.userBatchMappingService.upsert(userId, org, payload);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('teach/student-standard/all')
+  @Get('student-standard/all')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_MAPPING)
   async getStudentStandardMaps() {
     const org = this.requestContextService.getOrgId();
     const data = await this.studentStandardMappingService.getOrgMaps(org);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('teach/user-student/all')
+  @Get('user-student/all')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_MAPPING)
   async getUserStudentMaps() {
     const org = this.requestContextService.getOrgId();
     const data = await this.userStudentMappingService.getOrgMaps(org);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('teach/user-batch/all')
+  @Get('user-batch/all')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_MAPPING)
   async getUserBatchMaps() {
     const org = this.requestContextService.getOrgId();
     const data = await this.userBatchMappingService.getOrgMaps(org);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 }

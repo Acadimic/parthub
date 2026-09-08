@@ -1,7 +1,12 @@
+import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { Subdomains } from '@decorators/subdomains.decorator';
+import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, Query, HttpStatus } from '@nestjs/common';
+import { toCourseDto } from './course.mapper';
 import { CourseService } from './course.service';
 import { RequestContextService } from '../../context/request-context.service';
 import { UpsertCourseDto } from '@parthhub/shared/validations';
+import { CourseDto } from '@parthhub/shared';
 
 @Controller('course')
 export class CourseController {
@@ -10,41 +15,27 @@ export class CourseController {
     private readonly requestContextService: RequestContextService,
   ) {}
 
-  @Post('teach/upsert')
-  async upsertCourse(@Body() payload: UpsertCourseDto) {
+  @Post('upsert')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.CREATE_COURSE, PermissionItem.EDIT_COURSE)
+  async upsertCourse(@Body() payload: UpsertCourseDto): Promise<CourseDto> {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
-    const data = await this.courseService.upsert(userId, org, payload);
-    return { data, status: HttpStatus.OK };
+    return toCourseDto(await this.courseService.upsert(userId, org, payload));
   }
 
-  @Get('teach/all')
-  async getOrgCourses() {
-    const org = this.requestContextService.getOrgId();
-    const data = await this.courseService.getOrgCourses(org);
-    return { data, status: HttpStatus.OK };
-  }
-
-  @Get('teach/:id')
-  async getCourseById(@Param('id') id: string) {
-    const data = await this.courseService.getCourseById(id);
-    return { data, status: HttpStatus.OK };
-  }
-
-  @Get('learn/all')
-  async getLearnCourses() {
-    const org = this.requestContextService.getOrgId();
-    const data = await this.courseService.getOrgCourses(org);
-    return { data, status: HttpStatus.OK };
-  }
-
-  @Get()
-  async findAll(@Query('org') org: string) {
-    return this.courseService.findAll(org);
+  @Get('all')
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_COURSE)
+  async getOrgCourses(): Promise<CourseDto[]> {
+    const courses = await this.courseService.getOrgCourses(this.requestContextService.getOrgId());
+    return courses.map(toCourseDto);
   }
 
   @Get(':id')
-  async findById(@Param('id') id: string) {
-    return this.courseService.findById(id);
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_COURSE)
+  async getCourseById(@Param('id') id: string): Promise<CourseDto> {
+    return toCourseDto(await this.courseService.getOrgCourseById(this.requestContextService.getOrgId(), id));
   }
 }

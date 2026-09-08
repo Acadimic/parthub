@@ -1,14 +1,5 @@
 import { CurrencyType, PeriodType } from '@parthhub/shared';
-import {
-  IsArray,
-  IsBoolean,
-  IsEnum,
-  IsMongoId,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpsertPlanDto {
   @IsNotEmpty()

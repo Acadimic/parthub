@@ -31,15 +31,15 @@ export class QuestionService {
       .lean<QuestionDocument[]>();
   }
 
-  async findAll() {
-    return this.questionModel.find({ _deleted: false }).lean<QuestionDocument[]>();
+  async findAll(org: Types.ObjectId) {
+    return this.questionModel.find({ org, _deleted: { $ne: true } }).lean<QuestionDocument[]>();
   }
 
-  async findById(id: string) {
-    return this.questionModel.findById(id).lean<QuestionDocument>();
+  async findById(org: Types.ObjectId, id: string) {
+    return this.questionModel.findOne({ _id: id, org, _deleted: { $ne: true } }).lean<QuestionDocument>();
   }
 
-  async findByTestPaper(testPaperId: string) {
-    return this.questionModel.find({ testPaper: testPaperId, _deleted: false }).lean<QuestionDocument[]>();
+  async findByTestPaper(org: Types.ObjectId, testPaperId: string) {
+    return this.questionModel.find({ testPaper: testPaperId, org, _deleted: { $ne: true } }).lean<QuestionDocument[]>();
   }
 }

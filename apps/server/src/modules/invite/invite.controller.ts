@@ -1,7 +1,9 @@
+import { Subdomains } from '@decorators/subdomains.decorator';
+import { Permissions } from '@decorators/permissions.decorator';
 import { Public } from '@decorators/public.decorator';
 import { PermissionService } from '@modules/permissions/permission.service';
 import { Body, Controller, Get, Param, ParseArrayPipe, Post } from '@nestjs/common';
-import { PermissionItem } from '@parthhub/shared';
+import { PermissionItem, Subdomain } from '@parthhub/shared';
 import { InviteLookupDto, InviteDto, InviteUserDto } from '@parthhub/shared/validations';
 import { InviteService } from './invite.service';
 
@@ -19,26 +21,32 @@ export class InviteController {
   }
 
   @Post('/bulk/upsert')
-  async upsertInvite(@Body(new ParseArrayPipe({ items: InviteUserDto })) payloads: InviteUserDto[]): Promise<InviteDto[]> {
-    await this.permissionService.requireAny([PermissionItem.MANAGE_STAFF]);
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_STAFF)
+  async upsertInvite(
+    @Body(new ParseArrayPipe({ items: InviteUserDto })) payloads: InviteUserDto[],
+  ): Promise<InviteDto[]> {
     return await this.inviteService.upsertBulk(payloads);
   }
 
   @Post('/all')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_STAFF, PermissionItem.VIEW_STAFF)
   async getInvites(): Promise<InviteDto[]> {
-    await this.permissionService.requireAny([PermissionItem.MANAGE_STAFF, PermissionItem.VIEW_STAFF]);
     return await this.inviteService.getInvites();
   }
 
   @Post('/delete')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_STAFF)
   async deleteInvite(@Body() body: { inviteId: string }): Promise<void> {
-    await this.permissionService.requireAny([PermissionItem.MANAGE_STAFF]);
     await this.inviteService.deleteInvite(body.inviteId);
   }
 
   @Post('/resend')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_STAFF)
   async resendInvite(@Body() body: { inviteId: string }): Promise<InviteDto> {
-    await this.permissionService.requireAny([PermissionItem.MANAGE_STAFF]);
     return await this.inviteService.resendInvite(body.inviteId);
   }
 }

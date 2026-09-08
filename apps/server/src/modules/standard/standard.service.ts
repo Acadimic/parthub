@@ -25,6 +25,9 @@ export class StandardService {
   }
 
   async getAll(): Promise<StandardDocument[]> {
-    return this.standardModel.find({ _deleted: { $ne: true } }).sort({ order: 1 }).lean<StandardDocument[]>();
+    return this.standardModel
+      .find({ _deleted: { $ne: true } })
+      .sort({ order: 1 })
+      .lean<StandardDocument[]>();
   }
 }

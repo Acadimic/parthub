@@ -1,3 +1,6 @@
+import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { Subdomains } from '@decorators/subdomains.decorator';
+import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, HttpStatus } from '@nestjs/common';
 import { ChapterService } from './chapter.service';
 import { RequestContextService } from '../../context/request-context.service';
@@ -10,42 +13,45 @@ export class ChapterController {
     private readonly requestContextService: RequestContextService,
   ) {}
 
-  @Post('teach/upsert')
+  @Post('upsert')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_CHAPTER)
   async upsertChapter(@Body() payload: UpsertChapterDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.chapterService.upsert(userId, org, payload);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Post('teach/standard/subject/all')
+  @Post('standard/subject/all')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.VIEW_MATERIAL, PermissionItem.MANAGE_CHAPTER)
   async getStandardAndSubjectChapters(@Body() payload: StandardSubjectQueryDto) {
     const org = this.requestContextService.getOrgId();
     const data = await this.chapterService.getStandardAndSubjectChapters(org, payload);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('teach/all')
+  @Get('all')
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_MATERIAL)
   async getOrgChapters() {
     const org = this.requestContextService.getOrgId();
     const data = await this.chapterService.getChapters(org);
-    return { data, status: HttpStatus.OK };
-  }
-
-  @Get('learn/all')
-  async getLearnChapters() {
-    const org = this.requestContextService.getOrgId();
-    const data = await this.chapterService.getChapters(org);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
   @Get('course/:courseId')
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_MATERIAL)
   async findByCourse(@Param('courseId') courseId: string) {
-    return this.chapterService.findByCourse(courseId);
+    return this.chapterService.findByCourse(this.requestContextService.getOrgId(), courseId);
   }
 
   @Get(':id')
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_MATERIAL)
   async findById(@Param('id') id: string) {
-    return this.chapterService.findById(id);
+    return this.chapterService.findById(this.requestContextService.getOrgId(), id);
   }
 }

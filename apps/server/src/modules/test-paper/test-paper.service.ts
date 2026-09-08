@@ -65,7 +65,7 @@ export class TestPaperService {
     return this.testPaperModel.find({ org, _deleted: false }).lean<TestPaperDocument[]>();
   }
 
-  async findById(id: string) {
-    return this.testPaperModel.findById(id).lean<TestPaperDocument>();
+  async getOrgTestPaperById(org: Types.ObjectId, id: string) {
+    return this.testPaperModel.findOne({ _id: id, org, _deleted: { $ne: true } }).lean<TestPaperDocument>();
   }
 }

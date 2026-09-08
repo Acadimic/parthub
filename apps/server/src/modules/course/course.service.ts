@@ -29,8 +29,8 @@ export class CourseService {
       .lean<CourseDocument[]>();
   }
 
-  async getCourseById(id: string): Promise<CourseDocument> {
-    return this.courseModel.findById(id).lean<CourseDocument>();
+  async getOrgCourseById(org: Types.ObjectId, id: string): Promise<CourseDocument> {
+    return this.courseModel.findOne({ _id: id, org, _deleted: { $ne: true } }).lean<CourseDocument>();
   }
 
   async getCourseByName(org: Types.ObjectId, name: string): Promise<CourseDocument> {

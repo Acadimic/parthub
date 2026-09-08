@@ -22,9 +22,3 @@ export const getSubdomainFromUrl = (url: string): Subdomain | undefined => {
   const path = url.split('?')[0];
   return path.split('/').find((segment) => SUBDOMAINS.has(segment)) as Subdomain | undefined;
 };
-
-/** Route list for a controller path exposed under every subdomain prefix (plus the bare path). */
-export const subdomainRoutes = (path: string): string[] => [
-  path,
-  ...Object.values(Subdomain).map((subdomain) => `${subdomain}/${path}`),
-];

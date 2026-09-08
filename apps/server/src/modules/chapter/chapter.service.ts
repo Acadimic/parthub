@@ -30,11 +30,14 @@ export class ChapterService {
     return this.chapterModel.find({ org, _deleted: { $ne: true } }).lean<ChapterDocument[]>();
   }
 
-  async findByCourse(courseId: string) {
-    return this.chapterModel.find({ course: courseId, _deleted: false }).sort({ order: 1 }).lean<ChapterDocument[]>();
+  async findByCourse(org: Types.ObjectId, courseId: string) {
+    return this.chapterModel
+      .find({ course: courseId, org, _deleted: { $ne: true } })
+      .sort({ order: 1 })
+      .lean<ChapterDocument[]>();
   }
 
-  async findById(id: string) {
-    return this.chapterModel.findById(id).lean<ChapterDocument>();
+  async findById(org: Types.ObjectId, id: string) {
+    return this.chapterModel.findOne({ _id: id, org, _deleted: { $ne: true } }).lean<ChapterDocument>();
   }
 }

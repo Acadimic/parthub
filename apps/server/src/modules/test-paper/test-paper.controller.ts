@@ -1,3 +1,6 @@
+import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { Subdomains } from '@decorators/subdomains.decorator';
+import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, Query, HttpStatus } from '@nestjs/common';
 import { TestPaperService } from './test-paper.service';
 import { RequestContextService } from '../../context/request-context.service';
@@ -10,47 +13,38 @@ export class TestPaperController {
     private readonly requestContextService: RequestContextService,
   ) {}
 
-  @Post('teach/upsert')
+  @Post('upsert')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_TEST_PAPER)
   async upsertTestPaper(@Body() payload: UpsertTestPaperDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.testPaperService.upsert(userId, org, payload);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('teach/all')
+  @Get('all')
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_TEST_PAPER)
   async getOrgTestPapers() {
     const org = this.requestContextService.getOrgId();
     const data = await this.testPaperService.getOrgTestPapers(org);
-    return { data, status: HttpStatus.OK };
-  }
-
-  @Get('teach/:id')
-  async getTestPaperById(@Param('id') id: string) {
-    const data = await this.testPaperService.getTestPaperById(id);
-    return { data, status: HttpStatus.OK };
-  }
-
-  @Post('teach/merge')
-  async mergeTestPapers(@Body() payload: { primaryTestPaperId: string; secondaryTestPaperId: string }) {
-    const data = await this.testPaperService.mergeTestPapers(payload.primaryTestPaperId, payload.secondaryTestPaperId);
-    return { data, status: HttpStatus.OK };
-  }
-
-  @Get('learn/all')
-  async getLearnTestPapers() {
-    const org = this.requestContextService.getOrgId();
-    const data = await this.testPaperService.getOrgTestPapers(org);
-    return { data, status: HttpStatus.OK };
-  }
-
-  @Get()
-  async findAll(@Query('org') org: string) {
-    return this.testPaperService.findAll(org);
+    return data;
   }
 
   @Get(':id')
-  async findById(@Param('id') id: string) {
-    return this.testPaperService.findById(id);
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_TEST_PAPER)
+  async getTestPaperById(@Param('id') id: string) {
+    const data = await this.testPaperService.getOrgTestPaperById(this.requestContextService.getOrgId(), id);
+    return data;
+  }
+
+  @Post('merge')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_TEST_PAPER)
+  async mergeTestPapers(@Body() payload: { primaryTestPaperId: string; secondaryTestPaperId: string }) {
+    const data = await this.testPaperService.mergeTestPapers(payload.primaryTestPaperId, payload.secondaryTestPaperId);
+    return data;
   }
 }

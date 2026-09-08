@@ -1,14 +1,5 @@
 import { ColorType, MeetFrequency, MeetStatus } from '@parthhub/shared';
-import {
-  IsArray,
-  IsDateString,
-  IsEnum,
-  IsMongoId,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsArray, IsDateString, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpsertMeetDto {
   @IsNotEmpty()

@@ -1,3 +1,6 @@
+import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { Subdomains } from '@decorators/subdomains.decorator';
+import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Delete, Param, HttpStatus } from '@nestjs/common';
 import { MeetService } from './meet.service';
 import { UpsertMeetDto, GetByMeetIdsDto } from './dto/upsert-meet.dto';
@@ -10,49 +13,63 @@ export class MeetController {
     private readonly requestContextService: RequestContextService,
   ) {}
 
-  @Post('teach/upsert')
+  @Post('upsert')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_MEET)
   async upsertMeet(@Body() payload: UpsertMeetDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.meetService.upsert(userId, org, payload);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('teach/all')
+  @Get('all')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.VIEW_MEET)
   async getOrgMeets() {
     const org = this.requestContextService.getOrgId();
     const data = await this.meetService.getByOrg(org);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Post('teach/add-attendees/:meetId')
+  @Post('add-attendees/:meetId')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_MEET)
   async addAttendees(@Param('meetId') meetId: string, @Body() body: { attendeeIds: string[] }) {
     const data = await this.meetService.addAttendees(meetId, body.attendeeIds);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Post('teach/remove-attendees/:meetId')
+  @Post('remove-attendees/:meetId')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_MEET)
   async removeAttendees(@Param('meetId') meetId: string, @Body() body: { attendeeIds: string[] }) {
     const data = await this.meetService.removeAttendees(meetId, body.attendeeIds);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Delete('teach/:meetId')
+  @Delete(':meetId')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_MEET)
   async deleteMeet(@Param('meetId') meetId: string) {
     const data = await this.meetService.delete(meetId);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('learn/all')
+  @Get('my')
+  @Subdomains(Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_MEET)
   async getMyMeets() {
     const userId = this.requestContextService.getUserId();
     const data = await this.meetService.getByAttendee(userId);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Post('learn/by-ids')
+  @Post('by-ids')
+  @Subdomains(Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_MEET)
   async getMeetsByIds(@Body() payload: GetByMeetIdsDto) {
     const data = await this.meetService.getMeetsByIds(payload.ids);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 }

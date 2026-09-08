@@ -6,10 +6,7 @@ import { PresignedPutUrlDto } from './dto/presigned-url.dto';
 export class CommonService {
   constructor(private readonly s3Service: S3Service) {}
 
-  async getPreSignedPUTUrls(
-    files: PresignedPutUrlDto[],
-    isPublic = false,
-  ): Promise<{ key: string; url: string }[]> {
+  async getPreSignedPUTUrls(files: PresignedPutUrlDto[], isPublic = false): Promise<{ key: string; url: string }[]> {
     const urls = await Promise.all(
       files.map(async (file) => ({
         key: file.key,
@@ -19,10 +16,7 @@ export class CommonService {
     return urls;
   }
 
-  async getPreSignedGETUrls(
-    keys: string[],
-    isPublic = false,
-  ): Promise<{ key: string; url: string }[]> {
+  async getPreSignedGETUrls(keys: string[], isPublic = false): Promise<{ key: string; url: string }[]> {
     const urls = await Promise.all(
       keys.map(async (key) => ({
         key,

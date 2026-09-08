@@ -1,3 +1,6 @@
+import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { Subdomains } from '@decorators/subdomains.decorator';
+import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, HttpStatus } from '@nestjs/common';
 import { FollowerService } from './follower.service';
 import { UpsertFollowerDto } from './dto/upsert-follower.dto';
@@ -10,32 +13,40 @@ export class FollowerController {
     private readonly requestContextService: RequestContextService,
   ) {}
 
-  @Post('learn/upsert')
+  @Post('upsert')
+  @Subdomains(Subdomain.LEARN)
+  @Permissions(PermissionItem.MANAGE_FOLLOWER)
   async upsertFollower(@Body() payload: UpsertFollowerDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.followerService.upsert(userId, org, payload);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('learn/followers')
+  @Get('followers')
+  @Subdomains(Subdomain.LEARN)
+  @Permissions(PermissionItem.MANAGE_FOLLOWER)
   async getFollowers() {
     const userId = this.requestContextService.getUserId();
     const data = await this.followerService.getFollowers(userId);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('learn/followings')
+  @Get('followings')
+  @Subdomains(Subdomain.LEARN)
+  @Permissions(PermissionItem.MANAGE_FOLLOWER)
   async getFollowings() {
     const userId = this.requestContextService.getUserId();
     const data = await this.followerService.getFollowings(userId);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('learn/followers/count')
+  @Get('followers/count')
+  @Subdomains(Subdomain.LEARN)
+  @Permissions()
   async getFollowersCount() {
     const userId = this.requestContextService.getUserId();
     const data = await this.followerService.getFollowersCount(userId);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 }

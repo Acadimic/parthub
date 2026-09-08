@@ -1,3 +1,6 @@
+import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { Subdomains } from '@decorators/subdomains.decorator';
+import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, HttpStatus } from '@nestjs/common';
 import { ReactionService } from './reaction.service';
 import { UpsertReactionDto } from './dto/upsert-reaction.dto';
@@ -10,24 +13,30 @@ export class ReactionController {
     private readonly requestContextService: RequestContextService,
   ) {}
 
-  @Post('learn/upsert')
+  @Post('upsert')
+  @Subdomains(Subdomain.LEARN)
+  @Permissions(PermissionItem.MANAGE_REACTION)
   async upsertReaction(@Body() payload: UpsertReactionDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.reactionService.upsert(userId, org, payload);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('learn/all')
+  @Get('all')
+  @Subdomains(Subdomain.LEARN)
+  @Permissions(PermissionItem.MANAGE_REACTION)
   async getReactions() {
     const userId = this.requestContextService.getUserId();
     const data = await this.reactionService.getReactionsByUserId(userId);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('learn/count/:collectionItem')
+  @Get('count/:collectionItem')
+  @Subdomains(Subdomain.LEARN)
+  @Permissions()
   async getReactionsCount(@Param('collectionItem') collectionItem: string) {
     const data = await this.reactionService.getReactionsCount(collectionItem);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 }

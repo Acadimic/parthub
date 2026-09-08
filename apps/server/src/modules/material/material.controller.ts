@@ -1,3 +1,6 @@
+import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { Subdomains } from '@decorators/subdomains.decorator';
+import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, Query, HttpStatus } from '@nestjs/common';
 import { MaterialService } from './material.service';
 import { RequestContextService } from '../../context/request-context.service';
@@ -10,47 +13,45 @@ export class MaterialController {
     private readonly requestContextService: RequestContextService,
   ) {}
 
-  @Post('teach/upsert')
+  @Post('upsert')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_MATERIAL)
   async upsertMaterial(@Body() payload: UpsertMaterialDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.materialService.upsert(userId, org, payload);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Get('teach/all')
+  @Get('all')
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_MATERIAL)
   async getOrgMaterials() {
     const org = this.requestContextService.getOrgId();
     const data = await this.materialService.getOrgMaterials(org);
-    return { data, status: HttpStatus.OK };
+    return data;
   }
 
-  @Post('teach/standard/subject/all')
+  @Post('standard/subject/all')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.VIEW_MATERIAL)
   async getStandardAndSubjectMaterials(@Body() body: { standard: string; subject: string }) {
     const org = this.requestContextService.getOrgId();
     const data = await this.materialService.getStandardAndSubjectMaterials(org, body.standard, body.subject);
-    return { data, status: HttpStatus.OK };
-  }
-
-  @Get('learn/all')
-  async getLearnMaterials() {
-    const org = this.requestContextService.getOrgId();
-    const data = await this.materialService.getOrgMaterials(org);
-    return { data, status: HttpStatus.OK };
-  }
-
-  @Get()
-  async findAll(@Query('org') org: string) {
-    return this.materialService.findAll(org);
+    return data;
   }
 
   @Get(':id')
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_MATERIAL)
   async findById(@Param('id') id: string) {
-    return this.materialService.findById(id);
+    return this.materialService.findById(this.requestContextService.getOrgId(), id);
   }
 
   @Get('course/:courseId')
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_MATERIAL)
   async findByCourse(@Param('courseId') courseId: string) {
-    return this.materialService.findByCourse(courseId);
+    return this.materialService.findByCourse(this.requestContextService.getOrgId(), courseId);
   }
 }

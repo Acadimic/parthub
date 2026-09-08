@@ -1,6 +1,8 @@
+import { Subdomains } from '@decorators/subdomains.decorator';
+import { Permissions } from '@decorators/permissions.decorator';
 import { PermissionService } from '@modules/permissions/permission.service';
 import { Body, Controller, Post } from '@nestjs/common';
-import { PermissionItem } from '@parthhub/shared';
+import { PermissionItem, Subdomain } from '@parthhub/shared';
 import { OrgDto, UpdateOrgDto } from '@parthhub/shared/validations';
 import { RequestContextService } from '../../context/request-context.service';
 import { OrgService } from './org.service';
@@ -14,9 +16,10 @@ export class OrgController {
   ) {}
 
   /** Org owners complete or change their organization details after sign-up. */
-  @Post('teach/update')
+  @Post('update')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.EDIT_ORG)
   async updateOrg(@Body() body: UpdateOrgDto): Promise<OrgDto> {
-    await this.permissionService.requireAny([PermissionItem.EDIT_ORG]);
     return await this.orgService.update(this.requestContextService.getOrgId(), body);
   }
 }

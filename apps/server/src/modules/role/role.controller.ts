@@ -1,3 +1,4 @@
+import { Permissions } from '@decorators/permissions.decorator';
 import { PermissionService } from '@modules/permissions/permission.service';
 import { Body, Controller, ParseArrayPipe, Post } from '@nestjs/common';
 import { PermissionItem } from '@parthhub/shared';
@@ -12,20 +13,20 @@ export class RoleController {
   ) {}
 
   @Post('/bulk/upsert')
+  @Permissions(PermissionItem.EDIT_ROLE)
   async upsertRole(@Body(new ParseArrayPipe({ items: RoleDto })) payloads: RoleDto[]): Promise<RoleDto[]> {
-    await this.permissionService.requireAny([PermissionItem.EDIT_ROLE]);
     return await this.roleService.upsertBulk(payloads);
   }
 
   @Post('/all')
+  @Permissions(PermissionItem.VIEW_ROLE)
   async getRoles(): Promise<RoleDto[]> {
-    await this.permissionService.requireAny([PermissionItem.VIEW_ROLE]);
     return await this.roleService.getRoles();
   }
 
   @Post('/delete')
+  @Permissions(PermissionItem.DELETE_ROLE)
   async deleteRole(@Body() payload: DeleteRoleDto): Promise<void> {
-    await this.permissionService.requireAny([PermissionItem.DELETE_ROLE]);
     return await this.roleService.deleteRole(payload);
   }
 }
