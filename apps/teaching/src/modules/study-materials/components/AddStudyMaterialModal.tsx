@@ -1,4 +1,5 @@
-import { Modal, ModalFooter, Select } from '@components/app';
+import { Select } from '@components/app/selects';
+import { Modal, ModalFooter } from '@parthhub/ui/app';
 import { PositionType } from '@enums';
 import { ISelectItem } from '@interfaces';
 import { useStores } from '@stores';

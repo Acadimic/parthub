@@ -1,4 +1,4 @@
-import { Button, FullScreenLoader, Modal, ModalFooter } from '@components/app';
+import { Button, FullScreenLoader, Modal, ModalFooter } from '@parthhub/ui/app';
 import { ExamFooter } from '@components/app/footers';
 import { ExamHeader } from '@components/app/headers';
 import { ExamSidebar, Instruction } from '@components/exam';

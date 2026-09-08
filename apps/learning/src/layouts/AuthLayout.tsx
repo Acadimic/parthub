@@ -1,4 +1,4 @@
-import { AuthHeader } from '@components/app';
+import { AuthHeader } from '@components/app/headers';
 import { BannerImg } from '@components/images';
 
 interface IProps {

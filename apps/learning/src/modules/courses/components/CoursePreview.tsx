@@ -1,4 +1,4 @@
-import { Breadcrumb, IBreadcrumbItem } from '@components/app';
+import { Breadcrumb, IBreadcrumbItem } from '@parthhub/ui/app';
 import { CourseItemType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { useWindowDimensions } from '@hooks/dimensions.hook';

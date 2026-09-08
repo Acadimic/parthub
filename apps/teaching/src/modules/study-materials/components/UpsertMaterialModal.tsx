@@ -1,16 +1,6 @@
-import {
-  Attachments,
-  Button,
-  Label,
-  Modal,
-  ModalFooter,
-  Select,
-  SimpleAccordions,
-  TextInput,
-  UploadFiles,
-} from '@components/app';
-import { Block, MathEditor } from '@components/editors';
-import { getBlocks } from '@components/editors/math-jax-editor/util';
+import { Attachments, UploadFiles } from '@components/app/attachments';
+import { Select } from '@components/app/selects';
+import { Button, Label, Modal, ModalFooter, SimpleAccordions, TextInput } from '@parthhub/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
 import { FileExtension, PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
@@ -23,6 +13,8 @@ import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 import { StudyMaterialView } from './StudyMaterialView';
 import { UpsertAttachmentModal } from './UpsertAttachment';
+import { Block, MathEditor } from '@components/editors';
+import { getBlocks } from '@components/editors/math-jax-editor/util';
 
 interface IProps {
   isOpen: boolean;

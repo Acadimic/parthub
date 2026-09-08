@@ -1,4 +1,4 @@
-import { FullScreenLoader } from '@components/app';
+import { FullScreenLoader } from '@parthhub/ui/app';
 import { Layout } from '@enums';
 import { getFirebaseUser } from '@utils/firebase';
 import { useRouter } from 'next/router';

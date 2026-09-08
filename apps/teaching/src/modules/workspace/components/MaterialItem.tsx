@@ -1,4 +1,4 @@
-import { Card } from '@components/app';
+import { Card } from '@parthhub/ui/app';
 import { MaterialInfo, StandardWithLogo } from '@components/common';
 import { IMaterialStat, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';

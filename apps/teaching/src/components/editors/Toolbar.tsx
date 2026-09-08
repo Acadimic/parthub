@@ -1,4 +1,4 @@
-import { Tooltip } from '@components/app';
+import { Tooltip } from '@parthhub/ui/app';
 import { ITarget } from '@interfaces';
 import {
   ArrowUDownLeftIcon,

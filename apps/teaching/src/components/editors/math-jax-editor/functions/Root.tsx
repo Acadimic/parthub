@@ -1,4 +1,4 @@
-import { TextInput } from '@components/app';
+import { TextInput } from '@parthhub/ui/app';
 import { RenderEquation } from '@components/others';
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';

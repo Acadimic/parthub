@@ -1,4 +1,5 @@
-import { Breadcrumb, Card, IBreadcrumbItem, MenuList, UploadAvatar } from '@components/app';
+import { UploadAvatar } from '@components/app/attachments';
+import { Breadcrumb, Card, IBreadcrumbItem, MenuList } from '@parthhub/ui/app';
 import { GearSixIcon, LockKeyIcon, UserIcon } from '@phosphor-icons/react';
 import { AccountSettingsType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';

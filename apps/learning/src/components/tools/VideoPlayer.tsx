@@ -1,4 +1,4 @@
-import { Loader } from '@components/app';
+import { Loader } from '@parthhub/ui/app';
 import { useAttachment } from '@hooks/attachment.hook';
 import { useEffect, useState } from 'react';
 import ReactPlayer from 'react-player';

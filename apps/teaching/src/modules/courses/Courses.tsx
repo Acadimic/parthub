@@ -1,5 +1,6 @@
-import { Button, DataTable, FullScreenLoader, TextInput } from '@components/app';
-import { PresignedImage } from '@components/app/attachments/PresignedImage';
+import { DataTable } from '@components/app/tables';
+import { Button, FullScreenLoader, TextInput } from '@parthhub/ui/app';
+import { PresignedImage } from '@components/app/attachments';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { ICourse, useStores } from '@stores';
 import { ACTIONS, ALL } from '@utils/constants';

@@ -1,4 +1,5 @@
-import { LearnerNavigation, PageHeader } from '@components/app';
+import { PageHeader } from '@components/app/headers';
+import { LearnerNavigation } from '@components/app/navigations';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 

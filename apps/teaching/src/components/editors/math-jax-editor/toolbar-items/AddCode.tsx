@@ -1,4 +1,4 @@
-import { TextArea } from '@components/app';
+import { TextArea } from '@parthhub/ui/app';
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';
 import { CodeNode } from '../types';

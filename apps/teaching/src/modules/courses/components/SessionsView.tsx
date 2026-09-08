@@ -1,4 +1,4 @@
-import { Card } from '@components/app';
+import { Card } from '@parthhub/ui/app';
 import { MeetItem } from '@components/common';
 import { BlankState } from '@components/others';
 import { ICourse, useStores } from '@stores';

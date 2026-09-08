@@ -1,4 +1,4 @@
-import { SwipeButton } from '@components/app/buttons';
+import { SwipeButton } from '@parthhub/ui/app';
 import { CollectionType } from '@enums';
 import { CourseService } from '@services';
 import { IMaterial, ITestPaper, useStores } from '@stores';

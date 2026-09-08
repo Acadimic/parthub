@@ -1,7 +1,7 @@
-import { Label, Switch, TextInput } from '@components/app';
-import { Actions, EquationBlock, EquationEditor, EquationType } from '@components/editors';
+import { Label, Switch, TextInput } from '@parthhub/ui/app';
 import { useEffect, useState } from 'react';
 import { getEquationInitialContent } from '../../../math-jax-editor/util';
+import { Actions, EquationBlock, EquationEditor, EquationType } from '@components/editors';
 
 interface IProps {
   rows: EquationBlock[][][];

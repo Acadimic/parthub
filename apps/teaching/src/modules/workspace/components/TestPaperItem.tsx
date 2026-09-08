@@ -1,4 +1,4 @@
-import { Card } from '@components/app';
+import { Card } from '@parthhub/ui/app';
 import { StandardWithLogo, TestPaperInfo } from '@components/common';
 import { TestPaperIconSvg } from '@components/images';
 import { ITestPaper, useStores } from '@stores';

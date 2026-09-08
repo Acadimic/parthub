@@ -1,4 +1,4 @@
-import { Accordions } from '@components/app';
+import { Accordions } from '@parthhub/ui/app';
 import { StudyMaterialView } from '@modules/study-materials/components';
 import { ICourseModule, IMaterial, ITestPaper, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';

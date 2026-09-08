@@ -1,4 +1,4 @@
-import { Select } from '@components/app';
+import { Select } from '@components/app/selects';
 import { ArticleIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
 import { ISelectItem } from '@interfaces';

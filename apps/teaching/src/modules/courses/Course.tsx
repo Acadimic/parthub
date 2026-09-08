@@ -1,4 +1,4 @@
-import { Accordions, Button, Loader, Menu, SplitButton } from '@components/app';
+import { Accordions, Button, Loader, Menu, SplitButton } from '@parthhub/ui/app';
 import { DownloadSimpleIcon, PencilIcon, PlusIcon } from '@phosphor-icons/react';
 import { BlankState, TitleWithIcon } from '@components/others';
 import { MaterialInfo } from '@modules/study-materials/components';

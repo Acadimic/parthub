@@ -1,6 +1,6 @@
 import { Html } from '@components/others';
 import { ISelectItem } from '@interfaces';
-import { Label } from '../inputs';
+import { Label } from '@parthhub/ui/app';
 
 interface IProps {
   label?: string;

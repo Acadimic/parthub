@@ -1,4 +1,4 @@
-import { Button } from '@components/app';
+import { Button } from '@parthhub/ui/app';
 import { Layout } from '@enums';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';

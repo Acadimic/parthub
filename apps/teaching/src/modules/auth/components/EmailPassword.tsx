@@ -1,4 +1,4 @@
-import { Button, TextInput } from '@components/app';
+import { Button, TextInput } from '@parthhub/ui/app';
 import { EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
 import { ILoginUser } from '@interfaces';
 import { useRouter } from 'next/router';

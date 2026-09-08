@@ -1,4 +1,4 @@
-import { CheckboxSelection, RadioSelection } from '@components/app';
+import { CheckboxSelection, RadioSelection } from '@components/app/selections';
 import { Html } from '@components/others';
 import { QuestionType } from '@enums';
 import { IQuestion, useStores } from '@stores';

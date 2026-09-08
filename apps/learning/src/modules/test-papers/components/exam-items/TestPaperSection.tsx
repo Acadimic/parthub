@@ -1,4 +1,4 @@
-import { Tooltip } from '@components/app';
+import { Tooltip } from '@parthhub/ui/app';
 import { ITestPaperSection } from '@stores';
 import { observer } from 'mobx-react-lite';
 

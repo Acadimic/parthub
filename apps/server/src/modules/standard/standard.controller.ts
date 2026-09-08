@@ -4,8 +4,7 @@ import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, HttpStatus } from '@nestjs/common';
 import { StandardService } from './standard.service';
 import { StandardSubjectMappingService } from './standard-subject-mapping.service';
-import { StandardDto } from '@parthhub/shared/validations';
-import { StandardSubjectMappingDto } from '@parthhub/shared/validations';
+import { StandardDto, StandardSubjectMappingDto } from '@parthhub/shared/validations';
 
 @Controller('standard')
 export class StandardController {

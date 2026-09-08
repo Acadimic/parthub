@@ -1,4 +1,4 @@
-import { Avatar } from '@components/app';
+import { Avatar } from '@components/app/avatars';
 import { AccountSettingsType } from '@enums';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { IMenuItem } from '@interfaces';
@@ -9,7 +9,7 @@ import { capitalize, logOut } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import * as React from 'react';
-import { Menu } from '../../../menus';
+import { Menu } from '@parthhub/ui/app';
 
 export const ProfileDropdown = observer(() => {
   const { push } = useRouter();

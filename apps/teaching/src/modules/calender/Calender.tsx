@@ -1,4 +1,4 @@
-import { FullScreenLoader } from '@components/app';
+import { FullScreenLoader } from '@parthhub/ui/app';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';

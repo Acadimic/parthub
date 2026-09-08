@@ -1,4 +1,3 @@
-export * from '@parthhub/ui/app';
 export * from './BlankState';
 export * from './Confirm';
 export * from './Container';

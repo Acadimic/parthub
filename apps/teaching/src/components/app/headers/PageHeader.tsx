@@ -1,4 +1,4 @@
-import { Button, FullLogo, HamburgerIcon, Link, ToggleTheme } from '@components/app';
+import { Button, FullLogo, HamburgerIcon, Link, ToggleTheme } from '@parthhub/ui/app';
 import { CaretDownIcon, MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';

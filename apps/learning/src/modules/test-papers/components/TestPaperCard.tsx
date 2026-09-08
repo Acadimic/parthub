@@ -1,4 +1,4 @@
-import { Button } from '@components/app';
+import { Button } from '@parthhub/ui/app';
 import { DotsNineIcon } from '@phosphor-icons/react';
 import { ITestPaper } from '@stores';
 import { useRouter } from 'next/router';

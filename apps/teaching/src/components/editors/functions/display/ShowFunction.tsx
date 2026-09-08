@@ -1,4 +1,4 @@
-import { Modal, Popover } from '@components/app';
+import { Modal, Popover } from '@parthhub/ui/app';
 import {
   ArrowLineRightIcon,
   ArrowRightIcon,

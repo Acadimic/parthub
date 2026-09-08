@@ -4,9 +4,7 @@ import { IColumnData } from '@interfaces';
 import { ACTIONS } from '@utils/constants';
 import * as React from 'react';
 import { TableComponents, TableVirtuoso } from 'react-virtuoso';
-import { Menu } from '../menus';
-import { Checkbox } from '../selections';
-import { Tooltip } from '../tooltips';
+import { Menu, Checkbox, Tooltip } from '@parthhub/ui/app';
 
 const DEFAULT_CELL_WIDTH = 180;
 const INDEX_FIELD = 'index';

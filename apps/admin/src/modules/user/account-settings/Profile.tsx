@@ -1,4 +1,4 @@
-import { Button, Spinner } from '@components/app';
+import { Button, Spinner } from '@parthhub/ui/app';
 import { getFirebaseUser } from '@utils/firebase';
 import { errorToast, splitCamelCase, successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';

@@ -1,4 +1,4 @@
-import { Label, TextInput } from '@components/app';
+import { Label, TextInput } from '@parthhub/ui/app';
 import { errorToast } from '@utils/helpers';
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';

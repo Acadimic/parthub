@@ -1,4 +1,4 @@
-import { Button, Dropdown, Menu } from '@components/app';
+import { Button, Dropdown, Menu } from '@parthhub/ui/app';
 import {
   CaretLeftIcon,
   CaretRightIcon,

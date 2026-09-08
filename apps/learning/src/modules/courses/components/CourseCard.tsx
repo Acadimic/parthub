@@ -1,5 +1,5 @@
-import { Card } from '@components/app';
-import { PresignedImage } from '@components/app/attachments/PresignedImage';
+import { Card } from '@parthhub/ui/app';
+import { PresignedImage } from '@components/app/attachments';
 import { StandardWithLogo } from '@components/common';
 import { ICourse, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
@@ -56,7 +56,7 @@ export const CourseCard = observer(({ course }: { course: ICourse }) => {
   );
 });
 
-// import { Button } from '@components/app';
+// import { Button } from '@parthhub/ui/app';
 // import { DotsNineIcon } from '@phosphor-icons/react';
 // import { ICourse } from '@stores';
 // import { useRouter } from 'next/router';

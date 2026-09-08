@@ -1,4 +1,4 @@
-import { Link } from '@components/app';
+import { Link } from '@parthhub/ui/app';
 
 interface IProps {
   infoText: string;

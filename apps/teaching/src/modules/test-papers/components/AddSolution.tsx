@@ -1,6 +1,6 @@
-import { CheckboxSelection, RadioSelection, Select, TextInput } from '@components/app';
-import { Block, MathEditor } from '@components/editors';
-import { getBlocks } from '@components/editors/math-jax-editor/util';
+import { CheckboxSelection, RadioSelection } from '@components/app/selections';
+import { Select } from '@components/app/selects';
+import { TextInput } from '@parthhub/ui/app';
 import { Html } from '@components/others';
 import { Marking, QuestionType } from '@enums';
 import { ISelectItem } from '@interfaces';
@@ -11,6 +11,8 @@ import { getStandardSelectItem } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
 import { SelectQuestionType } from './SelectQuestionType';
+import { Block, MathEditor } from '@components/editors';
+import { getBlocks } from '@components/editors/math-jax-editor/util';
 
 export const AddSolution = observer(() => {
   const { selectorStore, questionStore, standardStore } = useStores();

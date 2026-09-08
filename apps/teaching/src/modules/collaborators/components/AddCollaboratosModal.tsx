@@ -1,4 +1,4 @@
-import { Card, Modal } from '@components/app';
+import { Card, Modal } from '@parthhub/ui/app';
 import { UserPlusIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { observer } from 'mobx-react-lite';
 

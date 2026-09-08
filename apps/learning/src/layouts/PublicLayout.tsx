@@ -1,4 +1,4 @@
-import { PageFooter } from '@components/app';
+import { PageFooter } from '@components/app/footers';
 import { PageLayout } from './PageLayout';
 
 interface IProps {

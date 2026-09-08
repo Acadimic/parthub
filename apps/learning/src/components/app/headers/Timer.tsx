@@ -4,7 +4,7 @@ import { getTimeString } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef } from 'react';
 import { useSetState } from 'react-use';
-import { Button } from '../buttons';
+import { Button } from '@parthhub/ui/app';
 
 interface IProps {
   isActiveTimer: boolean;

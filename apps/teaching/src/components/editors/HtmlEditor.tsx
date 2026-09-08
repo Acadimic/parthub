@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import ContentEditable from 'react-contenteditable';
 
-import { Label } from '@components/app';
+import { Label } from '@parthhub/ui/app';
 import { ITarget } from '@interfaces';
 import { replaceColor } from '@utils/helpers';
 import { Toolbar } from './Toolbar';

@@ -1,4 +1,4 @@
-import { Breadcrumb, IBreadcrumbItem, Modal } from '@components/app';
+import { Breadcrumb, IBreadcrumbItem, Modal } from '@parthhub/ui/app';
 import { StandardWithLogo } from '@components/common';
 import { useCourse } from '@hooks/course.hook';
 import { useWindowDimensions } from '@hooks/dimensions.hook';

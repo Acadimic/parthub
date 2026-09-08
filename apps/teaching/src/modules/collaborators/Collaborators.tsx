@@ -1,4 +1,5 @@
-import { Button, DataTable, FullScreenLoader, TextInput } from '@components/app';
+import { DataTable } from '@components/app/tables';
+import { Button, FullScreenLoader, TextInput } from '@parthhub/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { DefaultRole } from '@enums';
 import { IColumnData } from '@interfaces';

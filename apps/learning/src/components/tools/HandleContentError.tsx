@@ -1,4 +1,4 @@
-import { Link } from '@components/app';
+import { Link } from '@parthhub/ui/app';
 import Image from 'next/image';
 
 interface IProps {

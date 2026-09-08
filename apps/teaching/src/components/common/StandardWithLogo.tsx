@@ -1,4 +1,4 @@
-import { PresignedImage } from '@components/app/attachments/PresignedImage';
+import { PresignedImage } from '@components/app/attachments';
 import { IStandard } from '@stores';
 
 interface IProps {

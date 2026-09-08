@@ -1,4 +1,4 @@
-import { Card } from '@components/app';
+import { Card } from '@parthhub/ui/app';
 import { CopyUrl } from '@components/common';
 import { IMeet } from '@stores';
 import { getFormattedTime, getFrequencyText, getStringFormattedDate } from '@utils/helpers';

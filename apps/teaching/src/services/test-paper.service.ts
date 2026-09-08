@@ -1,6 +1,5 @@
 import { IMergeTestPapers, IUpsertBulkSectionQuestions, IUpsertSectionQuestion } from '@interfaces';
-import { ITestPaper, ITestPaperSection } from '@stores';
-import { ITestPaperSnapshotIn } from '@stores';
+import { ITestPaper, ITestPaperSection, ITestPaperSnapshotIn } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

@@ -42,17 +42,19 @@ pnpm --filter @parthhub/ui <script>
 ### Where shared code lives
 
 - **`packages/shared` (`@parthhub/shared`)** — pure TypeScript, no React: enums, DTOs, interfaces, constants. Consumed by the server and all three apps. Compiled with `tsc`; run `pnpm build:shared` after changes. Subpath exports: `@parthhub/shared`, `@parthhub/shared/enums`, `@parthhub/shared/interfaces`, `@parthhub/shared/validations`.
-- **`packages/ui` (`@parthhub/ui`)** — React code shared by the apps, consumed as TS source via `transpilePackages` (no build): `ui/` shadcn primitives, `core/` wrappers, `contexts/`, `hooks/`, `lib/` (cn, date-time, pure and browser helpers), `themes/` (light/dark used by every app's `tailwind.config.js`), `types/` (React-aware item types such as `ISelectItem`, `IMenuItem`, `IColumnData`). Subpaths: `.`, `./core`, `./ui/*`, `./contexts`, `./hooks`, `./lib`, `./themes`, `./types`.
-- **Apps keep thin barrels** so feature code never changes: `src/enums/index.ts` re-exports `@parthhub/shared/enums` plus app-only enums; `src/interfaces/index.ts` re-exports shared pure types and `@parthhub/ui/types` plus app-only interfaces; `src/components/core`, `src/components/contexts`, `src/themes`, `src/hooks/dimensions.hook.ts` and `src/utils/helpers/index.ts` re-export from `@parthhub/ui`. App `src/utils/helpers/util.ts` holds only helpers that depend on app stores/services.
+- **`packages/ui` (`@parthhub/ui`)** — every shared React component, consumed as TS source via `transpilePackages` (no build): `ui/` shadcn primitives, `core/` wrappers over them, `app/` components composed from `core/`, plus `contexts/`, `hooks/`, `lib/` (cn, date-time, pure and browser helpers), `themes/` (light/dark used by every app's `tailwind.config.js`) and `types/` (React-aware item types such as `ISelectItem`, `IMenuItem`, `IColumnData`). Subpaths: `.`, `./core`, `./app`, `./ui/*`, `./contexts`, `./hooks`, `./lib`, `./themes`, `./types`. **`./app` is deliberately not in the root barrel**: fourteen names exist in both `core` and `app` with different APIs. See `packages/ui/README.md` for the layer rules and for which components stay in the apps and why.
+- **Components are imported straight from the package.** Feature code writes `from '@parthhub/ui/app'` or `from '@parthhub/ui/core'`; there are no pass-through component barrels. An app keeps an `index.ts` under `src/components` only where that folder still holds its own components, and it exports those alone.
+- **Non-component barrels remain**, because they mix shared and app-only values: `src/enums/index.ts` re-exports `@parthhub/shared/enums` plus app-only enums; `src/interfaces/index.ts` re-exports shared pure types and `@parthhub/ui/types` plus app-only interfaces; `src/themes`, `src/hooks/dimensions.hook.ts` and `src/utils/helpers/index.ts` re-export from `@parthhub/ui`. App `src/utils/helpers/util.ts` holds only helpers that depend on app stores/services.
 - **Enum values are canonical in `packages/shared`** (they match what the server validates). App code that needs a new value adds it there, never in a local copy. Tailwind `content` in each app includes `../../packages/ui/src/**`.
 
 ### Learning (`apps/learning`) — Next.js 15 Pages Router
 
 - **State management:** MobX State Tree. Root store in `src/stores/root.store.ts` with sub-stores (user, course, material, selector, toast). Access via `useStores()` hook. Async actions use MST `flow(function*(...) { ... })`.
 - **Layouts:** Pages declare their layout via `Component.layout = Layout.AUTH | Layout.SIDEBAR | ...`. Layout components live in `src/layouts/`.
-- **Component layers:** Two-layer system enforced by convention, implemented in `packages/ui`:
+- **Component layers:** Three-layer system enforced by convention, implemented in `packages/ui`:
   - `packages/ui/src/ui/` — Raw shadcn primitives. **Never import these in feature code.**
-  - `packages/ui/src/core/` — Wrappers adding label, error, consistent API. Feature code (`modules/`, `layouts/`, `pages/`) imports only from the app's `@components/core` barrel. Use the `/create-core-component` skill to create new wrappers.
+  - `packages/ui/src/core/` — Wrappers adding label, error, consistent API. Feature code (`modules/`, `layouts/`, `pages/`) imports them from `@parthhub/ui/core`. Use the `/create-core-component` skill to create new wrappers.
+  - `packages/ui/src/app/` — Components composed from `core/` (SplitButton, DateInput, Carousel, Menu, ...). Feature code imports them from `@parthhub/ui/app`.
 - **Auth:** Firebase Authentication (email/password + Google/Microsoft OAuth). Token management and refresh in `src/utils/firebase/`.
 - **HTTP:** Axios with separate auth/unauth callers in `src/services/http.service.ts`. Request interceptor adds Bearer token + permission headers.
 - **Styling:** TailwindCSS 3 + MUI 6 + Emotion CSS-in-JS. Light/dark theme via `tw-colors` plugin and `ColorModeContext`.
@@ -62,7 +64,7 @@ pnpm --filter @parthhub/ui <script>
 
 - **Purpose:** Teacher-facing app for managing courses, study materials, test papers, students, and sessions.
 - **State management:** MobX State Tree (same pattern as Learning).
-- **Component layers:** Same two-layer system as Learning (`packages/ui` → app `@components/core` barrel → feature code).
+- **Component layers:** Same three-layer system as Learning, imported directly from `@parthhub/ui/core` and `@parthhub/ui/app`.
 - **Styling:** TailwindCSS 3 + shadcn/ui + tw-colors. No MUI dependency.
 - **Icons:** Phosphor Icons (`@phosphor-icons/react`).
 - **Auth:** Firebase Authentication (same as Learning).
@@ -71,7 +73,7 @@ pnpm --filter @parthhub/ui <script>
 
 - **Purpose:** Admin app for managing standards, subjects, and test papers across the platform.
 - **State management:** MobX State Tree. Root store with sub-stores (standard, course, selector). Access via `useStores()` hook.
-- **Component layers:** Same two-layer system (`packages/ui` → app `@components/core` barrel → feature code).
+- **Component layers:** Same three-layer system, imported directly from `@parthhub/ui/core` and `@parthhub/ui/app`.
 - **Styling:** TailwindCSS 3 + shadcn/ui + tw-colors. No MUI dependency.
 - **Icons:** Phosphor Icons (`@phosphor-icons/react`).
 - **Auth:** Firebase Authentication (same as Learning/Teaching).

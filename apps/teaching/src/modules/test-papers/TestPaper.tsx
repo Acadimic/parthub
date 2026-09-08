@@ -1,5 +1,4 @@
-import { Accordions, Card, Loader, Menu, Modal, ModalFooter, SplitButton, Tooltip } from '@components/app';
-import { ChapterName } from '@components/common/ChapterName';
+import { Accordions, Card, Loader, Menu, Modal, ModalFooter, SplitButton, Tooltip } from '@parthhub/ui/app';
 import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { PositionType, SectionCategoryType, SectionType } from '@enums';
@@ -10,6 +9,7 @@ import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
+import { ChapterName } from '@components/common/ChapterName';
 import {
   GenerateQuestionsModal,
   Options,

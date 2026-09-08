@@ -1,4 +1,4 @@
-import { Label } from '@components/app';
+import { Label } from '@parthhub/ui/app';
 import { RenderEquation } from '@components/others';
 import { useEffect, useRef, useState } from 'react';
 import { EquationActions } from './EquationActions';

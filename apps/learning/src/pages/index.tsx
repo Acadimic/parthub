@@ -1,4 +1,4 @@
-import { Link } from '@components/app';
+import { Link } from '@parthhub/ui/app';
 import { BannerImg } from '@components/images';
 import { Container, Testimonials, Title } from '@components/others';
 import { Layout } from '@enums';

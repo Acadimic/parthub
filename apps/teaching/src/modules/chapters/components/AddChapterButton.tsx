@@ -1,4 +1,4 @@
-import { Button, Modal, SplitButton } from '@components/app';
+import { Button, Modal, SplitButton } from '@parthhub/ui/app';
 import { GearIcon, PlusIcon } from '@phosphor-icons/react';
 import { PositionType } from '@enums';
 import { useStores } from '@stores';

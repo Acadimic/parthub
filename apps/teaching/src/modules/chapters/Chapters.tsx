@@ -1,4 +1,4 @@
-import { Button } from '@components/app';
+import { Button } from '@parthhub/ui/app';
 import { PencilIcon, PlusIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { ChapterService } from '@services';

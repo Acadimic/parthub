@@ -1,4 +1,4 @@
-import { RectangleSkeleton } from '@components/app';
+import { RectangleSkeleton } from '@parthhub/ui/app';
 import { IUser } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';

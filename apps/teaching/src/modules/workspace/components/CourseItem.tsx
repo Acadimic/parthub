@@ -1,5 +1,5 @@
-import { Card } from '@components/app';
-import { PresignedImage } from '@components/app/attachments/PresignedImage';
+import { Card } from '@parthhub/ui/app';
+import { PresignedImage } from '@components/app/attachments';
 import { CourseInfo, StandardWithLogo } from '@components/common';
 import { ICourse, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';

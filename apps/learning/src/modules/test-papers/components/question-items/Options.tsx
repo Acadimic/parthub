@@ -1,4 +1,5 @@
-import { CheckboxSelection, RadioSelection, TextInput } from '@components/app';
+import { CheckboxSelection, RadioSelection } from '@components/app/selections';
+import { TextInput } from '@parthhub/ui/app';
 import { Html } from '@components/others';
 import { QuestionType } from '@enums';
 import { ISelectItem } from '@interfaces';

@@ -1,6 +1,5 @@
-import { Label, Modal, ModalFooter, Select, TextArea, TextInput } from '@components/app';
-import { CopyUrl } from '@components/common';
-import { getTextAndEquationBlocksString } from '@components/editors/math-jax-editor/util';
+import { Select } from '@components/app/selects';
+import { Label, Modal, ModalFooter, TextArea, TextInput } from '@parthhub/ui/app';
 import { ArticleIcon, EqualizerIcon } from '@phosphor-icons/react';
 import { LevelType, PositionType, QuestionType } from '@enums';
 import { ISelectItem } from '@interfaces';
@@ -10,6 +9,8 @@ import { getGeneratedQuestionsPrompt } from '@utils/ai/prompts';
 import { errorToast, splitCamelCase, successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useSetState } from 'react-use';
+import { CopyUrl } from '@components/common';
+import { getTextAndEquationBlocksString } from '@components/editors/math-jax-editor/util';
 
 interface IProps {
   isOpen: boolean;

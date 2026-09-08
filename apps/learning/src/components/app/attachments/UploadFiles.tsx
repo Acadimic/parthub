@@ -1,6 +1,6 @@
 import { CloudArrowUpIcon } from '@phosphor-icons/react';
 import { getPlural } from '@utils/helpers';
-import { Button } from '../buttons';
+import { Button } from '@parthhub/ui/app';
 import { FileDropZone, IFileUploadProps } from '../selects';
 
 export const UploadFiles = ({ ...props }: IFileUploadProps) => {

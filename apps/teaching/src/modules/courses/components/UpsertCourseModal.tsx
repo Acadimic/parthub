@@ -1,4 +1,6 @@
-import { Label, Modal, ModalFooter, Select, TextArea, TextInput, UploadFiles } from '@components/app';
+import { UploadFiles } from '@components/app/attachments';
+import { Select } from '@components/app/selects';
+import { Label, Modal, ModalFooter, TextArea, TextInput } from '@parthhub/ui/app';
 import { PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { ISelectItem } from '@interfaces';

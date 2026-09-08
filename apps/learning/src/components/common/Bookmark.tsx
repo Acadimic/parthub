@@ -1,4 +1,4 @@
-import { Spinner } from '@components/app';
+import { Spinner } from '@parthhub/ui/app';
 import { CollectionType } from '@enums';
 import { useBookmark } from '@hooks/bookmark.hook';
 import { BookmarkSimpleIcon } from '@phosphor-icons/react';

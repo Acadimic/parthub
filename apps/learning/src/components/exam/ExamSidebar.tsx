@@ -1,4 +1,4 @@
-import { Button } from '@components/app';
+import { Button } from '@parthhub/ui/app';
 import { SubmitButton } from '@components/exam';
 import { Marking } from '@enums';
 import { TestPaperSection } from '@modules/test-papers/components/exam-items';

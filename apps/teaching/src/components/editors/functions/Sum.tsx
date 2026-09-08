@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Button } from '@components/app';
+import { Button } from '@parthhub/ui/app';
 import { IFunctionProps, IPosition, ITarget } from '@interfaces';
 import { HtmlEditor } from '..';
 import { Toolbar } from '../Toolbar';

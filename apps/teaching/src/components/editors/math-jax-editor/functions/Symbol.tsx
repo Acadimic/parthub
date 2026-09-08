@@ -1,4 +1,4 @@
-import { Tooltip } from '@components/app';
+import { Tooltip } from '@parthhub/ui/app';
 import { DotsNineIcon } from '@phosphor-icons/react';
 import { RenderEquation } from '@components/others';
 import {

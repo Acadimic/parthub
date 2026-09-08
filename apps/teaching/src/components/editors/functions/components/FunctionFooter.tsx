@@ -1,4 +1,4 @@
-import { Button } from '@components/app';
+import { Button } from '@parthhub/ui/app';
 
 interface IProps {
   onSave: () => void;

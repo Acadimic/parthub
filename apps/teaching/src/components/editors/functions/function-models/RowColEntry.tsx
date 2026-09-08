@@ -1,8 +1,8 @@
-import { HtmlEditor } from '@components/editors';
-import { Toolbar } from '@components/editors/Toolbar';
 import { IPosition, ITarget } from '@interfaces';
 import { useEffect, useState } from 'react';
 import { FunctionFooter } from '../components';
+import { HtmlEditor } from '@components/editors';
+import { Toolbar } from '@components/editors/Toolbar';
 
 interface IState {
   [key: string]: string;

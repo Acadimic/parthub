@@ -1,4 +1,5 @@
-import { AppSidebar, FullScreenLoader } from '@components/app';
+import { AppSidebar } from '@components/app/sidebars';
+import { FullScreenLoader } from '@parthhub/ui/app';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';

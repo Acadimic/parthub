@@ -1,6 +1,6 @@
 import { BookIcon, HouseIcon, Icon, PaperPlaneIcon, VideoIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
-import { Link } from '../links';
+import { Link } from '@parthhub/ui/app';
 
 interface INavigation {
   name: string;

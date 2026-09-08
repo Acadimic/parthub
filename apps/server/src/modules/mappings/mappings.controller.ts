@@ -6,9 +6,7 @@ import { RequestContextService } from '../../context/request-context.service';
 import { StudentStandardMappingService } from './services/student-standard-mapping.service';
 import { UserStudentMappingService } from './services/user-student-mapping.service';
 import { UserBatchMappingService } from './services/user-batch-mapping.service';
-import { StudentStandardMappingDto } from '@parthhub/shared/validations';
-import { UserStudentMappingDto } from '@parthhub/shared/validations';
-import { UserBatchMappingDto } from '@parthhub/shared/validations';
+import { StudentStandardMappingDto, UserStudentMappingDto, UserBatchMappingDto } from '@parthhub/shared/validations';
 
 @Controller('mapping')
 export class MappingsController {

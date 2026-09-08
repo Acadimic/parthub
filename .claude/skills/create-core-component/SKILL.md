@@ -4,11 +4,11 @@ description: >
   from packages/ui/src/ui/. Use this skill BEFORE creating any new UI component that a feature
   module needs. Feature code in the apps (modules/, layouts/, pages/) must NEVER import shadcn
   primitives directly. Instead, create or use a core wrapper that adds label, error, and a
-  consistent API, and consume it through the app's `@components/core` barrel.
+  consistent API, imported from `@parthhub/ui/core`.
 when_to_use: >
   Trigger when: (1) a feature module needs a UI element that has no core wrapper yet,
   (2) someone asks to add a form field, input, select, dialog, or any UI primitive to a feature,
-  (3) you see a direct import from `@parthhub/ui/ui/*` or a leftover `components/ui/` path in feature code.
+  (3) you see a direct import from `@parthhub/ui/ui/*` in feature code.
 argument-hint: "[component-name]"
 ---
 
@@ -23,11 +23,12 @@ apps (`apps/learning`, `apps/teaching`, `apps/admin`) consume it as TypeScript s
 1. **Two-layer component system (inside `packages/ui/src`):**
    - `ui/<name>.tsx` — Raw shadcn primitives (kebab-case files). NEVER import these in app feature code.
    - `core/<Name>/index.tsx` — Wrappers that compose `ui/` primitives with label, error, and a consistent
-     props API. Exported from `core/index.ts`, which is what `@parthhub/ui` and every app's
-     `@components/core` barrel re-export.
+     props API. Exported from `core/index.ts`, which is what `@parthhub/ui` and
+     `@parthhub/ui/core` expose.
 
-2. **Feature code** (`modules/`, `layouts/`, `pages/` in any app) imports ONLY from `@components/core`
-   (or `@parthhub/ui`). If a core wrapper doesn't exist yet, create one first.
+2. **Feature code** (`modules/`, `layouts/`, `pages/` in any app) imports wrappers from
+   `@parthhub/ui/core` and composed components from `@parthhub/ui/app`. There are no pass-through
+   component barrels in the apps. If a core wrapper doesn't exist yet, create one first.
 
 3. **Imports inside `packages/ui` are relative** (`../../ui/button`, `../../lib/cn`, `../../types`).
    Never use app path aliases such as `@components/*` or `@utils/*` there — they don't resolve in the package.
@@ -42,7 +43,7 @@ apps (`apps/learning`, `apps/teaching`, `apps/admin`) consume it as TypeScript s
 4. **Create `packages/ui/src/core/<Name>/index.tsx`** following the pattern below.
 5. **Export it** from `packages/ui/src/core/index.ts` (component and its props type).
 6. **Typecheck** with `pnpm typecheck:ui`, then typecheck the app that will use it.
-7. **Update feature code** to import the wrapper from `@components/core`.
+7. **Update feature code** to import the wrapper from `@parthhub/ui/core`.
 
 ## Pattern to Follow
 
@@ -102,6 +103,14 @@ Tabs, TextInput, Tooltip.
 
 Primitives available in `packages/ui/src/ui/` without a wrapper yet: command, dropdown-menu, input,
 sheet, switch, textarea, dialog (used by Modal).
+
+## The `app/` layer
+
+`packages/ui/src/app/` holds components composed from these wrappers, such as SplitButton,
+DateInput, Carousel and Menu. It is a separate subpath (`@parthhub/ui/app`) because fourteen names
+exist in both layers with different APIs. Put a new component there when it combines several core
+wrappers rather than wrapping a single primitive. See `packages/ui/README.md` for the layer rules,
+including which components deliberately stay in the apps.
 
 ## Argument
 

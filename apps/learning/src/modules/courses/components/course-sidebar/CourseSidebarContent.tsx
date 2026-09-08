@@ -1,4 +1,4 @@
-import { SimpleAccordions } from '@components/app';
+import { SimpleAccordions } from '@parthhub/ui/app';
 import { StandardWithLogo } from '@components/common';
 import { CourseItemType } from '@enums';
 import { useCourse } from '@hooks/course.hook';

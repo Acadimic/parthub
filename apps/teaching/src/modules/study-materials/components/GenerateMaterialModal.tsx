@@ -1,6 +1,5 @@
-import { Label, Modal, ModalFooter, TextArea, TextInput, UploadFiles } from '@components/app';
-import { CopyUrl } from '@components/common';
-import { getTextWithEquationBlocksString } from '@components/editors/math-jax-editor/util';
+import { UploadFiles } from '@components/app/attachments';
+import { Label, Modal, ModalFooter, TextArea, TextInput } from '@parthhub/ui/app';
 import { PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { MaterialService } from '@services';
@@ -10,6 +9,8 @@ import { errorToast, successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
 import { useSetState } from 'react-use';
+import { CopyUrl } from '@components/common';
+import { getTextWithEquationBlocksString } from '@components/editors/math-jax-editor/util';
 
 interface IProps {
   isOpen: boolean;

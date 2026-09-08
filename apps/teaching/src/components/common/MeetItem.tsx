@@ -1,4 +1,4 @@
-import { Card } from '@components/app';
+import { Card } from '@parthhub/ui/app';
 import { CopyUrl } from '@components/common';
 import { JoiningLink, MeetingTitle } from '@modules/calender/components';
 import { IMeet } from '@stores';

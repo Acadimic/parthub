@@ -1,13 +1,13 @@
-import { Button, Select, SplitButton, TextInput } from '@components/app';
-import { Modal } from '@components/app/modals';
-import { Block, HtmlEditor, MathEditor } from '@components/editors';
-import { RightSquareBracket } from '@components/editors/functions/DymaicBrackets';
-import { serializeBlocks } from '@components/editors/math-jax-editor/util';
+import { Select } from '@components/app/selects';
+import { Button, SplitButton, TextInput, Modal } from '@parthhub/ui/app';
 import { PencilIcon, PlusIcon, SquaresFourIcon, TrashIcon } from '@phosphor-icons/react';
 import { Layout } from '@enums';
 import { IPosition, ITarget } from '@interfaces';
 import { getCombineValue } from '@utils/helpers';
 import { useState } from 'react';
+import { Block, HtmlEditor, MathEditor } from '@components/editors';
+import { RightSquareBracket } from '@components/editors/functions/DymaicBrackets';
+import { serializeBlocks } from '@components/editors/math-jax-editor/util';
 
 const TestPage = () => {
   const [html, setHtml] = useState(``);

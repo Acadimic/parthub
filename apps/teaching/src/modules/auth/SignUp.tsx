@@ -1,4 +1,4 @@
-import { Button, TextInput, ToggleTheme } from '@components/app';
+import { Button, TextInput, ToggleTheme } from '@parthhub/ui/app';
 import { ArrowCircleLeftIcon, EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
 import { HorizontalLineWithText, Policy } from '@components/others';
 import { ILoginUser } from '@interfaces';

@@ -1,4 +1,4 @@
-import { Link, Tooltip } from '@components/app';
+import { Link, Tooltip } from '@parthhub/ui/app';
 import { ArrowSquareOutIcon, LinkSimpleIcon } from '@phosphor-icons/react';
 
 interface IProps {

@@ -1,4 +1,4 @@
-import { Button } from '@components/app';
+import { Button } from '@parthhub/ui/app';
 import { SubmitButton } from '@components/exam';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';

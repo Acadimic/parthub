@@ -1,7 +1,7 @@
 import { Html } from '@components/others';
 import { ISelectItem } from '@interfaces';
 import * as React from 'react';
-import { Label } from '../inputs';
+import { Label } from '@parthhub/ui/app';
 
 interface IProps {
   label?: string;
