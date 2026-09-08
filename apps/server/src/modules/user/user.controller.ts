@@ -4,13 +4,7 @@ import { User } from '@decorators/user.decorator';
 import { PermissionService } from '@modules/permissions/permission.service';
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { PermissionItem, Subdomain } from '@repo/shared';
-import {
-  AcceptInviteDto,
-  InitialDataDto,
-  UpdateOrgUserDto,
-  UpdateProfileDto,
-  UserDto,
-} from '@repo/shared/validations';
+import { AcceptInviteDto, InitialDataDto, UpdateOrgUserDto, UpdateProfileDto, UserDto } from '@repo/shared/validations';
 import { INITIAL_LOGIN_DATA_URL } from '@utils/constants';
 import { UserService } from './user.service';
 
