@@ -12,8 +12,6 @@
   "dependencies": {
     "@firebase/app": "^0.10.13",
     "@firebase/auth": "^1.7.9",
-    "@repo/shared": "workspace:*",
-    "@repo/ui": "workspace:*",
     "@phosphor-icons/react": "^2.1.7",
     "@radix-ui/react-accordion": "^1.2.17",
     "@radix-ui/react-alert-dialog": "^1.1.20",
@@ -32,6 +30,8 @@
     "@radix-ui/react-switch": "^1.2.5",
     "@radix-ui/react-tabs": "^1.1.18",
     "@radix-ui/react-tooltip": "^1.2.13",
+    "@repo/shared": "workspace:*",
+    "@repo/ui": "workspace:*",
     "axios": "^1.7.7",
     "bson-objectid": "^2.0.4",
     "class-variance-authority": "^0.7.1",
@@ -52,7 +52,8 @@
     "react-virtuoso": "^4.18.11",
     "sass": "^1.89.2",
     "tailwind-merge": "^3.6.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "16.3.4",

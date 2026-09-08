@@ -1,17 +1,10 @@
-import { type IStandardSubjectQuery, type IMaterialInfo } from '@interfaces';
+import { type IMaterialStat, type IStandardSubjectQuery, type IMaterialInfo } from '@interfaces';
 import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { DocumentType, LevelType, LinkType, MaterialType } from '../enums';
 import { MaterialService } from '../services';
 import { getObjectId } from '../utils/helpers';
 import { type IAttachment, type IMaterial, Material } from './models';
 import { type IStore } from './root.store';
-
-export interface IMaterialStat {
-  standard: string;
-  subject: string;
-  count: number;
-  lastUpdatedAt: string;
-}
 
 export const MaterialStore = t
   .model({
@@ -161,3 +154,5 @@ export const MaterialStore = t
   }));
 
 export type IMaterialStore = Instance<typeof MaterialStore>;
+
+export type { IMaterialStat };

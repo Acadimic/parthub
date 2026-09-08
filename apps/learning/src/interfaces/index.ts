@@ -10,6 +10,8 @@ export type {
   ITarget,
   IFunctionProps,
   IPosition,
+  IBatchStat,
+  IMaterialStat,
   ICourseBase,
   IMaterialInfo,
   IQuestionBase,

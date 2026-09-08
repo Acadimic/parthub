@@ -11,6 +11,8 @@ export type {
   IFunctionProps,
   IPosition,
   IEditorCellMap,
+  IBatchStat,
+  IMaterialStat,
   ICourseBase,
   IMaterialInfo,
   IQuestionBase,

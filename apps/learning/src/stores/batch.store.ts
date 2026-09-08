@@ -1,15 +1,9 @@
+import { type IBatchStat } from '@interfaces';
 import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { BatchService } from '../services';
 import { getObjectId } from '../utils/helpers';
 import { Batch, type IBatch, type IUser, type IUserBatchMapping, UserBatchMapping } from './models';
 import { type IStore } from './root.store';
-
-export interface IBatchStat {
-  standard: string;
-  subject: string;
-  count: number;
-  lastUpdatedAt: string;
-}
 
 export const BatchStore = t
   .model({
@@ -146,3 +140,5 @@ export const BatchStore = t
   }));
 
 export type IBatchStore = Instance<typeof BatchStore>;
+
+export type { IBatchStat };

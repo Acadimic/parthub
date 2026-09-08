@@ -213,10 +213,23 @@ time, smallest app first.
 **Phase 0 — groundwork (no behaviour change)**
 1. Add `InviteDto`, `RoleDto` and `UserDto` to `packages/shared/src/contracts/`, then
    `pnpm build:shared`. Everything else the stores model is already covered.
-2. Move the shapes from the table in decision 2 into `packages/shared/src/interfaces/` — `IToast`,
-   `batch.interface.ts`, `IBatchStat`, and the reconciled `IMaterialStat`. This is a pure
-   type move with no behaviour change, so it can land before any store is touched and be verified by
-   typecheck alone.
+2. Move the shapes that do not depend on MST into `packages/shared/src/interfaces/`: `IBatchStat`
+   and the reconciled `IMaterialStat`. A pure type move, verified by typecheck alone.
+
+   **Two entries from the decision-2 table cannot move yet, and this only became clear on
+   contact:**
+
+   - `IToast` is `Instance<typeof ToastModel>` — MST-derived. Declaring it in `packages/shared`
+     before the store migrates would create exactly the duplicate this migration removes, so it
+     moves *with* admin's toast store in the next step.
+   - `IBatchUpsert` holds `batch: IBatch`, another MST instance type, so it waits for the batch
+     store. Its sibling `IBatchUser` turns out to duplicate the existing `UserBatchMappingDto`
+     contract and is only consumed by `BatchService.upsertBatchUserMappings`, which has **no
+     callers**; delete both rather than move them.
+
+   The general rule this implies: **a shape can move to `packages/shared` only once it no longer
+   references an MST type.** For anything that does, the move happens in the same commit as its
+   store, not in Phase 0.
 3. Add `zustand` (5.0.15, peers `react >=18`) to the three apps.
 4. Write one reference store end to end — **`toast` in admin**: 5 stores, 14 `observer` uses, 9
    `getRoot`, and the toast store is self-contained with an existing non-React caller. It sets the

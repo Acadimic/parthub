@@ -35,3 +35,11 @@ export type StandardSubjectMappingDto = ResponseOf<StandardSubjectMappingDtoFiel
 export type StudentStandardMappingDto = ResponseOf<StudentStandardMappingDtoFields>;
 export type UserBatchMappingDto = ResponseOf<UserBatchMappingDtoFields>;
 export type UserStudentMappingDto = ResponseOf<UserStudentMappingDtoFields>;
+
+// These three declare their own complete field lists rather than extending BaseOwnedDto, so they
+// are re-exported as-is. Wrapping them in ResponseOf would add org, createdBy, updatedBy,
+// createdAt, updatedAt and _deleted as *required*, which the server does not send for them —
+// UserDto declares its own `org` and nothing else from that set.
+export type { UserDto } from '../dtos/validations/user/user.dto';
+export type { InviteDto } from '../dtos/validations/invite/invite.dto';
+export type { RoleDto } from '../dtos/validations/role/role.dto';
