@@ -99,11 +99,11 @@ export const Students = observer(() => {
     },
     {
       label: 'Role',
-      dataKey: 'role',
+      dataKey: 'designation',
       valueFormatter: (row: IUser) => {
         return (
           <div className="capitalize">
-            <span className="">{row.role}</span>
+            <span className="">{row.designation}</span>
           </div>
         );
       },

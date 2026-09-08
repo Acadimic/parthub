@@ -129,8 +129,10 @@ const SelectElement = ({
     if (searchTerm) {
       sortedItems = sortedItems.filter(
         (item) =>
-          (typeof item.label === 'string' && item.label.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())),
+          // Labels may be JSX; keep those visible rather than filtering out what cannot be matched.
+          typeof item.label !== 'string' ||
+          item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          Boolean(item.description?.toLowerCase().includes(searchTerm.toLowerCase())),
       );
     }
     return sortedItems;

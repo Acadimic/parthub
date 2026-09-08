@@ -1,1 +1,1 @@
-export * from './color-mode-context';
+export * from '@parthhub/ui/contexts';

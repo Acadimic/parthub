@@ -1,42 +1,50 @@
 import { IUser } from '@stores';
-import { API, Subdomain } from '../enums';
+import { API, DefaultRole, Subdomain } from '../enums';
+import { getProfilePayload } from '@parthhub/ui/lib';
 import { callAuthApi } from './http.service';
 
 class UserService {
   getInitialLoginData = async () => {
     const url = `user/${Subdomain.TEACH}/initial-login-data`;
-    const resData = await callAuthApi(url, API.GET);
-    return resData;
+    return await callAuthApi(url, API.GET);
+  };
+
+  /** The signed-in user's own profile (account settings / onboarding). */
+  updateProfile = async (user: IUser) => {
+    const url = `user/${Subdomain.TEACH}/profile`;
+    return await callAuthApi(url, API.POST, getProfilePayload(user));
   };
 
   getOrgUsers = async () => {
     const url = `user/${Subdomain.TEACH}/all`;
-    const resData = await callAuthApi(url, API.GET);
-    return resData;
+    return await callAuthApi(url, API.GET);
   };
 
+  /** Invites create a pending invite; the member record is created when they first sign in. */
   inviteStudent = async (student: IUser) => {
-    const url = `user/${Subdomain.TEACH}/invite/student`;
-    const resData = await callAuthApi(url, API.POST, student);
-    return resData;
-  };
-
-  updateStudent = async (student: IUser) => {
-    const url = `user/${Subdomain.TEACH}/update/student`;
-    const resData = await callAuthApi(url, API.POST, student);
-    return resData;
+    return await this.invite(student, DefaultRole.STUDENT);
   };
 
   inviteCollaborator = async (collaborator: IUser) => {
-    const url = `user/${Subdomain.TEACH}/invite/collaborator`;
-    const resData = await callAuthApi(url, API.POST, collaborator);
-    return resData;
+    return await this.invite(collaborator, collaborator.permission);
+  };
+
+  updateStudent = async (student: IUser) => {
+    return await this.updateOrgUser(student);
   };
 
   updateCollaborator = async (collaborator: IUser) => {
-    const url = `user/${Subdomain.TEACH}/update/collaborator`;
-    const resData = await callAuthApi(url, API.POST, collaborator);
-    return resData;
+    return await this.updateOrgUser(collaborator);
+  };
+
+  private invite = async (user: IUser, role: string) => {
+    const url = 'invite/bulk/upsert';
+    return await callAuthApi(url, API.POST, [{ _id: user._id, name: user.name, email: user.email, role }]);
+  };
+
+  private updateOrgUser = async (user: IUser) => {
+    const url = `user/${Subdomain.TEACH}/update`;
+    return await callAuthApi(url, API.POST, { _id: user._id, ...getProfilePayload(user) });
   };
 }
 

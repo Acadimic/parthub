@@ -1,5 +1,5 @@
 import { getRoot, Instance, SnapshotIn, SnapshotOut, types as t } from 'mobx-state-tree';
-import { AccountType, Gender, Permission } from '../../enums';
+import { AccountType, Gender, DefaultRole } from '../../enums';
 import { IStore } from '../root.store';
 import { BaseOrgModel, BaseTimestampModel } from './base-models';
 
@@ -15,8 +15,9 @@ export const User = t
       lastName: t.optional(t.string, ''),
       email: t.string,
       role: t.string,
+      designation: t.optional(t.string, ''),
       isUpdated: t.boolean,
-      permission: t.enumeration('Permission', Object.values(Permission)),
+      permission: t.enumeration('DefaultRole', Object.values(DefaultRole)),
       accountType: t.enumeration('AccountType', Object.values(AccountType)),
       gender: t.optional(t.enumeration('Gender', Object.values(Gender)), Gender.OTHER),
       phoneNumber: t.maybeNull(t.string),
@@ -34,7 +35,7 @@ export const User = t
     },
 
     get isStudent() {
-      return self.permission === Permission.STUDENT;
+      return self.permission === DefaultRole.STUDENT;
     },
   }))
   .actions((self) => ({
@@ -54,6 +55,10 @@ export const User = t
 
     setRole: (role: string) => {
       self.role = role;
+    },
+
+    setDesignation: (designation: string) => {
+      self.designation = designation;
     },
 
     setGender: (gender: Gender) => {

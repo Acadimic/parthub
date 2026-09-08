@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
-import { dark, light } from './src/themes';
-import { getColors } from './src/utils/helpers';
+import { dark, light } from '../../packages/ui/src/themes';
+import { getColors } from '../../packages/ui/src/lib';
 
 const { createThemes } = require('tw-colors');
 const tailwindcssAnimate = require('tailwindcss-animate');
@@ -13,6 +13,7 @@ module.exports = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/modules/**/*.{js,ts,jsx,tsx}',
     './src/layouts/**/*.{js,ts,jsx,tsx}',
+    '../../packages/ui/src/**/*.{ts,tsx}',
   ],
   theme: {
     extend: {

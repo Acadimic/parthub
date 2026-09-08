@@ -1,5 +1,5 @@
 import { Instance, getRoot, types as t } from 'mobx-state-tree';
-import { CourseItemType, Permission, QuestionType, StorageKey } from '../enums';
+import { CourseItemType, DefaultRole, QuestionType, StorageKey } from '../enums';
 import {
   Attachment,
   IAttachment,
@@ -25,7 +25,7 @@ export const SelectorStore = t
   .model({
     selectedOrgId: t.optional(t.string, ''),
     selectedUserId: t.optional(t.string, ''),
-    selectedPermission: t.optional(t.enumeration('Permission', [Permission.STUDENT]), Permission.STUDENT),
+    selectedPermission: t.optional(t.enumeration('DefaultRole', Object.values(DefaultRole)), DefaultRole.STUDENT),
     selectedTestPaperId: t.optional(t.string, ''),
     selectedTestPaperSectionId: t.optional(t.string, ''),
     selectedQuestionId: t.optional(t.string, ''),

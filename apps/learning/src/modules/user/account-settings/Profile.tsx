@@ -12,7 +12,7 @@ interface IState {
   firstName: string;
   lastName: string;
   email: string;
-  role: string;
+  designation: string;
   gender: Gender;
   countryCode: string;
   phoneNumber: string;
@@ -27,7 +27,7 @@ export const Profile = observer(() => {
     firstName: selectedUser?.firstName || '',
     lastName: selectedUser?.lastName || '',
     email: selectedUser?.email || '',
-    role: selectedUser?.role || '',
+    designation: selectedUser?.designation || '',
     countryCode: selectedUser?.countryCode || '+91',
     phoneNumber: selectedUser?.phoneNumber || '',
     gender: selectedUser?.gender || Gender.OTHER,
@@ -59,7 +59,7 @@ export const Profile = observer(() => {
         errorToast({ message: 'Phone number is required!' });
         return;
       }
-      if (!state.role?.trim()) {
+      if (!state.designation?.trim()) {
         errorToast({ message: 'Role is required!' });
         return;
       }
@@ -84,9 +84,9 @@ export const Profile = observer(() => {
       selectedUser.setLastName(state.lastName);
       selectedUser.setCountryCode(state.countryCode);
       selectedUser.setPhoneNumber(phoneNumber);
-      selectedUser.setRole(state.role);
+      selectedUser.setDesignation(state.designation);
       selectedUser.setGender(state.gender);
-      await UserService.updateStudent(selectedUser);
+      await UserService.updateProfile(selectedUser);
       successToast({ message: 'Profile updated successfully!' });
       toggleEdit(false);
     } catch (error) {
@@ -101,7 +101,7 @@ export const Profile = observer(() => {
       firstName: selectedUser?.firstName || '',
       lastName: selectedUser?.lastName || '',
       email: selectedUser?.email || '',
-      role: selectedUser?.role || '',
+      designation: selectedUser?.designation || '',
       countryCode: selectedUser?.countryCode || '+91',
       phoneNumber: selectedUser?.phoneNumber || '',
       gender: selectedUser?.gender,
@@ -153,9 +153,9 @@ export const Profile = observer(() => {
             <div className="w-full md:w-[50%]">
               <TextInput
                 label="Role"
-                value={state.role}
+                value={state.designation}
                 onChange={handleTextInputChange}
-                name="role"
+                name="designation"
                 required
                 disabled={!state.isEditing || state.isLoading}
               />

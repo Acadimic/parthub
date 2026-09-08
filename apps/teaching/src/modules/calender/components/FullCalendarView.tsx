@@ -3,7 +3,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import { ErrorBoundaryFallback } from '@components/app/error';
 import { CalendarX } from '@phosphor-icons/react';
-import { CalenderType } from '@enums';
+import { CalendarType } from '@enums';
 import { DayCellContentArg, DayHeaderContentArg, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -14,7 +14,7 @@ import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { IFullCalendarEvent } from '@interfaces';
 import { useStores } from '@stores';
 import { dark, light } from '@themes';
-import { CalenderViewMap } from '@utils/constants';
+import { CalendarViewMap } from '@utils/constants';
 import { getFormattedTime } from '@utils/helpers';
 import { useEffect, useRef } from 'react';
 import { CustomToolbar, getDayEvents, getMonthEvents, getWeekEvents } from '.';
@@ -51,7 +51,7 @@ const EmptyListView = () => {
 };
 
 const EventContentDefaultView = observer(
-  ({ event, calenderType }: { event: EventInput; calenderType: CalenderType }) => {
+  ({ event, calenderType }: { event: EventInput; calenderType: CalendarType }) => {
     const { userStore } = useStores();
     const { getUsersByIds } = userStore;
     const attendees = getUsersByIds(event.extendedProps?.attendees || []);
@@ -69,7 +69,7 @@ const EventContentDefaultView = observer(
           <div className="w-1 h-1 rounded-full bg-white" />
           <div className="truncate flex-1">{event.title}</div>
         </div>
-        {calenderType === CalenderType.DAY ? (
+        {calenderType === CalendarType.DAY ? (
           <>
             <div className="flex flex-nowrap line-clamp-1 items-center gap-2">
               {attendees.map((attendee) => (
@@ -105,11 +105,11 @@ export const FullCalendarView = observer(({ onEventClick, onDateClick }: IProps)
   const calendarRef = useRef<FullCalendar | null>(null);
   const date = new Date(selectedCalenderDate);
   const events =
-    selectedCalenderType === CalenderType.DAY
+    selectedCalenderType === CalendarType.DAY
       ? getDayEvents({ date, meets })
-      : selectedCalenderType === CalenderType.WEEK
+      : selectedCalenderType === CalendarType.WEEK
         ? getWeekEvents({ date, meets })
-        : selectedCalenderType === CalenderType.MONTH
+        : selectedCalenderType === CalendarType.MONTH
           ? getMonthEvents({ date, meets })
           : getWeekEvents({ date, meets });
 
@@ -117,7 +117,7 @@ export const FullCalendarView = observer(({ onEventClick, onDateClick }: IProps)
     // Initialize calendar with current view and date
     if (calendarRef.current) {
       const calendar = calendarRef.current.getApi();
-      calendar.changeView(CalenderViewMap[selectedCalenderType]);
+      calendar.changeView(CalendarViewMap[selectedCalenderType]);
       calendar.gotoDate(selectedCalenderDate);
     }
   }, [selectedCalenderType, selectedCalenderDate]);
@@ -139,10 +139,10 @@ export const FullCalendarView = observer(({ onEventClick, onDateClick }: IProps)
       <div className="grow">
         <ErrorBoundary FallbackComponent={handleError}>
           <FullCalendar
-            viewClassNames={`${selectedCalenderType === CalenderType.DAY ? 'fc-day-grid-day-frame' : ''}`}
+            viewClassNames={`${selectedCalenderType === CalendarType.DAY ? 'fc-day-grid-day-frame' : ''}`}
             ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-            initialView={CalenderViewMap[selectedCalenderType]}
+            initialView={CalendarViewMap[selectedCalenderType]}
             initialDate={now}
             nowIndicator
             height={`${isSmallScreen ? 'calc(100vh - 174px)' : 'calc(100vh - 144px)'}`}
@@ -195,7 +195,7 @@ export const FullCalendarView = observer(({ onEventClick, onDateClick }: IProps)
             datesSet={({ view }) => {
               // Update the calendar type based on the current view
               const viewType = view.type;
-              const calendarType = Object.values(CalenderType).find((value) => value === viewType);
+              const calendarType = Object.values(CalendarType).find((value) => value === viewType);
               if (calendarType && calendarType !== selectedCalenderType) {
                 setSelectedCalenderType(calendarType);
               }

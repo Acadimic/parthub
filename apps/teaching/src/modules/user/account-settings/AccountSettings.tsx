@@ -28,7 +28,7 @@ export const AccountSettings = observer(() => {
       const attachment = file && (await uploadFilesToS3(selectedUser._id, [file]));
       const photoUrl = attachment?.length ? attachment[0].url : '';
       selectedUser.setPhotoUrl(photoUrl);
-      await UserService.updateCollaborator(selectedUser);
+      await UserService.updateProfile(selectedUser);
       successToast({ message: 'Avatar updated successfully!' });
       setAvatarFile(undefined);
     } catch (error) {

@@ -16,7 +16,7 @@ import {
   addDaysToDate,
   getFormattedTime,
   getFrequencyText,
-  getFullCalenderEvents,
+  getFullCalendarEvents,
   getFullFormattedDate,
   splitCamelCase,
 } from '@utils/helpers';
@@ -62,7 +62,7 @@ export const Sessions = observer(() => {
       label: 'Date and Time',
       dataKey: 'date',
       component: (row: IMeet) => {
-        const events = getFullCalenderEvents(row, new Date(), addDaysToDate(new Date(), 15));
+        const events = getFullCalendarEvents(row, new Date(), addDaysToDate(new Date(), 15));
         const nextEvent = events[0];
         return (
           <Tooltip>

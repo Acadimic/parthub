@@ -1,7 +1,7 @@
 import { AxiosError } from 'axios';
 import { StorageKey } from '../../enums';
 import { errorToast } from './toasts';
-import { clearLocalStorage } from './util';
+import { clearLocalStorage } from '@parthhub/ui/lib';
 
 export const handleError = (errorData: AxiosError, shouldNotThrowError?: boolean): void => {
   // handle unauthentication 401 error

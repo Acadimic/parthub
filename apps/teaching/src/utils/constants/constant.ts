@@ -1,8 +1,8 @@
 import {
   AccountSettingsType,
-  CalenderType,
+  CalendarType,
   ColorType,
-  FCCalenderType,
+  FCCalendarType,
   Marking,
   QuestionType,
   StandardGroup,
@@ -540,8 +540,6 @@ export const ACTIONS = 'actions';
 
 export const ALL = 'ALL';
 
-export const DEFAULT_TIME_STRING = '00:00:00';
-
 export const ColorTypeMap: Record<ColorType, string> = {
   [ColorType.RED]: 'text-red-primary',
   [ColorType.GREEN]: 'text-green-primary',
@@ -573,24 +571,54 @@ export const AccountSettingsRoutes: Record<AccountSettingsType, string> = {
 };
 
 export const defaultMarkings = {
-  [QuestionType.SINGLE_CHOICE]: { [Marking.CORRECT]: 4, [Marking.INCORRECT]: 0, [Marking.UNATTEMPTED]: 0 },
-  [QuestionType.MULTIPLE_CHOICE]: { [Marking.CORRECT]: 4, [Marking.INCORRECT]: 0, [Marking.UNATTEMPTED]: 0 },
-  [QuestionType.BOOLEAN]: { [Marking.CORRECT]: 4, [Marking.INCORRECT]: 0, [Marking.UNATTEMPTED]: 0 },
-  [QuestionType.INTEGER]: { [Marking.CORRECT]: 4, [Marking.INCORRECT]: 0, [Marking.UNATTEMPTED]: 0 },
-  [QuestionType.FILL_IN_THE_BLANK]: { [Marking.CORRECT]: 4, [Marking.INCORRECT]: 0, [Marking.UNATTEMPTED]: 0 },
-  [QuestionType.SUBJECTIVE]: { [Marking.CORRECT]: 4, [Marking.INCORRECT]: 0, [Marking.UNATTEMPTED]: 0 },
+  [QuestionType.SINGLE_CHOICE]: {
+    [Marking.CORRECT]: 4,
+    [Marking.INCORRECT]: 0,
+    [Marking.UNATTEMPTED]: 0,
+    [Marking.PARTIALLY_CORRECT]: 0,
+  },
+  [QuestionType.MULTIPLE_CHOICE]: {
+    [Marking.CORRECT]: 4,
+    [Marking.INCORRECT]: 0,
+    [Marking.UNATTEMPTED]: 0,
+    [Marking.PARTIALLY_CORRECT]: 0,
+  },
+  [QuestionType.BOOLEAN]: {
+    [Marking.CORRECT]: 4,
+    [Marking.INCORRECT]: 0,
+    [Marking.UNATTEMPTED]: 0,
+    [Marking.PARTIALLY_CORRECT]: 0,
+  },
+  [QuestionType.INTEGER]: {
+    [Marking.CORRECT]: 4,
+    [Marking.INCORRECT]: 0,
+    [Marking.UNATTEMPTED]: 0,
+    [Marking.PARTIALLY_CORRECT]: 0,
+  },
+  [QuestionType.FILL_IN_THE_BLANK]: {
+    [Marking.CORRECT]: 4,
+    [Marking.INCORRECT]: 0,
+    [Marking.UNATTEMPTED]: 0,
+    [Marking.PARTIALLY_CORRECT]: 0,
+  },
+  [QuestionType.SUBJECTIVE]: {
+    [Marking.CORRECT]: 4,
+    [Marking.INCORRECT]: 0,
+    [Marking.UNATTEMPTED]: 0,
+    [Marking.PARTIALLY_CORRECT]: 0,
+  },
 };
 
-export const CalenderTypeMap = {
-  [FCCalenderType.DAY]: CalenderType.DAY,
-  [FCCalenderType.WEEK]: CalenderType.WEEK,
-  [FCCalenderType.MONTH]: CalenderType.MONTH,
-  [FCCalenderType.LIST]: CalenderType.LIST,
+export const CalendarTypeMap = {
+  [FCCalendarType.DAY]: CalendarType.DAY,
+  [FCCalendarType.WEEK]: CalendarType.WEEK,
+  [FCCalendarType.MONTH]: CalendarType.MONTH,
+  [FCCalendarType.LIST]: CalendarType.LIST,
 };
 
-export const CalenderViewMap = {
-  [CalenderType.DAY]: FCCalenderType.DAY,
-  [CalenderType.WEEK]: FCCalenderType.WEEK,
-  [CalenderType.MONTH]: FCCalenderType.MONTH,
-  [CalenderType.LIST]: FCCalenderType.LIST,
+export const CalendarViewMap = {
+  [CalendarType.DAY]: FCCalendarType.DAY,
+  [CalendarType.WEEK]: FCCalendarType.WEEK,
+  [CalendarType.MONTH]: FCCalendarType.MONTH,
+  [CalendarType.LIST]: FCCalendarType.LIST,
 };

@@ -1,18 +1,22 @@
 import { IUser } from '@stores';
-import { API } from '../enums';
+import { API, Subdomain } from '../enums';
+import { getProfilePayload } from '@parthhub/ui/lib';
 import { callAuthApi } from './http.service';
 
 class UserService {
   getInitialLoginData = async () => {
-    const url = 'user/learn/initial-login-data';
+    const url = `user/${Subdomain.LEARN}/initial-login-data`;
     return await callAuthApi(url, API.GET);
   };
 
-  updateStudent = async (student: IUser) => {
-    const url = 'user/update/student';
-    const resData = await callAuthApi(url, API.POST, student);
-    return resData;
+  /** The signed-in learner's own profile (account settings / onboarding). */
+  updateProfile = async (user: IUser) => {
+    const url = `user/${Subdomain.LEARN}/profile`;
+    return await callAuthApi(url, API.POST, getProfilePayload(user));
   };
+
+  /** @deprecated use updateProfile; kept so existing call sites keep working. */
+  updateStudent = async (student: IUser) => this.updateProfile(student);
 }
 
 export default new UserService();

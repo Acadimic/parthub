@@ -1,4 +1,4 @@
-import { IGetStandardSubjectChapters } from '@interfaces';
+import { IStandardSubjectQuery } from '@interfaces';
 import { IChapter } from '@stores';
 import { API, Subdomain } from '../enums';
 import { callAuthApi } from './http.service';
@@ -10,7 +10,7 @@ class ChapterService {
     return resData;
   };
 
-  getStandardSubjectChapters = async (payload: IGetStandardSubjectChapters) => {
+  getStandardSubjectChapters = async (payload: IStandardSubjectQuery) => {
     const url = `chapter/${Subdomain.TEACH}/standard/subject/all`;
     const resData = await callAuthApi(url, API.POST, payload);
     return resData;

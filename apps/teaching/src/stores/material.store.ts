@@ -1,4 +1,4 @@
-import { IGetDataForStandardSubject, IMaterialInfo } from '@interfaces';
+import { IStandardSubjectQuery, IMaterialInfo } from '@interfaces';
 import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { DocumentType, FileExtension, LevelType, LinkType, MaterialType } from '../enums';
 import { MaterialService } from '../services';
@@ -79,7 +79,7 @@ export const MaterialStore = t
       self.materialStats = result.data;
     }),
 
-    loadStandardSubjectMaterials: flow(function* (payload: IGetDataForStandardSubject) {
+    loadStandardSubjectMaterials: flow(function* (payload: IStandardSubjectQuery) {
       self.isLoadingMaterials = true;
       const result = yield MaterialService.getStandardSubjectMaterials(payload);
       self.isLoadingMaterials = false;

@@ -1,4 +1,4 @@
-import { Switch as SwitchPrimitive } from '@components/ui/switch';
+import { Switch as SwitchPrimitive } from '@parthhub/ui/ui/switch';
 import { Label } from './Label';
 
 export interface ISwitchProps {

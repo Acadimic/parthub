@@ -14,7 +14,7 @@ interface IProps {
 
 export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
   const { userStore, selectorStore, standardStore } = useStores();
-  const { getStudentStandardsByStudentId, loadStudentStandardMappings } = userStore;
+  const { getStudentStandardsByStudentId, loadStudentStandardMappings, removeUserByUserId } = userStore;
   const { selectedStudent } = selectorStore;
   const { standardItems } = standardStore;
   const [isLoading, setIsLoading] = useState(false);
@@ -68,7 +68,10 @@ export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
       else await UserService.updateStudent(selectedStudent);
       successToast({ message: isNewStudent ? 'Student invited successfully!' : 'Student updated successfully!' });
       await loadStudentStandardMappings();
-      selectedStudent.resetIsNew();
+      // An invite creates no member yet; the store entry was only a form model, so drop it
+      // instead of showing a student that does not exist on the server.
+      if (isNewStudent) removeUserByUserId(selectedStudent._id);
+      else selectedStudent.resetIsNew();
       onClose();
     } catch (error) {
       console.error(error);

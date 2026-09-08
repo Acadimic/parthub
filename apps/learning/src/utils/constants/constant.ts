@@ -532,8 +532,6 @@ export const ACTIONS = 'actions';
 
 export const ALL = 'ALL';
 
-export const DEFAULT_TIME_STRING = '00:00:00';
-
 export const ColorTypeMap: Record<ColorType, string> = {
   [ColorType.RED]: 'text-red-primary',
   [ColorType.GREEN]: 'text-green-primary',

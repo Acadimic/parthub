@@ -58,7 +58,7 @@ export const CreateTestPaperModal = observer(({ isOpen, onClose }: IProps) => {
         const isSubject = selectedTestPaper.subjects.length > 0;
         const ids = isSubject ? selectedTestPaper.subjects : selectedTestPaper.standards;
         testPaperSections = ids.map((id) => {
-          const section = createTestPaperSection(SectionType.SECTION, SectionCategoryType.DEFAULT, markings);
+          const section = createTestPaperSection(SectionType.SECTION, SectionCategoryType.CUSTOM, markings);
           const obj = isSubject ? getSubjectById(id) : getStandardById(id);
           obj && section.setName(obj.name);
           return section;

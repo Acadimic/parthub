@@ -1,15 +1,24 @@
-export {
-  type ICreateFirebaseUser,
-  type ILoginUser,
-  type IColor,
-  type IDynamicObject,
-  type ISelectItem,
+export type {
+  IDynamicObject,
+  ICreateFirebaseUser,
+  ILoginUser,
+  IPresignedPutUrlRequest,
+  IPresignedPutUrlsRequest,
+  IStandardSubjectQuery,
+  IScoreRating,
+  ISubjectGraphData,
+  ITarget,
+  IFunctionProps,
+  IPosition,
+  ICourseBase,
+  IMaterialInfo,
+  IQuestionBase,
+  ITestPaperBase,
+  PermissionConfig,
+  PermissionConfigItem,
+  PermissionConfigOption,
 } from '@parthhub/shared';
 
-export * from './app.interface';
+export * from '@parthhub/ui/types';
 export * from './batch.interface';
-export * from './chapter.interface';
 export * from './course.interface';
-export * from './editor.interface';
-export * from './exam.interface';
-export * from './material.interface';

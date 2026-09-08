@@ -1,7 +1,7 @@
 import { Button, Dropdown, Menu } from '@components/app';
 import { CaretLeft, CaretRight, GridFour, GridNine, ListBullets, Plus, Rows } from '@phosphor-icons/react';
-import { CalenderType, FCCalenderType } from '@enums';
-import { CalenderTypeMap } from '@utils/constants';
+import { CalendarType, FCCalendarType } from '@enums';
+import { CalendarTypeMap } from '@utils/constants';
 import {
   addDaysToDate,
   addMonthsToDate,
@@ -17,18 +17,18 @@ import {
 
 interface IProps {
   calendarRef: React.RefObject<any>;
-  setCalenderType: (calenderType: CalenderType) => void;
-  calendarType: CalenderType;
+  setCalenderType: (calenderType: CalendarType) => void;
+  calendarType: CalendarType;
   setDate: (date: number) => void;
   selectedDate: number;
   handleCreateMeet: (date: Date) => void;
 }
 
 export const CalenderViewIconMap = {
-  [FCCalenderType.DAY]: <Rows weight="bold" size={16} />,
-  [FCCalenderType.WEEK]: <GridFour weight="bold" size={16} />,
-  [FCCalenderType.MONTH]: <GridNine weight="bold" size={16} />,
-  [FCCalenderType.LIST]: <ListBullets weight="bold" size={16} />,
+  [FCCalendarType.DAY]: <Rows weight="bold" size={16} />,
+  [FCCalendarType.WEEK]: <GridFour weight="bold" size={16} />,
+  [FCCalendarType.MONTH]: <GridNine weight="bold" size={16} />,
+  [FCCalendarType.LIST]: <ListBullets weight="bold" size={16} />,
 };
 
 export const CustomToolbar = ({
@@ -50,13 +50,13 @@ export const CustomToolbar = ({
 
   const handlePrev = () => {
     let prevDate = date;
-    if (calendarType === CalenderType.DAY) {
+    if (calendarType === CalendarType.DAY) {
       calendarRef.current.getApi().prev();
       prevDate = subtractDaysFromDate(prevDate, 1);
-    } else if (calendarType === CalenderType.WEEK || calendarType === CalenderType.LIST) {
+    } else if (calendarType === CalendarType.WEEK || calendarType === CalendarType.LIST) {
       prevDate = subtractWeeksFromDate(prevDate, 1);
       calendarRef.current.getApi().gotoDate(prevDate);
-    } else if (calendarType === CalenderType.MONTH) {
+    } else if (calendarType === CalendarType.MONTH) {
       prevDate = subtractMonthsFromDate(prevDate, 1);
       calendarRef.current.getApi().gotoDate(prevDate);
     }
@@ -65,26 +65,26 @@ export const CustomToolbar = ({
 
   const handleNext = () => {
     let nextDate = date;
-    if (calendarType === CalenderType.DAY) {
+    if (calendarType === CalendarType.DAY) {
       calendarRef.current.getApi().next();
       nextDate = addDaysToDate(nextDate, 1);
-    } else if (calendarType === CalenderType.WEEK || calendarType === CalenderType.LIST) {
+    } else if (calendarType === CalendarType.WEEK || calendarType === CalendarType.LIST) {
       nextDate = addWeeksToDate(nextDate, 1);
       calendarRef.current.getApi().gotoDate(nextDate);
-    } else if (calendarType === CalenderType.MONTH) {
+    } else if (calendarType === CalendarType.MONTH) {
       nextDate = addMonthsToDate(nextDate, 1);
       calendarRef.current.getApi().gotoDate(nextDate);
     }
     setDate(Date.parse(nextDate.toISOString()));
   };
 
-  const handleViewChange = (view: FCCalenderType) => {
+  const handleViewChange = (view: FCCalendarType) => {
     calendarRef.current.getApi().changeView(view);
-    setCalenderType(CalenderTypeMap[view]);
+    setCalenderType(CalendarTypeMap[view]);
   };
 
-  const viewItems = Object.values(FCCalenderType).map((view) => ({
-    label: capitalize(CalenderTypeMap[view]),
+  const viewItems = Object.values(FCCalendarType).map((view) => ({
+    label: capitalize(CalendarTypeMap[view]),
     onClick: () => handleViewChange(view),
     icon: CalenderViewIconMap[view],
   }));
@@ -103,17 +103,17 @@ export const CustomToolbar = ({
             <CaretRight className="w-5 h-5" />
           </button>
           <div className="font-semibold text-md md:text-lg truncate max-w-[120px] md:max-w-full">
-            {calendarType === CalenderType.DAY ? (
+            {calendarType === CalendarType.DAY ? (
               <div className="flex gap-3 items-center">
                 <p>{getFormattedDate(date, 'D MMMM YYYY')}</p>
               </div>
-            ) : calendarType === CalenderType.WEEK ? (
+            ) : calendarType === CalendarType.WEEK ? (
               getFormattedDate(getStartOfWeek(date), 'MMM D') +
               ' - ' +
               getFormattedDate(getEndOfWeek(date), 'MMM D, YYYY')
-            ) : calendarType === CalenderType.MONTH ? (
+            ) : calendarType === CalendarType.MONTH ? (
               getFormattedDate(date, 'MMMM YYYY')
-            ) : calendarType === CalenderType.LIST ? (
+            ) : calendarType === CalendarType.LIST ? (
               getFormattedDate(getStartOfWeek(date), 'MMM D') +
               ' - ' +
               getFormattedDate(getEndOfWeek(date), 'MMM D, YYYY')

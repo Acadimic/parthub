@@ -1,6 +1,6 @@
 import { IFullCalendarEvent } from '@interfaces';
 import { Instance, getRoot, types as t } from 'mobx-state-tree';
-import { CalenderType, Permission, QuestionType, StorageKey } from '../enums';
+import { CalendarType, DefaultRole, QuestionType, StorageKey } from '../enums';
 import {
   IBaseOrgOwnerModel,
   IBaseTimestampModel,
@@ -26,7 +26,7 @@ export const SelectorStore = t
   .model({
     selectedOrgId: t.optional(t.string, ''),
     selectedUserId: t.optional(t.string, ''),
-    selectedPermission: t.optional(t.enumeration('Permission', Object.values(Permission)), Permission.ADMIN),
+    selectedPermission: t.optional(t.enumeration('DefaultRole', Object.values(DefaultRole)), DefaultRole.SUPER_ADMIN),
     selectedTestPaperId: t.optional(t.string, ''),
     selectedTestPaperSectionId: t.optional(t.string, ''),
     selectedQuestionId: t.optional(t.string, ''),
@@ -46,7 +46,7 @@ export const SelectorStore = t
     selectedBatchId: t.optional(t.string, ''),
     selectedMeetId: t.optional(t.string, ''),
     selectedCalenderDate: t.optional(t.number, Date.now()),
-    selectedCalenderType: t.optional(t.enumeration('CalenderType', Object.values(CalenderType)), CalenderType.DAY),
+    selectedCalenderType: t.optional(t.enumeration('CalendarType', Object.values(CalendarType)), CalendarType.DAY),
     selectedCalenderEvent: t.maybeNull(t.frozen<IFullCalendarEvent>()),
     selectedSolutionId: t.optional(t.string, ''),
   })
@@ -129,7 +129,7 @@ export const SelectorStore = t
       self.selectedCalenderDate = date;
     },
 
-    setSelectedCalenderType: (calenderType: CalenderType) => {
+    setSelectedCalenderType: (calenderType: CalendarType) => {
       self.selectedCalenderType = calenderType;
     },
 
@@ -198,7 +198,7 @@ export const SelectorStore = t
     },
 
     removeSelectedCalenderType: () => {
-      self.selectedCalenderType = CalenderType.DAY;
+      self.selectedCalenderType = CalendarType.DAY;
     },
 
     removeSelectedCalenderEvent: () => {

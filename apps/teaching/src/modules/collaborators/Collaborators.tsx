@@ -1,6 +1,6 @@
 import { Button, DataTable, FullScreenLoader, TextInput } from '@components/app';
 import { MagnifyingGlass, Pencil, Plus, Trash } from '@phosphor-icons/react';
-import { Permission } from '@enums';
+import { DefaultRole } from '@enums';
 import { IColumnData } from '@interfaces';
 import { IUser, useStores } from '@stores';
 import { ACTIONS } from '@utils/constants';
@@ -39,7 +39,7 @@ export const Collaborators = observer(() => {
   };
 
   const openUpsertCollaboratorModal = () => {
-    createCollaborator(Permission.TEACHER);
+    createCollaborator(DefaultRole.TEACHER);
     setState({ isOpenUpsertCollaboratorModal: true });
     closeAddCollaboratorsModal();
   };
@@ -92,11 +92,11 @@ export const Collaborators = observer(() => {
     },
     {
       label: 'Role',
-      dataKey: 'role',
+      dataKey: 'designation',
       valueFormatter: (row: IUser) => {
         return (
           <div className="capitalize">
-            <span className="">{row.role}</span>
+            <span className="">{row.designation}</span>
           </div>
         );
       },

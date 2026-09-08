@@ -1,6 +1,6 @@
 import { AvatarWithName, Label } from '@components/app';
 import { User } from '@phosphor-icons/react';
-import { Permission } from '@enums';
+import { DefaultRole } from '@enums';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 
@@ -17,8 +17,8 @@ export const ViewMeetAttendees = observer(({ attendeeIds, isStudents, isTeachers
   const attendees = getUsersByIds(attendeeIds);
 
   const filteredAttendees = attendees.filter((attendee) => {
-    if (isStudents) return attendee.permission === Permission.STUDENT;
-    if (isTeachers) return attendee.permission !== Permission.STUDENT;
+    if (isStudents) return attendee.permission === DefaultRole.STUDENT;
+    if (isTeachers) return attendee.permission !== DefaultRole.STUDENT;
     return true;
   });
 

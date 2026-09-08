@@ -1,5 +1,5 @@
 import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
-import { AccountType, Gender, Permission, StorageKey } from '../enums';
+import { AccountType, Gender, DefaultRole, StorageKey } from '../enums';
 import { MappingService, UserService } from '../services';
 import { getObjectId } from '../utils/helpers';
 import { IOrg, IStandard, IStudentStandardMapping, IUser, Org, StudentStandardMapping, User } from './models';
@@ -103,7 +103,7 @@ export const UserStore = t
       mapItems.forEach((mapItem) => self.addStudentStandardMap(mapItem));
     },
 
-    getNewUser: (permission: Permission) => {
+    getNewUser: (permission: DefaultRole) => {
       const user = User.create({
         _id: getObjectId(),
         firstName: '',
@@ -112,7 +112,8 @@ export const UserStore = t
         uid: '',
         email: '',
         gender: Gender.OTHER,
-        role: permission,
+        role: '',
+        designation: '',
         permission,
         accountType: AccountType.INVITED,
         isUpdated: false,
@@ -156,12 +157,12 @@ export const UserStore = t
   }))
   .actions((self) => ({
     createStudent: () => {
-      const student = self.getNewUser(Permission.STUDENT);
+      const student = self.getNewUser(DefaultRole.STUDENT);
       self.rootStore.selectorStore.setSelectedStudentId(student._id);
       return student;
     },
 
-    createCollaborator: (permission: Permission) => {
+    createCollaborator: (permission: DefaultRole) => {
       const collaborator = self.getNewUser(permission);
       self.rootStore.selectorStore.setSelectedCollaboratorId(collaborator._id);
       return collaborator;
@@ -169,11 +170,11 @@ export const UserStore = t
   }))
   .views((self) => ({
     get students() {
-      return self.users.filter((user) => user.permission === Permission.STUDENT);
+      return self.users.filter((user) => user.permission === DefaultRole.STUDENT);
     },
 
     get collaborators() {
-      return self.users.filter((user) => user.permission !== Permission.STUDENT);
+      return self.users.filter((user) => user.permission !== DefaultRole.STUDENT);
     },
 
     getStudentStandardsByStudentId(studentId: string): IStandard[] {

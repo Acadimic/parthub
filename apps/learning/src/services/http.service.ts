@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { API, Permission, StorageKey } from '../enums';
+import { API, DefaultRole, StorageKey } from '../enums';
 import { generateAndSetNewToken } from '../utils/firebase';
 import { getToken, handleError } from '../utils/helpers';
 
@@ -21,7 +21,7 @@ const createAxiosInstance = (isUnAuth: boolean) => {
       const token = getToken();
       if (config.headers && token) {
         config.headers.Authorization = `Bearer ${token}`;
-        config.headers.permission = Permission.STUDENT;
+        config.headers.permission = DefaultRole.STUDENT;
         config.headers.organization = localStorage.getItem(StorageKey.ORGANIZATION);
       }
       return config;

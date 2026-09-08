@@ -28,7 +28,7 @@ export const TestPaper = t
       instruction: t.optional(t.string, ''),
       paperCategory: t.optional(
         t.enumeration('PaperCategoryType', Object.values(PaperCategoryType)),
-        PaperCategoryType.DEFAULT,
+        PaperCategoryType.CUSTOM,
       ),
       isNew: t.optional(t.boolean, false),
     }),

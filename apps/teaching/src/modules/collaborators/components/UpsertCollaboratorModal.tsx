@@ -13,8 +13,9 @@ interface IProps {
 }
 
 export const UpsertCollaboratorModal = observer(({ isOpen, onClose }: IProps) => {
-  const { selectorStore } = useStores();
+  const { selectorStore, userStore } = useStores();
   const { selectedCollaborator } = selectorStore;
+  const { removeUserByUserId } = userStore;
   const [isLoading, setIsLoading] = useState(false);
 
   const closeModal = () => {
@@ -37,7 +38,7 @@ export const UpsertCollaboratorModal = observer(({ isOpen, onClose }: IProps) =>
   const onChangeRole = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedCollaborator) return;
     const value = e.target.value;
-    selectedCollaborator.setRole(value);
+    selectedCollaborator.setDesignation(value);
   };
 
   const onChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +62,7 @@ export const UpsertCollaboratorModal = observer(({ isOpen, onClose }: IProps) =>
         'name',
         'email',
         'gender',
-        'role',
+        'designation',
       ]);
       if (errors.length) return;
       if (isNewCollaborator) await UserService.inviteCollaborator(selectedCollaborator);
@@ -69,7 +70,10 @@ export const UpsertCollaboratorModal = observer(({ isOpen, onClose }: IProps) =>
       successToast({
         message: isNewCollaborator ? 'Collaborator invited successfully!' : 'Collaborator updated successfully!',
       });
-      selectedCollaborator.resetIsNew();
+      // An invite creates no member yet; the store entry was only a form model, so drop it
+      // instead of showing a collaborator that does not exist on the server.
+      if (isNewCollaborator) removeUserByUserId(selectedCollaborator._id);
+      else selectedCollaborator.resetIsNew();
       onClose();
     } catch (error) {
       console.error(error);
@@ -134,7 +138,7 @@ export const UpsertCollaboratorModal = observer(({ isOpen, onClose }: IProps) =>
                 <TextInput
                   label="Role"
                   required
-                  value={selectedCollaborator.role}
+                  value={selectedCollaborator.designation}
                   onChange={onChangeRole}
                   disabled={isLoading}
                 />

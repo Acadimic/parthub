@@ -1,7 +1,7 @@
 import { IAttachment } from '@stores';
 import { DocumentType } from '../../enums';
 import { errorToast } from './toasts';
-import { isValidUrl } from './util';
+import { isValidUrl } from '@parthhub/ui/lib';
 
 export const validateLinkAttachment = (selectedAttachment: IAttachment | null): boolean => {
   if (!selectedAttachment) {

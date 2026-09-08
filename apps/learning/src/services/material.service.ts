@@ -1,4 +1,4 @@
-import { IGetStandardSubjectMaterials } from '@interfaces';
+import { IStandardSubjectQuery } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
@@ -7,7 +7,7 @@ class MaterialService {
     return await callAuthApi('material', API.GET);
   };
 
-  getStandardSubjectMaterials = async (payload: IGetStandardSubjectMaterials) => {
+  getStandardSubjectMaterials = async (payload: IStandardSubjectQuery) => {
     const url = 'material/standard/subject/all';
     const resData = await callAuthApi(url, API.POST, payload);
     return resData;

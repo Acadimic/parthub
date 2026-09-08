@@ -1,4 +1,4 @@
-import { IGetDataForStandardSubject, ISelectItem } from '@interfaces';
+import { IStandardSubjectQuery, ISelectItem } from '@interfaces';
 import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { ChapterService, StandardService, SubjectService } from '../services';
 import { STANDARD_GROUP_ORDER } from '../utils/constants';
@@ -195,7 +195,7 @@ export const StandardStore = t
       self.isLoadingStandard = true;
     }),
 
-    loadStandardSubjectChapters: flow(function* ({ standard, subject }: IGetDataForStandardSubject) {
+    loadStandardSubjectChapters: flow(function* ({ standard, subject }: IStandardSubjectQuery) {
       self.isLoadingChapter = true;
       const result = yield ChapterService.getStandardSubjectChapters({ standard, subject });
       if (result?.data) self.addChapters(result.data);
