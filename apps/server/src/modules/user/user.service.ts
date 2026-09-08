@@ -3,29 +3,33 @@ import { OrgService } from '@modules/org/org.service';
 import { RoleService } from '@modules/role/role.service';
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { DEFAULT_PERMISSIONS, DefaultRole, AccountType } from '@parthhub/shared';
+import { AccountType, DEFAULT_PERMISSIONS, DefaultRole, OrgType, PermissionItem, Subdomain } from '@parthhub/shared';
 import {
   CreateUserDto,
   FindByOrgIdAndUidDto,
   InitialDataDto,
   RegisterUserDto,
   RoleDto,
+  UpdateOrgUserDto,
+  UpdateProfileDto,
   UserDto,
 } from '@parthhub/shared/validations';
 import { getObjectId } from '@utils/util';
 import { Model, Types } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
+import { RoleDocument } from '@modules/role/role.schema';
 import { User, UserDocument } from './user.schema';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly orgService: OrgService,
     private readonly roleService: RoleService,
     private readonly inviteService: InviteService,
@@ -36,40 +40,83 @@ export class UserService {
     return {
       ...user,
       _id: user._id.toString(),
-      orgId: user.orgId.toString(),
-      role: user.role.toString(),
+      org: user.org?.toString(),
+      role: user.role?.toString(),
+      standards: user.standards?.map((standard) => standard.toString()),
+      dob: user.dob ? new Date(user.dob).toISOString() : undefined,
     };
   }
 
-  async registerUser(payload: RegisterUserDto): Promise<UserDto> {
-    console.log('##Registering user: ', payload);
+  /** The role name the apps use as `permission`; falls back to the closest default role for custom roles. */
+  getPermissionForRole(role: RoleDocument | undefined): DefaultRole {
+    // The apps model `permission` as a strict DefaultRole enum, so a custom role must always be
+    // mapped onto the closest default rather than returned verbatim or left undefined.
+    if (role?.isAdmin) return DefaultRole.SUPER_ADMIN;
+    if (role && (Object.values(DefaultRole) as string[]).includes(role.role)) return role.role as DefaultRole;
+    if (role?.permissions?.includes(PermissionItem.STUDENT)) return DefaultRole.STUDENT;
+    if (role?.permissions?.includes(PermissionItem.CREATE_COURSE)) return DefaultRole.TEACHER;
+    return DefaultRole.ASSISTANT;
+  }
+
+  async withPermissions(users: UserDto[]): Promise<UserDto[]> {
+    const roleIds = [...new Set(users.map((user) => user.role).filter(Boolean))];
+    const roles = await this.roleService.getRolesByIds(roleIds);
+    const roleMap = new Map(roles.map((role) => [role._id.toString(), role]));
+    return users.map((user) => ({ ...user, permission: this.getPermissionForRole(roleMap.get(user.role)) }));
+  }
+
+  /**
+   * First login of a Firebase account. Two paths:
+   * - Invited: the user joins the inviting org with the invited role (learner joins a teacher's org).
+   * - Self sign-up: a personal org is created with the default roles. Teachers (and admins) own it as
+   *   SUPER_ADMIN; learners signing up from the learn app get the STUDENT role in their own org.
+   */
+  async registerUser(payload: RegisterUserDto, subdomain?: Subdomain): Promise<UserDto> {
     const invite = await this.inviteService.getPendingInviteByEmail(payload.email);
+    const timezone = this.requestContextService.getTimezone() || 'Asia/Kolkata';
+
+    if (invite) {
+      const org = invite.org.toString();
+      const dbUser = await this.requestContextService.withOrg(org, () =>
+        this.upsert({
+          ...payload,
+          org,
+          isUpdated: false,
+          timezone,
+          accountType: AccountType.INVITED,
+          invitedBy: invite.invitedBy.toString(),
+          role: invite.role.toString(),
+          invite: invite._id.toString(),
+        }),
+      );
+      await this.inviteService.acceptPendingInvite(invite._id.toString());
+      return dbUser;
+    }
+
     const rolePayloads: RoleDto[] = Object.values(DefaultRole).map((role) => ({
       _id: getObjectId(),
       role,
       permissions: DEFAULT_PERMISSIONS[role],
-      orgId: payload.orgId,
+      org: payload.org,
       isAdmin: role === DefaultRole.SUPER_ADMIN,
     }));
-    if (!invite) await this.roleService.upsertBulk(rolePayloads);
-    const currentRole = invite
-      ? invite.role.toString()
-      : rolePayloads.find((r) => (r.role as DefaultRole) === DefaultRole.SUPER_ADMIN)?._id;
-    const dbUser = await this.upsert({
-      ...payload,
-      orgId: invite ? invite.orgId.toString() : payload.orgId,
-      isUpdated: false,
-      timezone: this.requestContextService.getTimezone() || 'Asia/Kolkata',
-      accountType: invite ? AccountType.INVITED : AccountType.SELF,
-      invitedBy: invite ? invite.invitedBy.toString() : undefined,
-      role: currentRole!,
-      invite: invite ? invite._id.toString() : undefined,
+    const ownerRole = subdomain === Subdomain.LEARN ? DefaultRole.STUDENT : DefaultRole.SUPER_ADMIN;
+    const currentRole = rolePayloads.find((r) => r.role === ownerRole)!._id;
+
+    // Roles and org first so a failure never leaves a user pointing at a half-created org.
+    await this.roleService.upsertBulk(rolePayloads);
+    await this.orgService.upsert({
+      _id: payload.org,
+      name: payload.name || payload.email.split('@')[0],
+      orgType: OrgType.INDIVIDUAL,
     });
-    console.log('##Registered user: ', dbUser);
-    if (!invite) await this.orgService.upsert({ _id: payload.orgId, name: payload.name || '' });
-    console.log('##Created org: ', payload.orgId);
-    if (invite) await this.inviteService.acceptPendingInvite(invite._id.toString());
-    return dbUser;
+    return await this.upsert({
+      ...payload,
+      isUpdated: false,
+      timezone,
+      accountType: AccountType.SELF,
+      role: currentRole,
+    });
   }
 
   async upsert(payload: CreateUserDto): Promise<UserDto> {
@@ -99,11 +146,13 @@ export class UserService {
   }
 
   async getUserByOrgIdAndUid(payload: FindByOrgIdAndUidDto): Promise<UserDocument | null> {
-    const { orgId, uid } = payload;
-    console.log('##Org ID: ', orgId, uid);
-    if (!orgId) throw new NotAcceptableException('Org ID is required!');
+    const { org, uid } = payload;
+    if (!org) throw new NotAcceptableException('Org ID is required!');
     if (!uid) throw new NotAcceptableException('UID is required!');
-    return await this.userModel.findOne({ orgId: new Types.ObjectId(orgId), uid }).lean<UserDocument>().exec();
+    return await this.userModel
+      .findOne({ org: new Types.ObjectId(org), uid })
+      .lean<UserDocument>()
+      .exec();
   }
 
   async updateLastActive(userId: string, lastActive: Date): Promise<UserDocument | null> {
@@ -124,30 +173,60 @@ export class UserService {
     const { uid } = payload;
     const users = await this.getUsersByUid(uid);
     if (!users.length) throw new NotAcceptableException('User not found!');
-    const orgIds: string[] = users.map((user) => user.orgId).map((orgId) => String(orgId));
+    const orgIds: string[] = [
+      ...new Set(
+        users
+          .map((user) => user.org)
+          .filter(Boolean)
+          .map(String),
+      ),
+    ];
     const orgs = await this.orgService.getOrgsByIds(orgIds);
-    console.log('##Orgs: ', orgs);
-    console.log('##Org IDs: ', orgIds);
     if (orgIds.length !== orgs.length) throw new NotAcceptableException('Org not found!');
-    return { users, orgs };
+    return { users: await this.withPermissions(users), orgs };
   }
 
-  async getOrgUsers(orgId: string): Promise<UserDocument[]> {
-    return this.userModel.find({ orgId }).lean<UserDocument[]>();
+  /** A user completing or editing their own profile; marks onboarding as done. */
+  async updateProfile(userId: string | Types.ObjectId, payload: UpdateProfileDto): Promise<UserDto> {
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, { ...payload, isUpdated: true }, { new: true, runValidators: true })
+      .lean<UserDocument>()
+      .exec();
+    if (!user) throw new NotFoundException('User not found.');
+    const [withPermission] = await this.withPermissions([this.transformUser(user)]);
+    return withPermission;
   }
 
-  async getOrgUsersByEmails(orgId: string, emails: string[]): Promise<UserDocument[]> {
-    return this.userModel.find({ orgId, email: { $in: emails } }).lean<UserDocument[]>();
+  /** Staff editing another member of the same org (students, collaborators). */
+  async updateOrgUser(payload: UpdateOrgUserDto): Promise<UserDto> {
+    const { _id, ...fields } = payload;
+    const org = this.requestContextService.getOrgId();
+    const member = await this.userModel.findOne({ _id, org }).lean<UserDocument>().exec();
+    if (!member) throw new ForbiddenException('User does not belong to your organization.');
+    const user = await this.userModel
+      .findByIdAndUpdate(_id, { ...fields }, { new: true, runValidators: true })
+      .lean<UserDocument>()
+      .exec();
+    const [withPermission] = await this.withPermissions([this.transformUser(user!)]);
+    return withPermission;
+  }
+
+  async getOrgUsers(org: string): Promise<UserDocument[]> {
+    return this.userModel.find({ org }).lean<UserDocument[]>();
+  }
+
+  async getOrgUsersByEmails(org: string, emails: string[]): Promise<UserDocument[]> {
+    return this.userModel.find({ org, email: { $in: emails } }).lean<UserDocument[]>();
   }
 
   async getOrgStaff(): Promise<UserDto[]> {
-    const orgId = this.requestContextService.getOrgId();
+    const org = this.requestContextService.getOrgId();
     const users = await this.userModel
-      .find({ orgId })
+      .find({ org })
       .sort({ isInactive: 1, updatedAt: -1 })
       .lean<UserDocument[]>()
       .exec();
-    return users.map((user) => this.transformUser(user));
+    return this.withPermissions(users.map((user) => this.transformUser(user)));
   }
 
   async revokeAccess(userId: string): Promise<void> {
@@ -171,25 +250,28 @@ export class UserService {
       throw new BadRequestException('This invite was sent to a different email address.');
     }
     const existingUser = await this.userModel
-      .findOne({ uid: currentUser.uid, orgId: invite.orgId })
+      .findOne({ uid: currentUser.uid, org: invite.org })
       .lean<UserDocument>()
       .exec();
     if (existingUser) {
       throw new BadRequestException('You are already a member of this organization.');
     }
-    const newUser = await this.upsert({
-      _id: getObjectId(),
-      uid: currentUser.uid,
-      name: currentUser.name,
-      email: currentUser.email,
-      orgId: invite.orgId.toString(),
-      isUpdated: false,
-      timezone: this.requestContextService.getTimezone() || 'Asia/Kolkata',
-      accountType: AccountType.INVITED,
-      invitedBy: invite.invitedBy.toString(),
-      role: invite.role.toString(),
-      invite: invite._id.toString(),
-    });
+    const org = invite.org.toString();
+    const newUser = await this.requestContextService.withOrg(org, () =>
+      this.upsert({
+        _id: getObjectId(),
+        uid: currentUser.uid,
+        name: currentUser.name,
+        email: currentUser.email,
+        org,
+        isUpdated: false,
+        timezone: this.requestContextService.getTimezone() || 'Asia/Kolkata',
+        accountType: AccountType.INVITED,
+        invitedBy: invite.invitedBy.toString(),
+        role: invite.role.toString(),
+        invite: invite._id.toString(),
+      }),
+    );
     await this.inviteService.acceptPendingInvite(invite._id.toString());
     return newUser;
   }

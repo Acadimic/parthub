@@ -7,7 +7,7 @@ export abstract class BaseSchema {
   _deleted: boolean;
 
   @Prop({ type: Types.ObjectId, ref: 'Org', required: true, immutable: true })
-  orgId: Types.ObjectId;
+  org: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, immutable: true })
   createdBy: Types.ObjectId;

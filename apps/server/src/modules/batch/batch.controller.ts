@@ -13,15 +13,15 @@ export class BatchController {
   @Post('teach/upsert')
   async upsertBatch(@Body() payload: UpsertBatchDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.batchService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.batchService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('teach/all')
   async getOrgBatches() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.batchService.getOrgBatches(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.batchService.getOrgBatches(org);
     return { data, status: HttpStatus.OK };
   }
 }

@@ -12,13 +12,13 @@ export class UserBatchMappingService {
 
   async upsert(
     userId: Types.ObjectId,
-    orgId: Types.ObjectId,
+    org: Types.ObjectId,
     payload: { user: string; batch: string },
   ): Promise<UserBatchMappingDocument> {
     return this.mappingModel
       .findOneAndUpdate(
-        { user: payload.user, batch: payload.batch, orgId },
-        { ...payload, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { user: payload.user, batch: payload.batch, org },
+        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<UserBatchMappingDocument>();
@@ -26,32 +26,26 @@ export class UserBatchMappingService {
 
   async bulkUpsert(
     userId: Types.ObjectId,
-    orgId: Types.ObjectId,
+    org: Types.ObjectId,
     payloads: { user: string; batch: string }[],
   ): Promise<UserBatchMappingDocument[]> {
     const results: UserBatchMappingDocument[] = [];
     for (const payload of payloads) {
-      const result = await this.upsert(userId, orgId, payload);
+      const result = await this.upsert(userId, org, payload);
       results.push(result);
     }
     return results;
   }
 
   async getUserMaps(userId: string): Promise<UserBatchMappingDocument[]> {
-    return this.mappingModel
-      .find({ user: userId, _deleted: { $ne: true } })
-      .lean<UserBatchMappingDocument[]>();
+    return this.mappingModel.find({ user: userId, _deleted: { $ne: true } }).lean<UserBatchMappingDocument[]>();
   }
 
   async getBatchMaps(batchId: string): Promise<UserBatchMappingDocument[]> {
-    return this.mappingModel
-      .find({ batch: batchId, _deleted: { $ne: true } })
-      .lean<UserBatchMappingDocument[]>();
+    return this.mappingModel.find({ batch: batchId, _deleted: { $ne: true } }).lean<UserBatchMappingDocument[]>();
   }
 
-  async getOrgMaps(orgId: Types.ObjectId): Promise<UserBatchMappingDocument[]> {
-    return this.mappingModel
-      .find({ orgId, _deleted: { $ne: true } })
-      .lean<UserBatchMappingDocument[]>();
+  async getOrgMaps(org: Types.ObjectId): Promise<UserBatchMappingDocument[]> {
+    return this.mappingModel.find({ org, _deleted: { $ne: true } }).lean<UserBatchMappingDocument[]>();
   }
 }

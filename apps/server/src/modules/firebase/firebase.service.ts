@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Secrets } from '@secrets/secrets';
 import { SecretsService } from '@secrets/secrets.service';
 import * as firebase from 'firebase-admin';
-import { DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
+import { DecodedIdToken } from 'firebase-admin/auth';
 import { isEmpty, isNil } from 'lodash';
 import { CreateFirebaseUserDto, FirebaseUserUpdatePayloadDto, UpdateFirebaseUserDto } from './firebase.dto';
 

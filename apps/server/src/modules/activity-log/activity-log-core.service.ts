@@ -12,7 +12,7 @@ export interface ActivityLogData {
   changes?: Record<string, { previous: unknown; new: unknown }>;
   createdBy: Types.ObjectId;
   updatedBy: Types.ObjectId;
-  orgId: Types.ObjectId;
+  org: Types.ObjectId;
   apiRoute: string;
   accessType: AccessType;
 }
@@ -38,23 +38,11 @@ export class ActivityLogCoreService {
   }
 
   private getUserIdSafe(): Types.ObjectId | undefined {
-    try {
-      const context = this.contextService.getContext();
-      if (!context.userId) return undefined;
-      return new Types.ObjectId(context.userId);
-    } catch {
-      return undefined;
-    }
+    return this.contextService.getUserIdSafe();
   }
 
   private getOrgIdSafe(): Types.ObjectId | undefined {
-    try {
-      const context = this.contextService.getContext();
-      if (!context.orgId) return undefined;
-      return new Types.ObjectId(context.orgId);
-    } catch {
-      return undefined;
-    }
+    return this.contextService.getOrgIdSafe();
   }
 
   prepareCreateLog(
@@ -63,10 +51,10 @@ export class ActivityLogCoreService {
     newState: Record<string, unknown>,
   ): ActivityLogData | null {
     const userId = this.getUserIdSafe();
-    const orgId = this.getOrgIdSafe();
+    const org = this.getOrgIdSafe();
     const apiRoute = this.getApiRoute();
     const accessType = this.getAccessType();
-    if (!userId || !orgId || !apiRoute || !accessType) return null;
+    if (!userId || !org || !apiRoute || !accessType) return null;
 
     return {
       entityType,
@@ -75,7 +63,7 @@ export class ActivityLogCoreService {
       newState,
       createdBy: userId,
       updatedBy: userId,
-      orgId,
+      org,
       apiRoute,
       accessType,
     };
@@ -94,10 +82,10 @@ export class ActivityLogCoreService {
     }
 
     const userId = this.getUserIdSafe();
-    const orgId = this.getOrgIdSafe();
+    const org = this.getOrgIdSafe();
     const apiRoute = this.getApiRoute();
     const accessType = this.getAccessType();
-    if (!userId || !orgId || !apiRoute || !accessType) return null;
+    if (!userId || !org || !apiRoute || !accessType) return null;
 
     return {
       entityType,
@@ -108,7 +96,7 @@ export class ActivityLogCoreService {
       changes,
       createdBy: userId,
       updatedBy: userId,
-      orgId,
+      org,
       apiRoute,
       accessType,
     };
@@ -120,10 +108,10 @@ export class ActivityLogCoreService {
     previousState: Record<string, unknown>,
   ): ActivityLogData | null {
     const userId = this.getUserIdSafe();
-    const orgId = this.getOrgIdSafe();
+    const org = this.getOrgIdSafe();
     const apiRoute = this.getApiRoute();
     const accessType = this.getAccessType();
-    if (!userId || !orgId || !apiRoute || !accessType) return null;
+    if (!userId || !org || !apiRoute || !accessType) return null;
 
     return {
       entityType,
@@ -132,7 +120,7 @@ export class ActivityLogCoreService {
       previousState,
       createdBy: userId,
       updatedBy: userId,
-      orgId,
+      org,
       apiRoute,
       accessType,
     };
@@ -144,10 +132,10 @@ export class ActivityLogCoreService {
     newState: Record<string, unknown>,
   ): ActivityLogData | null {
     const userId = this.getUserIdSafe();
-    const orgId = this.getOrgIdSafe();
+    const org = this.getOrgIdSafe();
     const apiRoute = this.getApiRoute();
     const accessType = this.getAccessType();
-    if (!userId || !orgId || !apiRoute || !accessType) return null;
+    if (!userId || !org || !apiRoute || !accessType) return null;
 
     return {
       entityType,
@@ -156,7 +144,7 @@ export class ActivityLogCoreService {
       newState,
       createdBy: userId,
       updatedBy: userId,
-      orgId,
+      org,
       apiRoute,
       accessType,
     };

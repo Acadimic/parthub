@@ -8,24 +8,24 @@ import { UpsertCourseDto } from '@parthhub/shared/validations';
 export class CourseService {
   constructor(@InjectModel(Course.name) private courseModel: Model<CourseDocument>) {}
 
-  async upsert(userId: Types.ObjectId, orgId: Types.ObjectId, payload: UpsertCourseDto): Promise<CourseDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertCourseDto): Promise<CourseDocument> {
     const { _id } = payload;
     return this.courseModel
       .findOneAndUpdate(
         { _id },
-        { ...payload, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<CourseDocument>();
   }
 
-  async getOrgCourses(orgId: Types.ObjectId): Promise<CourseDocument[]> {
-    return this.courseModel.find({ orgId, _deleted: { $ne: true } }).lean<CourseDocument[]>();
+  async getOrgCourses(org: Types.ObjectId): Promise<CourseDocument[]> {
+    return this.courseModel.find({ org, _deleted: { $ne: true } }).lean<CourseDocument[]>();
   }
 
-  async getCoursesByStandardIds(orgId: Types.ObjectId, standardIds: string[]): Promise<CourseDocument[]> {
+  async getCoursesByStandardIds(org: Types.ObjectId, standardIds: string[]): Promise<CourseDocument[]> {
     return this.courseModel
-      .find({ orgId, standards: { $in: standardIds }, _deleted: { $ne: true } })
+      .find({ org, standards: { $in: standardIds }, _deleted: { $ne: true } })
       .lean<CourseDocument[]>();
   }
 
@@ -33,12 +33,12 @@ export class CourseService {
     return this.courseModel.findById(id).lean<CourseDocument>();
   }
 
-  async getCourseByName(orgId: Types.ObjectId, name: string): Promise<CourseDocument> {
-    return this.courseModel.findOne({ orgId, name, _deleted: { $ne: true } }).lean<CourseDocument>();
+  async getCourseByName(org: Types.ObjectId, name: string): Promise<CourseDocument> {
+    return this.courseModel.findOne({ org, name, _deleted: { $ne: true } }).lean<CourseDocument>();
   }
 
   async findAll(org: string) {
-    return this.courseModel.find({ orgId: org, _deleted: false }).lean<CourseDocument[]>();
+    return this.courseModel.find({ org, _deleted: false }).lean<CourseDocument[]>();
   }
 
   async findById(id: string) {

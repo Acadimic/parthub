@@ -1,10 +1,11 @@
 import { UserDocument } from '@modules/user/user.schema';
 import { UserService } from '@modules/user/user.service';
-import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import { RoleService } from '@modules/role/role.service';
+import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { InviteStatus } from '@parthhub/shared';
 import { InviteLookupDto, InviteDto, InviteUserDto } from '@parthhub/shared/validations';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
 import { Invite, InviteDocument } from './invite.schema';
 
@@ -15,7 +16,16 @@ export class InviteService {
     private readonly requestContextService: RequestContextService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
+    private readonly roleService: RoleService,
   ) {}
+
+  /** Invites may name the role (e.g. "student") instead of passing a Role id; resolve it within the org. */
+  private async resolveRoleId(role: string, org: Types.ObjectId): Promise<string> {
+    if (Types.ObjectId.isValid(role)) return role;
+    const roleDoc = await this.roleService.findByName(org, role);
+    if (!roleDoc) throw new BadRequestException(`Role "${role}" does not exist in this organization.`);
+    return roleDoc._id.toString();
+  }
 
   getTransformedInvite(invite: InviteDocument): InviteDto {
     return {
@@ -29,9 +39,24 @@ export class InviteService {
 
   async upsert(payload: InviteUserDto): Promise<InviteDto> {
     const { email } = payload;
-    const orgId = this.requestContextService.getOrgId();
+    const org = this.requestContextService.getOrgId();
+    const role = await this.resolveRoleId(payload.role, org);
+    // `_id` is client-generated and immutable, so it must not reach the update; matching on
+    // (email, org) alone — the unique index — lets a declined or revoked invite be re-sent.
+    const { _id, ...fields } = payload;
     const invite: InviteDocument = await this.inviteModel
-      .findOneAndUpdate({ email, orgId, status: InviteStatus.PENDING }, { ...payload }, { new: true, upsert: true })
+      .findOneAndUpdate(
+        { email, org },
+        {
+          ...fields,
+          role,
+          invitedBy: this.requestContextService.getUserId(),
+          status: InviteStatus.PENDING,
+          acceptedDate: null,
+          $setOnInsert: { _id },
+        },
+        { new: true, upsert: true },
+      )
       .select(Object.keys(new InviteDto()).join(' '))
       .lean<InviteDocument>()
       .exec();
@@ -39,9 +64,9 @@ export class InviteService {
   }
 
   async upsertBulk(payloads: InviteUserDto[]): Promise<InviteDto[]> {
-    const orgId = this.requestContextService.getOrgId().toString();
+    const org = this.requestContextService.getOrgId().toString();
     const emails = payloads.map((p) => p.email);
-    const users = await this.userService.getOrgUsersByEmails(orgId, emails);
+    const users = await this.userService.getOrgUsersByEmails(org, emails);
     const filteredPayloads = payloads.filter(
       (p) => !users.find((u: UserDocument) => u.email.toLowerCase() === p.email.toLowerCase()),
     );
@@ -51,9 +76,9 @@ export class InviteService {
   }
 
   async getInvites(): Promise<InviteDto[]> {
-    const orgId = this.requestContextService.getOrgId();
+    const org = this.requestContextService.getOrgId();
     const result = await this.inviteModel
-      .find({ orgId })
+      .find({ org })
       .select(Object.keys(new InviteDto()).join(' '))
       .sort({ updatedAt: -1 })
       .lean<InviteDocument[]>()
@@ -70,7 +95,10 @@ export class InviteService {
   }
 
   async getPendingInviteById(inviteId: string): Promise<InviteDocument | null> {
-    return await this.inviteModel.findOne({ _id: inviteId, status: InviteStatus.PENDING }).lean<InviteDocument>().exec();
+    return await this.inviteModel
+      .findOne({ _id: inviteId, status: InviteStatus.PENDING })
+      .lean<InviteDocument>()
+      .exec();
   }
 
   async acceptPendingInvite(inviteId: string): Promise<InviteDocument | null> {
@@ -84,12 +112,17 @@ export class InviteService {
   }
 
   async lookupInvite(inviteId: string): Promise<InviteLookupDto> {
-    const invite = await this.inviteModel.findById(inviteId).populate('role', 'role').populate('orgId', 'name').lean().exec();
+    const invite = await this.inviteModel
+      .findById(inviteId)
+      .populate('role', 'role')
+      .populate('org', 'name')
+      .lean()
+      .exec();
     if (!invite) {
       throw new NotFoundException('Invite not found.');
     }
     const role = invite.role as unknown as { role: string };
-    const org = invite.orgId as unknown as { name: string };
+    const org = invite.org as unknown as { name: string };
     return {
       _id: invite._id.toString(),
       email: invite.email,

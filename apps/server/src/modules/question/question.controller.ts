@@ -13,8 +13,8 @@ export class QuestionController {
   @Post('teach/upsert')
   async upsertQuestion(@Body() payload: UpsertQuestionDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.questionService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.questionService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 

@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { PermissionItem, SpecialPermissions } from '@parthhub/shared';
+import { OrgType, PermissionItem, SpecialPermissions } from '@parthhub/shared';
 import { HydratedDocument } from 'mongoose';
 
 @Schema({ timestamps: true })
@@ -13,6 +13,9 @@ export class Org extends BaseSchema {
 
   @Prop({ type: String })
   displayId: string;
+
+  @Prop({ type: String, enum: OrgType, default: OrgType.INDIVIDUAL })
+  orgType: OrgType;
 
   @Prop({ type: [{ type: String, enum: SpecialPermissions }] })
   specialPermissions: SpecialPermissions[];

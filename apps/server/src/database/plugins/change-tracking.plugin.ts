@@ -1,39 +1,75 @@
-import { Document, Query, Schema, Types } from 'mongoose';
+import { Document, Query, Schema } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
 import { BaseSchema } from '../base.schema';
 
+type UpdateObject = Record<string, any>;
+
+/** Ownership fields that are stamped once, on insert, and must never be reassigned by an update. */
+const IMMUTABLE_FIELDS = ['org', 'createdBy'] as const;
+
+/**
+ * Fills the `BaseSchema` ownership fields from the request context on every write:
+ *
+ * | operation                                            | org / createdBy | updatedBy | createdAt / updatedAt | _deleted |
+ * | ---------------------------------------------------- | --------------- | --------- | --------------------- | -------- |
+ * | `save` (incl. `create`, `new Model()`)               | plugin, if new  | plugin    | `timestamps: true`    | default  |
+ * | `insertMany`                                         | plugin          | plugin    | plugin                | default  |
+ * | `updateOne` / `updateMany` / `findOneAndUpdate`      | stripped        | plugin    | `timestamps: true`    | -        |
+ * | ...the same with `upsert: true`                      | plugin, on insert | plugin  | mongoose, on insert   | mongoose |
+ * | `replaceOne` / `findOneAndReplace`                   | plugin          | plugin    | `timestamps: true`    | default  |
+ * | `bulkWrite`                                          | plugin, per op  | plugin    | mongoose / plugin     | mongoose |
+ *
+ * `createdAt`/`updatedAt` come from each schema's `timestamps: true`, and `_deleted` from its own
+ * default (Mongoose applies defaults on upsert-insert via `setDefaultsOnInsert`, on by default).
+ */
 export function createChangeTrackingPlugin(contextService: RequestContextService) {
+  // Safe accessors: public and private routes run with a minimal context whose ids are empty
+  // strings, and background work has no context at all. The throwing getters would surface a
+  // BSONError from deep inside a write instead of the guard messages below.
+  const userId = () => contextService.getUserIdSafe();
+  const orgId = () => contextService.getOrgIdSafe();
+
+  const missingOrg = (operation: string) =>
+    new Error(`Organization (org) is required from the request context for ${operation}`);
+
+  /** Stamps a plain object that is about to be inserted. */
+  const stampInsert = (doc: UpdateObject, operation: string): Error | undefined => {
+    const org = orgId();
+    if (!org) return missingOrg(operation);
+    const user = userId();
+    if (user) {
+      doc.createdBy = user;
+      doc.updatedBy = user;
+    }
+    doc.org = org;
+    const now = new Date();
+    if (!doc.createdAt) doc.createdAt = now;
+    if (!doc.updatedAt) doc.updatedAt = now;
+    return undefined;
+  };
+
   return function changeTrackingPlugin(schema: Schema): void {
     schema.pre('save', function (this: Document & BaseSchema, next) {
       try {
-        const userId = contextService.getUserId();
-        const orgId = contextService.getOrgId();
+        const user = userId();
 
         if (this.isNew) {
-          if (userId) {
-            this.createdBy = new Types.ObjectId(userId);
-            this.updatedBy = new Types.ObjectId(userId);
-          }
-
-          if (orgId) {
-            this.orgId = new Types.ObjectId(orgId);
-          } else {
-            return next(new Error('Organization ID (orgId) is required from context for new documents'));
+          const org = orgId();
+          if (!org) return next(missingOrg('new documents'));
+          this.org = org;
+          if (user) {
+            this.createdBy = user;
+            this.updatedBy = user;
           }
         } else {
-          if (this.isModified('createdBy')) {
-            this.createdBy = this.get('createdBy', null, { getters: false }) as Types.ObjectId;
+          // Restore either field if application code reassigned it on an existing document.
+          for (const field of IMMUTABLE_FIELDS) {
+            if (this.isModified(field)) {
+              this.set(field, this.get(field, null, { getters: false }), { strict: false });
+              this.unmarkModified(field);
+            }
           }
-
-          if (this.isModified('orgId')) {
-            this.orgId = this.get('orgId', null, { getters: false }) as Types.ObjectId;
-          }
-
-          if (userId) {
-            this.updatedBy = new Types.ObjectId(userId);
-          } else {
-            this.updatedBy = this.get('updatedBy', null, { getters: false }) as Types.ObjectId;
-          }
+          if (user) this.updatedBy = user;
         }
 
         next();
@@ -44,50 +80,37 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
 
     const updateHook = function (this: Query<any, any>, next: (error?: Error) => void) {
       try {
-        const userId = contextService.getUserId();
-        const orgId = contextService.getOrgId();
-
         const updateObj = this.getUpdate();
-        const options = this.getOptions();
+        if (!updateObj) return next();
 
-        if (!updateObj) {
+        // Aggregation-pipeline updates are an array of stages; there is no $set to extend, so
+        // append one stage rather than corrupting the pipeline with object properties.
+        if (Array.isArray(updateObj)) {
+          const user = userId();
+          if (user) updateObj.push({ $set: { updatedBy: user } });
           return next();
         }
 
-        const update = updateObj as Record<string, any>;
+        const update = updateObj as UpdateObject;
 
-        if (update.$set) {
-          if ('createdBy' in (update.$set as Record<string, any>))
-            delete (update.$set as Record<string, any>).createdBy;
-          if ('orgId' in (update.$set as Record<string, any>))
-            delete (update.$set as Record<string, any>).orgId;
+        for (const field of IMMUTABLE_FIELDS) {
+          delete update[field];
+          if (update.$set) delete (update.$set as UpdateObject)[field];
+          if (update.$setOnInsert) delete (update.$setOnInsert as UpdateObject)[field];
         }
 
-        if ('createdBy' in update) delete update.createdBy;
-        if ('orgId' in update) delete update.orgId;
-
-        if (userId) {
-          if (!update.$set) {
-            update.$set = {};
-          }
-          (update.$set as Record<string, any>).updatedBy = new Types.ObjectId(userId);
-          (update.$set as Record<string, any>).updatedAt = new Date();
+        const user = userId();
+        if (user) {
+          update.$set = update.$set || {};
+          (update.$set as UpdateObject).updatedBy = user;
         }
 
-        if (options && options.upsert === true) {
-          if (!update.$setOnInsert) {
-            update.$setOnInsert = {};
-          }
-
-          if (userId) {
-            (update.$setOnInsert as Record<string, any>).createdBy = new Types.ObjectId(userId);
-          }
-
-          if (orgId) {
-            (update.$setOnInsert as Record<string, any>).orgId = new Types.ObjectId(orgId);
-          } else {
-            return next(new Error('Organization ID (orgId) is required from context for upsert operations'));
-          }
+        if (this.getOptions()?.upsert) {
+          const org = orgId();
+          if (!org) return next(missingOrg('upsert operations'));
+          update.$setOnInsert = update.$setOnInsert || {};
+          (update.$setOnInsert as UpdateObject).org = org;
+          if (user) (update.$setOnInsert as UpdateObject).createdBy = user;
         }
 
         next();
@@ -100,39 +123,74 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
     schema.pre('updateMany', updateHook);
     schema.pre('findOneAndUpdate', updateHook);
 
-    schema.pre(
-      'insertMany',
-      function (this: any, next: (error?: Error) => void, docs: Array<Record<string, any>>) {
-        try {
-          const userId = contextService.getUserId();
-          const orgId = contextService.getOrgId();
+    // A replace swaps the whole document, so the ownership fields have to be re-supplied or they
+    // are silently dropped — `immutable` does not protect against replacement.
+    const replaceHook = function (this: Query<any, any>, next: (error?: Error) => void) {
+      try {
+        const replacement = this.getUpdate() as UpdateObject | null;
+        if (!replacement || Array.isArray(replacement)) return next();
+        const error = stampInsert(replacement, 'replace operations');
+        return error ? next(error) : next();
+      } catch (error) {
+        next(error as Error);
+      }
+    };
 
-          if (!Array.isArray(docs)) {
-            return next(new Error('Expected an array of documents for insertMany'));
-          }
+    schema.pre('replaceOne', replaceHook);
+    schema.pre('findOneAndReplace', replaceHook);
 
-          for (const doc of docs) {
-            if (userId) {
-              doc.createdBy = new Types.ObjectId(userId);
-              doc.updatedBy = new Types.ObjectId(userId);
-            }
-
-            if (orgId) {
-              doc.orgId = new Types.ObjectId(orgId);
-            } else {
-              return next(new Error('Organization ID (orgId) is required from context for bulk insert operations'));
-            }
-
-            const now = new Date();
-            if (!doc.createdAt) doc.createdAt = now;
-            if (!doc.updatedAt) doc.updatedAt = now;
-          }
-
-          next();
-        } catch (error) {
-          next(error as Error);
+    schema.pre('insertMany', function (this: unknown, next: (error?: Error) => void, docs: UpdateObject[]) {
+      try {
+        if (!Array.isArray(docs)) return next(new Error('Expected an array of documents for insertMany'));
+        for (const doc of docs) {
+          const error = stampInsert(doc, 'bulk insert operations');
+          if (error) return next(error);
         }
-      },
-    );
+        next();
+      } catch (error) {
+        next(error as Error);
+      }
+    });
+
+    schema.pre('bulkWrite', function (this: unknown, next: (error?: Error) => void, ops: UpdateObject[]) {
+      try {
+        if (!Array.isArray(ops)) return next();
+        const user = userId();
+        for (const op of ops) {
+          if (op.insertOne?.document) {
+            const error = stampInsert(op.insertOne.document, 'bulkWrite insertOne');
+            if (error) return next(error);
+            continue;
+          }
+          if (op.replaceOne?.replacement) {
+            const error = stampInsert(op.replaceOne.replacement, 'bulkWrite replaceOne');
+            if (error) return next(error);
+            continue;
+          }
+          const write = op.updateOne || op.updateMany;
+          if (!write) continue;
+          const update = write.update as UpdateObject | undefined;
+          if (!update || Array.isArray(update)) continue;
+          for (const field of IMMUTABLE_FIELDS) {
+            delete update[field];
+            if (update.$set) delete (update.$set as UpdateObject)[field];
+          }
+          if (user) {
+            update.$set = update.$set || {};
+            (update.$set as UpdateObject).updatedBy = user;
+          }
+          if (write.upsert) {
+            const org = orgId();
+            if (!org) return next(missingOrg('bulkWrite upsert'));
+            update.$setOnInsert = update.$setOnInsert || {};
+            (update.$setOnInsert as UpdateObject).org = org;
+            if (user) (update.$setOnInsert as UpdateObject).createdBy = user;
+          }
+        }
+        next();
+      } catch (error) {
+        next(error as Error);
+      }
+    });
   };
 }

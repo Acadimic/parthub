@@ -27,6 +27,7 @@
       "@constants": ["./src/constants"]
     },
     "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "skipLibCheck": true,
     "strictNullChecks": false,
     "noImplicitAny": false,

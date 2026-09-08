@@ -18,5 +18,5 @@ export class StudentStandardMapping extends BaseSchema {
 
 export const StudentStandardMappingSchema = SchemaFactory.createForClass(StudentStandardMapping);
 
-StudentStandardMappingSchema.index({ student: 1, standard: 1, orgId: 1 }, { unique: true });
-StudentStandardMappingSchema.index({ orgId: 1, _deleted: 1 });
+StudentStandardMappingSchema.index({ student: 1, standard: 1, org: 1 }, { unique: true });
+StudentStandardMappingSchema.index({ org: 1, _deleted: 1 });

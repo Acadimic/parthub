@@ -13,29 +13,29 @@ export class MaterialController {
   @Post('teach/upsert')
   async upsertMaterial(@Body() payload: UpsertMaterialDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.materialService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.materialService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('teach/all')
   async getOrgMaterials() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.materialService.getOrgMaterials(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.materialService.getOrgMaterials(org);
     return { data, status: HttpStatus.OK };
   }
 
   @Post('teach/standard/subject/all')
   async getStandardAndSubjectMaterials(@Body() body: { standard: string; subject: string }) {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.materialService.getStandardAndSubjectMaterials(orgId, body.standard, body.subject);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.materialService.getStandardAndSubjectMaterials(org, body.standard, body.subject);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('learn/all')
   async getLearnMaterials() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.materialService.getOrgMaterials(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.materialService.getOrgMaterials(org);
     return { data, status: HttpStatus.OK };
   }
 

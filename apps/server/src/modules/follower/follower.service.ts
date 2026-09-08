@@ -8,26 +8,22 @@ import { UpsertFollowerDto } from './dto/upsert-follower.dto';
 export class FollowerService {
   constructor(@InjectModel(Follower.name) private followerModel: Model<FollowerDocument>) {}
 
-  async upsert(userId: Types.ObjectId, orgId: Types.ObjectId, payload: UpsertFollowerDto): Promise<FollowerDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertFollowerDto): Promise<FollowerDocument> {
     return this.followerModel
       .findOneAndUpdate(
         { follower: userId, following: payload.following },
-        { ...payload, follower: userId, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { ...payload, follower: userId, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<FollowerDocument>();
   }
 
   async getFollowers(userId: Types.ObjectId): Promise<FollowerDocument[]> {
-    return this.followerModel
-      .find({ following: userId, _deleted: { $ne: true } })
-      .lean<FollowerDocument[]>();
+    return this.followerModel.find({ following: userId, _deleted: { $ne: true } }).lean<FollowerDocument[]>();
   }
 
   async getFollowings(userId: Types.ObjectId): Promise<FollowerDocument[]> {
-    return this.followerModel
-      .find({ follower: userId, _deleted: { $ne: true } })
-      .lean<FollowerDocument[]>();
+    return this.followerModel.find({ follower: userId, _deleted: { $ne: true } }).lean<FollowerDocument[]>();
   }
 
   async getFollowersCount(userId: Types.ObjectId): Promise<number> {

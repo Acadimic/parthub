@@ -11,33 +11,31 @@ export class ChapterController {
   ) {}
 
   @Post('teach/upsert')
-  async upsertChapter(
-    @Body() payload: UpsertChapterDto,
-  ) {
+  async upsertChapter(@Body() payload: UpsertChapterDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.chapterService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.chapterService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 
   @Post('teach/standard/subject/all')
   async getStandardAndSubjectChapters(@Body() payload: StandardSubjectQueryDto) {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.chapterService.getStandardAndSubjectChapters(orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.chapterService.getStandardAndSubjectChapters(org, payload);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('teach/all')
   async getOrgChapters() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.chapterService.getChapters(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.chapterService.getChapters(org);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('learn/all')
   async getLearnChapters() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.chapterService.getChapters(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.chapterService.getChapters(org);
     return { data, status: HttpStatus.OK };
   }
 

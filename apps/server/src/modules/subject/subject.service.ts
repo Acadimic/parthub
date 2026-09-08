@@ -20,7 +20,7 @@ export class SubjectService {
   }
 
   async findAll(org: string) {
-    return this.subjectModel.find({ orgId: org, _deleted: false }).lean<SubjectDocument[]>();
+    return this.subjectModel.find({ org, _deleted: false }).lean<SubjectDocument[]>();
   }
 
   async findById(id: string) {

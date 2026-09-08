@@ -13,15 +13,15 @@ export class PlanController {
   @Post('teach/upsert')
   async upsertPlan(@Body() payload: UpsertPlanDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.planService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.planService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('teach/all')
   async getCoursePlans() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.planService.getCoursePlans(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.planService.getCoursePlans(org);
     return { data, status: HttpStatus.OK };
   }
 

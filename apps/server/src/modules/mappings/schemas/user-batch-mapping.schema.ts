@@ -15,5 +15,5 @@ export class UserBatchMapping extends BaseSchema {
 
 export const UserBatchMappingSchema = SchemaFactory.createForClass(UserBatchMapping);
 
-UserBatchMappingSchema.index({ user: 1, batch: 1, orgId: 1 }, { unique: true });
-UserBatchMappingSchema.index({ orgId: 1, _deleted: 1 });
+UserBatchMappingSchema.index({ user: 1, batch: 1, org: 1 }, { unique: true });
+UserBatchMappingSchema.index({ org: 1, _deleted: 1 });

@@ -13,15 +13,15 @@ export class CourseController {
   @Post('teach/upsert')
   async upsertCourse(@Body() payload: UpsertCourseDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.courseService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.courseService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('teach/all')
   async getOrgCourses() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.courseService.getOrgCourses(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.courseService.getOrgCourses(org);
     return { data, status: HttpStatus.OK };
   }
 
@@ -33,8 +33,8 @@ export class CourseController {
 
   @Get('learn/all')
   async getLearnCourses() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.courseService.getOrgCourses(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.courseService.getOrgCourses(org);
     return { data, status: HttpStatus.OK };
   }
 

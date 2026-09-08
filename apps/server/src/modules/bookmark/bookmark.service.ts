@@ -8,19 +8,17 @@ import { UpsertBookmarkDto } from './dto/upsert-bookmark.dto';
 export class BookmarkService {
   constructor(@InjectModel(Bookmark.name) private bookmarkModel: Model<BookmarkDocument>) {}
 
-  async upsert(userId: Types.ObjectId, orgId: Types.ObjectId, payload: UpsertBookmarkDto): Promise<BookmarkDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertBookmarkDto): Promise<BookmarkDocument> {
     return this.bookmarkModel
       .findOneAndUpdate(
         { createdBy: userId, collectionItem: payload.collectionItem, collectionRef: payload.collectionRef },
-        { ...payload, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<BookmarkDocument>();
   }
 
   async getBookmarksByUserId(userId: Types.ObjectId): Promise<BookmarkDocument[]> {
-    return this.bookmarkModel
-      .find({ createdBy: userId, _deleted: { $ne: true } })
-      .lean<BookmarkDocument[]>();
+    return this.bookmarkModel.find({ createdBy: userId, _deleted: { $ne: true } }).lean<BookmarkDocument[]>();
   }
 }

@@ -8,34 +8,34 @@ import { UpsertMaterialDto } from '@parthhub/shared/validations';
 export class MaterialService {
   constructor(@InjectModel(Material.name) private materialModel: Model<MaterialDocument>) {}
 
-  async upsert(userId: Types.ObjectId, orgId: Types.ObjectId, payload: UpsertMaterialDto): Promise<MaterialDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertMaterialDto): Promise<MaterialDocument> {
     const { _id } = payload;
     return this.materialModel
       .findOneAndUpdate(
         { _id },
-        { ...payload, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<MaterialDocument>();
   }
 
-  async getOrgMaterials(orgId: Types.ObjectId): Promise<MaterialDocument[]> {
-    return this.materialModel.find({ orgId, _deleted: { $ne: true } }).lean<MaterialDocument[]>();
+  async getOrgMaterials(org: Types.ObjectId): Promise<MaterialDocument[]> {
+    return this.materialModel.find({ org, _deleted: { $ne: true } }).lean<MaterialDocument[]>();
   }
 
   async getStandardAndSubjectMaterials(
-    orgId: Types.ObjectId,
+    org: Types.ObjectId,
     standard: string,
     subject: string,
   ): Promise<MaterialDocument[]> {
     return this.materialModel
-      .find({ orgId, standard, subject, _deleted: { $ne: true } })
+      .find({ org, standard, subject, _deleted: { $ne: true } })
       .sort({ order: 1 })
       .lean<MaterialDocument[]>();
   }
 
   async findAll(org: string) {
-    return this.materialModel.find({ orgId: org, _deleted: false }).lean<MaterialDocument[]>();
+    return this.materialModel.find({ org, _deleted: false }).lean<MaterialDocument[]>();
   }
 
   async findById(id: string) {

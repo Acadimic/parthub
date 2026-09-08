@@ -14,8 +14,8 @@ export class BookmarkController {
   @Post('learn/upsert')
   async upsertBookmark(@Body() payload: UpsertBookmarkDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.bookmarkService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.bookmarkService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 

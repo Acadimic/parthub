@@ -19,45 +19,45 @@ export class MappingsController {
   @Post('teach/student-standard/upsert')
   async upsertStudentStandard(@Body() payload: UpsertStudentStandardMappingDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.studentStandardMappingService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.studentStandardMappingService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 
   @Post('teach/user-student/upsert')
   async upsertUserStudent(@Body() payload: UpsertUserStudentMappingDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.userStudentMappingService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.userStudentMappingService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 
   @Post('teach/user-batch/upsert')
   async upsertUserBatch(@Body() payload: UpsertUserBatchMappingDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.userBatchMappingService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.userBatchMappingService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('teach/student-standard/all')
   async getStudentStandardMaps() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.studentStandardMappingService.getOrgMaps(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.studentStandardMappingService.getOrgMaps(org);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('teach/user-student/all')
   async getUserStudentMaps() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.userStudentMappingService.getOrgMaps(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.userStudentMappingService.getOrgMaps(org);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('teach/user-batch/all')
   async getUserBatchMaps() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.userBatchMappingService.getOrgMaps(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.userBatchMappingService.getOrgMaps(org);
     return { data, status: HttpStatus.OK };
   }
 }

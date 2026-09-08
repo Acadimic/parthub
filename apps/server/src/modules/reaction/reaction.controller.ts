@@ -13,8 +13,8 @@ export class ReactionController {
   @Post('learn/upsert')
   async upsertReaction(@Body() payload: UpsertReactionDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.reactionService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.reactionService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 

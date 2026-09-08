@@ -28,8 +28,5 @@ export class CompletedModule extends BaseSchema {
 
 export const CompletedModuleSchema = SchemaFactory.createForClass(CompletedModule);
 
-CompletedModuleSchema.index(
-  { course: 1, courseModule: 1, collectionItem: 1, createdBy: 1 },
-  { unique: true },
-);
-CompletedModuleSchema.index({ orgId: 1, _deleted: 1 });
+CompletedModuleSchema.index({ course: 1, courseModule: 1, collectionItem: 1, createdBy: 1 }, { unique: true });
+CompletedModuleSchema.index({ org: 1, _deleted: 1 });

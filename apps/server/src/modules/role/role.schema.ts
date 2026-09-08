@@ -18,5 +18,5 @@ export class Role extends BaseSchema {
 export type RoleDocument = HydratedDocument<Role>;
 export const RoleSchema = SchemaFactory.createForClass(Role);
 
-RoleSchema.index({ orgId: 1, updatedAt: 1 });
-RoleSchema.index({ role: 1, orgId: 1 }, { unique: true });
+RoleSchema.index({ org: 1, updatedAt: 1 });
+RoleSchema.index({ role: 1, org: 1 }, { unique: true });

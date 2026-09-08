@@ -16,4 +16,4 @@ export class Follower extends BaseSchema {
 export const FollowerSchema = SchemaFactory.createForClass(Follower);
 
 FollowerSchema.index({ follower: 1, following: 1 }, { unique: true });
-FollowerSchema.index({ orgId: 1, _deleted: 1 });
+FollowerSchema.index({ org: 1, _deleted: 1 });

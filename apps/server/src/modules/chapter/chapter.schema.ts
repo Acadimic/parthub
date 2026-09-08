@@ -21,4 +21,4 @@ export class Chapter extends BaseSchema {
 
 export const ChapterSchema = SchemaFactory.createForClass(Chapter);
 
-ChapterSchema.index({ name: 1, standard: 1, subject: 1, orgId: 1 }, { unique: true, sparse: true });
+ChapterSchema.index({ name: 1, standard: 1, subject: 1, org: 1 }, { unique: true, sparse: true });

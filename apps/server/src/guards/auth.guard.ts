@@ -2,22 +2,24 @@ import { IS_PRIVATE_KEY } from '@decorators/private.decorator';
 import { IS_PUBLIC_KEY } from '@decorators/public.decorator';
 import { FirebaseUserDto } from '@modules/firebase/firebase.dto';
 import { FirebaseService } from '@modules/firebase/firebase.service';
+import { UserDocument } from '@modules/user/user.schema';
 import { UserService } from '@modules/user/user.service';
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Secrets } from '@secrets/secrets';
 import { SecretsService } from '@secrets/secrets.service';
-import { AccessType } from '@parthhub/shared';
+import { AccessType, Subdomain } from '@parthhub/shared';
 import { RegisterUserDto, UserDto } from '@parthhub/shared/validations';
 import { INITIAL_LOGIN_DATA_URL } from '@utils/constants';
-import { getRegisterPayload } from '@utils/util';
-import { DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
+import { getRegisterPayload, getSubdomainFromUrl } from '@utils/util';
+import { DecodedIdToken } from 'firebase-admin/auth';
 import { ClsService } from 'nestjs-cls';
 import { IRequestContext } from '../context/request-context.interface';
 
 type ContextPayload = {
   apiRoute: string;
   accessType: AccessType;
+  subdomain?: Subdomain;
   timezone?: string;
   timezoneOffset?: string;
 };
@@ -50,7 +52,7 @@ export class AuthGuard implements CanActivate {
   setRequestContext(payload: UserDto | RegisterUserDto, otherPayload: ContextPayload) {
     const requestContext: IRequestContext = {
       userId: String(payload._id),
-      orgId: String(payload.orgId),
+      org: String(payload.org),
       role: (payload as UserDto).role ? String((payload as UserDto).role) : '',
       ...otherPayload,
     };
@@ -60,7 +62,7 @@ export class AuthGuard implements CanActivate {
   setMinimalRequestContext(otherPayload: ContextPayload) {
     const requestContext: IRequestContext = {
       userId: '',
-      orgId: '',
+      org: '',
       role: '',
       ...otherPayload,
     };
@@ -85,25 +87,26 @@ export class AuthGuard implements CanActivate {
     const timezone = this.getHeaderValue(context, 'timezone') as string;
     const timezoneOffset = this.getHeaderValue(context, 'timezone-offset') as string;
     const url = (request as any).url as string;
-    const orgId = this.getHeaderValue(context, 'organization') as string;
-    if (!orgId && !url.includes(INITIAL_LOGIN_DATA_URL)) {
+    const subdomain = getSubdomainFromUrl(url);
+    const org = this.getHeaderValue(context, 'organization') as string;
+    if (!org && !url.includes(INITIAL_LOGIN_DATA_URL)) {
       throw new UnauthorizedException('Organization is required!');
     }
     const firebaseUser = await this.validateAndGetFirebaseUser(context);
     if (!firebaseUser.email) throw new UnauthorizedException('Firebase email not found!');
     if (!firebaseUser.uid) throw new UnauthorizedException('Firebase uid not found!');
-    let user = orgId
-      ? await this.userService.getUserByOrgIdAndUid({ uid: firebaseUser.uid, orgId })
+    let user = org
+      ? await this.userService.getUserByOrgIdAndUid({ uid: firebaseUser.uid, org })
       : (await this.userService.getUsersByUid(firebaseUser.uid))[0];
-    if (orgId && !user) throw new UnauthorizedException(`DB user not found for org id: ${orgId}`);
+    if (org && !user) throw new UnauthorizedException(`DB user not found for org id: ${org}`);
     if (!user && url.includes(INITIAL_LOGIN_DATA_URL)) {
       const payload = getRegisterPayload(firebaseUser);
-      this.setRequestContext(payload, { apiRoute: url, accessType, timezone, timezoneOffset });
-      user = await this.userService.registerUser(payload);
+      this.setRequestContext(payload, { apiRoute: url, accessType, subdomain, timezone, timezoneOffset });
+      user = await this.userService.registerUser(payload, subdomain);
     }
     if (!user) throw new UnauthorizedException('DB user not found!');
     this.userService.updateLastActive(String(user._id), new Date());
-    return { ...user, _id: String(user._id), orgId: String(user.orgId), role: String(user.role) };
+    return this.userService.transformUser(user as UserDocument);
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -111,6 +114,7 @@ export class AuthGuard implements CanActivate {
     const url = (request as any).url as string;
     const method = (request as any).method as string;
     const apiRoute = `${method} ${url}`;
+    const subdomain = getSubdomainFromUrl(url);
     const timezone = this.getHeaderValue(context, 'timezone') as string;
     const timezoneOffset = this.getHeaderValue(context, 'timezone-offset') as string;
 
@@ -121,7 +125,7 @@ export class AuthGuard implements CanActivate {
 
     if (isPublic) {
       accessType = AccessType.PUBLIC;
-      this.setMinimalRequestContext({ apiRoute, accessType, timezone, timezoneOffset });
+      this.setMinimalRequestContext({ apiRoute, accessType, subdomain, timezone, timezoneOffset });
       return true;
     }
     if (isPrivate) {
@@ -129,7 +133,7 @@ export class AuthGuard implements CanActivate {
       const headers = request.headers as unknown as Record<string, string>;
       const apiKey = this.secretsService.get(Secrets.PRIVATE_API_KEY) as string;
       if (headers && apiKey && [headers['api-key']].includes(apiKey)) {
-        this.setMinimalRequestContext({ apiRoute, accessType, timezone, timezoneOffset });
+        this.setMinimalRequestContext({ apiRoute, accessType, subdomain, timezone, timezoneOffset });
         return true;
       }
     }
@@ -138,7 +142,7 @@ export class AuthGuard implements CanActivate {
 
     if (!user) throw new UnauthorizedException('User not found!');
 
-    this.setRequestContext(user, { apiRoute, accessType, timezone, timezoneOffset });
+    this.setRequestContext(user, { apiRoute, accessType, subdomain, timezone, timezoneOffset });
 
     (request as any).user = user;
 

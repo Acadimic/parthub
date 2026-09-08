@@ -35,7 +35,7 @@ export class ActivityLog extends BaseSchema {
 export const ActivityLogSchema = SchemaFactory.createForClass(ActivityLog);
 
 ActivityLogSchema.index({ entityType: 1, entityId: 1 });
-ActivityLogSchema.index({ orgId: 1 });
+ActivityLogSchema.index({ org: 1 });
 ActivityLogSchema.index({ createdAt: -1 });
 ActivityLogSchema.index({ apiRoute: 1 });
 ActivityLogSchema.index({ accessType: 1 });

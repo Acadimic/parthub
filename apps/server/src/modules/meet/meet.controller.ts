@@ -13,15 +13,15 @@ export class MeetController {
   @Post('teach/upsert')
   async upsertMeet(@Body() payload: UpsertMeetDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.meetService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.meetService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('teach/all')
   async getOrgMeets() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.meetService.getByOrg(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.meetService.getByOrg(org);
     return { data, status: HttpStatus.OK };
   }
 

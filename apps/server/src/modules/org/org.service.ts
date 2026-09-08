@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { OrgDto } from '@parthhub/shared/validations';
-import { Model } from 'mongoose';
+import { OrgType } from '@parthhub/shared';
+import { OrgDto, UpdateOrgDto } from '@parthhub/shared/validations';
+import { Model, Types } from 'mongoose';
 import { CreateOrgDto } from './org.dto';
 import { Org, OrgDocument } from './org.schema';
 
@@ -13,6 +14,10 @@ export class OrgService {
     return {
       ...org,
       _id: org._id.toString(),
+      // Lean reads skip schema defaults, so orgs stored before `orgType` existed come back without it.
+      orgType: org.orgType || OrgType.INDIVIDUAL,
+      createdBy: org.createdBy?.toString(),
+      updatedBy: org.updatedBy?.toString(),
     };
   }
 
@@ -22,10 +27,18 @@ export class OrgService {
       .lean<OrgDocument>();
   }
 
+  async update(id: string | Types.ObjectId, payload: UpdateOrgDto): Promise<OrgDto> {
+    const org = await this.orgModel
+      .findByIdAndUpdate(id, { ...payload }, { new: true, runValidators: true })
+      .lean<OrgDocument>();
+    if (!org) throw new NotFoundException('Organization not found.');
+    return this.transformOrg(org);
+  }
+
   async getOrgsByIds(ids: string[]): Promise<OrgDto[]> {
     const orgs = await this.orgModel
       .find({ _id: { $in: ids } })
-      .select(Object.keys(new OrgDto()).join(' '))
+      .select('_id name displayId logo orgType createdBy updatedBy createdAt updatedAt')
       .lean<OrgDocument[]>();
     return orgs.map((org) => this.transformOrg(org));
   }

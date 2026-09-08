@@ -12,33 +12,27 @@ export class UserStudentMappingService {
 
   async upsert(
     userId: Types.ObjectId,
-    orgId: Types.ObjectId,
+    org: Types.ObjectId,
     payload: { user: string; student: string },
   ): Promise<UserStudentMappingDocument> {
     return this.mappingModel
       .findOneAndUpdate(
         { user: payload.user, student: payload.student },
-        { ...payload, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<UserStudentMappingDocument>();
   }
 
   async getUserMaps(userId: string): Promise<UserStudentMappingDocument[]> {
-    return this.mappingModel
-      .find({ user: userId, _deleted: { $ne: true } })
-      .lean<UserStudentMappingDocument[]>();
+    return this.mappingModel.find({ user: userId, _deleted: { $ne: true } }).lean<UserStudentMappingDocument[]>();
   }
 
   async getStudentMaps(studentId: string): Promise<UserStudentMappingDocument[]> {
-    return this.mappingModel
-      .find({ student: studentId, _deleted: { $ne: true } })
-      .lean<UserStudentMappingDocument[]>();
+    return this.mappingModel.find({ student: studentId, _deleted: { $ne: true } }).lean<UserStudentMappingDocument[]>();
   }
 
-  async getOrgMaps(orgId: Types.ObjectId): Promise<UserStudentMappingDocument[]> {
-    return this.mappingModel
-      .find({ orgId, _deleted: { $ne: true } })
-      .lean<UserStudentMappingDocument[]>();
+  async getOrgMaps(org: Types.ObjectId): Promise<UserStudentMappingDocument[]> {
+    return this.mappingModel.find({ org, _deleted: { $ne: true } }).lean<UserStudentMappingDocument[]>();
   }
 }

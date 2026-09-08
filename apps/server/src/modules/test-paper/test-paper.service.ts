@@ -8,19 +8,19 @@ import { UpsertTestPaperDto } from '@parthhub/shared/validations';
 export class TestPaperService {
   constructor(@InjectModel(TestPaper.name) private testPaperModel: Model<TestPaperDocument>) {}
 
-  async upsert(userId: Types.ObjectId, orgId: Types.ObjectId, payload: UpsertTestPaperDto): Promise<TestPaperDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertTestPaperDto): Promise<TestPaperDocument> {
     const { _id } = payload;
     return this.testPaperModel
       .findOneAndUpdate(
         { _id },
-        { ...payload, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<TestPaperDocument>();
   }
 
-  async getOrgTestPapers(orgId: Types.ObjectId): Promise<TestPaperDocument[]> {
-    return this.testPaperModel.find({ orgId, _deleted: { $ne: true } }).lean<TestPaperDocument[]>();
+  async getOrgTestPapers(org: Types.ObjectId): Promise<TestPaperDocument[]> {
+    return this.testPaperModel.find({ org, _deleted: { $ne: true } }).lean<TestPaperDocument[]>();
   }
 
   async getTestPaperById(id: string): Promise<TestPaperDocument> {
@@ -62,7 +62,7 @@ export class TestPaperService {
   }
 
   async findAll(org: string) {
-    return this.testPaperModel.find({ orgId: org, _deleted: false }).lean<TestPaperDocument[]>();
+    return this.testPaperModel.find({ org, _deleted: false }).lean<TestPaperDocument[]>();
   }
 
   async findById(id: string) {

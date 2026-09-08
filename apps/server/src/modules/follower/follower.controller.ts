@@ -13,8 +13,8 @@ export class FollowerController {
   @Post('learn/upsert')
   async upsertFollower(@Body() payload: UpsertFollowerDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.followerService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.followerService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 

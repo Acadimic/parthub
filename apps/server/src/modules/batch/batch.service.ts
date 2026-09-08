@@ -8,18 +8,18 @@ import { UpsertBatchDto } from './dto/upsert-batch.dto';
 export class BatchService {
   constructor(@InjectModel(Batch.name) private batchModel: Model<BatchDocument>) {}
 
-  async upsert(userId: Types.ObjectId, orgId: Types.ObjectId, payload: UpsertBatchDto): Promise<BatchDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertBatchDto): Promise<BatchDocument> {
     const { _id } = payload;
     return this.batchModel
       .findOneAndUpdate(
         { _id },
-        { ...payload, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<BatchDocument>();
   }
 
-  async getOrgBatches(orgId: Types.ObjectId): Promise<BatchDocument[]> {
-    return this.batchModel.find({ orgId, _deleted: { $ne: true } }).lean<BatchDocument[]>();
+  async getOrgBatches(org: Types.ObjectId): Promise<BatchDocument[]> {
+    return this.batchModel.find({ org, _deleted: { $ne: true } }).lean<BatchDocument[]>();
   }
 }

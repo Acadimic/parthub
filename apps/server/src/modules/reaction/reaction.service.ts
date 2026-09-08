@@ -8,20 +8,18 @@ import { UpsertReactionDto } from './dto/upsert-reaction.dto';
 export class ReactionService {
   constructor(@InjectModel(Reaction.name) private reactionModel: Model<ReactionDocument>) {}
 
-  async upsert(userId: Types.ObjectId, orgId: Types.ObjectId, payload: UpsertReactionDto): Promise<ReactionDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertReactionDto): Promise<ReactionDocument> {
     return this.reactionModel
       .findOneAndUpdate(
         { createdBy: userId, collectionItem: payload.collectionItem, collectionRef: payload.collectionRef },
-        { ...payload, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<ReactionDocument>();
   }
 
   async getReactionsByUserId(userId: Types.ObjectId): Promise<ReactionDocument[]> {
-    return this.reactionModel
-      .find({ createdBy: userId, _deleted: { $ne: true } })
-      .lean<ReactionDocument[]>();
+    return this.reactionModel.find({ createdBy: userId, _deleted: { $ne: true } }).lean<ReactionDocument[]>();
   }
 
   async getReactionsCount(collectionItem: string): Promise<number> {

@@ -8,19 +8,19 @@ import { UpsertPlanDto } from './dto/upsert-plan.dto';
 export class PlanService {
   constructor(@InjectModel(Plan.name) private planModel: Model<PlanDocument>) {}
 
-  async upsert(userId: Types.ObjectId, orgId: Types.ObjectId, payload: UpsertPlanDto): Promise<PlanDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertPlanDto): Promise<PlanDocument> {
     const { _id } = payload;
     return this.planModel
       .findOneAndUpdate(
         { _id },
-        { ...payload, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<PlanDocument>();
   }
 
-  async getCoursePlans(orgId: Types.ObjectId): Promise<PlanDocument[]> {
-    return this.planModel.find({ orgId, _deleted: { $ne: true } }).lean<PlanDocument[]>();
+  async getCoursePlans(org: Types.ObjectId): Promise<PlanDocument[]> {
+    return this.planModel.find({ org, _deleted: { $ne: true } }).lean<PlanDocument[]>();
   }
 
   async getPlanById(id: string): Promise<PlanDocument> {

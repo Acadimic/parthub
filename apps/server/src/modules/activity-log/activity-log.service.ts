@@ -73,12 +73,12 @@ export class ActivityLogService {
     const query: {
       entityType: string;
       entityId: Types.ObjectId;
-      orgId: Types.ObjectId;
+      org: Types.ObjectId;
       action?: ActivityAction;
     } = {
       entityType,
       entityId,
-      orgId: this.contextService.getOrgId(),
+      org: this.contextService.getOrgId(),
     };
 
     if (action) {

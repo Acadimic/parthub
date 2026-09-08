@@ -13,15 +13,15 @@ export class TestPaperController {
   @Post('teach/upsert')
   async upsertTestPaper(@Body() payload: UpsertTestPaperDto) {
     const userId = this.requestContextService.getUserId();
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.testPaperService.upsert(userId, orgId, payload);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.testPaperService.upsert(userId, org, payload);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('teach/all')
   async getOrgTestPapers() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.testPaperService.getOrgTestPapers(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.testPaperService.getOrgTestPapers(org);
     return { data, status: HttpStatus.OK };
   }
 
@@ -33,17 +33,14 @@ export class TestPaperController {
 
   @Post('teach/merge')
   async mergeTestPapers(@Body() payload: { primaryTestPaperId: string; secondaryTestPaperId: string }) {
-    const data = await this.testPaperService.mergeTestPapers(
-      payload.primaryTestPaperId,
-      payload.secondaryTestPaperId,
-    );
+    const data = await this.testPaperService.mergeTestPapers(payload.primaryTestPaperId, payload.secondaryTestPaperId);
     return { data, status: HttpStatus.OK };
   }
 
   @Get('learn/all')
   async getLearnTestPapers() {
-    const orgId = this.requestContextService.getOrgId();
-    const data = await this.testPaperService.getOrgTestPapers(orgId);
+    const org = this.requestContextService.getOrgId();
+    const data = await this.testPaperService.getOrgTestPapers(org);
     return { data, status: HttpStatus.OK };
   }
 

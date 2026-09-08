@@ -8,12 +8,12 @@ import { UpsertQuestionDto } from '@parthhub/shared/validations';
 export class QuestionService {
   constructor(@InjectModel(Question.name) private questionModel: Model<QuestionDocument>) {}
 
-  async upsert(userId: Types.ObjectId, orgId: Types.ObjectId, payload: UpsertQuestionDto): Promise<QuestionDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertQuestionDto): Promise<QuestionDocument> {
     const { _id } = payload;
     return this.questionModel
       .findOneAndUpdate(
         { _id },
-        { ...payload, updatedBy: userId, $setOnInsert: { orgId, createdBy: userId } },
+        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<QuestionDocument>();
@@ -21,9 +21,7 @@ export class QuestionService {
 
   async getQuestionsByIds(ids: string[]): Promise<QuestionDocument[]> {
     if (!ids.length) return [];
-    return this.questionModel
-      .find({ _id: { $in: ids }, _deleted: { $ne: true } })
-      .lean<QuestionDocument[]>();
+    return this.questionModel.find({ _id: { $in: ids }, _deleted: { $ne: true } }).lean<QuestionDocument[]>();
   }
 
   async getQuestionsBySectionIds(sectionIds: string[]): Promise<QuestionDocument[]> {

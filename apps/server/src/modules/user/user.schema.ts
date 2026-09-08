@@ -1,7 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { PermissionItem } from '@parthhub/shared';
-import { AccountType } from '@parthhub/shared';
+import { AccountType, Gender, PermissionItem } from '@parthhub/shared';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User> & { avatarPresignedUrl?: string };
@@ -10,6 +9,32 @@ export type UserDocument = HydratedDocument<User> & { avatarPresignedUrl?: strin
 export class User extends BaseSchema {
   @Prop({ type: String, trim: true })
   name: string;
+
+  @Prop({ type: String, trim: true })
+  firstName: string;
+
+  @Prop({ type: String, trim: true })
+  lastName: string;
+
+  @Prop({ type: String, enum: Gender })
+  gender: Gender;
+
+  @Prop({ type: Date })
+  dob: Date;
+
+  @Prop({ type: String, trim: true })
+  countryCode: string;
+
+  /** Free-text title shown on the profile (e.g. "Physics Teacher", "Class 10 Student"). */
+  @Prop({ type: String, trim: true })
+  designation: string;
+
+  @Prop({ type: String, trim: true })
+  pinCode: string;
+
+  /** Standards a learner studies; used by self-registered learners who have no teacher org mappings. */
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Standard' }], default: [] })
+  standards: MongooseSchema.Types.ObjectId[];
 
   @Prop({ type: String, required: true, lowercase: true, trim: true })
   email: string;
@@ -59,8 +84,8 @@ export class User extends BaseSchema {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-UserSchema.index({ uid: 1, orgId: 1 }, { unique: true });
+UserSchema.index({ uid: 1, org: 1 }, { unique: true });
 UserSchema.index({ email: 1 });
-UserSchema.index({ orgId: 1 });
+UserSchema.index({ org: 1 });
 UserSchema.index({ uid: 1 });
-UserSchema.index({ email: 1, orgId: 1 });
+UserSchema.index({ email: 1, org: 1 });

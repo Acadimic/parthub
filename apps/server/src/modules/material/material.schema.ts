@@ -86,5 +86,5 @@ export class Material extends BaseSchema {
 
 export const MaterialSchema = SchemaFactory.createForClass(Material);
 
-MaterialSchema.index({ orgId: 1, _deleted: 1 });
-MaterialSchema.index({ standard: 1, subject: 1, chapter: 1, order: 1, orgId: 1 }, { unique: true, sparse: true });
+MaterialSchema.index({ org: 1, _deleted: 1 });
+MaterialSchema.index({ standard: 1, subject: 1, chapter: 1, order: 1, org: 1 }, { unique: true, sparse: true });
