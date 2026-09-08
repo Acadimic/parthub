@@ -88,6 +88,8 @@ without aliasing.
 
 ## What must not happen
 
+These are `error` in ESLint, not advice — `no-restricted-imports` fails the lint on the first two.
+
 - `import { Input } from '@repo/ui/ui/input'` in feature code. Wrap it, then use the wrapper.
 - A bare `<input>`, `<select>`, `<table>` or `<dialog>` for something a wrapper covers.
 - The same component pasted into two apps, or into two modules. Move it to the library instead,
@@ -107,3 +109,11 @@ only there:
 ```bash
 pnpm --filter @repo/teaching exec tsc --noEmit
 ```
+
+The `verify-changes` skill has the full sequence.
+
+## Related skills
+
+- `create-core-component` — creates the wrapper, and covers adding a shadcn primitive.
+- `add-app-screen` — the page, module and store around the UI you are building.
+- `define-data-shape` — where a prop's type belongs, and why `IColumnData<T>` defaults to `unknown`.

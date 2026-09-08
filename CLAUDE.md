@@ -2,6 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Skills
+
+`.claude/skills/` holds the conventions as skills, so the rule arrives with the task rather than
+having to be remembered. Each one is split into **must** (a violation is a defect) and **should**
+(convention), mirroring the two ESLint tiers. Invoke one with `/<name>`.
+
+| Skill                   | Use it before                                                         |
+| ----------------------- | --------------------------------------------------------------------- |
+| `use-ui-component`      | writing any UI in a feature — decides what already exists             |
+| `create-core-component` | adding a wrapper in `packages/ui/src/core/`, or a shadcn primitive    |
+| `add-app-screen`        | touching an app's `pages/`, `modules/`, `layouts/` or `stores/`       |
+| `add-api-endpoint`      | touching `apps/server/src/modules`, a client service, or a shared DTO |
+| `define-data-shape`     | declaring any interface, enum, DTO, MST model or Mongoose schema      |
+| `write-comments`        | writing comments, docblocks, or any suppression that needs a reason   |
+| `verify-changes`        | reporting a change complete, and before every commit                  |
+
+Longer-form reasoning lives in `.claude/plans/API_CONVENTIONS.md` and
+`.claude/plans/DATA_CONTRACTS.md`; the skills reference them rather than repeating them.
+
 ## Build & Development Commands
 
 ```bash
