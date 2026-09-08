@@ -20,25 +20,25 @@ export class CourseService {
   }
 
   async getOrgCourses(org: Types.ObjectId): Promise<CourseDocument[]> {
-    return this.courseModel.find({ org, isDeleted: { $ne: true } }).lean<CourseDocument[]>();
+    return this.courseModel.find({ org, _deleted: { $ne: true } }).lean<CourseDocument[]>();
   }
 
   async getCoursesByStandardIds(org: Types.ObjectId, standardIds: string[]): Promise<CourseDocument[]> {
     return this.courseModel
-      .find({ org, standards: { $in: standardIds }, isDeleted: { $ne: true } })
+      .find({ org, standards: { $in: standardIds }, _deleted: { $ne: true } })
       .lean<CourseDocument[]>();
   }
 
   async getOrgCourseById(org: Types.ObjectId, id: string): Promise<CourseDocument> {
-    return this.courseModel.findOne({ _id: id, org, isDeleted: { $ne: true } }).lean<CourseDocument>();
+    return this.courseModel.findOne({ _id: id, org, _deleted: { $ne: true } }).lean<CourseDocument>();
   }
 
   async getCourseByName(org: Types.ObjectId, name: string): Promise<CourseDocument> {
-    return this.courseModel.findOne({ org, name, isDeleted: { $ne: true } }).lean<CourseDocument>();
+    return this.courseModel.findOne({ org, name, _deleted: { $ne: true } }).lean<CourseDocument>();
   }
 
   async findAll(org: string) {
-    return this.courseModel.find({ org, isDeleted: { $ne: true } }).lean<CourseDocument[]>();
+    return this.courseModel.find({ org, _deleted: { $ne: true } }).lean<CourseDocument[]>();
   }
 
   async findById(id: string) {

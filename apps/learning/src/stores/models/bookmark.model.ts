@@ -21,7 +21,7 @@ export const Bookmark = t
   }))
   .actions((self) => ({
     toggleDelete: () => {
-      self.isDeleted = !self.isDeleted;
+      self._deleted = !self._deleted;
     },
   }));
 

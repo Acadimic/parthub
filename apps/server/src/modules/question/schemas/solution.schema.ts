@@ -16,5 +16,5 @@ export class Solution extends BaseSchema {
 export const SolutionSchema = SchemaFactory.createForClass(Solution);
 
 SolutionSchema.index({ question: 1 });
-SolutionSchema.index({ org: 1, isDeleted: 1 });
-SolutionSchema.index({ question: 1, isDeleted: 1 });
+SolutionSchema.index({ org: 1, _deleted: 1 });
+SolutionSchema.index({ question: 1, _deleted: 1 });

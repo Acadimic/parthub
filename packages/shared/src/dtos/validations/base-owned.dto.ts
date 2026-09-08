@@ -15,7 +15,7 @@ export class BaseOwnedDto {
    */
   @IsOptional()
   @IsBoolean()
-  isDeleted?: boolean;
+  _deleted?: boolean;
 
   @IsOptional()
   @IsMongoId()

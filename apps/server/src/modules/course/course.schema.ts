@@ -84,4 +84,4 @@ export class Course extends BaseSchema {
 
 export const CourseSchema = SchemaFactory.createForClass(Course);
 
-CourseSchema.index({ org: 1, isDeleted: 1 });
+CourseSchema.index({ org: 1, _deleted: 1 });

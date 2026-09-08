@@ -132,17 +132,17 @@ export class UserService {
 
   async getUsersByUid(uid: string): Promise<UserDto[]> {
     if (!uid) throw new NotAcceptableException('UID is required!');
-    const users = await this.userModel.find({ uid, isDeleted: { $ne: true } }).lean<UserDocument[]>();
+    const users = await this.userModel.find({ uid, _deleted: { $ne: true } }).lean<UserDocument[]>();
     return users.map((user) => this.transformUser(user));
   }
 
   async getUsersByEmail(email: string): Promise<UserDocument[]> {
     if (!email) throw new NotAcceptableException('Email is required!');
-    return this.userModel.find({ email, isDeleted: { $ne: true } }).lean<UserDocument[]>();
+    return this.userModel.find({ email, _deleted: { $ne: true } }).lean<UserDocument[]>();
   }
 
   async getUserById(_id: string): Promise<UserDocument | null> {
-    return await this.userModel.findOne({ _id, isDeleted: { $ne: true } }).lean<UserDocument>();
+    return await this.userModel.findOne({ _id, _deleted: { $ne: true } }).lean<UserDocument>();
   }
 
   async getUserByOrgIdAndUid(payload: FindByOrgIdAndUidDto): Promise<UserDocument | null> {
@@ -150,7 +150,7 @@ export class UserService {
     if (!org) throw new NotAcceptableException('Org ID is required!');
     if (!uid) throw new NotAcceptableException('UID is required!');
     return await this.userModel
-      .findOne({ org: new Types.ObjectId(org), uid, isDeleted: { $ne: true } })
+      .findOne({ org: new Types.ObjectId(org), uid, _deleted: { $ne: true } })
       .lean<UserDocument>()
       .exec();
   }
@@ -202,7 +202,7 @@ export class UserService {
     const { _id, ...fields } = payload;
     const org = this.requestContextService.getOrgId();
     const member = await this.userModel
-      .findOne({ _id, org, isDeleted: { $ne: true } })
+      .findOne({ _id, org, _deleted: { $ne: true } })
       .lean<UserDocument>()
       .exec();
     if (!member) throw new ForbiddenException('User does not belong to your organization.');
@@ -215,17 +215,17 @@ export class UserService {
   }
 
   async getOrgUsers(org: string): Promise<UserDocument[]> {
-    return this.userModel.find({ org, isDeleted: { $ne: true } }).lean<UserDocument[]>();
+    return this.userModel.find({ org, _deleted: { $ne: true } }).lean<UserDocument[]>();
   }
 
   async getOrgUsersByEmails(org: string, emails: string[]): Promise<UserDocument[]> {
-    return this.userModel.find({ org, email: { $in: emails }, isDeleted: { $ne: true } }).lean<UserDocument[]>();
+    return this.userModel.find({ org, email: { $in: emails }, _deleted: { $ne: true } }).lean<UserDocument[]>();
   }
 
   async getOrgStaff(): Promise<UserDto[]> {
     const org = this.requestContextService.getOrgId();
     const users = await this.userModel
-      .find({ org, isDeleted: { $ne: true } })
+      .find({ org, _deleted: { $ne: true } })
       .sort({ isInactive: 1, updatedAt: -1 })
       .lean<UserDocument[]>()
       .exec();

@@ -78,7 +78,7 @@ export class InviteService {
   async getInvites(): Promise<InviteDto[]> {
     const org = this.requestContextService.getOrgId();
     const result = await this.inviteModel
-      .find({ org, isDeleted: { $ne: true } })
+      .find({ org, _deleted: { $ne: true } })
       .select(Object.keys(new InviteDto()).join(' '))
       .sort({ updatedAt: -1 })
       .lean<InviteDocument[]>()
@@ -88,7 +88,7 @@ export class InviteService {
 
   async getPendingInviteByEmail(email: string): Promise<InviteDocument | null> {
     return await this.inviteModel
-      .findOne({ email, status: InviteStatus.PENDING, isDeleted: { $ne: true } })
+      .findOne({ email, status: InviteStatus.PENDING, _deleted: { $ne: true } })
       .sort({ createdAt: 1 })
       .lean<InviteDocument>()
       .exec();
@@ -96,7 +96,7 @@ export class InviteService {
 
   async getPendingInviteById(inviteId: string): Promise<InviteDocument | null> {
     return await this.inviteModel
-      .findOne({ _id: inviteId, status: InviteStatus.PENDING, isDeleted: { $ne: true } })
+      .findOne({ _id: inviteId, status: InviteStatus.PENDING, _deleted: { $ne: true } })
       .lean<InviteDocument>()
       .exec();
   }

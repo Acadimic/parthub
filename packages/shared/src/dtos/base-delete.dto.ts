@@ -1,3 +1,3 @@
 export class BaseDeleteDto {
-  isDeleted: boolean;
+  _deleted: boolean;
 }

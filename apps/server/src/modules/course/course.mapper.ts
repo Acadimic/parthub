@@ -18,12 +18,12 @@ const toAttachmentDto = (attachment: Attachment & { _id?: unknown }): Attachment
 
 /**
  * Converts a course document to its wire contract. The only place that knows about ObjectId and
- * Date for this entity. Listing every field explicitly keeps `isDeleted`, `__v` and any field added
+ * Date for this entity. Listing every field explicitly keeps `_deleted`, `__v` and any field added
  * later out of the response.
  */
 export const toCourseDto = (course: CourseDocument): CourseDto => ({
   _id: course._id.toString(),
-  isDeleted: course.isDeleted ?? false,
+  _deleted: course._deleted ?? false,
   org: course.org.toString(),
   createdBy: course.createdBy?.toString(),
   updatedBy: course.updatedBy?.toString(),

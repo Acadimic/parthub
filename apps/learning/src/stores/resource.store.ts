@@ -51,21 +51,21 @@ export const ResourceStore = t
       const selectedCourseId = self.rootStore.selectorStore.selectedCourseId;
       if (!selectedCourseId) return false;
       const bookmarkItem = self.getBookmarkByItemId(selectedCourseId, collectionItem);
-      return bookmarkItem && !bookmarkItem.isDeleted ? true : false;
+      return bookmarkItem && !bookmarkItem._deleted ? true : false;
     },
 
     isReacted(collectionItem: string): boolean {
       const selectedCourseId = self.rootStore.selectorStore.selectedCourseId;
       if (!selectedCourseId) return false;
       const reactionItem = self.getReactionByItemId(selectedCourseId, collectionItem);
-      return reactionItem && !reactionItem.isDeleted ? true : false;
+      return reactionItem && !reactionItem._deleted ? true : false;
     },
 
     isFollowing(userId: string): boolean {
       const selectedUserId = self.rootStore.selectorStore.selectedUserId;
       if (!selectedUserId) return false;
       const followingItem = self.getFollowerFollowingMap(selectedUserId, userId);
-      return followingItem && !followingItem.isDeleted ? true : false;
+      return followingItem && !followingItem._deleted ? true : false;
     },
   }))
   .actions((self) => ({

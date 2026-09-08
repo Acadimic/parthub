@@ -20,4 +20,4 @@ export class Reaction extends BaseSchema {
 export const ReactionSchema = SchemaFactory.createForClass(Reaction);
 
 ReactionSchema.index({ createdBy: 1, collectionItem: 1, collectionRef: 1 }, { unique: true });
-ReactionSchema.index({ org: 1, isDeleted: 1 });
+ReactionSchema.index({ org: 1, _deleted: 1 });

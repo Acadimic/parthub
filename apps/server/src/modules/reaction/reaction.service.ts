@@ -19,13 +19,13 @@ export class ReactionService {
   }
 
   async getReactionsByUserId(userId: Types.ObjectId): Promise<ReactionDocument[]> {
-    return this.reactionModel.find({ createdBy: userId, isDeleted: { $ne: true } }).lean<ReactionDocument[]>();
+    return this.reactionModel.find({ createdBy: userId, _deleted: { $ne: true } }).lean<ReactionDocument[]>();
   }
 
   async getReactionsCount(collectionItem: string): Promise<number> {
     return this.reactionModel.countDocuments({
       collectionItem,
-      isDeleted: { $ne: true },
+      _deleted: { $ne: true },
     });
   }
 }

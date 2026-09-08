@@ -19,5 +19,5 @@ export class Option extends BaseSchema {
 export const OptionSchema = SchemaFactory.createForClass(Option);
 
 OptionSchema.index({ question: 1 });
-OptionSchema.index({ org: 1, isDeleted: 1 });
-OptionSchema.index({ question: 1, isDeleted: 1 });
+OptionSchema.index({ org: 1, _deleted: 1 });
+OptionSchema.index({ question: 1, _deleted: 1 });

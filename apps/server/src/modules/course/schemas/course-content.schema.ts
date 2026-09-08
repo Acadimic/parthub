@@ -34,4 +34,4 @@ export class CourseContent extends BaseSchema {
 export const CourseContentSchema = SchemaFactory.createForClass(CourseContent);
 
 CourseContentSchema.index({ course: 1, day: 1 }, { unique: true });
-CourseContentSchema.index({ org: 1, isDeleted: 1 });
+CourseContentSchema.index({ org: 1, _deleted: 1 });

@@ -20,4 +20,4 @@ export class StudentProductMapping extends BaseSchema {
 export const StudentProductMappingSchema = SchemaFactory.createForClass(StudentProductMapping);
 
 StudentProductMappingSchema.index({ student: 1, collectionItem: 1, collectionRef: 1, org: 1 }, { unique: true });
-StudentProductMappingSchema.index({ org: 1, isDeleted: 1 });
+StudentProductMappingSchema.index({ org: 1, _deleted: 1 });

@@ -10,7 +10,7 @@ export const Follower = t
       _id: t.identifier,
       follower: t.string,
       following: t.string,
-      isDeleted: t.optional(t.boolean, false),
+      _deleted: t.optional(t.boolean, false),
     }),
   )
   .views((self) => ({
@@ -20,7 +20,7 @@ export const Follower = t
   }))
   .actions((self) => ({
     toggleDelete: () => {
-      self.isDeleted = !self.isDeleted;
+      self._deleted = !self._deleted;
     },
   }));
 

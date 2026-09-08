@@ -29,12 +29,12 @@ export class StandardSubjectMappingService {
 
   async getAll(): Promise<StandardSubjectMappingDocument[]> {
     return this.mappingModel
-      .find({ isDeleted: { $ne: true } })
+      .find({ _deleted: { $ne: true } })
       .sort({ order: 1 })
       .lean<StandardSubjectMappingDocument[]>();
   }
 
   async deleteStandardMappings(standardId: string): Promise<void> {
-    await this.mappingModel.updateMany({ standard: standardId }, { isDeleted: true });
+    await this.mappingModel.updateMany({ standard: standardId }, { _deleted: true });
   }
 }

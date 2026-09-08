@@ -52,4 +52,4 @@ export class Plan extends BaseSchema {
 
 export const PlanSchema = SchemaFactory.createForClass(Plan);
 
-PlanSchema.index({ org: 1, isDeleted: 1 });
+PlanSchema.index({ org: 1, _deleted: 1 });

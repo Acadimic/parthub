@@ -20,11 +20,11 @@ export class TestPaperService {
   }
 
   async getOrgTestPapers(org: Types.ObjectId): Promise<TestPaperDocument[]> {
-    return this.testPaperModel.find({ org, isDeleted: { $ne: true } }).lean<TestPaperDocument[]>();
+    return this.testPaperModel.find({ org, _deleted: { $ne: true } }).lean<TestPaperDocument[]>();
   }
 
   async getTestPaperById(id: string): Promise<TestPaperDocument> {
-    return this.testPaperModel.findOne({ _id: id, isDeleted: { $ne: true } }).lean<TestPaperDocument>();
+    return this.testPaperModel.findOne({ _id: id, _deleted: { $ne: true } }).lean<TestPaperDocument>();
   }
 
   async updateTotalQuestionsAndMarks(
@@ -62,10 +62,10 @@ export class TestPaperService {
   }
 
   async findAll(org: string) {
-    return this.testPaperModel.find({ org, isDeleted: { $ne: true } }).lean<TestPaperDocument[]>();
+    return this.testPaperModel.find({ org, _deleted: { $ne: true } }).lean<TestPaperDocument[]>();
   }
 
   async getOrgTestPaperById(org: Types.ObjectId, id: string) {
-    return this.testPaperModel.findOne({ _id: id, org, isDeleted: { $ne: true } }).lean<TestPaperDocument>();
+    return this.testPaperModel.findOne({ _id: id, org, _deleted: { $ne: true } }).lean<TestPaperDocument>();
   }
 }

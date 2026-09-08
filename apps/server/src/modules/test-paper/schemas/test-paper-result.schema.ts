@@ -80,5 +80,5 @@ export class TestPaperResult extends BaseSchema {
 
 export const TestPaperResultSchema = SchemaFactory.createForClass(TestPaperResult);
 
-TestPaperResultSchema.index({ org: 1, isDeleted: 1 });
-TestPaperResultSchema.index({ createdBy: 1, isDeleted: 1 });
+TestPaperResultSchema.index({ org: 1, _deleted: 1 });
+TestPaperResultSchema.index({ createdBy: 1, _deleted: 1 });

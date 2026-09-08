@@ -217,7 +217,7 @@ export const SelectorStore = t
         updatedBy: self.rootStore.selectorStore.selectedUserId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        isDeleted: false,
+        _deleted: false,
       };
     },
 

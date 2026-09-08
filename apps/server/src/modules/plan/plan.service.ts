@@ -20,7 +20,7 @@ export class PlanService {
   }
 
   async getCoursePlans(org: Types.ObjectId): Promise<PlanDocument[]> {
-    return this.planModel.find({ org, isDeleted: { $ne: true } }).lean<PlanDocument[]>();
+    return this.planModel.find({ org, _deleted: { $ne: true } }).lean<PlanDocument[]>();
   }
 
   async getPlanById(id: string): Promise<PlanDocument> {
