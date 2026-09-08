@@ -1,3 +1,4 @@
+import { toPayload } from '@repo/ui/lib';
 import { IBatchUpsert, IBatchUser } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
@@ -5,7 +6,7 @@ import { callAuthApi } from './http.service';
 class BatchService {
   upsertBatch = async (payload: IBatchUpsert) => {
     const url = 'batch/upsert';
-    const resData = await callAuthApi(url, API.POST, payload);
+    const resData = await callAuthApi(url, API.POST, toPayload(payload));
     return resData;
   };
 

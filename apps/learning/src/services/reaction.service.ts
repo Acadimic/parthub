@@ -1,3 +1,4 @@
+import { toPayload } from '@repo/ui/lib';
 import { IReaction } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
@@ -17,7 +18,7 @@ class ReactionService {
 
   upsertReaction = async (payload: IReaction) => {
     const url = 'reaction/upsert';
-    const resData = await callAuthApi(url, API.POST, payload);
+    const resData = await callAuthApi(url, API.POST, toPayload(payload));
     return resData;
   };
 }

@@ -1,3 +1,4 @@
+import { toPayload } from '@repo/ui/lib';
 import { ICompletedModule } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
@@ -25,7 +26,7 @@ class CourseService {
 
   upsertCompletedModule = async (payload: ICompletedModule) => {
     const url = 'course/completed/module/upsert';
-    const resData = await callAuthApi(url, API.POST, payload);
+    const resData = await callAuthApi(url, API.POST, toPayload(payload));
     return resData;
   };
 

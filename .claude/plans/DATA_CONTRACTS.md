@@ -218,6 +218,16 @@ export const callAuthApi = async <T>(
 getCourses = async () => await callAuthApi<CourseDto[]>('course/all', API.GET);
 ```
 
+**Strip client-only fields before posting.** The models add keys the API never accepts, and the
+validation pipe runs with `forbidNonWhitelisted`, so one undeclared property fails the whole
+request. Every write goes through `toPayload` from `@repo/ui/lib`, which snapshots the instance and
+removes those keys at any depth. The list lives in `packages/ui/src/lib/payload.ts` with a comment
+explaining each entry; adding a field to a schema and its DTO means removing it from that list.
+
+```ts
+const resData = await callAuthApi<CourseDto>(url, API.POST, toPayload(payload));
+```
+
 **Separate the wire shape from view state** in the models. Declare the server
 fields, then the UI-only fields under a comment, so it is obvious which is
 which and a reviewer can see when the two have diverged.

@@ -1,3 +1,4 @@
+import { toPayload } from '@repo/ui/lib';
 import { IMergeTestPapers, IUpsertBulkSectionQuestions, IUpsertSectionQuestion } from '@interfaces';
 import { ITestPaper, ITestPaperSection, ITestPaperSnapshotIn } from '@stores';
 import { API } from '../enums';
@@ -7,25 +8,25 @@ class TestPaperService {
   // Interim: declares the shape the store consumes until a TestPaper response contract exists.
   upsertTestPaper = async (payload: ITestPaper) => {
     const url = 'test-paper/upsert';
-    const resData = await callAuthApi<ITestPaperSnapshotIn>(url, API.POST, payload);
+    const resData = await callAuthApi<ITestPaperSnapshotIn>(url, API.POST, toPayload(payload));
     return resData;
   };
 
   upsertTestPaperSection = async (payload: ITestPaperSection) => {
     const url = 'test-paper/section/upsert';
-    const resData = await callAuthApi(url, API.POST, payload);
+    const resData = await callAuthApi(url, API.POST, toPayload(payload));
     return resData;
   };
 
   upsertTestPaperSectionQuestion = async (payload: IUpsertSectionQuestion) => {
     const url = 'test-paper/section/upsert-question';
-    const resData = await callAuthApi(url, API.POST, payload);
+    const resData = await callAuthApi(url, API.POST, toPayload(payload));
     return resData;
   };
 
   upsertBulkTestPaperSectionQuestions = async (payload: IUpsertBulkSectionQuestions) => {
     const url = 'test-paper/section/upsert-bulk-questions';
-    const resData = await callAuthApi(url, API.POST, payload);
+    const resData = await callAuthApi(url, API.POST, toPayload(payload));
     return resData;
   };
 

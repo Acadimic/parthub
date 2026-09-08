@@ -32,7 +32,7 @@ package imports an app.
 | `@repo/ui/core`     | the wrappers: Button, TextInput, Select, Modal, Table, ...      |
 | `@repo/ui/app`      | the composed layer: SplitButton, DateInput, Carousel, Menu, ... |
 | `@repo/ui/ui/*`     | a single shadcn primitive, e.g. `@repo/ui/ui/switch`            |
-| `@repo/ui/lib`      | `cn`, date helpers, browser-safe utilities, `getProfilePayload` |
+| `@repo/ui/lib`      | `cn`, date helpers, browser-safe utilities, `toPayload`         |
 | `@repo/ui/types`    | `ISelectItem`, `IMenuItem`, `IColumnData`, `IStep`, `IColor`    |
 | `@repo/ui/contexts` | `ColorModeContext`                                              |
 | `@repo/ui/hooks`    | `useWindowDimensions`                                           |
