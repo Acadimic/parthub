@@ -10,15 +10,11 @@ export class UserBatchMappingService {
     private mappingModel: Model<UserBatchMappingDocument>,
   ) {}
 
-  async upsert(
-    userId: Types.ObjectId,
-    org: Types.ObjectId,
-    payload: { user: string; batch: string },
-  ): Promise<UserBatchMappingDocument> {
+  async upsert(org: Types.ObjectId, payload: { user: string; batch: string }): Promise<UserBatchMappingDocument> {
     return this.mappingModel
       .findOneAndUpdate(
         { user: payload.user, batch: payload.batch, org },
-        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
+        { ...payload },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<UserBatchMappingDocument>();
@@ -31,7 +27,7 @@ export class UserBatchMappingService {
   ): Promise<UserBatchMappingDocument[]> {
     const results: UserBatchMappingDocument[] = [];
     for (const payload of payloads) {
-      const result = await this.upsert(userId, org, payload);
+      const result = await this.upsert(org, payload);
       results.push(result);
     }
     return results;

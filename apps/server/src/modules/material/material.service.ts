@@ -8,12 +8,13 @@ import { MaterialDto } from '@parthhub/shared/validations';
 export class MaterialService {
   constructor(@InjectModel(Material.name) private materialModel: Model<MaterialDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: MaterialDto): Promise<MaterialDocument> {
+  async upsert(org: Types.ObjectId, payload: MaterialDto): Promise<MaterialDocument> {
     const { _id } = payload;
     return this.materialModel
       .findOneAndUpdate(
-        { _id },
-        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
+        // org in the filter so an upsert cannot reach another organization's document
+        { _id, org },
+        { ...payload },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<MaterialDocument>();

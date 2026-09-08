@@ -17,9 +17,8 @@ export class QuestionController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_QUESTION)
   async upsertQuestion(@Body() payload: QuestionDto) {
-    const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
-    const data = await this.questionService.upsert(userId, org, payload);
+    const data = await this.questionService.upsert(org, payload);
     return data;
   }
 

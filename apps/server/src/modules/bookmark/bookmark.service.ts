@@ -8,11 +8,11 @@ import { Bookmark, BookmarkDocument } from './bookmark.schema';
 export class BookmarkService {
   constructor(@InjectModel(Bookmark.name) private bookmarkModel: Model<BookmarkDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: BookmarkDto): Promise<BookmarkDocument> {
+  async upsert(userId: Types.ObjectId, payload: BookmarkDto): Promise<BookmarkDocument> {
     return this.bookmarkModel
       .findOneAndUpdate(
         { createdBy: userId, collectionItem: payload.collectionItem, collectionRef: payload.collectionRef },
-        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
+        { ...payload },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<BookmarkDocument>();

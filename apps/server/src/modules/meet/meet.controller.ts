@@ -17,9 +17,8 @@ export class MeetController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MEET)
   async upsertMeet(@Body() payload: MeetDto) {
-    const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
-    const data = await this.meetService.upsert(userId, org, payload);
+    const data = await this.meetService.upsert(org, payload);
     return data;
   }
 
@@ -36,7 +35,7 @@ export class MeetController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MEET)
   async addAttendees(@Param('meetId') meetId: string, @Body() body: { attendeeIds: string[] }) {
-    const data = await this.meetService.addAttendees(meetId, body.attendeeIds);
+    const data = await this.meetService.addAttendees(this.requestContextService.getOrgId(), meetId, body.attendeeIds);
     return data;
   }
 
@@ -44,7 +43,11 @@ export class MeetController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MEET)
   async removeAttendees(@Param('meetId') meetId: string, @Body() body: { attendeeIds: string[] }) {
-    const data = await this.meetService.removeAttendees(meetId, body.attendeeIds);
+    const data = await this.meetService.removeAttendees(
+      this.requestContextService.getOrgId(),
+      meetId,
+      body.attendeeIds,
+    );
     return data;
   }
 
@@ -52,7 +55,7 @@ export class MeetController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MEET)
   async deleteMeet(@Param('meetId') meetId: string) {
-    const data = await this.meetService.delete(meetId);
+    const data = await this.meetService.delete(this.requestContextService.getOrgId(), meetId);
     return data;
   }
 

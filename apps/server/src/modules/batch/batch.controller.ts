@@ -17,9 +17,8 @@ export class BatchController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_BATCH)
   async upsertBatch(@Body() payload: BatchDto) {
-    const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
-    const data = await this.batchService.upsert(userId, org, payload);
+    const data = await this.batchService.upsert(org, payload);
     return data;
   }
 

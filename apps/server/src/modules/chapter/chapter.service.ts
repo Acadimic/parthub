@@ -8,12 +8,13 @@ import { ChapterDto, StandardSubjectQueryDto } from '@parthhub/shared/validation
 export class ChapterService {
   constructor(@InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: ChapterDto): Promise<ChapterDocument> {
+  async upsert(org: Types.ObjectId, payload: ChapterDto): Promise<ChapterDocument> {
     const { _id } = payload;
     return this.chapterModel
       .findOneAndUpdate(
-        { _id },
-        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
+        // org in the filter so an upsert cannot reach another organization's document
+        { _id, org },
+        { ...payload },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<ChapterDocument>();

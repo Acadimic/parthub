@@ -11,14 +11,13 @@ export class StudentStandardMappingService {
   ) {}
 
   async upsert(
-    userId: Types.ObjectId,
     org: Types.ObjectId,
     payload: { student: string; standard: string },
   ): Promise<StudentStandardMappingDocument> {
     return this.mappingModel
       .findOneAndUpdate(
         { student: payload.student, standard: payload.standard, org },
-        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId, enrolledAt: new Date() } },
+        { ...payload, $setOnInsert: { enrolledAt: new Date() } },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<StudentStandardMappingDocument>();

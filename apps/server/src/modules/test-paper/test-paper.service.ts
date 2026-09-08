@@ -8,12 +8,13 @@ import { TestPaperDto } from '@parthhub/shared/validations';
 export class TestPaperService {
   constructor(@InjectModel(TestPaper.name) private testPaperModel: Model<TestPaperDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: TestPaperDto): Promise<TestPaperDocument> {
+  async upsert(org: Types.ObjectId, payload: TestPaperDto): Promise<TestPaperDocument> {
     const { _id } = payload;
     return this.testPaperModel
       .findOneAndUpdate(
-        { _id },
-        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
+        // org in the filter so an upsert cannot reach another organization's document
+        { _id, org },
+        { ...payload },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<TestPaperDocument>();
@@ -28,21 +29,26 @@ export class TestPaperService {
   }
 
   async updateTotalQuestionsAndMarks(
+    org: Types.ObjectId,
     testPaperId: string,
     totalQuestions: number,
     maxMarks: number,
   ): Promise<TestPaperDocument> {
     return this.testPaperModel
-      .findOneAndUpdate({ _id: testPaperId }, { totalQuestions, maxMarks }, { new: true })
+      .findOneAndUpdate({ _id: testPaperId, org }, { totalQuestions, maxMarks }, { new: true })
       .lean<TestPaperDocument>();
   }
 
-  async mergeTestPapers(primaryTestPaperId: string, secondaryTestPaperId: string): Promise<TestPaperDocument> {
-    const secondaryTestPaper = await this.getTestPaperById(secondaryTestPaperId);
+  async mergeTestPapers(
+    org: Types.ObjectId,
+    primaryTestPaperId: string,
+    secondaryTestPaperId: string,
+  ): Promise<TestPaperDocument> {
+    const secondaryTestPaper = await this.getOrgTestPaperById(org, secondaryTestPaperId);
     if (!secondaryTestPaper) throw new Error('Secondary test paper not found');
     return this.testPaperModel
       .findOneAndUpdate(
-        { _id: primaryTestPaperId },
+        { _id: primaryTestPaperId, org },
         {
           $inc: {
             totalQuestions: secondaryTestPaper.totalQuestions,

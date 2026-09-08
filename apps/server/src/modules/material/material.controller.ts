@@ -17,9 +17,8 @@ export class MaterialController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MATERIAL)
   async upsertMaterial(@Body() payload: MaterialDto) {
-    const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
-    const data = await this.materialService.upsert(userId, org, payload);
+    const data = await this.materialService.upsert(org, payload);
     return data;
   }
 

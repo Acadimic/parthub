@@ -18,8 +18,7 @@ export class ReactionController {
   @Permissions(PermissionItem.MANAGE_REACTION)
   async upsertReaction(@Body() payload: ReactionDto) {
     const userId = this.requestContextService.getUserId();
-    const org = this.requestContextService.getOrgId();
-    const data = await this.reactionService.upsert(userId, org, payload);
+    const data = await this.reactionService.upsert(userId, payload);
     return data;
   }
 

@@ -17,9 +17,8 @@ export class PlanController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_PLAN)
   async upsertPlan(@Body() payload: PlanDto) {
-    const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
-    const data = await this.planService.upsert(userId, org, payload);
+    const data = await this.planService.upsert(org, payload);
     return data;
   }
 

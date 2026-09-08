@@ -8,12 +8,13 @@ import { Batch, BatchDocument } from './batch.schema';
 export class BatchService {
   constructor(@InjectModel(Batch.name) private batchModel: Model<BatchDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: BatchDto): Promise<BatchDocument> {
+  async upsert(org: Types.ObjectId, payload: BatchDto): Promise<BatchDocument> {
     const { _id } = payload;
     return this.batchModel
       .findOneAndUpdate(
-        { _id },
-        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
+        // org in the filter so an upsert cannot reach another organization's document
+        { _id, org },
+        { ...payload },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<BatchDocument>();

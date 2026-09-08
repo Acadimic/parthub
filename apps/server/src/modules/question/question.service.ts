@@ -8,12 +8,13 @@ import { QuestionDto } from '@parthhub/shared/validations';
 export class QuestionService {
   constructor(@InjectModel(Question.name) private questionModel: Model<QuestionDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: QuestionDto): Promise<QuestionDocument> {
+  async upsert(org: Types.ObjectId, payload: QuestionDto): Promise<QuestionDocument> {
     const { _id } = payload;
     return this.questionModel
       .findOneAndUpdate(
-        { _id },
-        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
+        // org in the filter so an upsert cannot reach another organization's document
+        { _id, org },
+        { ...payload },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<QuestionDocument>();

@@ -17,9 +17,8 @@ export class TestPaperController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_TEST_PAPER)
   async upsertTestPaper(@Body() payload: TestPaperDto) {
-    const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
-    const data = await this.testPaperService.upsert(userId, org, payload);
+    const data = await this.testPaperService.upsert(org, payload);
     return data;
   }
 
@@ -44,7 +43,11 @@ export class TestPaperController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_TEST_PAPER)
   async mergeTestPapers(@Body() payload: { primaryTestPaperId: string; secondaryTestPaperId: string }) {
-    const data = await this.testPaperService.mergeTestPapers(payload.primaryTestPaperId, payload.secondaryTestPaperId);
+    const data = await this.testPaperService.mergeTestPapers(
+      this.requestContextService.getOrgId(),
+      payload.primaryTestPaperId,
+      payload.secondaryTestPaperId,
+    );
     return data;
   }
 }

@@ -18,9 +18,8 @@ export class CourseController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.CREATE_COURSE, PermissionItem.EDIT_COURSE)
   async upsertCourse(@Body() payload: CourseDto): Promise<CourseDto> {
-    const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
-    return toCourseDto(await this.courseService.upsert(userId, org, payload));
+    return toCourseDto(await this.courseService.upsert(org, payload));
   }
 
   @Get('all')

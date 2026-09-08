@@ -20,14 +20,14 @@ export class RoleService {
   }
 
   async upsert(payload: RoleDto): Promise<RoleDto> {
-    if (!payload.isAdmin) {
-      const existing = await this.roleModel.findById(payload._id).lean<RoleDocument>().exec();
-      if (existing?.isAdmin) {
-        throw new ForbiddenException('Cannot modify admin role.');
-      }
+    const org = this.requestContextService.getOrgId();
+    const existing = await this.roleModel.findOne({ _id: payload._id, org }).lean<RoleDocument>().exec();
+    if (existing?.isAdmin) {
+      throw new ForbiddenException('Cannot modify admin role.');
     }
     const role: RoleDocument = await this.roleModel
-      .findOneAndUpdate({ _id: payload._id }, { ...payload }, { new: true, upsert: true })
+      // org in the filter so an upsert cannot reach another organization's role
+      .findOneAndUpdate({ _id: payload._id, org }, { ...payload }, { new: true, upsert: true })
       .lean<RoleDocument>()
       .exec();
     return this.getTransformedRole(role);

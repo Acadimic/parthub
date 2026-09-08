@@ -8,11 +8,11 @@ import { Reaction, ReactionDocument } from './reaction.schema';
 export class ReactionService {
   constructor(@InjectModel(Reaction.name) private reactionModel: Model<ReactionDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: ReactionDto): Promise<ReactionDocument> {
+  async upsert(userId: Types.ObjectId, payload: ReactionDto): Promise<ReactionDocument> {
     return this.reactionModel
       .findOneAndUpdate(
         { createdBy: userId, collectionItem: payload.collectionItem, collectionRef: payload.collectionRef },
-        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
+        { ...payload },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<ReactionDocument>();

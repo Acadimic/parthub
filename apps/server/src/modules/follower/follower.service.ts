@@ -8,11 +8,11 @@ import { Follower, FollowerDocument } from './follower.schema';
 export class FollowerService {
   constructor(@InjectModel(Follower.name) private followerModel: Model<FollowerDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: FollowerDto): Promise<FollowerDocument> {
+  async upsert(userId: Types.ObjectId, payload: FollowerDto): Promise<FollowerDocument> {
     return this.followerModel
       .findOneAndUpdate(
         { follower: userId, following: payload.following },
-        { ...payload, follower: userId, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
+        { ...payload, follower: userId },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<FollowerDocument>();

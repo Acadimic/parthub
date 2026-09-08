@@ -18,8 +18,7 @@ export class FollowerController {
   @Permissions(PermissionItem.MANAGE_FOLLOWER)
   async upsertFollower(@Body() payload: FollowerDto) {
     const userId = this.requestContextService.getUserId();
-    const org = this.requestContextService.getOrgId();
-    const data = await this.followerService.upsert(userId, org, payload);
+    const data = await this.followerService.upsert(userId, payload);
     return data;
   }
 

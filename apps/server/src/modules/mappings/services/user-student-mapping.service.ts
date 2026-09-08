@@ -10,15 +10,11 @@ export class UserStudentMappingService {
     private mappingModel: Model<UserStudentMappingDocument>,
   ) {}
 
-  async upsert(
-    userId: Types.ObjectId,
-    org: Types.ObjectId,
-    payload: { user: string; student: string },
-  ): Promise<UserStudentMappingDocument> {
+  async upsert(org: Types.ObjectId, payload: { user: string; student: string }): Promise<UserStudentMappingDocument> {
     return this.mappingModel
       .findOneAndUpdate(
-        { user: payload.user, student: payload.student },
-        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
+        { user: payload.user, student: payload.student, org },
+        { ...payload },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<UserStudentMappingDocument>();

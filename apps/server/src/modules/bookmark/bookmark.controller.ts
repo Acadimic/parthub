@@ -19,8 +19,7 @@ export class BookmarkController {
   @Permissions(PermissionItem.MANAGE_BOOKMARK)
   async upsertBookmark(@Body() payload: BookmarkDto) {
     const userId = this.requestContextService.getUserId();
-    const org = this.requestContextService.getOrgId();
-    const data = await this.bookmarkService.upsert(userId, org, payload);
+    const data = await this.bookmarkService.upsert(userId, payload);
     return data;
   }
 

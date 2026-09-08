@@ -23,9 +23,8 @@ export class MappingsController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MAPPING)
   async upsertStudentStandard(@Body() payload: StudentStandardMappingDto) {
-    const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
-    const data = await this.studentStandardMappingService.upsert(userId, org, payload);
+    const data = await this.studentStandardMappingService.upsert(org, payload);
     return data;
   }
 
@@ -33,9 +32,8 @@ export class MappingsController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MAPPING)
   async upsertUserStudent(@Body() payload: UserStudentMappingDto) {
-    const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
-    const data = await this.userStudentMappingService.upsert(userId, org, payload);
+    const data = await this.userStudentMappingService.upsert(org, payload);
     return data;
   }
 
@@ -43,9 +41,8 @@ export class MappingsController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MAPPING)
   async upsertUserBatch(@Body() payload: UserBatchMappingDto) {
-    const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
-    const data = await this.userBatchMappingService.upsert(userId, org, payload);
+    const data = await this.userBatchMappingService.upsert(org, payload);
     return data;
   }
 

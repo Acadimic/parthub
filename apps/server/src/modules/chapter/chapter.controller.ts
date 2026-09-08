@@ -17,9 +17,8 @@ export class ChapterController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_CHAPTER)
   async upsertChapter(@Body() payload: ChapterDto) {
-    const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
-    const data = await this.chapterService.upsert(userId, org, payload);
+    const data = await this.chapterService.upsert(org, payload);
     return data;
   }
 

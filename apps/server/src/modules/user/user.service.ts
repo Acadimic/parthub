@@ -232,16 +232,21 @@ export class UserService {
     return this.withPermissions(users.map((user) => this.transformUser(user)));
   }
 
+  // The user id comes from the request body, so every one of these is scoped to the caller's
+  // organization: staff must not be able to reach a member of another org by guessing an id.
   async revokeAccess(userId: string): Promise<void> {
-    await this.userModel.updateOne({ _id: userId }, { isInactive: true }).exec();
+    const org = this.requestContextService.getOrgId();
+    await this.userModel.updateOne({ _id: userId, org }, { isInactive: true }).exec();
   }
 
   async restoreAccess(userId: string): Promise<void> {
-    await this.userModel.updateOne({ _id: userId }, { isInactive: false }).exec();
+    const org = this.requestContextService.getOrgId();
+    await this.userModel.updateOne({ _id: userId, org }, { isInactive: false }).exec();
   }
 
   async updateUserRole(userId: string, roleId: string): Promise<void> {
-    await this.userModel.updateOne({ _id: userId }, { role: new Types.ObjectId(roleId) }).exec();
+    const org = this.requestContextService.getOrgId();
+    await this.userModel.updateOne({ _id: userId, org }, { role: new Types.ObjectId(roleId) }).exec();
   }
 
   async acceptInviteAndJoinOrg(currentUser: UserDto, inviteId: string): Promise<UserDto> {

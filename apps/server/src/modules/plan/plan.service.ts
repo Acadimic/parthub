@@ -8,12 +8,13 @@ import { PlanDto } from '@parthhub/shared/validations';
 export class PlanService {
   constructor(@InjectModel(Plan.name) private planModel: Model<PlanDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: PlanDto): Promise<PlanDocument> {
+  async upsert(org: Types.ObjectId, payload: PlanDto): Promise<PlanDocument> {
     const { _id } = payload;
     return this.planModel
       .findOneAndUpdate(
-        { _id },
-        { ...payload, updatedBy: userId, $setOnInsert: { org, createdBy: userId } },
+        // org in the filter so an upsert cannot reach another organization's document
+        { _id, org },
+        { ...payload },
         { new: true, upsert: true, runValidators: true },
       )
       .lean<PlanDocument>();
