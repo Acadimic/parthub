@@ -1,4 +1,4 @@
-import { Spinner } from '@repo/ui/app';
+import { Spinner } from './Spinner';
 
 interface IProps {
   isLoading: boolean;

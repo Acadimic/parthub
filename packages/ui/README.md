@@ -76,9 +76,15 @@ into this package later means updating its call sites, so check
 5. **One component per file, named after the file.** The folder's `index.ts`
    re-exports it.
 6. **No barrel self-imports.** Import the module that defines a component
-   (`../loaders/Spinner`), never the folder barrel above it (`..`). Doing the
-   latter makes every component transitively depend on every other one, which is
-   what previously kept 17 shareable components stuck in the apps.
+   (`../loaders/Spinner`), never the folder barrel above it (`..`), and never
+   this package's own `@repo/ui/*` subpaths. Doing the latter makes every
+   component transitively depend on every other one, which is what previously
+   kept 17 shareable components stuck in the apps.
+
+Rules 2, 3 and 6 are enforced: `no-restricted-imports` in `eslint.config.js`
+(from `@repo/eslint-config`) fails the lint on an app alias, on `mobx*`, on an
+`@repo/ui` subpath and on `from '..'`. Rule 1 is enforced from the other side —
+an app may not import `@repo/ui/ui/*`.
 
 ## Adding a component
 

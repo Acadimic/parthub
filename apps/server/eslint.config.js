@@ -4,6 +4,7 @@ const tsParser = require('@typescript-eslint/parser');
 const tsPlugin = require('@typescript-eslint/eslint-plugin');
 const prettierPlugin = require('eslint-plugin-prettier');
 const prettierConfig = require('eslint-config-prettier');
+const { mustRules, shouldRules, layerRules } = require('@repo/eslint-config');
 
 module.exports = [
   { ignores: ['dist/**', 'node_modules/**', 'eslint.config.js'] },
@@ -18,9 +19,9 @@ module.exports = [
       ...tsPlugin.configs.recommended.rules,
       ...prettierConfig.rules,
       'prettier/prettier': 'error',
-
-      // Data must have a declared type. `unknown` plus narrowing is the escape hatch, not `any`.
-      '@typescript-eslint/no-explicit-any': 'error',
+      ...mustRules,
+      ...shouldRules,
+      ...layerRules.server,
 
       // Annotation style is left to the author; `noImplicitAny` in tsconfig covers the real gap.
       '@typescript-eslint/explicit-function-return-type': 'off',

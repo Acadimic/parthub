@@ -37,7 +37,7 @@ pnpm --filter @repo/ui <script>
 
 ## Architecture
 
-**Monorepo** with pnpm workspaces: `apps/learning`, `apps/teaching`, `apps/admin`, `apps/server`, `packages/shared`, `packages/ui`.
+**Monorepo** with pnpm workspaces: `apps/learning`, `apps/teaching`, `apps/admin`, `apps/server`, `packages/shared`, `packages/ui`, `packages/eslint-config`.
 
 ### Where shared code lives
 
@@ -116,7 +116,38 @@ Shared React layer for the apps (see "Where shared code lives"). No build step; 
 - Prettier: 120 char width, single quotes, trailing commas, 2-space indent, LF line endings
 - App ESLint (learning, teaching, admin): `.eslintrc.js`, next/core-web-vitals + prettier
 - Server, shared and ui ESLint: `eslint.config.js` (ESLint 9 flat config), @typescript-eslint/recommended + prettier
-- `pnpm lint` covers all six workspaces. Every one of them is clean; keep it that way.
+- **The rules themselves live in one place: `packages/eslint-config/index.js`** (`@repo/eslint-config`).
+  All six workspaces spread the same `mustRules`, `shouldRules` and their own `layerRules` entry, so
+  a rule change happens once. It is CommonJS because both ESLint generations consume it.
+- `pnpm lint` reports; `pnpm --filter <workspace> lint:fix` fixes. The lint script never rewrites files.
+
+### Two tiers of rule
+
+**must (`error`) — a violation is a defect, and `pnpm lint` fails.**
+
+- `no-explicit-any`, everywhere. See "Typing rules" below.
+- `no-restricted-imports`, which makes the package layering machine-checked. Each of these has zero
+  violations, and the rule is what keeps it that way:
+  - an app may not import `@repo/ui/ui/*` (a raw shadcn primitive) or climb `../../../`;
+  - `packages/ui` may not import an app alias, `mobx*`, its own `@repo/ui` subpaths, or the barrel
+    above a module (`from '..'`);
+  - `packages/shared` may not import React, Next or `@repo/ui`;
+  - the server may not import React or `@repo/ui`.
+
+  The message on each one names the fix, so a failure tells you what to do instead.
+
+**should (`warn`) — conventions, advisory.** Twenty-four rules covering: say when an import is a
+type (`consistent-type-imports`, inline style), one shape-declaration style (`interface`), no
+`!` non-null assertions, `??` over `||` for nullable objects, no unused bindings, no `console.log`,
+plain control flow (`eqeqeq`, no nested ternary, no param reassign, no `else` after `return`), and
+ceilings that say "extract something" rather than "this is wrong": `max-params` 4, `max-depth` 4,
+`complexity` 15, `max-nested-callbacks` 3, `max-lines` 500.
+
+Warnings do not fail the build, so treat them as a nudge on code you are already touching. The
+backlog when the tier was introduced was 341, and every autofixable one had already been applied:
+teaching 173, learning 93, ui 34, admin 28, server 13, shared 0. The bulk is 96 unused bindings
+(the rule had been switched off in the apps), 69 `console.log` calls and 52 nested ternaries. If you
+add a warning to a file you are editing, fix it before you finish.
 
 ### Typing rules
 

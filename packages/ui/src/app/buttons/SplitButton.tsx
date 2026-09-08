@@ -1,8 +1,8 @@
-import { IMenuItem } from '../../types';
+import { type IMenuItem } from '../../types';
 import { CaretDownIcon } from '@phosphor-icons/react';
 import * as React from 'react';
 import { Menu } from '../menus';
-import { Button } from '@repo/ui/app';
+import { Button } from './Buttons';
 
 interface IProps {
   text: string;

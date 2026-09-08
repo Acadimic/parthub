@@ -1,5 +1,5 @@
-import { Switch as SwitchPrimitive } from '@repo/ui/ui/switch';
-import { Label } from '@repo/ui/app';
+import { Switch as SwitchPrimitive } from '../../ui/switch';
+import { Label } from './Label';
 
 export interface ISwitchProps {
   label?: string;

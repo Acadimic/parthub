@@ -5,6 +5,9 @@ import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import prettierPlugin from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
+import sharedConfig from '@repo/eslint-config';
+
+const { mustRules, shouldRules, layerRules } = sharedConfig;
 
 export default [
   { ignores: ['node_modules/**', 'eslint.config.js'] },
@@ -24,18 +27,11 @@ export default [
       ...tsPlugin.configs.recommended.rules,
       ...prettierConfig.rules,
       'prettier/prettier': 'error',
+      ...mustRules,
+      ...shouldRules,
+      ...layerRules.ui,
 
-      // A prop pulled out of a `...rest` spread on purpose, or a deliberately unused
-      // parameter, is named with a leading underscore.
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { args: 'after-used', argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
-      ],
-
-      // Data must have a declared type. `unknown` plus narrowing is the escape hatch, not `any`.
-      '@typescript-eslint/no-explicit-any': 'error',
-
-      // Annotation style is left to the author; `noImplicitAny` in tsconfig covers the real gap.
+      // Annotation style is left to the author; `strict` in tsconfig covers the real gap.
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
     },
