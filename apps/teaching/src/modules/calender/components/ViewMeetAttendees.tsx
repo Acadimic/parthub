@@ -2,8 +2,7 @@ import { AvatarWithName } from '@components/app/avatars';
 import { Label } from '@repo/ui/app';
 import { UserIcon } from '@phosphor-icons/react';
 import { DefaultRole } from '@enums';
-import { useSelectorLookups, useUserLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useUserLookups } from '@stores';
 
 interface IProps {
   attendeeIds: string[];
@@ -12,8 +11,7 @@ interface IProps {
   noLabel?: boolean;
 }
 
-export const ViewMeetAttendees = observer(({ attendeeIds, isStudents, isTeachers, noLabel }: IProps) => {
-  const selectorStore = useSelectorLookups();
+export const ViewMeetAttendees = ({ attendeeIds, isStudents, isTeachers, noLabel }: IProps) => {
   const userStore = useUserLookups();
   const { getUsersByIds } = userStore;
   const attendees = getUsersByIds(attendeeIds);
@@ -45,4 +43,4 @@ export const ViewMeetAttendees = observer(({ attendeeIds, isStudents, isTeachers
       </div>
     </div>
   );
-});
+};

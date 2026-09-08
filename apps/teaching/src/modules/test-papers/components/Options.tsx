@@ -2,14 +2,14 @@ import { CheckboxSelection, RadioSelection } from '@components/app/selections';
 import { Html } from '@components/others';
 import { QuestionType } from '@enums';
 import { type IQuestion, useQuestionLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   question: IQuestion;
 }
 
-export const Options = observer(({ question }: IProps) => {
+export const Options = ({ question }: IProps) => {
   const questionStore = useQuestionLookups();
+  const { getOptionItems } = questionStore;
   const { getOptionsByIds, getOptionById } = questionStore;
 
   return (
@@ -17,10 +17,10 @@ export const Options = observer(({ question }: IProps) => {
       <div>
         {question.questionType === QuestionType.MULTIPLE_CHOICE ? (
           <CheckboxSelection
-            selectedValues={getOptionsByIds(question.options)
+            selectedValues={getOptionsByIds(question.options ?? [])
               .filter((option) => option.isCorrect)
               .map((option) => option._id)}
-            options={question.optionItems}
+            options={getOptionItems(question._id)}
             handleClick={() => {}}
             isDisabled
             isHtml
@@ -28,8 +28,8 @@ export const Options = observer(({ question }: IProps) => {
           />
         ) : question.questionType === QuestionType.SINGLE_CHOICE || question.questionType === QuestionType.BOOLEAN ? (
           <RadioSelection
-            selectedValue={getOptionsByIds(question.options).find((option) => option.isCorrect)?._id}
-            options={question.optionItems}
+            selectedValue={getOptionsByIds(question.options ?? []).find((option) => option.isCorrect)?._id}
+            options={getOptionItems(question._id)}
             handleClick={() => {}}
             isDisabled
             isHtml
@@ -37,10 +37,10 @@ export const Options = observer(({ question }: IProps) => {
           />
         ) : (
           <div className="py-2 text-sm font-medium">
-            <Html html={getOptionById(question.options[0])?.option || ''} prefix="Ans:" />
+            <Html html={getOptionById((question.options ?? [])[0])?.option || ''} prefix="Ans:" />
           </div>
         )}
       </div>
     </div>
   );
-});
+};

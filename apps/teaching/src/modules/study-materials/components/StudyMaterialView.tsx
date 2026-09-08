@@ -2,7 +2,6 @@ import { Attachments, type IAttachmentProps } from '@components/app/attachments'
 import { Label } from '@repo/ui/app';
 import { Html } from '@components/others';
 import { type IMaterial } from '@stores';
-import { observer } from 'mobx-react-lite';
 import { ChapterName } from '@components/common/ChapterName';
 
 interface IProps {
@@ -10,14 +9,14 @@ interface IProps {
   otherAttachments?: IAttachmentProps[];
 }
 
-export const StudyMaterialView = observer(({ material, otherAttachments }: IProps) => {
+export const StudyMaterialView = ({ material, otherAttachments }: IProps) => {
   return (
     <div className="w-full">
       <div className="">
         <Html html={material.content} />
       </div>
       <div className="flex flex-col gap-2 mt-4">
-        {material.attachments.length > 0 ? (
+        {(material.attachments ?? []).length > 0 ? (
           <div>
             <Label label="Attachments" />
             <Attachments
@@ -38,4 +37,4 @@ export const StudyMaterialView = observer(({ material, otherAttachments }: IProp
       <ChapterName chapterId={material.chapter} />
     </div>
   );
-});
+};

@@ -1,11 +1,10 @@
 import { Stepper } from '@components/app/steppers';
 import { type IStep } from '@interfaces';
 import { useSelectorLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
 import { AddQuestion } from './AddQuestion';
 import { AddSolution } from './AddSolution';
 
-export const UpsertQuestionStepper = observer(() => {
+export const UpsertQuestionStepper = () => {
   const selectorStore = useSelectorLookups();
   const { selectedUpsertQuestionStep } = selectorStore;
 
@@ -25,4 +24,4 @@ export const UpsertQuestionStepper = observer(() => {
       <Stepper steps={steps} activeStep={selectedUpsertQuestionStep} />
     </div>
   );
-});
+};

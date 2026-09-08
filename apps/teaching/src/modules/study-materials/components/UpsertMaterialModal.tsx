@@ -15,7 +15,6 @@ import {
   useSelectorLookups,
 } from '@stores';
 import { successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 import { StudyMaterialView } from './StudyMaterialView';
 import { UpsertAttachmentModal } from './UpsertAttachment';
@@ -27,9 +26,10 @@ interface IProps {
   onClose: () => void;
 }
 
-export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
+export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
   const selectorStore = useSelectorLookups();
   const materialStore = useMaterialLookups();
+  const { renameMaterial } = materialStore;
   const { removeAttachment } = materialStore;
   const { patchMaterial } = materialStore;
   const { addAttachment } = materialStore;
@@ -44,8 +44,8 @@ export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
   const [selectedAttachment, setSelectedAttachment] = useState<IAttachment | null>(null);
 
   const onAddLinkAttachment = () => {
-    const attachment = addLinkAttachment();
-    setSelectedAttachment(attachment);
+    if (!selectedMaterial) return;
+    setSelectedAttachment(addLinkAttachment(selectedMaterial._id));
   };
 
   const onEditAttachment = (attachment: IAttachment) => {
@@ -53,8 +53,9 @@ export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
   };
 
   const onCloseAttachmentModal = () => {
-    if (selectedAttachment?.isNew && (!selectedAttachment?.fileName || !selectedAttachment?.url)) {
-      selectedMaterial?.removeAttachment(selectedAttachment);
+    // A draft link the user abandoned without filling in is not worth keeping.
+    if (selectedMaterial && selectedAttachment?.isNew && (!selectedAttachment.fileName || !selectedAttachment.url)) {
+      removeAttachment(selectedMaterial._id, selectedAttachment._id);
     }
     setSelectedAttachment(null);
   };
@@ -77,7 +78,8 @@ export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
   };
 
   const handleContentTextChange = (blocks: Block[]) => {
-    selectedMaterial?.setContent(JSON.stringify(blocks));
+    if (!selectedMaterial) return;
+    patchMaterial(selectedMaterial._id, { content: JSON.stringify(blocks) });
   };
 
   // Upload files to S3 bucket
@@ -87,7 +89,7 @@ export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
     try {
       setIsLoading(true);
       const attachments = await uploadFilesToS3(selectedMaterial._id, selectedFiles);
-      attachments?.forEach((attachment) => selectedMaterial.addAttachment(attachment));
+      attachments?.forEach((attachment) => addAttachment(selectedMaterial._id, attachment));
       await MaterialService.upsertMaterial(selectedMaterial);
       setSelectedFiles([]);
       patchMaterial(selectedMaterial._id, { isNew: false });
@@ -115,7 +117,7 @@ export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
                   label="Content Title"
                   required
                   value={selectedMaterial.name}
-                  onChange={(e) => selectedMaterial.setName(e.target.value)}
+                  onChange={(e) => renameMaterial(selectedMaterial._id, e.target.value)}
                 />
                 <div>
                   <div className="max-w-full">
@@ -149,11 +151,11 @@ export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
                   </div>
                   <div>
                     <Attachments
-                      attachments={selectedMaterial.attachments.map((attachment, index) => ({
+                      attachments={(selectedMaterial.attachments ?? []).map((attachment, index) => ({
                         fileName: attachment.fileName,
                         extension: attachment.fileExtension,
                         index,
-                        onRemove: () => selectedMaterial.removeAttachment(attachment),
+                        onRemove: () => removeAttachment(selectedMaterial._id, attachment._id),
                         onEdit: () => onEditAttachment(attachment),
                         url: attachment.url,
                         isStatic: attachment.isUploaded ? false : true,
@@ -177,7 +179,7 @@ export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
                     <AddChapterButton standard={selectedStandardId} subject={selectedSubjectId} />
                   </div>
                 </div>
-                {selectedMaterial.content || selectedMaterial.attachments.length ? (
+                {selectedMaterial.content || (selectedMaterial.attachments ?? []).length ? (
                   <div className="mt-12 flex flex-col gap-2 items-center justify-center">
                     <SimpleAccordions
                       items={[
@@ -217,4 +219,4 @@ export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
       />
     </>
   );
-});
+};

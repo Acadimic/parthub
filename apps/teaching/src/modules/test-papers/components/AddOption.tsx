@@ -1,6 +1,5 @@
 import { XIcon } from '@phosphor-icons/react';
-import { type IOption } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type IOption, useQuestionLookups } from '@stores';
 import { type Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
 
@@ -10,9 +9,11 @@ interface IProps {
   handleRemoveOption: (option: IOption) => void;
 }
 
-export const AddOption = observer(({ option, index, handleRemoveOption }: IProps) => {
+export const AddOption = ({ option, index, handleRemoveOption }: IProps) => {
+  const { patchOption } = useQuestionLookups();
+
   const handleOptionTextChange = (blocks: Block[]) => {
-    option.setOption(JSON.stringify(blocks));
+    patchOption(option._id, { option: JSON.stringify(blocks) });
   };
 
   return (
@@ -33,4 +34,4 @@ export const AddOption = observer(({ option, index, handleRemoveOption }: IProps
       </div>
     </div>
   );
-});
+};

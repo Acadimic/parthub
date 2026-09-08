@@ -1,5 +1,5 @@
+import { type MarkingType } from '@repo/shared';
 import { type QuestionType } from '@enums';
-import { type MarkingType } from '@stores';
 
 export interface ICreateQuestion {
   standard: string;

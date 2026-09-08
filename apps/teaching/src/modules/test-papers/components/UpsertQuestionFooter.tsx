@@ -8,9 +8,9 @@ import {
   useSelectedTestPaper,
   useSelectedTestPaperSection,
   useSelectorLookups,
+  useTestPaperLookups,
 } from '@stores';
 import { errorToast, successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   onClose: (isForce?: boolean) => void;
@@ -18,8 +18,10 @@ interface IProps {
   isLoading: boolean;
 }
 
-export const UpsertQuestionFooter = observer(({ onClose, setLoading, isLoading }: IProps) => {
+export const UpsertQuestionFooter = ({ onClose, setLoading, isLoading }: IProps) => {
   const selectorStore = useSelectorLookups();
+  const testPaperStore = useTestPaperLookups();
+  const { updateTotalQuestionsAndMarks } = testPaperStore;
   const questionStore = useQuestionLookups();
   const { patchSolution } = questionStore;
   const { patchQuestion } = questionStore;
@@ -41,7 +43,7 @@ export const UpsertQuestionFooter = observer(({ onClose, setLoading, isLoading }
       selectedQuestion.questionType === QuestionType.SINGLE_CHOICE ||
       selectedQuestion.questionType === QuestionType.MULTIPLE_CHOICE
     ) {
-      const options = getOptionsByIds(selectedQuestion.options);
+      const options = getOptionsByIds(selectedQuestion.options ?? []);
       for (let i = 0; i < options.length; i++) {
         const option = options[i];
         if (!option.option?.trim()) {
@@ -56,7 +58,7 @@ export const UpsertQuestionFooter = observer(({ onClose, setLoading, isLoading }
   const handleSaveQuestion = async () => {
     if (!selectedTestPaperSection || !selectedQuestion || !selectedTestPaperSection || !selectedTestPaper) return;
     try {
-      const options = getOptionsByIds(selectedQuestion.options);
+      const options = getOptionsByIds(selectedQuestion.options ?? []);
       const correctCount = options.filter((option) => option.isCorrect).length;
       if (correctCount === 0) {
         errorToast({ message: 'Please add at least one correct option.' });
@@ -78,7 +80,7 @@ export const UpsertQuestionFooter = observer(({ onClose, setLoading, isLoading }
         if (selectedSolution?.isNew) {
           patchSolution(selectedSolution._id, { isNew: false });
         }
-        selectedTestPaper.updateTotalQuestionsAndMarks();
+        updateTotalQuestionsAndMarks(selectedTestPaper._id);
         removeSelectedSolutionId();
         onClose();
       }, 500);
@@ -117,4 +119,4 @@ export const UpsertQuestionFooter = observer(({ onClose, setLoading, isLoading }
       </div>
     </div>
   );
-});
+};

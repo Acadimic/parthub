@@ -1,11 +1,10 @@
 import { FullScreenLoader } from '@repo/ui/app';
 import { useMeetLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
 import { FullCalendarView, MeetingOverviewModal, UpsertMeetingModal } from './components';
 import { useMeetHooks } from './hooks';
 
-export const Calender = observer(() => {
+export const Calender = () => {
   const meetStore = useMeetLookups();
   const { loadMeets } = meetStore;
   const isLoadingMeets = meetStore.isLoading('meets');
@@ -41,4 +40,4 @@ export const Calender = observer(() => {
       )}
     </>
   );
-});
+};

@@ -8,7 +8,6 @@ import {
   useSelectedMaterial,
   useSelectorLookups,
 } from '@stores';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
@@ -24,7 +23,7 @@ interface IState {
   isOpenGenerateModal: boolean;
 }
 
-export const StudyMaterial = observer(({ standardId, subjectId }: IProps) => {
+export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
   const { push } = useRouter();
   const selectorStore = useSelectorLookups();
   const materialStore = useMaterialLookups();
@@ -82,8 +81,9 @@ export const StudyMaterial = observer(({ standardId, subjectId }: IProps) => {
 
   if (!standard || !subject) return null;
 
-  const maxLastUpdatedAt = materials.reduce((max, material) => {
-    return material.updatedAt > max ? material.updatedAt : max;
+  const maxLastUpdatedAt = materials.reduce<string>((max, material) => {
+    const updatedAt = material.updatedAt ?? '';
+    return updatedAt > max ? updatedAt : max;
   }, '');
 
   return (
@@ -154,4 +154,4 @@ export const StudyMaterial = observer(({ standardId, subjectId }: IProps) => {
       <GenerateMaterialModal isOpen={state.isOpenGenerateModal} onClose={onCloseGenerateModal} />
     </div>
   );
-});
+};

@@ -1,6 +1,7 @@
 import {
   type BatchDto,
   type ClientEntity,
+  type ClientEntityWith,
   type IRequestSlice,
   type UserBatchMappingDto,
   createRequestSlice,
@@ -13,7 +14,7 @@ import { getObjectId } from '../utils/helpers';
 import { useSelectorStore } from './selector.store';
 import { type IUser, isStudentUser, useUserStore } from './user.store';
 
-export type IBatch = ClientEntity<BatchDto>;
+export type IBatch = ClientEntityWith<BatchDto, 'name' | 'standard' | 'year'>;
 export type IUserBatchMapping = ClientEntity<UserBatchMappingDto>;
 
 /** The fetches this store tracks. */

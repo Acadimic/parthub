@@ -1,7 +1,6 @@
 import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { ChapterService } from '@services';
-import { useStandardLookups, useStandardStore, useSelectedChapter, useSelectorLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useStandardLookups, useStandardStore, useSelectorLookups } from '@stores';
 import { useState } from 'react';
 
 interface IProps {
@@ -9,7 +8,7 @@ interface IProps {
   onClose: () => void;
 }
 
-export const UpsertChapterModal = observer(({ isOpen, onClose }: IProps) => {
+export const UpsertChapterModal = ({ isOpen, onClose }: IProps) => {
   const selectorStore = useSelectorLookups();
   const standardStore = useStandardLookups();
   const { patchChapter } = standardStore;
@@ -66,4 +65,4 @@ export const UpsertChapterModal = observer(({ isOpen, onClose }: IProps) => {
       footer={<ModalFooter onCancel={handleClose} onSave={saveChapter} isLoading={isLoading} />}
     />
   );
-});
+};

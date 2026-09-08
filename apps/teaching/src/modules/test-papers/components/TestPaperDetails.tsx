@@ -1,7 +1,6 @@
 import { Button, Menu } from '@repo/ui/app';
 import { CheckIcon, CopyIcon, GitMergeIcon, PencilIcon, PlusIcon, ShareIcon, WarningIcon } from '@phosphor-icons/react';
 import { type ITestPaper, useStandardLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
 import { useSetState } from 'react-use';
 import { MergeTestPapersModal } from './MergeTestPapersModal';
 
@@ -14,7 +13,7 @@ interface IState {
   isOpenMergeTestPapersModal: boolean;
 }
 
-export const TestPaperDetails = observer(({ testPaper, addNewSection }: IProps) => {
+export const TestPaperDetails = ({ testPaper, addNewSection }: IProps) => {
   const { isPublished, standards } = testPaper;
   const { getStandardNamesText } = useStandardLookups();
   const [state, setState] = useSetState<IState>({
@@ -104,4 +103,4 @@ export const TestPaperDetails = observer(({ testPaper, addNewSection }: IProps) 
       />
     </div>
   );
-});
+};

@@ -27,7 +27,7 @@ class UserService {
   };
 
   inviteCollaborator = async (collaborator: IUser) => {
-    return await this.invite(collaborator, collaborator.permission);
+    return await this.invite(collaborator, collaborator.permission as DefaultRole);
   };
 
   updateStudent = async (student: IUser) => {

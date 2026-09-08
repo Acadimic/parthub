@@ -2,9 +2,8 @@ import { Select } from '@components/app/selects';
 import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { LinkType } from '@enums';
 import { type ISelectItem } from '@interfaces';
-import { type IAttachment } from '@stores';
+import { type IAttachment, useMaterialLookups, useSelectedMaterial } from '@stores';
 import { validateLinkAttachment } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   isOpen: boolean;
@@ -12,7 +11,16 @@ interface IProps {
   selectedAttachment?: IAttachment | null;
 }
 
-export const UpsertAttachmentModal = observer(({ isOpen, onClose, selectedAttachment }: IProps) => {
+export const UpsertAttachmentModal = ({ isOpen, onClose, selectedAttachment }: IProps) => {
+  // An attachment has no store of its own: it is a subdocument of the material being edited.
+  const selectedMaterial = useSelectedMaterial();
+  const { patchAttachment } = useMaterialLookups();
+
+  const patchSelectedAttachment = (fields: Partial<IAttachment>) => {
+    if (!selectedMaterial || !selectedAttachment) return;
+    patchAttachment(selectedMaterial._id, selectedAttachment._id, fields);
+  };
+
   const handleAdd = () => {
     if (selectedAttachment && validateLinkAttachment(selectedAttachment)) onClose();
   };
@@ -32,7 +40,7 @@ export const UpsertAttachmentModal = observer(({ isOpen, onClose, selectedAttach
                     label="Name"
                     required
                     value={selectedAttachment.fileName}
-                    onChange={(e) => selectedAttachment.setFileName(e.target.value)}
+                    onChange={(e) => patchSelectedAttachment({ fileName: e.target.value })}
                     placeholder="Enter Name"
                   />
                 </div>
@@ -41,7 +49,7 @@ export const UpsertAttachmentModal = observer(({ isOpen, onClose, selectedAttach
                     label="URL"
                     required
                     value={selectedAttachment.url}
-                    onChange={(e) => selectedAttachment.setUrl(e.target.value)}
+                    onChange={(e) => patchSelectedAttachment({ url: e.target.value })}
                     placeholder="Enter URL"
                     disabled={selectedAttachment.isUploaded}
                   />
@@ -52,7 +60,7 @@ export const UpsertAttachmentModal = observer(({ isOpen, onClose, selectedAttach
                     items={Object.values(LinkType).map((item) => ({ label: item, value: item }))}
                     values={selectedAttachment.linkType ? [selectedAttachment.linkType] : []}
                     onChange={(values: ISelectItem[]) =>
-                      values[0] && selectedAttachment.setLinkType(values[0].value as LinkType)
+                      values[0] && patchSelectedAttachment({ linkType: values[0].value as LinkType })
                     }
                     isSingleSelect
                     isDisabled={selectedAttachment.isUploaded}
@@ -68,4 +76,4 @@ export const UpsertAttachmentModal = observer(({ isOpen, onClose, selectedAttach
       />
     </>
   );
-});
+};

@@ -5,7 +5,6 @@ import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-
 import { type IColumnData } from '@interfaces';
 import { type IBatch, useStandardLookups, useBatchLookups, useSelectorLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
@@ -16,7 +15,7 @@ interface IState {
   isLoading: boolean;
 }
 
-export const Batches = observer(() => {
+export const Batches = () => {
   const { push } = useRouter();
   const selectorStore = useSelectorLookups();
   const batchStore = useBatchLookups();
@@ -142,4 +141,4 @@ export const Batches = observer(() => {
       <UpsertBatchModal isOpen={state.isOpenUpsertBatchModal} onClose={closeUpsertBatchModal} />
     </>
   );
-});
+};

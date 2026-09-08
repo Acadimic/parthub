@@ -3,9 +3,8 @@ import { DateInput, Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { Gender, PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { UserService } from '@services';
-import { useStandardLookups, useSelectedStudent, useSelectorLookups, useUserLookups } from '@stores';
+import { useStandardLookups, useSelectedStudent, useUserLookups } from '@stores';
 import { getFormattedDate, successToast, validateFieldValues } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
 interface IProps {
@@ -13,10 +12,10 @@ interface IProps {
   onClose: () => void;
 }
 
-export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
+export const UpsertStudentModal = ({ isOpen, onClose }: IProps) => {
   const userStore = useUserLookups();
+  const { setUserName } = userStore;
   const { patchUser } = userStore;
-  const selectorStore = useSelectorLookups();
   const { getStudentStandardsByStudentId, loadStudentStandardMappings, removeUserByUserId } = userStore;
   const selectedStudent = useSelectedStudent();
   const { getStandardItems } = useStandardLookups();
@@ -30,13 +29,13 @@ export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
   const onChangeFirstName = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedStudent) return;
     const value = e.target.value;
-    selectedStudent.setFirstName(value);
+    setUserName(selectedStudent._id, { firstName: value });
   };
 
   const onChangeLastName = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedStudent) return;
     const value = e.target.value;
-    selectedStudent.setLastName(value);
+    setUserName(selectedStudent._id, { lastName: value });
   };
 
   const onChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +45,7 @@ export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
 
   const onChangeDob = (date: Date) => {
     if (!selectedStudent) return;
-    selectedStudent.setDob(getFormattedDate(date));
+    patchUser(selectedStudent._id, { dob: getFormattedDate(date) });
   };
 
   const handleGenderChange = (values: ISelectItem[]) => {
@@ -56,7 +55,7 @@ export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
 
   const handleStandardsChange = (values: ISelectItem[]) => {
     if (!selectedStudent) return;
-    selectedStudent.setStandards(values.map((value) => value.value));
+    patchUser(selectedStudent._id, { standards: values.map((value) => value.value) });
   };
 
   const handleSaveStudent = async () => {
@@ -127,7 +126,7 @@ export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
                   items={getStandardItems()}
                   values={
                     selectedStudent?.isNew
-                      ? selectedStudent.standards
+                      ? (selectedStudent.standards ?? [])
                       : getStudentStandardsByStudentId(selectedStudent._id).map((standard) => standard._id)
                   }
                   onChange={handleStandardsChange}
@@ -171,4 +170,4 @@ export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
       />
     </>
   );
-});
+};

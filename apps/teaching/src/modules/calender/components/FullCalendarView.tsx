@@ -1,4 +1,3 @@
-import { observer } from 'mobx-react-lite';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { ErrorBoundaryFallback } from '@repo/ui/app';
@@ -12,7 +11,7 @@ import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IFullCalendarEvent } from '@interfaces';
-import { useUserLookups } from '@stores';
+import { useUserLookups, useMeetLookups, useSelectorLookups } from '@stores';
 import { dark, light } from '@themes';
 import { CalendarViewMap } from '@utils/constants';
 import { getFormattedTime } from '@utils/helpers';
@@ -50,49 +49,48 @@ const EmptyListView = () => {
   );
 };
 
-const EventContentDefaultView = observer(
-  ({ event, calenderType }: { event: EventInput; calenderType: CalendarType }) => {
-    const userStore = useUserLookups();
-    const { getUsersByIds } = userStore;
-    const attendees = getUsersByIds(event.extendedProps?.attendees || []);
-    const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-    const colorObject = isDark ? dark : light;
-    const color = colorObject.colors[event.backgroundColor as keyof typeof colorObject.colors]?.primary;
+const EventContentDefaultView = ({ event, calenderType }: { event: EventInput; calenderType: CalendarType }) => {
+  const userStore = useUserLookups();
+  const { getUsersByIds } = userStore;
+  const attendees = getUsersByIds(event.extendedProps?.attendees || []);
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+  const colorObject = isDark ? dark : light;
+  const color = colorObject.colors[event.backgroundColor as keyof typeof colorObject.colors]?.primary;
 
-    return (
-      <div
-        style={{ background: color, border: `1px solid ${color}` }}
-        className={`px-2 flex flex-col items-start justify-center text-white text-sm h-full w-full`}
-      >
-        <div className="flex items-center gap-2 font-medium w-full">
-          <div>{getFormattedTime(event.start as Date)}</div>
-          <div className="w-1 h-1 rounded-full bg-white" />
-          <div className="truncate flex-1">{event.title}</div>
-        </div>
-        {calenderType === CalendarType.DAY ? (
-          <>
-            <div className="flex flex-nowrap line-clamp-1 items-center gap-2">
-              {attendees.map((attendee) => (
-                <div key={attendee._id}>
-                  <div className="text-xs font-medium max-w-20 truncate">{attendee.name}</div>
-                </div>
-              ))}
-            </div>
-            <div className="text-xs">{event.extendedProps?.meetingLink}</div>
-          </>
-        ) : null}
+  return (
+    <div
+      style={{ background: color, border: `1px solid ${color}` }}
+      className={`px-2 flex flex-col items-start justify-center text-white text-sm h-full w-full`}
+    >
+      <div className="flex items-center gap-2 font-medium w-full">
+        <div>{getFormattedTime(event.start as Date)}</div>
+        <div className="w-1 h-1 rounded-full bg-white" />
+        <div className="truncate flex-1">{event.title}</div>
       </div>
-    );
-  },
-);
+      {calenderType === CalendarType.DAY ? (
+        <>
+          <div className="flex flex-nowrap line-clamp-1 items-center gap-2">
+            {attendees.map((attendee) => (
+              <div key={attendee._id}>
+                <div className="text-xs font-medium max-w-20 truncate">{attendee.name}</div>
+              </div>
+            ))}
+          </div>
+          <div className="text-xs">{event.extendedProps?.meetingLink}</div>
+        </>
+      ) : null}
+    </div>
+  );
+};
 
 interface IProps {
   onEventClick: (event: IFullCalendarEvent) => void;
   onDateClick: (date: Date) => void;
 }
 
-export const FullCalendarView = observer(({ onEventClick, onDateClick }: IProps) => {
-  const { selectorStore, meetStore } = useStores();
+export const FullCalendarView = ({ onEventClick, onDateClick }: IProps) => {
+  const selectorStore = useSelectorLookups();
+  const meetStore = useMeetLookups();
   const { selectedCalenderType, setSelectedCalenderType, setSelectedCalenderDate, selectedCalenderDate } =
     selectorStore;
   const meets = meetStore.getMeets();
@@ -207,4 +205,4 @@ export const FullCalendarView = observer(({ onEventClick, onDateClick }: IProps)
       </div>
     </div>
   );
-});
+};

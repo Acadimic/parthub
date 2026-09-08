@@ -1,21 +1,34 @@
 import { DynamicSlider, FullScreenLoader } from '@repo/ui/app';
 import { Title } from '@components/others';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useCourseLookups, useMaterialLookups, useMeetLookups, useTestPaperLookups } from '@stores';
 import { useEffect } from 'react';
 import { AddItem, CourseItem, TestPaperItem, UpcomingSessions } from './components';
 import { MaterialItem } from './components/MaterialItem';
 
-export const Workspace = observer(() => {
-  const { courseStore, testPaperStore, materialStore, loadHomePageData, isLoadingHomePageData, isLoadedHomePageData } =
-    useStores();
+export const Workspace = () => {
+  const courseStore = useCourseLookups();
+  const testPaperStore = useTestPaperLookups();
+  const materialStore = useMaterialLookups();
+  const meetStore = useMeetLookups();
 
   const courses = courseStore.getCourses();
   const testPapers = testPaperStore.getTestPapers();
   const { materialStats } = materialStore;
 
+  // The root store's `loadHomePageData` fanned out to these four. With the root store gone the
+  // composition belongs to the screen that needs it, and each store reports its own status.
+  const isLoadingHomePageData =
+    courseStore.isLoading('courses') ||
+    testPaperStore.isLoading('testPapers') ||
+    materialStore.isLoading('materialStats') ||
+    meetStore.isLoading('meets');
+
   useEffect(() => {
-    if (!isLoadedHomePageData && !isLoadingHomePageData) loadHomePageData();
+    if (courseStore.shouldLoad('courses')) courseStore.loadCourses();
+    if (testPaperStore.shouldLoad('testPapers')) testPaperStore.loadTestPapers();
+    if (materialStore.shouldLoad('materialStats')) materialStore.loadMaterialStats();
+    if (meetStore.shouldLoad('meets')) meetStore.loadMeets();
+    // Once on mount, like the root store's fan-out did.
   }, []);
 
   const courseItems = courses.slice(0, 5).map((course) => <CourseItem key={course._id} course={course} />);
@@ -59,4 +72,4 @@ export const Workspace = observer(() => {
       )}
     </div>
   );
-});
+};

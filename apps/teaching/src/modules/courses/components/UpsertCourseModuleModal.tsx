@@ -15,7 +15,6 @@ import {
   useTestPaperLookups,
 } from '@stores';
 import { getFrequencyText, successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 import { CourseModuleView } from './CourseModuleView';
 import { SessionsView } from './SessionsView';
@@ -25,9 +24,11 @@ interface IProps {
   onClose: () => void;
 }
 
-export const UpsertCourseModuleModal = observer(({ isOpen, onClose }: IProps) => {
+export const UpsertCourseModuleModal = ({ isOpen, onClose }: IProps) => {
   const selectorStore = useSelectorLookups();
   const courseStore = useCourseLookups();
+  const { patchCourse } = courseStore;
+  const { renameCourseModule } = courseStore;
   const { patchCourseModule } = courseStore;
   const materialStore = useMaterialLookups();
   const testPaperStore = useTestPaperLookups();
@@ -51,17 +52,17 @@ export const UpsertCourseModuleModal = observer(({ isOpen, onClose }: IProps) =>
 
   const handleMaterialsChange = (values: ISelectItem[]) => {
     if (!selectedCourseModule) return;
-    selectedCourseModule.setMaterials(values.map((value) => value.value));
+    patchCourseModule(selectedCourseModule._id, { materials: values.map((value) => value.value) });
   };
 
   const handleTestPapersChange = (values: ISelectItem[]) => {
     if (!selectedCourseModule) return;
-    selectedCourseModule.setTestPapers(values.map((value) => value.value));
+    patchCourseModule(selectedCourseModule._id, { testPapers: values.map((value) => value.value) });
   };
 
   const handleMeetsChange = (values: ISelectItem[]) => {
     if (!selectedCourse) return;
-    selectedCourse.setMeets(values.map((value) => value.value));
+    patchCourse(selectedCourse._id, { meets: values.map((value) => value.value) });
   };
 
   const saveCourseModule = async () => {
@@ -97,32 +98,34 @@ export const UpsertCourseModuleModal = observer(({ isOpen, onClose }: IProps) =>
                 <TextInput
                   label="Name"
                   value={selectedCourseModule.name}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => selectedCourseModule.setName(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    renameCourseModule(selectedCourseModule._id, e.target.value)
+                  }
                   required
                 />
                 <Select
                   label="Study Materials"
-                  items={getMaterialsByStandardIds(selectedCourse.standards).map((material) => ({
+                  items={getMaterialsByStandardIds(selectedCourse.standards ?? []).map((material) => ({
                     label: material.name,
                     value: material._id,
                     group: getSubjectById(material.subject)?.name,
                   }))}
                   required
                   isGrouped
-                  values={selectedCourseModule.materials}
+                  values={selectedCourseModule.materials ?? []}
                   onChange={handleMaterialsChange}
                   // isCloseOnSelect={true}
                 />
                 <Select
                   label="Test Papers"
-                  items={getTestPapersByStandardIds(selectedCourse.standards).map((testPaper) => ({
+                  items={getTestPapersByStandardIds(selectedCourse.standards ?? []).map((testPaper) => ({
                     label: testPaper.name,
                     value: testPaper._id,
                     group: testPaper.paperType,
                     description: `${testPaper.totalQuestions} questions ${testPaper.maxMarks} marks, ${testPaper.durationMins} mins`,
                   }))}
                   required
-                  values={selectedCourseModule.testPapers}
+                  values={selectedCourseModule.testPapers ?? []}
                   onChange={handleTestPapersChange}
                 />
                 <HorizontalLineWithText text="Add Sessions" />
@@ -135,11 +138,11 @@ export const UpsertCourseModuleModal = observer(({ isOpen, onClose }: IProps) =>
                     description: meet.description,
                   }))}
                   required
-                  values={selectedCourse.meets}
+                  values={selectedCourse.meets ?? []}
                   onChange={handleMeetsChange}
                   isGrouped
                 />
-                {selectedCourseModule.materials.length || selectedCourseModule.testPapers.length ? (
+                {(selectedCourseModule.materials ?? []).length || (selectedCourseModule.testPapers ?? []).length ? (
                   <div className="">
                     <div className="border border-color-border mt-8 pt-4 pb-8 px-4">
                       <Label label="Course Preview" required />
@@ -168,4 +171,4 @@ export const UpsertCourseModuleModal = observer(({ isOpen, onClose }: IProps) =>
       />
     </>
   );
-});
+};

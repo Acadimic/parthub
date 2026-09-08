@@ -1,3 +1,4 @@
+import { type MarkingType } from '@repo/shared';
 import { CheckboxSelection, RadioSelection } from '@components/app/selections';
 import { Select } from '@components/app/selects';
 import { TextInput } from '@repo/ui/app';
@@ -6,25 +7,23 @@ import { Marking, QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
 import {
-  type MarkingType,
   useStandardLookups,
   useQuestionLookups,
   useSelectedQuestion,
   useSelectedSolution,
   useSelectedTestPaper,
   useSelectedTestPaperSection,
-  useSelectorLookups,
 } from '@stores';
 import { defaultMarkings } from '@utils/constants';
-import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
 import { SelectQuestionType } from './SelectQuestionType';
 import { type Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
 
-export const AddSolution = observer(() => {
-  const selectorStore = useSelectorLookups();
+export const AddSolution = () => {
   const questionStore = useQuestionLookups();
+  const { patchSolution } = questionStore;
+  const { getOptionItems } = questionStore;
   const { patchQuestion } = questionStore;
   const { patchOption } = questionStore;
   const selectedTestPaperSection = useSelectedTestPaperSection();
@@ -37,7 +36,7 @@ export const AddSolution = observer(() => {
 
   const handleCheckboxOptionClick = (optionId: string) => {
     if (!selectedQuestion) return;
-    const options = getOptionsByIds(selectedQuestion.options);
+    const options = getOptionsByIds(selectedQuestion.options ?? []);
     const option = options.find((item) => item._id === optionId);
     if (!option) return;
     patchOption(option._id, { isCorrect: !option.isCorrect });
@@ -45,10 +44,10 @@ export const AddSolution = observer(() => {
 
   const handleRadioOptionClick = (optionId: string) => {
     if (!selectedQuestion) return;
-    const options = getOptionsByIds(selectedQuestion.options);
+    const options = getOptionsByIds(selectedQuestion.options ?? []);
     const option = options.find((item) => item._id === optionId);
     if (!option) return;
-    options.forEach((item) => item.setIsCorrect(false));
+    options.forEach((item) => patchOption(item._id, { isCorrect: false }));
     patchOption(option._id, { isCorrect: true });
   };
 
@@ -59,7 +58,8 @@ export const AddSolution = observer(() => {
   };
 
   const handleSolutionTextChange = (blocks: Block[]) => {
-    selectedSolution?.setSolution(JSON.stringify(blocks));
+    if (!selectedSolution) return;
+    patchSolution(selectedSolution._id, { solution: JSON.stringify(blocks) });
   };
 
   const handleChangeMarks = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,11 +98,11 @@ export const AddSolution = observer(() => {
           <div>
             {selectedQuestion.questionType === QuestionType.MULTIPLE_CHOICE ? (
               <CheckboxSelection
-                selectedValues={getOptionsByIds(selectedQuestion.options)
+                selectedValues={getOptionsByIds(selectedQuestion.options ?? [])
                   .filter((option) => option.isCorrect)
                   .map((option) => option._id)}
                 label="Select one or more options."
-                options={selectedQuestion.optionItems}
+                options={getOptionItems(selectedQuestion._id)}
                 handleClick={handleCheckboxOptionClick}
                 required
                 isHtml
@@ -110,9 +110,9 @@ export const AddSolution = observer(() => {
             ) : selectedQuestion.questionType === QuestionType.SINGLE_CHOICE ||
               selectedQuestion.questionType === QuestionType.BOOLEAN ? (
               <RadioSelection
-                selectedValue={getOptionsByIds(selectedQuestion.options).find((option) => option.isCorrect)?._id}
+                selectedValue={getOptionsByIds(selectedQuestion.options ?? []).find((option) => option.isCorrect)?._id}
                 label="Select one option."
-                options={selectedQuestion.optionItems}
+                options={getOptionItems(selectedQuestion._id)}
                 handleClick={handleRadioOptionClick}
                 required
                 isHtml
@@ -120,10 +120,11 @@ export const AddSolution = observer(() => {
             ) : (
               <TextInput
                 placeholder="Enter Answer"
-                value={getOptionsByIds(selectedQuestion.options)[0].option}
+                value={getOptionsByIds(selectedQuestion.options ?? [])[0].option}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   const value = e.target.value;
-                  getOptionsByIds(selectedQuestion.options)[0].setOption(value);
+                  const [firstOption] = getOptionsByIds(selectedQuestion.options ?? []);
+                  if (firstOption) patchOption(firstOption._id, { option: value });
                 }}
               />
             )}
@@ -174,7 +175,7 @@ export const AddSolution = observer(() => {
             <div className="flex flex-col md:flex-row gap-2.5">
               <Select
                 label="Standards"
-                items={getStandardItemsByIds(selectedTestPaper.standards)}
+                items={getStandardItemsByIds(selectedTestPaper.standards ?? [])}
                 required
                 isGrouped
                 values={[selectedQuestion.standard]}
@@ -227,4 +228,4 @@ export const AddSolution = observer(() => {
       </div>
     </div>
   );
-});
+};

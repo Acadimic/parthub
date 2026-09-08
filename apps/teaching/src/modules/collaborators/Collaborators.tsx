@@ -6,7 +6,6 @@ import { type IColumnData } from '@interfaces';
 import { type IUser, useSelectorLookups, useUserLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { getStringFormattedDate, getStringFormattedDateWithTime } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useSetState } from 'react-use';
 import { AddCollaboratorsModal, UpsertCollaboratorModal } from './components';
@@ -18,7 +17,7 @@ interface IState {
   isLoading: boolean;
 }
 
-export const Collaborators = observer(() => {
+export const Collaborators = () => {
   const { push } = useRouter();
   const selectorStore = useSelectorLookups();
   const userStore = useUserLookups();
@@ -130,7 +129,7 @@ export const Collaborators = observer(() => {
     {
       label: 'Added At',
       dataKey: 'sections',
-      valueFormatter: (row: IUser) => getStringFormattedDate(row.createdAt),
+      valueFormatter: (row: IUser) => (row.createdAt ? getStringFormattedDate(row.createdAt) : ''),
     },
     {
       label: 'Last Active',
@@ -189,4 +188,4 @@ export const Collaborators = observer(() => {
       <UpsertCollaboratorModal isOpen={state.isOpenUpsertCollaboratorModal} onClose={closeUpsertCollaboratorModal} />
     </>
   );
-});
+};

@@ -4,7 +4,6 @@ import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { TestPaperService } from '@services';
 import { type ITestPaper, useTestPaperLookups } from '@stores';
 import { errorToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
 
@@ -22,9 +21,9 @@ interface IState {
   isConfirmModalOpen: boolean;
 }
 
-export const MergeTestPapersModal = observer(({ isOpen, onClose, primaryTestPaperId }: IProps) => {
+export const MergeTestPapersModal = ({ isOpen, onClose, primaryTestPaperId }: IProps) => {
   const testPaperStore = useTestPaperLookups();
-  const { addTestPaper, loadTestPaperSectionsWithQuestions, getTestPaperById } = testPaperStore;
+  const { addTestPapers, loadTestPaperSectionsWithQuestions, getTestPaperById } = testPaperStore;
   const testPapers = testPaperStore.getTestPapers();
   const [state, setState] = useSetState<IState>({
     isLoading: false,
@@ -59,7 +58,7 @@ export const MergeTestPapersModal = observer(({ isOpen, onClose, primaryTestPape
       setState({ isLoading: true });
       onCloseConfirmModal();
       const result = await TestPaperService.mergeTestPapers({ primaryTestPaperId, secondaryTestPaperId });
-      result && addTestPaper(result.data);
+      result && addTestPapers([result.data]);
       await loadTestPaperSectionsWithQuestions(primaryTestPaperId);
       setTimeout(() => closeModal(), 1000);
     } catch {
@@ -148,4 +147,4 @@ export const MergeTestPapersModal = observer(({ isOpen, onClose, primaryTestPape
       />
     </>
   );
-});
+};

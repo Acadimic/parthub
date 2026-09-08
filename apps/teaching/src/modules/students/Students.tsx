@@ -5,7 +5,6 @@ import { type IColumnData } from '@interfaces';
 import { type IUser, useSelectorLookups, useUserLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { getStringFormattedDate, getStringFormattedDateWithTime } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useSetState } from 'react-use';
 import { AddStudentsModal, UpsertStudentModal } from './components';
@@ -17,7 +16,7 @@ interface IState {
   isLoading: boolean;
 }
 
-export const Students = observer(() => {
+export const Students = () => {
   const { push } = useRouter();
   const selectorStore = useSelectorLookups();
   const userStore = useUserLookups();
@@ -203,4 +202,4 @@ export const Students = observer(() => {
       <UpsertStudentModal isOpen={state.isOpenUpsertStudentModal} onClose={closeUpsertStudentModal} />
     </>
   );
-});
+};

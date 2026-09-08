@@ -16,6 +16,9 @@ import type { QuestionType } from '../enums/question.enum';
  * them.
  */
 
+/** Marks a section applies by default, per question type. */
+export type DefaultMarkingType = { [key in QuestionType]: MarkingType };
+
 /** `question/schemas/option.schema.ts` */
 export interface IOptionFields {
   _id: string;
@@ -39,7 +42,7 @@ export interface ITestPaperSectionFields {
   sectionType: SectionType;
   sectionCategory?: SectionCategoryType;
   /** Marks per question type, e.g. `{ 'single-choice': { correct: 4, incorrect: -1 } }`. */
-  defaultMarkings?: Record<string, Record<string, number>>;
+  defaultMarkings?: DefaultMarkingType;
   subsections?: string[];
   instruction?: string;
 }
@@ -57,8 +60,12 @@ export interface ICourseModuleFields {
   meets?: string[];
 }
 
-/** Marks awarded per outcome for one question, e.g. `{ correct: 4, incorrect: -1 }`. */
-export type MarkingType = { [key in Marking]: number };
-
-/** A section's default marks, per question type. */
-export type DefaultMarkingType = { [key in QuestionType]: MarkingType };
+/**
+ * Marks awarded per outcome for one question, e.g. `{ correct: 4, incorrect: -1 }`.
+ *
+ * Three keys are required, matching `MarkingSchema` on the server and `MarkingsDto`.
+ * `partiallyCorrect` is in the `Marking` enum and used by the exam scoring types, but the question
+ * schema does not persist it, so it is optional here rather than required.
+ */
+export type MarkingType = Record<Exclude<Marking, Marking.PARTIALLY_CORRECT>, number> &
+  Partial<Record<Marking.PARTIALLY_CORRECT, number>>;

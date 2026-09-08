@@ -1,8 +1,7 @@
 import { Button, Modal, SplitButton } from '@repo/ui/app';
 import { GearIcon, PlusIcon } from '@phosphor-icons/react';
 import { PositionType } from '@enums';
-import { useStandardLookups, useSelectedChapter, useSelectorLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useStandardLookups, useSelectorLookups } from '@stores';
 import { useSetState } from 'react-use';
 import { Chapters } from '../Chapters';
 import { UpsertChapterModal } from './UpsertChapterModal';
@@ -18,7 +17,7 @@ interface IState {
   isOpenManageChaptersModal: boolean;
 }
 
-export const AddChapterButton = observer(({ standard, subject, isSecondary }: IProps) => {
+export const AddChapterButton = ({ standard, subject, isSecondary }: IProps) => {
   const selectorStore = useSelectorLookups();
   const { selectedChapterId, setSelectedChapterId } = selectorStore;
   const { createChapter, removeChapterById, getStandardById, getSubjectById, getChapterById } = useStandardLookups();
@@ -90,4 +89,4 @@ export const AddChapterButton = observer(({ standard, subject, isSecondary }: IP
       <UpsertChapterModal isOpen={state.isOpenChapterModal} onClose={onCloseChapterModal} />
     </>
   );
-});
+};

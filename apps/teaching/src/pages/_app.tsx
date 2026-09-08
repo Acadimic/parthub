@@ -9,7 +9,6 @@ import '@styles/globals.scss';
 import { loadFirebaseUser } from '@utils/firebase';
 import { getToken, IS_WINDOW_UNDEFINED } from '@utils/helpers';
 import { MathJaxContext } from 'better-react-mathjax';
-import { observer } from 'mobx-react-lite';
 import type { NextPage } from 'next';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
@@ -164,7 +163,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   );
 }
 
-const AppWithErrorBoundary = withErrorBoundary(observer(App), {
+const AppWithErrorBoundary = withErrorBoundary(App, {
   FallbackComponent: ErrorBoundaryFallback,
   onError(error: Error, info: ErrorInfo) {
     console.log(error, info);

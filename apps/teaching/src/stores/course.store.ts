@@ -1,5 +1,6 @@
 import {
   type ClientEntity,
+  type ClientEntityWith,
   type CourseDto,
   type CourseStatsDto,
   type ICourseModuleFields,
@@ -18,7 +19,10 @@ import { useSelectorStore } from './selector.store';
 import { useStandardStore } from './standard.store';
 import { useTestPaperStore } from './test-paper.store';
 
-export type ICourse = ClientEntity<CourseDto>;
+export type ICourse = ClientEntityWith<
+  CourseDto,
+  'name' | 'slug' | 'standards' | 'subjects' | 'courses' | 'meets' | 'order' | 'isPublished' | 'attachments' | 'stats'
+>;
 export type IPlan = ClientEntity<PlanDto>;
 export type ICourseModule = ICourseModuleFields & { isNew?: boolean };
 export type ICourseStats = CourseStatsDto;
@@ -197,6 +201,20 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
       courses: [courseId],
       meets: [],
       order: get().getCourses().length,
+      // The defaults the model supplied through `t.optional`; a draft must be as complete as a
+      // fetched row now that the store type says these are always present.
+      isPublished: false,
+      attachments: [],
+      stats: {
+        daysCount: 0,
+        videosCount: 0,
+        readingsCount: 0,
+        testsCount: 0,
+        meetsCount: 0,
+        testsDurationMins: 0,
+        materialsDurationMins: 0,
+        meetsDurationMins: 0,
+      },
       isNew: true,
     };
     get().addCourses([course]);

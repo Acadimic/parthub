@@ -1,8 +1,7 @@
 import { MeetItem } from '@components/common';
 import { useMeetLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
 
-export const UpcomingSessions = observer(() => {
+export const UpcomingSessions = () => {
   const meetStore = useMeetLookups();
   const todaysScheduledMeets = meetStore.getTodaysScheduledMeets();
 
@@ -13,4 +12,4 @@ export const UpcomingSessions = observer(() => {
       ))}
     </div>
   );
-});
+};

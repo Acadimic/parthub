@@ -2,10 +2,9 @@ import { Select } from '@components/app/selects';
 import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
-import { BatchService } from '@services';
-import { useStandardLookups, useBatchLookups, useSelectedBatch, useSelectorLookups, useUserLookups } from '@stores';
+import { BatchService, MappingService } from '@services';
+import { useBatchLookups, useBatchStore, useSelectedBatch, useStandardLookups, useUserLookups } from '@stores';
 import { successToast, validateFieldValues } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
 
@@ -25,10 +24,9 @@ interface IState {
 
 const year = new Date().getFullYear();
 
-export const UpsertBatchModal = observer(({ isOpen, onClose }: IProps) => {
+export const UpsertBatchModal = ({ isOpen, onClose }: IProps) => {
   const batchStore = useBatchLookups();
   const { patchBatch } = batchStore;
-  const selectorStore = useSelectorLookups();
   const userStore = useUserLookups();
   const { createBatch, loadBatchesData, getBatchStudentIds, getBatchCollaboratorIds, removeBatchById } = batchStore;
   const selectedBatch = useSelectedBatch();
@@ -78,15 +76,37 @@ export const UpsertBatchModal = observer(({ isOpen, onClose }: IProps) => {
       setState({ isLoading: true });
       const errors = validateFieldValues(state, ['name', 'standard']);
       if (errors.length) return;
-      const batch = selectedBatch || createBatch(state.name, state.standard);
-      batch.setName(state.name);
-      patchBatch(batch._id, { standard: state.standard });
-      patchBatch(batch._id, { year: state.year });
+      const batchId = (selectedBatch ?? createBatch(state.name, state.standard))._id;
+      // One patch, not three: each replaces the row, so earlier ones would be dropped.
+      patchBatch(batchId, { name: state.name, standard: state.standard, year: state.year });
+
+      // Read the row back rather than posting the copy captured during render: the store holds
+      // immutable rows, so that copy does not carry the patch above.
+      const batchStore = useBatchStore.getState();
+      const batch = batchStore.getBatchById(batchId);
+      if (!batch) return;
       const isNewBatch = batch.isNew;
-      await BatchService.upsertBatch({ batch, users: [...state.collaborators, ...state.students] });
+
+      // The batch and its membership are two routes. This used to post
+      // `{ batch, users }` to `batch/upsert`, which takes a `BatchDto` and rejects anything else
+      // under `forbidNonWhitelisted`, and then call `batch/upsert/mappings`, which does not exist.
+      await BatchService.upsertBatch(batch);
+      const selectedUserIds = [...state.collaborators, ...state.students];
+      const existingUserIds = batchStore
+        .getUserBatchMappings()
+        .filter((mapping) => mapping.batch === batchId)
+        .map((mapping) => mapping.user);
+      const added = selectedUserIds.filter((userId) => !existingUserIds.includes(userId));
+      const removed = existingUserIds.filter((userId) => !selectedUserIds.includes(userId));
+      await Promise.all([
+        ...added.map((user) => MappingService.upsertUserBatchMapping({ user, batch: batchId })),
+        // The API removes a row by upserting it with `_deleted`; every read filters those out.
+        ...removed.map((user) => MappingService.upsertUserBatchMapping({ user, batch: batchId, _deleted: true })),
+      ]);
+
       successToast({ message: isNewBatch ? 'Batch created successfully!' : 'Batch updated successfully!' });
       await loadBatchesData();
-      patchBatch(batch._id, { isNew: false });
+      patchBatch(batchId, { isNew: false });
       onClose();
     } catch (error) {
       console.error(error);
@@ -187,4 +207,4 @@ export const UpsertBatchModal = observer(({ isOpen, onClose }: IProps) => {
       />
     </>
   );
-});
+};

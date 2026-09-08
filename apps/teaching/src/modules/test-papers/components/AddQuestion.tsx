@@ -1,32 +1,34 @@
 import { Button } from '@repo/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
-import { type IOption, useQuestionLookups, useSelectedQuestion, useSelectorLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type IOption, useQuestionLookups, useSelectedQuestion } from '@stores';
 import { AddOption } from './AddOption';
 import { SelectQuestionType } from './SelectQuestionType';
 import { type Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
 
-export const AddQuestion = observer(() => {
-  const selectorStore = useSelectorLookups();
+export const AddQuestion = () => {
   const questionStore = useQuestionLookups();
+  const { patchQuestion } = questionStore;
   const selectedQuestion = useSelectedQuestion();
   const { getOptionsByIds, createOption, removeOptionById } = questionStore;
 
   const handleQuestionTextChange = (blocks: Block[]) => {
-    selectedQuestion?.setQuestion(JSON.stringify(blocks));
+    if (!selectedQuestion) return;
+    patchQuestion(selectedQuestion._id, { question: JSON.stringify(blocks) });
   };
 
   const handleAddOption = () => {
     if (!selectedQuestion) return;
     const newOption = createOption(selectedQuestion._id);
-    selectedQuestion.setOptions([...selectedQuestion.options, newOption._id]);
+    patchQuestion(selectedQuestion._id, { options: [...selectedQuestion.options, newOption._id] });
   };
 
   const handleRemoveOption = (option: IOption) => {
-    if (!selectedQuestion || selectedQuestion.options.length === 1) return;
-    selectedQuestion.setOptions(selectedQuestion.options.filter((id) => id !== option._id));
+    if (!selectedQuestion || (selectedQuestion.options ?? []).length === 1) return;
+    patchQuestion(selectedQuestion._id, {
+      options: (selectedQuestion.options ?? []).filter((id) => id !== option._id),
+    });
     removeOptionById(option._id);
   };
 
@@ -45,7 +47,7 @@ export const AddQuestion = observer(() => {
           {selectedQuestion.questionType === QuestionType.SINGLE_CHOICE ||
           selectedQuestion.questionType === QuestionType.MULTIPLE_CHOICE ? (
             <>
-              {getOptionsByIds(selectedQuestion.options).map((option, index) => {
+              {getOptionsByIds(selectedQuestion.options ?? []).map((option, index) => {
                 return (
                   <AddOption key={option._id} option={option} index={index} handleRemoveOption={handleRemoveOption} />
                 );
@@ -64,4 +66,4 @@ export const AddQuestion = observer(() => {
       </div>
     </div>
   );
-});
+};

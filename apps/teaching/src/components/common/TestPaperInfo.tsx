@@ -30,7 +30,7 @@ export const TestPaperInfo = ({ testPaper }: IProps) => {
         {/* <div className="flex flex-col">
           <div className="flex items-center gap-1">
             <FileTextIcon weight="bold" className="w-auto h-4" />
-            <div className="">{testPaper.sections.length}</div>
+            <div className="">{(testPaper.sections ?? []).length}</div>
           </div>
           <div className="capitalize">
             <span className=""> Sections</span>

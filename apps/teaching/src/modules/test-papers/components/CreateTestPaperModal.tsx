@@ -1,10 +1,10 @@
+import { type DefaultMarkingType } from '@repo/shared';
 import { Select } from '@components/app/selects';
 import { Button, Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { PaperType, PositionType, SectionCategoryType, SectionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { TestPaperService } from '@services';
 import {
-  type DefaultMarkingType,
   type ITestPaperSection,
   useStandardLookups,
   useSelectedTestPaper,
@@ -13,7 +13,6 @@ import {
 } from '@stores';
 import { ALL, defaultMarkings } from '@utils/constants';
 import { getYears, successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { DefaultMarkingsModal } from './DefaultMarkingsModal';
@@ -23,16 +22,17 @@ interface IProps {
   onClose: () => void;
 }
 
-export const CreateTestPaperModal = observer(({ isOpen, onClose }: IProps) => {
+export const CreateTestPaperModal = ({ isOpen, onClose }: IProps) => {
   const { push } = useRouter();
   const selectorStore = useSelectorLookups();
   const testPaperStore = useTestPaperLookups();
+  const { patchTestPaperSection } = testPaperStore;
   const { patchTestPaper } = testPaperStore;
   const { setSelectedTestPaperId, setSelectedTestPaperSectionId } = selectorStore;
   const selectedTestPaper = useSelectedTestPaper();
   const standardStore = useStandardLookups();
   const { getStandardItems, getStandardById, getSubjectById, getStandardsSubjectItems } = standardStore;
-  const { removeTestPaper, createTestPaperSection, addTestPaper, getTestPaperSectionsByIds } = testPaperStore;
+  const { removeTestPaper, createTestPaperSection, addTestPapers, getTestPaperSectionsByIds } = testPaperStore;
   const [isOpenMarkings, setIsOpenMarkings] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [markings, setMarkings] = useState<DefaultMarkingType>(structuredClone(defaultMarkings));
@@ -53,35 +53,35 @@ export const CreateTestPaperModal = observer(({ isOpen, onClose }: IProps) => {
 
   const handleStandardsChange = (values: ISelectItem[]) => {
     if (!selectedTestPaper) return;
-    selectedTestPaper.setStandards(values.map((value) => value.value));
+    patchTestPaper(selectedTestPaper._id, { standards: values.map((value) => value.value) });
   };
 
   const handleSubjectsChange = (values: ISelectItem[]) => {
     if (!selectedTestPaper) return;
-    selectedTestPaper.setSubjects(values.map((value) => value.value));
+    patchTestPaper(selectedTestPaper._id, { subjects: values.map((value) => value.value) });
   };
 
   const saveTestPaper = async () => {
     if (!selectedTestPaper) return;
     try {
       setIsLoading(true);
-      let testPaperSections: ITestPaperSection[] = getTestPaperSectionsByIds(selectedTestPaper.sections);
+      let testPaperSections: ITestPaperSection[] = getTestPaperSectionsByIds(selectedTestPaper.sections ?? []);
       if (selectedTestPaper.isNew) {
-        const isSubject = selectedTestPaper.subjects.length > 0;
-        const ids = isSubject ? selectedTestPaper.subjects : selectedTestPaper.standards;
+        const isSubject = (selectedTestPaper.subjects ?? []).length > 0;
+        const ids = isSubject ? selectedTestPaper.subjects : (selectedTestPaper.standards ?? []);
         testPaperSections = ids.map((id) => {
           const section = createTestPaperSection(SectionType.SECTION, SectionCategoryType.CUSTOM, markings);
           const obj = isSubject ? getSubjectById(id) : getStandardById(id);
-          obj && section.setName(obj.name);
+          obj && patchTestPaperSection(section._id, { name: obj.name });
           return section;
         });
         const sectionIds = testPaperSections.map((section) => section._id);
         patchTestPaper(selectedTestPaper._id, { sections: sectionIds });
         await Promise.all(testPaperSections.map((section) => TestPaperService.upsertTestPaperSection(section)));
-        testPaperSections.forEach((section) => section.resetIsNew());
+        testPaperSections.forEach((section) => patchTestPaperSection(section._id, { isNew: false }));
       }
       const result = await TestPaperService.upsertTestPaper(selectedTestPaper);
-      if (result.data) addTestPaper(result.data);
+      if (result.data) addTestPapers([result.data]);
       patchTestPaper(selectedTestPaper._id, { isNew: false });
       setSelectedTestPaperSectionId(testPaperSections[0]._id);
       successToast({ message: 'Test paper created successfully.' });
@@ -107,7 +107,7 @@ export const CreateTestPaperModal = observer(({ isOpen, onClose }: IProps) => {
       let newName = standardStore.getStandardNamesText(standards);
       if (subjectNamesText) newName += ` - ${subjectNamesText}`;
       if (year) newName += ` - ${year}`;
-      selectedTestPaper.setName(newName);
+      patchTestPaper(selectedTestPaper._id, { name: newName });
       setIsVisibleMore(true);
     }
   }, [selectedTestPaper?.standards.length, selectedTestPaper?.subjects.length, selectedTestPaper?.year]);
@@ -129,24 +129,31 @@ export const CreateTestPaperModal = observer(({ isOpen, onClose }: IProps) => {
                   items={getStandardItems()}
                   required
                   isGrouped
-                  values={selectedTestPaper.standards}
+                  values={selectedTestPaper.standards ?? []}
                   onChange={handleStandardsChange}
-                  isCloseOnSelect={selectedTestPaper.standards.length === 0}
+                  isCloseOnSelect={(selectedTestPaper.standards ?? []).length === 0}
                 />
                 <Select
                   label="Year"
                   items={getYears(15).map((year) => ({ label: year.toString(), value: year.toString() }))}
                   required
                   values={[selectedTestPaper.year.toString()]}
-                  onChange={(values) => values[0] && selectedTestPaper.setYear(Number(values[0].value))}
+                  onChange={(values) =>
+                    values[0] && patchTestPaper(selectedTestPaper._id, { year: Number(values[0].value) })
+                  }
                   isSingleSelect
                 />
                 <div className={`flex flex-col space-y-3 ${isVisibleMore ? 'visible' : 'hidden'}`}>
                   <Select
                     label="Subjects"
-                    items={[...getStandardsSubjectItems(selectedTestPaper.standards), { label: 'All', value: ALL }]}
+                    items={[
+                      ...getStandardsSubjectItems(selectedTestPaper.standards ?? []),
+                      { label: 'All', value: ALL },
+                    ]}
                     values={
-                      selectedTestPaper.subjects.length || selectedTestPaper.isNew ? selectedTestPaper.subjects : [ALL]
+                      (selectedTestPaper.subjects ?? []).length || selectedTestPaper.isNew
+                        ? selectedTestPaper.subjects
+                        : [ALL]
                     }
                     onChange={handleSubjectsChange}
                   />
@@ -162,14 +169,16 @@ export const CreateTestPaperModal = observer(({ isOpen, onClose }: IProps) => {
                   <TextInput
                     label="Name"
                     value={selectedTestPaper.name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => selectedTestPaper.setName(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      patchTestPaper(selectedTestPaper._id, { name: e.target.value })
+                    }
                     required
                   />
                   <TextInput
                     label="Duration (mins)"
                     value={selectedTestPaper.durationMins}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      selectedTestPaper.setDurationMins(Number(e.target.value))
+                      patchTestPaper(selectedTestPaper._id, { durationMins: Number(e.target.value) })
                     }
                     required
                   />
@@ -205,4 +214,4 @@ export const CreateTestPaperModal = observer(({ isOpen, onClose }: IProps) => {
       />
     </>
   );
-});
+};

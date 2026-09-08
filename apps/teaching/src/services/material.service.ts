@@ -1,4 +1,3 @@
-import { type MaterialDto } from '@repo/shared';
 import { type IMaterialStat } from '@interfaces';
 import { type IStandardSubjectQuery } from '@interfaces';
 import { type IMaterial } from '@stores';
@@ -20,13 +19,13 @@ class MaterialService {
 
   getStandardSubjectMaterials = async (payload: IStandardSubjectQuery) => {
     const url = 'material/standard/subject/all';
-    const resData = await callAuthApi<MaterialDto[]>(url, API.POST, payload);
+    const resData = await callAuthApi<IMaterial[]>(url, API.POST, payload);
     return resData;
   };
 
   getStandardsMaterials = async (standards: string[]) => {
     const url = 'material/standards/all';
-    const resData = await callAuthApi<MaterialDto[]>(url, API.POST, standards);
+    const resData = await callAuthApi<IMaterial[]>(url, API.POST, standards);
     return resData;
   };
 }

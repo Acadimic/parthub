@@ -1,14 +1,13 @@
 import { CircleIcon } from '@phosphor-icons/react';
 import { type IMeet } from '@stores';
 import { dark, light } from '@themes';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   meet: IMeet;
   className?: string;
 }
 
-export const MeetingTitle = observer(({ meet, className }: IProps) => {
+export const MeetingTitle = ({ meet, className }: IProps) => {
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
   const colorObject = isDark ? dark : light;
 
@@ -23,4 +22,4 @@ export const MeetingTitle = observer(({ meet, className }: IProps) => {
       </div>
     </div>
   );
-});
+};

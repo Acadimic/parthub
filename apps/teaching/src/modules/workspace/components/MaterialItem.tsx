@@ -1,14 +1,14 @@
+import { type IMaterialStat } from '@interfaces';
 import { Card } from '@repo/ui/app';
 import { MaterialInfo, StandardWithLogo } from '@components/common';
-import { type IMaterialStat, useStandardLookups, useMaterialLookups, useSelectorLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useStandardLookups, useMaterialLookups, useSelectorLookups } from '@stores';
 import Link from 'next/link';
 
 interface IProps {
   materialStat: IMaterialStat;
 }
 
-export const MaterialItem = observer(({ materialStat }: IProps) => {
+export const MaterialItem = ({ materialStat }: IProps) => {
   const selectorStore = useSelectorLookups();
   const materialStore = useMaterialLookups();
   const { getStandardById, getSubjectById } = useStandardLookups();
@@ -50,4 +50,4 @@ export const MaterialItem = observer(({ materialStat }: IProps) => {
       </Link>
     </Card>
   );
-});
+};

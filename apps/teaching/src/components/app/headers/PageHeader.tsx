@@ -1,7 +1,6 @@
 import { Button, FullLogo, HamburgerIcon, Link, ToggleTheme } from '@repo/ui/app';
 import { CaretDownIcon, MagnifyingGlassIcon } from '@phosphor-icons/react';
-import { useSelectedUser, useSelectorLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useSelectedUser } from '@stores';
 import { useRouter } from 'next/router';
 import { ProfileDropdown } from '../sidebars/components';
 
@@ -22,10 +21,9 @@ const SearchBar = () => {
   );
 };
 
-export const PageHeader = observer(() => {
+export const PageHeader = () => {
   const { route, push, query, back } = useRouter();
   const name = query?.name as string;
-  const selectorStore = useSelectorLookups();
   const selectedUser = useSelectedUser();
 
   return (
@@ -82,4 +80,4 @@ export const PageHeader = observer(() => {
       </header>
     </div>
   );
-});
+};

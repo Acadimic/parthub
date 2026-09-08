@@ -1,11 +1,10 @@
-import { type IColumnData } from '@interfaces';
+import { type IColumnData, type IMaterialStat } from '@interfaces';
 import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, Link, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { type IMaterialStat, useStandardLookups, useMaterialLookups, useSelectorLookups } from '@stores';
+import { useStandardLookups, useMaterialLookups, useSelectorLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { getStringFormattedDate } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
@@ -15,7 +14,7 @@ interface IState {
   isOpenAddModal: boolean;
 }
 
-export const StudyMaterials = observer(() => {
+export const StudyMaterials = () => {
   const { push } = useRouter();
   const materialStore = useMaterialLookups();
   const selectorStore = useSelectorLookups();
@@ -148,4 +147,4 @@ export const StudyMaterials = observer(() => {
       />
     </>
   );
-});
+};

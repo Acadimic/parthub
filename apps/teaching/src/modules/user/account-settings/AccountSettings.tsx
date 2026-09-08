@@ -5,17 +5,15 @@ import { AccountSettingsType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { type IMenuItem } from '@interfaces';
 import { UserService } from '@services';
-import { useSelectedUser, useSelectorLookups, useUserLookups } from '@stores';
+import { useSelectedUser, useUserLookups } from '@stores';
 import { AccountSettingsRoutes } from '@utils/constants';
 import { successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { Profile } from './Profile';
 import { Security } from './Security';
 
-export const AccountSettings = observer(() => {
-  const selectorStore = useSelectorLookups();
+export const AccountSettings = () => {
   const userStore = useUserLookups();
   const { patchUser } = userStore;
   const selectedUser = useSelectedUser();
@@ -118,4 +116,4 @@ export const AccountSettings = observer(() => {
       </div>
     </div>
   );
-});
+};

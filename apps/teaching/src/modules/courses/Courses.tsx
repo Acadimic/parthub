@@ -5,7 +5,6 @@ import { PresignedImage } from '@components/app/attachments';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { type ICourse, useStandardLookups, useCourseLookups, useSelectorLookups } from '@stores';
 import { ACTIONS, ALL } from '@utils/constants';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
@@ -15,7 +14,7 @@ interface IState {
   isOpenAddModal: boolean;
 }
 
-export const Courses = observer(() => {
+export const Courses = () => {
   const { push } = useRouter();
   const courseStore = useCourseLookups();
   const selectorStore = useSelectorLookups();
@@ -58,9 +57,9 @@ export const Courses = observer(() => {
         return (
           <div className="flex items-center space-x-2">
             <div>
-              {row.attachments.length ? (
+              {(row.attachments ?? []).length ? (
                 <div className="w-6 h-6 p-1 rounded-full border border-color-secondary border-dashed">
-                  <PresignedImage url={row.attachments[0].url} />
+                  <PresignedImage url={(row.attachments ?? [])[0].url} />
                 </div>
               ) : null}
             </div>
@@ -78,12 +77,12 @@ export const Courses = observer(() => {
     {
       label: 'Standards',
       dataKey: 'standards',
-      valueFormatter: (row: ICourse) => getStandardNamesText(row.standards),
+      valueFormatter: (row: ICourse) => getStandardNamesText(row.standards ?? []),
     },
     {
       label: 'Subjects',
       dataKey: 'subjects',
-      valueFormatter: (row: ICourse) => getSubjectNamesText(row.subjects) || ALL,
+      valueFormatter: (row: ICourse) => getSubjectNamesText(row.subjects ?? []) || ALL,
     },
     {
       label: 'Total Modules',
@@ -178,4 +177,4 @@ export const Courses = observer(() => {
       <UpsertCourseModal isOpen={state.isOpenAddModal} onClose={onCloseAddModal} />
     </>
   );
-});
+};

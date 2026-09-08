@@ -1,12 +1,12 @@
 import {
-  type ClientEntity,
+  type ClientEntityWith,
   type IOptionFields,
   type IRequestSlice,
   type ISolutionFields,
   type QuestionDto,
   createRequestSlice,
 } from '@repo/shared';
-import { type ICreateQuestion } from '@interfaces';
+import { type ICreateQuestion, type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { QuestionType } from '../enums';
@@ -14,7 +14,10 @@ import { QuestionService } from '../services';
 import { getObjectId } from '../utils/helpers';
 import { useSelectorStore } from './selector.store';
 
-export type IQuestion = ClientEntity<QuestionDto>;
+export type IQuestion = ClientEntityWith<
+  QuestionDto,
+  'question' | 'standard' | 'options' | 'questionType' | 'markings' | 'section' | 'year'
+>;
 export type IOption = IOptionFields & { isNew?: boolean };
 export type ISolution = ISolutionFields & { isNew?: boolean };
 
@@ -37,7 +40,10 @@ export interface IQuestionState extends IRequestSlice<QuestionFetch> {
   getQuestionsBySectionId: (sectionId: string) => IQuestion[];
   getQuestionsBySectionIds: (sectionIds: string[]) => IQuestion[];
   getSolutionByQuestionId: (questionId: string) => ISolution | undefined;
+  /** A question's options as select items. Was the `optionItems` view on the model. */
+  getOptionItems: (questionId: string) => ISelectItem[];
   /** Rows the user has created and not yet saved — what an upsert posts. */
+
   getNewQuestions: () => IQuestion[];
   getNewOptions: () => IOption[];
   getNewSolutions: () => ISolution[];
@@ -121,6 +127,14 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
           .getSolutions()
           .find((solution) => solution.question === questionId)
       : undefined,
+
+  getOptionItems: (questionId) => {
+    const question = get().getQuestionById(questionId);
+    if (!question) return [];
+    return get()
+      .getOptionsByIds(question.options ?? [])
+      .map((option) => ({ label: option.option, value: option._id }));
+  },
 
   getNewQuestions: () =>
     get()
@@ -225,6 +239,7 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
       _id: questionId,
       question: '',
       options: options.map((option) => option._id),
+      year: new Date().getFullYear(),
       isNew: true,
       ...payload,
     };

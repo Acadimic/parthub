@@ -24,7 +24,7 @@ class CourseService {
 
   getCourses = async () => {
     const url = '/course/all';
-    const resData = await callAuthApi<CourseDto[]>(url, API.GET);
+    const resData = await callAuthApi<ICourse[]>(url, API.GET);
     return resData;
   };
 

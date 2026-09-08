@@ -1,21 +1,45 @@
 import {
-  type ClientEntity,
+  type ClientEntityWith,
   type DefaultMarkingType,
   type IRequestSlice,
   type ITestPaperSectionFields,
   type TestPaperDto,
   createRequestSlice,
 } from '@repo/shared';
+import { type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { PaperType, type SectionCategoryType, type SectionType } from '../enums';
+import { PaperCategoryType, PaperType, type SectionCategoryType, type SectionType } from '../enums';
 import { TestPaperService } from '../services';
 import { getObjectId } from '../utils/helpers';
-import { useQuestionStore } from './question.store';
+import { type IQuestion, useQuestionStore } from './question.store';
+import { useStandardStore } from './standard.store';
 import { useSelectorStore } from './selector.store';
 
-export type ITestPaper = ClientEntity<TestPaperDto>;
-export type ITestPaperSection = ITestPaperSectionFields & { isNew?: boolean };
+export type ITestPaper = ClientEntityWith<
+  TestPaperDto,
+  | 'name'
+  | 'slug'
+  | 'standards'
+  | 'subjects'
+  | 'sections'
+  | 'totalQuestions'
+  | 'durationMins'
+  | 'year'
+  | 'maxMarks'
+  | 'paperType'
+  | 'instruction'
+  | 'paperCategory'
+  | 'isPublished'
+  | 'webLink'
+  | 'appLink'
+>;
+/**
+ * A section in the store. `defaultMarkings` and `sectionCategory` are required here because the
+ * model declared them so and every screen reads them; see `ClientEntityWith` for the same idea.
+ */
+export type ITestPaperSection = ITestPaperSectionFields &
+  Required<Pick<ITestPaperSectionFields, 'defaultMarkings' | 'sectionCategory'>> & { isNew?: boolean };
 
 /** The fetches this store tracks. */
 type TestPaperFetch = 'testPapers' | 'testPaperSections';
@@ -31,6 +55,14 @@ export interface ITestPaperState extends IRequestSlice<TestPaperFetch> {
   getTestPapersByIds: (testPaperIds: string[]) => ITestPaper[];
   getTestPaperSectionsByIds: (sectionIds: string[]) => ITestPaperSection[];
   getTestPapersByStandardIds: (standardIds: string[]) => ITestPaper[];
+  /** A section's questions. Was the `questions` view on the section model. */
+  getSectionQuestions: (sectionId: string) => IQuestion[];
+  /** A paper's subjects as select items. Was a view on the model. */
+  getTestPaperSubjectItems: (testPaperId: string) => ISelectItem[];
+  /** A paper's standards as select items. Was a view on the model. */
+  getTestPaperStandardItems: (testPaperId: string) => ISelectItem[];
+  /** Recomputes a paper's question count and max marks from its sections' questions. */
+  updateTotalQuestionsAndMarks: (testPaperId: string) => void;
 
   addTestPapers: (testPapers: ITestPaper[]) => void;
   addTestPaperSections: (sections: ITestPaperSection[]) => void;
@@ -88,6 +120,31 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
       .getTestPapers()
       .filter((testPaper) => (testPaper.standards ?? []).some((standardId) => standardIds.includes(standardId))),
 
+  getSectionQuestions: (sectionId) => useQuestionStore.getState().getQuestionsBySectionId(sectionId),
+
+  getTestPaperSubjectItems: (testPaperId) => {
+    const testPaper = get().getTestPaperById(testPaperId);
+    if (!testPaper) return [];
+    return useStandardStore
+      .getState()
+      .getSubjectsByIds(testPaper.subjects ?? [])
+      .map((subject) => ({ label: subject.name, value: subject._id }));
+  },
+
+  getTestPaperStandardItems: (testPaperId) => {
+    const testPaper = get().getTestPaperById(testPaperId);
+    if (!testPaper) return [];
+    return useStandardStore.getState().getStandardItemsByIds(testPaper.standards ?? []);
+  },
+
+  updateTotalQuestionsAndMarks: (testPaperId) => {
+    const testPaper = get().getTestPaperById(testPaperId);
+    if (!testPaper) return;
+    const questions = useQuestionStore.getState().getQuestionsBySectionIds(testPaper.sections ?? []);
+    const maxMarks = questions.reduce((total, question) => total + (question.markings?.correct ?? 0), 0);
+    get().patchTestPaper(testPaperId, { totalQuestions: questions.length, maxMarks });
+  },
+
   addTestPapers: (testPapers) => {
     set((state) => ({ testPaperMap: { ...state.testPaperMap, ...keyById(testPapers) } }));
   },
@@ -134,6 +191,16 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
       standards: [],
       sections: [],
       paperType: PaperType.QUIZ,
+      subjects: [],
+      totalQuestions: 0,
+      durationMins: 60,
+      year: new Date().getFullYear(),
+      maxMarks: 0,
+      instruction: '',
+      paperCategory: PaperCategoryType.CUSTOM,
+      isPublished: false,
+      webLink: '',
+      appLink: '',
       isNew: true,
     };
     get().addTestPapers([testPaper]);
@@ -180,7 +247,12 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
 }));
 
 /** The store's lookups, subscribed to its state. */
-export const useTestPaperLookups = (): ITestPaperState => useTestPaperStore(useShallow((state) => state));
+export const useTestPaperLookups = (): ITestPaperState => {
+  // `getSectionQuestions` and the item builders read the question and standard stores.
+  useQuestionStore(useShallow((state) => state.questionMap));
+  useStandardStore(useShallow((state) => [state.standardMap, state.subjectMap]));
+  return useTestPaperStore(useShallow((state) => state));
+};
 
 /** The selected test paper, or `undefined`. Replaces `selectorStore.selectedTestPaper`. */
 export const useSelectedTestPaper = (): ITestPaper | undefined => {

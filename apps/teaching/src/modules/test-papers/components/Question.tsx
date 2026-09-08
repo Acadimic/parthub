@@ -1,6 +1,6 @@
+import { type MarkingType } from '@repo/shared';
 import { Html } from '@components/others';
-import { type IQuestion, type MarkingType } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type IQuestion } from '@stores';
 
 interface IProps {
   prefix?: string;
@@ -8,7 +8,7 @@ interface IProps {
   marks?: MarkingType;
 }
 
-export const Question = observer(({ question, prefix, marks }: IProps) => {
+export const Question = ({ question, prefix, marks }: IProps) => {
   return (
     <div className="relative">
       <div className="mt-2">
@@ -32,4 +32,4 @@ export const Question = observer(({ question, prefix, marks }: IProps) => {
       )}
     </div>
   );
-});
+};

@@ -51,3 +51,18 @@ export type ClientEntity<T> = Omit<T, keyof BaseFields> &
     /** True while the row exists only on the client and has never been saved. */
     isNew?: boolean;
   };
+
+/**
+ * `ClientEntity<T>` with some fields required.
+ *
+ * An entity's DTO marks a field optional when one class serves both directions — a write body need
+ * not send it — but the client may still rely on it always being there. The MST models this
+ * migration replaces did exactly that: `Meet.startTime` was `t.string`, not `t.maybe(t.string)`, so
+ * the app has always assumed a stored meet has one.
+ *
+ * Naming the fields here keeps that guarantee in one place instead of scattering `?? ''` through the
+ * components, and documents the assumption. Note that it *is* an assumption: the Mongoose schema
+ * does not always enforce these, so if a row can genuinely lack one, take it out of the list and
+ * handle the absence rather than leaving the type lying.
+ */
+export type ClientEntityWith<T, K extends keyof T> = ClientEntity<T> & Required<Pick<T, K>>;

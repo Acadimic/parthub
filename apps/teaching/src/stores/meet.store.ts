@@ -1,4 +1,4 @@
-import { type ClientEntity, type IRequestSlice, type MeetDto, createRequestSlice } from '@repo/shared';
+import { type ClientEntityWith, type IRequestSlice, type MeetDto, createRequestSlice } from '@repo/shared';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { ColorType, MeetFrequency, MeetStatus } from '../enums';
@@ -11,10 +11,29 @@ import {
   getStartOfWeek,
   getTimezone,
   getTimezoneOffset,
+  setTime,
 } from '../utils/helpers';
 import { useSelectorStore } from './selector.store';
 
-export type IMeet = ClientEntity<MeetDto>;
+export type IMeet = ClientEntityWith<
+  MeetDto,
+  | 'title'
+  | 'color'
+  | 'durationMins'
+  | 'timezone'
+  | 'timezoneOffset'
+  | 'startTime'
+  | 'endTime'
+  | 'status'
+  | 'standards'
+  | 'batches'
+  | 'attendees'
+  | 'meetingLink'
+  | 'meetingId'
+  | 'weekDays'
+  | 'cancelledDates'
+  | 'frequency'
+>;
 
 /** The fetches this store tracks. */
 type MeetFetch = 'meets';
@@ -31,6 +50,8 @@ export interface IMeetState extends IRequestSlice<MeetFetch> {
 
   addMeets: (meets: IMeet[]) => void;
   patchMeet: (meetId: string, fields: Partial<IMeet>) => void;
+  /** Moves a meet to another day, keeping its start and end times. */
+  setMeetDate: (meetId: string, date: Date) => void;
   removeMeetById: (meetId: string) => void;
 
   /** Adds an unsaved meet and returns it, for the caller to select. */
@@ -95,6 +116,15 @@ export const useMeetStore = create<IMeetState>()((set, get) => ({
       const meet = state.meetMap[meetId];
       if (!meet) return state;
       return { meetMap: { ...state.meetMap, [meetId]: { ...meet, ...fields } } };
+    });
+  },
+
+  setMeetDate: (meetId, date) => {
+    const meet = get().getMeetById(meetId);
+    if (!meet?.startTime || !meet.endTime) return;
+    get().patchMeet(meetId, {
+      startTime: setTime(date, new Date(meet.startTime)).toISOString(),
+      endTime: setTime(date, new Date(meet.endTime)).toISOString(),
     });
   },
 

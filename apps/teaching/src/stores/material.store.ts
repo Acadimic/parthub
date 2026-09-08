@@ -1,6 +1,6 @@
 import {
   type AttachmentDto,
-  type ClientEntity,
+  type ClientEntityWith,
   type IRequestSlice,
   type MaterialDto,
   createRequestSlice,
@@ -13,7 +13,10 @@ import { MaterialService } from '../services';
 import { getObjectId, getSlug } from '../utils/helpers';
 import { useSelectorStore } from './selector.store';
 
-export type IMaterial = ClientEntity<MaterialDto>;
+export type IMaterial = ClientEntityWith<
+  MaterialDto,
+  'name' | 'slug' | 'standard' | 'subject' | 'order' | 'content' | 'durationMins' | 'level' | 'attachments' | 'tag'
+>;
 export type IAttachment = AttachmentDto & { isNew?: boolean };
 
 /** The fetches this store tracks. */
@@ -38,6 +41,8 @@ export interface IMaterialState extends IRequestSlice<MaterialFetch> {
   renameMaterial: (materialId: string, name: string) => void;
   removeMaterialById: (materialId: string) => void;
   addAttachment: (materialId: string, attachment: IAttachment) => void;
+  /** Patches one attachment inside its material — an attachment has no store of its own. */
+  patchAttachment: (materialId: string, attachmentId: string, fields: Partial<IAttachment>) => void;
   removeAttachment: (materialId: string, attachmentId: string) => void;
   /** Adds an empty link attachment to a material and returns it. */
   addLinkAttachment: (materialId: string) => IAttachment;
@@ -145,6 +150,16 @@ export const useMaterialStore = create<IMaterialState>()((set, get) => ({
     get().patchMaterial(materialId, { attachments: [...(material.attachments ?? []), attachment] });
   },
 
+  patchAttachment: (materialId, attachmentId, fields) => {
+    const material = get().getMaterialById(materialId);
+    if (!material) return;
+    get().patchMaterial(materialId, {
+      attachments: (material.attachments ?? []).map((item) =>
+        item._id === attachmentId ? { ...item, ...fields } : item,
+      ),
+    });
+  },
+
   removeAttachment: (materialId, attachmentId) => {
     const material = get().getMaterialById(materialId);
     if (!material) return;
@@ -181,6 +196,9 @@ export const useMaterialStore = create<IMaterialState>()((set, get) => ({
       order: get().getStandardSubjectMaterials(standardId, subjectId).length,
       durationMins: DEFAULT_DURATION_MINS,
       level: LevelType.EASY,
+      content: '',
+      tag: '',
+      attachments: [],
       isNew: true,
     };
     get().addMaterials([material]);

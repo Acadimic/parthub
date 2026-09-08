@@ -6,7 +6,6 @@ import { MaterialService } from '@services';
 import { useStandardLookups, useMaterialLookups, useSelectedMaterial, useSelectorLookups } from '@stores';
 import { getGeneratedMaterialPrompt } from '@utils/ai/prompts';
 import { errorToast, successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
 import { useSetState } from 'react-use';
 import { CopyUrl } from '@components/common';
@@ -46,7 +45,7 @@ const isYouTubeVideoValid = async (url: string) => {
   }
 };
 
-export const GenerateMaterialModal = observer(({ isOpen, onClose }: IProps) => {
+export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
   const selectorStore = useSelectorLookups();
   const materialStore = useMaterialLookups();
   const { patchMaterial } = materialStore;
@@ -54,7 +53,7 @@ export const GenerateMaterialModal = observer(({ isOpen, onClose }: IProps) => {
   const { removeSelectedMaterialId } = selectorStore;
   const selectedMaterial = useSelectedMaterial();
   const { getStandardById, getSubjectById, getChapterById } = useStandardLookups();
-  const { addLinkAttachment } = materialStore;
+  const { addLinkAttachment, patchAttachment } = materialStore;
   const { uploadFilesToS3 } = useAttachment();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const initialState = {
@@ -89,13 +88,12 @@ export const GenerateMaterialModal = observer(({ isOpen, onClose }: IProps) => {
       console.log('####materialContent: ', selectedMaterial.content);
       // if (materialContent) return;
       const attachments = await uploadFilesToS3(selectedMaterial._id, selectedFiles);
-      attachments?.forEach((attachment) => selectedMaterial.addAttachment(attachment));
+      attachments?.forEach((attachment) => addAttachment(selectedMaterial._id, attachment));
       for (const item of videoLinks) {
         const isValid = await isYouTubeVideoValid(item.url);
         if (!isValid) continue;
-        const attachment = addLinkAttachment();
-        attachment?.setFileName(item.title);
-        attachment?.setUrl(item.url);
+        const attachment = addLinkAttachment(selectedMaterial._id);
+        patchAttachment(selectedMaterial._id, attachment._id, { fileName: item.title, url: item.url });
       }
       await MaterialService.upsertMaterial(selectedMaterial);
       setSelectedFiles([]);
@@ -189,4 +187,4 @@ export const GenerateMaterialModal = observer(({ isOpen, onClose }: IProps) => {
       footer={<ModalFooter onCancel={handleClose} onSave={generateAndSaveQuestions} isLoading={state.isLoading} />}
     />
   );
-});
+};

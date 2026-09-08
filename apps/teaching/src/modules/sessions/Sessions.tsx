@@ -11,7 +11,7 @@ import {
   ViewMeetAttendees,
 } from '@modules/calender/components';
 import { useMeetHooks } from '@modules/calender/hooks';
-import { type IMeet, useMeetLookups, useSelectorLookups, useUserLookups } from '@stores';
+import { type IMeet, useMeetLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import {
   addDaysToDate,
@@ -21,14 +21,11 @@ import {
   getFullFormattedDate,
   splitCamelCase,
 } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
-export const Sessions = observer(() => {
+export const Sessions = () => {
   const { push } = useRouter();
-  const selectorStore = useSelectorLookups();
-  const userStore = useUserLookups();
   const meetStore = useMeetLookups();
   const { loadMeets } = meetStore;
   const meets = meetStore.getMeets();
@@ -105,7 +102,7 @@ export const Sessions = observer(() => {
       label: 'Teachers',
       dataKey: 'teachers',
       component: (row: IMeet) => {
-        return <ViewMeetAttendees attendeeIds={row.attendees} isTeachers noLabel />;
+        return <ViewMeetAttendees attendeeIds={row.attendees ?? []} isTeachers noLabel />;
       },
     },
 
@@ -113,7 +110,7 @@ export const Sessions = observer(() => {
       label: 'Students',
       dataKey: 'students',
       component: (row: IMeet) => {
-        return <ViewMeetAttendees attendeeIds={row.attendees} isStudents noLabel />;
+        return <ViewMeetAttendees attendeeIds={row.attendees ?? []} isStudents noLabel />;
       },
     },
 
@@ -202,4 +199,4 @@ export const Sessions = observer(() => {
       />
     </>
   );
-});
+};

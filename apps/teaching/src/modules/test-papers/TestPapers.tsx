@@ -10,7 +10,6 @@ import {
   useTestPaperLookups,
 } from '@stores';
 import { ACTIONS } from '@utils/constants';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
@@ -20,7 +19,7 @@ interface IState {
   isOpenCreateModal: boolean;
 }
 
-export const TestPapers = observer(() => {
+export const TestPapers = () => {
   const { push } = useRouter();
   const testPaperStore = useTestPaperLookups();
   const selectorStore = useSelectorLookups();
@@ -51,7 +50,7 @@ export const TestPapers = observer(() => {
 
   const onClickTestPaper = (testPaper: ITestPaper) => {
     setSelectedTestPaperId(testPaper._id);
-    setSelectedTestPaperSectionId(testPaper.sections[0]);
+    setSelectedTestPaperSectionId((testPaper.sections ?? [])[0]);
     setTimeout(() => {
       push(
         { pathname: `/test-papers/${testPaper._id}`, query: { name: testPaper.name } },
@@ -79,17 +78,17 @@ export const TestPapers = observer(() => {
     {
       label: 'Standards',
       dataKey: 'standards',
-      valueFormatter: (row) => getStandardNamesText(row.standards),
+      valueFormatter: (row) => getStandardNamesText(row.standards ?? []),
     },
     {
       label: 'Subjects',
       dataKey: 'subjects',
-      valueFormatter: (row) => getSubjectNamesText(row.subjects),
+      valueFormatter: (row) => getSubjectNamesText(row.subjects ?? []),
     },
     {
       label: 'Total Sections',
       dataKey: 'sections',
-      valueFormatter: (row) => row.sections.length,
+      valueFormatter: (row) => (row.sections ?? []).length,
     },
     {
       label: 'Total Questions',
@@ -180,4 +179,4 @@ export const TestPapers = observer(() => {
       {selectedTestPaper && <CreateTestPaperModal isOpen={state.isOpenCreateModal} onClose={onCloseCreateModal} />}
     </>
   );
-});
+};

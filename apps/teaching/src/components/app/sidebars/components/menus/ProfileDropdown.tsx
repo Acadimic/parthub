@@ -1,21 +1,20 @@
 import { Avatar } from '@components/app/avatars';
-import { AccountSettingsType } from '@enums';
+import { AccountSettingsType, DefaultRole } from '@enums';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IMenuItem } from '@interfaces';
 import { CheckIcon, GearSixIcon, SignOutIcon } from '@phosphor-icons/react';
 import { type IUser, useSelectedUser, useSelectorLookups, useUserLookups } from '@stores';
 import { AccountSettingsRoutes } from '@utils/constants';
 import { capitalize, logOut } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import * as React from 'react';
 import { Menu } from '@repo/ui/app';
 
-export const ProfileDropdown = observer(() => {
+export const ProfileDropdown = () => {
   const { push } = useRouter();
   const selectorStore = useSelectorLookups();
   const userStore = useUserLookups();
-  const { selectUserAndOrgLeader } = selectorStore;
+  const { selectUserAndOrg } = selectorStore;
   const selectedUser = useSelectedUser();
   const { getOrgById } = userStore;
   const loggedInUsers = userStore.getLoggedInUsers();
@@ -45,8 +44,8 @@ export const ProfileDropdown = observer(() => {
   ];
 
   const handleSwitchAccount = (user: IUser) => {
-    if (!user || !selectedUser || user._id === selectedUser._id) return;
-    selectUserAndOrgLeader(user);
+    if (!user?.org || !user.permission || !selectedUser || user._id === selectedUser._id) return;
+    selectUserAndOrg(user._id, user.org, user.permission as DefaultRole);
     window.location.reload();
   };
 
@@ -72,8 +71,8 @@ export const ProfileDropdown = observer(() => {
                 <div className="text-sm font-medium truncate w-full">{selectedUser.name || 'User'}</div>
                 <div className="text-xs text-color-secondary truncate w-full">{selectedUser.email}</div>
                 <div className="text-xs text-color-secondary w-full truncate flex items-center justify-start divide-x divide-color-border">
-                  <div className="pr-1">{getOrgById(selectedUser.org)?.name || 'Organization'}</div>
-                  <div className="px-1">{capitalize(getOrgById(selectedUser.org)?.orgType || '')}</div>
+                  <div className="pr-1">{getOrgById(selectedUser.org ?? '')?.name || 'Organization'}</div>
+                  <div className="px-1">{capitalize(getOrgById(selectedUser.org ?? '')?.orgType ?? '')}</div>
                   <div className="px-1 capitalize">{selectedUser.permission}</div>
                 </div>
               </div>
@@ -82,7 +81,7 @@ export const ProfileDropdown = observer(() => {
               <div className="text-xs px-1 uppercase font-semibold text-color-secondary">Switch Account</div>
               <div className="flex flex-col items-center gap-2 divide-y divide-color-border">
                 {loggedInUsers.map((user) => {
-                  const org = getOrgById(user.org);
+                  const org = getOrgById(user.org ?? '');
                   if (!org) return null;
                   const isSelected = selectedUser._id === user._id;
                   return (
@@ -96,7 +95,7 @@ export const ProfileDropdown = observer(() => {
                         <div className="flex flex-col flex-1">
                           <div className="text-sm truncate w-full font-medium">{org.name || 'Organization'}</div>
                           <div className="text-xs text-color-secondary w-full truncate flex divide-x divide-color-border">
-                            <div className="pr-1">{capitalize(org.orgType)}</div>
+                            <div className="pr-1">{capitalize(org.orgType ?? '')}</div>
                             <div className="px-1 capitalize">{user.permission}</div>
                           </div>
                         </div>
@@ -116,4 +115,4 @@ export const ProfileDropdown = observer(() => {
       />
     </React.Fragment>
   );
-});
+};

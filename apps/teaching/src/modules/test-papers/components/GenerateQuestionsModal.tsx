@@ -4,10 +4,15 @@ import { ArticleIcon, EqualizerIcon } from '@phosphor-icons/react';
 import { LevelType, PositionType, QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { TestPaperService } from '@services';
-import { useQuestionLookups, useSelectedTestPaper, useSelectedTestPaperSection, useSelectorLookups } from '@stores';
+import {
+  useQuestionLookups,
+  useSelectedTestPaper,
+  useSelectedTestPaperSection,
+  useSelectorLookups,
+  useTestPaperLookups,
+} from '@stores';
 import { getGeneratedQuestionsPrompt } from '@utils/ai/prompts';
 import { errorToast, splitCamelCase, successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useSetState } from 'react-use';
 import { CopyUrl } from '@components/common';
 import { getTextAndEquationBlocksString } from '@components/editors/math-jax-editor/util';
@@ -34,11 +39,15 @@ interface IQuestionObject {
   solutionText?: string;
 }
 
-export const GenerateQuestionsModal = observer(({ isOpen, onClose }: IProps) => {
+export const GenerateQuestionsModal = ({ isOpen, onClose }: IProps) => {
   const selectorStore = useSelectorLookups();
+  const testPaperStore = useTestPaperLookups();
+  const { updateTotalQuestionsAndMarks } = testPaperStore;
+  const { getTestPaperSubjectItems } = testPaperStore;
+  const { getTestPaperStandardItems } = testPaperStore;
   const questionStore = useQuestionLookups();
   const { patchQuestion } = questionStore;
-  const { patchOption } = questionStore;
+  const { patchOption, patchSolution } = questionStore;
   const { removeSelectedQuestionId } = selectorStore;
   const selectedTestPaperSection = useSelectedTestPaperSection();
   const selectedTestPaper = useSelectedTestPaper();
@@ -97,21 +106,21 @@ export const GenerateQuestionsModal = observer(({ isOpen, onClose }: IProps) => 
             : state.selectedQuestionType;
         const question = createQuestion({
           standard:
-            selectedTestPaper.standardItems.find((item) => item.label === questionObject.standard)?.value ||
-            selectedTestPaper.standards[0],
+            getTestPaperStandardItems(selectedTestPaper._id).find((item) => item.label === questionObject.standard)
+              ?.value || (selectedTestPaper.standards ?? [])[0],
           subject:
-            selectedTestPaper.subjectItems.find((item) => item.label === questionObject.subject)?.value ||
-            selectedTestPaper.subjects[0],
+            getTestPaperSubjectItems(selectedTestPaper._id).find((item) => item.label === questionObject.subject)
+              ?.value || (selectedTestPaper.subjects ?? [])[0],
           questionType,
           section: selectedTestPaperSection._id,
           markings: selectedTestPaperSection.defaultMarkings[questionType],
         });
         console.log('####questionObject.standard: ', JSON.stringify(question));
         console.log('####questionObject.questionText: ', getTextAndEquationBlocksString(questionObject.questionText));
-        question.setQuestion(getTextAndEquationBlocksString(questionObject.questionText));
-        getOptionsByIds(question.options).forEach((option, index) => {
+        patchQuestion(question._id, { question: getTextAndEquationBlocksString(questionObject.questionText) });
+        getOptionsByIds(question.options ?? []).forEach((option, index) => {
           console.log('####questionObject.options[index].optionText: ', questionObject.options[index].optionText);
-          option.setOption(getTextAndEquationBlocksString(questionObject.options[index].optionText));
+          patchOption(option._id, { option: getTextAndEquationBlocksString(questionObject.options[index].optionText) });
           patchOption(option._id, { isCorrect: questionObject.options[index].isCorrect || false });
         });
         upsertSolution(question._id, getTextAndEquationBlocksString(questionObject.solutionText || ''));
@@ -121,7 +130,7 @@ export const GenerateQuestionsModal = observer(({ isOpen, onClose }: IProps) => 
       await TestPaperService.upsertBulkTestPaperSectionQuestions({
         testPaper: selectedTestPaper._id,
         questions: questions.map((question) => {
-          const options = getOptionsByIds(question.options);
+          const options = getOptionsByIds(question.options ?? []);
           const solution = getSolutionByQuestionId(question._id);
           return {
             question,
@@ -134,10 +143,11 @@ export const GenerateQuestionsModal = observer(({ isOpen, onClose }: IProps) => 
       setTimeout(() => {
         questions.forEach((question) => {
           patchQuestion(question._id, { isNew: false });
-          getOptionsByIds(question.options).forEach((option) => patchOption(option._id, { isNew: false }));
-          getSolutionByQuestionId(question._id)?.resetIsNew();
+          getOptionsByIds(question.options ?? []).forEach((option) => patchOption(option._id, { isNew: false }));
+          const solution = getSolutionByQuestionId(question._id);
+          if (solution) patchSolution(solution._id, { isNew: false });
         });
-        selectedTestPaper.updateTotalQuestionsAndMarks();
+        updateTotalQuestionsAndMarks(selectedTestPaper._id);
         onClose();
       }, 500);
     } catch (error) {
@@ -155,8 +165,12 @@ export const GenerateQuestionsModal = observer(({ isOpen, onClose }: IProps) => 
   const questionPrompt = getGeneratedQuestionsPrompt({
     numberOfQuestions: state.totalQuestions,
     questionType: state.selectedQuestionType,
-    standardNames: selectedTestPaper?.standardItems.map((item) => item.label as string) || [],
-    subjectNames: selectedTestPaper?.subjectItems.map((item) => item.label as string) || [],
+    standardNames: selectedTestPaper
+      ? getTestPaperStandardItems(selectedTestPaper._id).map((item) => item.label as string)
+      : [],
+    subjectNames: selectedTestPaper
+      ? getTestPaperSubjectItems(selectedTestPaper._id).map((item) => item.label as string)
+      : [],
     levels: state.selectedLevels,
     prompt: state.prompt,
   });
@@ -229,4 +243,4 @@ export const GenerateQuestionsModal = observer(({ isOpen, onClose }: IProps) => 
       footer={<ModalFooter onCancel={handleClose} onSave={generateAndSaveQuestions} isLoading={state.isLoading} />}
     />
   );
-});
+};

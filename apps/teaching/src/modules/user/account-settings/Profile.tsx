@@ -3,9 +3,8 @@ import { Button, Card, ModalFooter, TextInput } from '@repo/ui/app';
 import { PencilLineIcon } from '@phosphor-icons/react';
 import { Gender } from '@enums';
 import { UserService } from '@services';
-import { useSelectedUser, useSelectorLookups, useUserLookups } from '@stores';
+import { useSelectedUser, useUserLookups } from '@stores';
 import { errorToast, formatPhoneNumber, successToast, validateEmail } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
 
@@ -21,9 +20,9 @@ interface IState {
   isEditing: boolean;
 }
 
-export const Profile = observer(() => {
-  const selectorStore = useSelectorLookups();
+export const Profile = () => {
   const userStore = useUserLookups();
+  const { setUserName } = userStore;
   const { patchUser } = userStore;
   const selectedUser = useSelectedUser();
   const [state, setState] = useSetState<IState>({
@@ -83,8 +82,8 @@ export const Profile = observer(() => {
         return;
       }
       setState({ isLoading: true });
-      selectedUser.setFirstName(state.firstName);
-      selectedUser.setLastName(state.lastName);
+      setUserName(selectedUser._id, { firstName: state.firstName });
+      setUserName(selectedUser._id, { lastName: state.lastName });
       patchUser(selectedUser._id, { countryCode: state.countryCode });
       patchUser(selectedUser._id, { phoneNumber: phoneNumber });
       patchUser(selectedUser._id, { designation: state.designation });
@@ -217,4 +216,4 @@ export const Profile = observer(() => {
       </Card>
     </div>
   );
-});
+};

@@ -2,8 +2,7 @@ import { Button } from '@repo/ui/app';
 import { PencilIcon, PlusIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { ChapterService } from '@services';
-import { useStandardLookups, useSelectedChapter, useSelectorLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useStandardLookups, useSelectorLookups } from '@stores';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
 import { UpsertChapterModal } from './components';
@@ -17,7 +16,7 @@ interface IState {
   isOpenChapterModal: boolean;
 }
 
-export const Chapters = observer(({ standard, subject }: IProps) => {
+export const Chapters = ({ standard, subject }: IProps) => {
   const selectorStore = useSelectorLookups();
   const { setSelectedChapterId, selectedChapterId } = selectorStore;
   const {
@@ -89,4 +88,4 @@ export const Chapters = observer(({ standard, subject }: IProps) => {
       <UpsertChapterModal isOpen={state.isOpenChapterModal} onClose={onCloseChapterModal} />
     </>
   );
-});
+};

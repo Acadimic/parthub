@@ -1,13 +1,12 @@
 import { Accordions } from '@repo/ui/app';
 import { StudyMaterialView } from '@modules/study-materials/components';
 import { type ICourseModule, type IMaterial, type ITestPaper, useMaterialLookups, useTestPaperLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   courseModule: ICourseModule;
 }
 
-export const CourseModuleView = observer(({ courseModule }: IProps) => {
+export const CourseModuleView = ({ courseModule }: IProps) => {
   const materialStore = useMaterialLookups();
   const testPaperStore = useTestPaperLookups();
   const { getMaterialsByIds } = materialStore;
@@ -17,7 +16,7 @@ export const CourseModuleView = observer(({ courseModule }: IProps) => {
     <div>
       {/* <Label label="Study Materials" /> */}
       <Accordions
-        items={getMaterialsByIds(courseModule.materials).map((material: IMaterial) => ({
+        items={getMaterialsByIds(courseModule.materials ?? []).map((material: IMaterial) => ({
           title: (
             <div className="flex justify-between w-full items-center relative">
               <div className="text-sm font-semibold text-blue-primary">{material.name}</div>
@@ -28,7 +27,7 @@ export const CourseModuleView = observer(({ courseModule }: IProps) => {
       />
       {/* <Label label="Test Papers" /> */}
       <Accordions
-        items={getTestPapersByIds(courseModule.testPapers).map((testPaper: ITestPaper) => ({
+        items={getTestPapersByIds(courseModule.testPapers ?? []).map((testPaper: ITestPaper) => ({
           title: (
             <div className="flex justify-between w-full items-center relative">
               <div className="text-sm font-semibold text-blue-primary">{testPaper.name}</div>
@@ -53,4 +52,4 @@ export const CourseModuleView = observer(({ courseModule }: IProps) => {
       />
     </div>
   );
-});
+};

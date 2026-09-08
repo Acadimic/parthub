@@ -1,8 +1,6 @@
-import { useStandardLookups, useSelectedCourse, useSelectorLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useStandardLookups, useSelectedCourse } from '@stores';
 
-export const CourseDetails = observer(() => {
-  const selectorStore = useSelectorLookups();
+export const CourseDetails = () => {
   const selectedCourse = useSelectedCourse();
   const { getStandardNamesText } = useStandardLookups();
 
@@ -14,8 +12,8 @@ export const CourseDetails = observer(() => {
         <div>
           <h1 className="font-semibold text-lg md:text-lg text-center">{selectedCourse.name}</h1>
         </div>
-        <div className="text-sm font-medium">{getStandardNamesText(selectedCourse.standards)}</div>
+        <div className="text-sm font-medium">{getStandardNamesText(selectedCourse.standards ?? [])}</div>
       </div>
     </div>
   );
-});
+};

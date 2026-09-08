@@ -1,4 +1,3 @@
-import { type QuestionDto } from '@repo/shared';
 import { type IQuestion } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
@@ -12,7 +11,7 @@ class QuestionService {
 
   getQuestions = async () => {
     const url = 'question/all';
-    const resData = await callAuthApi<QuestionDto[]>(url, API.GET);
+    const resData = await callAuthApi<IQuestion[]>(url, API.GET);
     return resData;
   };
 }

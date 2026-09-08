@@ -1,9 +1,8 @@
 import { Label, Modal } from '@repo/ui/app';
 import { CopyUrl } from '@components/common';
 import { CalendarBlankIcon, PencilIcon, TrashIcon } from '@phosphor-icons/react';
-import { useSelectedMeet, useSelectorLookups, useUserLookups } from '@stores';
+import { useSelectedMeet, useSelectorLookups } from '@stores';
 import { getFormattedTime, getFrequencyText, getFullFormattedDate } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { JoiningLink } from './JoiningLink';
 import { MeetingTitle } from './MeetingTitle';
 import { ViewMeetAttendees } from './ViewMeetAttendees';
@@ -15,9 +14,8 @@ interface IProps {
   openDeleteModal: () => void;
 }
 
-export const MeetingOverviewModal = observer(({ isOpen, onClose, openEditModal, openDeleteModal }: IProps) => {
+export const MeetingOverviewModal = ({ isOpen, onClose, openEditModal, openDeleteModal }: IProps) => {
   const selectorStore = useSelectorLookups();
-  const userStore = useUserLookups();
   const { selectedCalenderEvent } = selectorStore;
   const selectedMeet = useSelectedMeet();
 
@@ -63,8 +61,8 @@ export const MeetingOverviewModal = observer(({ isOpen, onClose, openEditModal, 
             </div>
           </div>
           <div className="flex flex-col gap-2 px-0.5">
-            <ViewMeetAttendees attendeeIds={selectedMeet.attendees} isTeachers />
-            <ViewMeetAttendees attendeeIds={selectedMeet.attendees} isStudents />
+            <ViewMeetAttendees attendeeIds={selectedMeet.attendees ?? []} isTeachers />
+            <ViewMeetAttendees attendeeIds={selectedMeet.attendees ?? []} isStudents />
           </div>
           <div className="flex items-end w-full justify-between mt-3">
             <CopyUrl url={selectedMeet.meetingLink} />
@@ -74,4 +72,4 @@ export const MeetingOverviewModal = observer(({ isOpen, onClose, openEditModal, 
       }
     />
   );
-});
+};

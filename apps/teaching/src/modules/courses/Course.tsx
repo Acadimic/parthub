@@ -11,7 +11,6 @@ import {
   useSelectorLookups,
   useTestPaperLookups,
 } from '@stores';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
@@ -26,7 +25,7 @@ interface IState {
   isOpenUpsertSessionsModal: boolean;
 }
 
-export const Course = observer(({ courseId }: IProps) => {
+export const Course = ({ courseId }: IProps) => {
   const { push } = useRouter();
   const selectorStore = useSelectorLookups();
   const courseStore = useCourseLookups();
@@ -35,8 +34,8 @@ export const Course = observer(({ courseId }: IProps) => {
   const meetStore = useMeetLookups();
   const { selectedCourseId, setSelectedCourseModuleId } = selectorStore;
   const selectedCourse = useSelectedCourse();
-  const { isCourseModuleLoading, getCourseModulesByCourseId, loadCourseModules, createCourseModule, getCourseById } =
-    courseStore;
+  const { getCourseModulesByCourseId, loadCourseModules, createCourseModule, getCourseById } = courseStore;
+  const isCourseModuleLoading = courseStore.isLoading('courseModules');
   const { loadStandardsMaterials } = materialStore;
   const isLoadingMaterials = materialStore.isLoading('materials');
   const { loadTestPapers } = testPaperStore;
@@ -87,7 +86,7 @@ export const Course = observer(({ courseId }: IProps) => {
         <CourseDetails />
       </Card> */}
       <div className="flex flex-col gap-3">
-        {selectedCourse.courses.map((courseId: string, index: number) => {
+        {(selectedCourse.courses ?? []).map((courseId: string, index: number) => {
           const course = getCourseById(courseId);
           const courseModules = getCourseModulesByCourseId(courseId);
           if (!course) return null;
@@ -119,8 +118,8 @@ export const Course = observer(({ courseId }: IProps) => {
                               <div>{courseModule.name}</div>{' '}
                               <div className="">
                                 <MaterialInfo
-                                  materialIds={courseModule.materials}
-                                  testPaperIds={courseModule.testPapers}
+                                  materialIds={courseModule.materials ?? []}
+                                  testPaperIds={courseModule.testPapers ?? []}
                                 />
                               </div>
                             </div>
@@ -151,8 +150,10 @@ export const Course = observer(({ courseId }: IProps) => {
                         component: <CourseModuleView courseModule={courseModule} />,
                       }))}
                     />
-                  ) : isCourseModuleLoading || isLoadingTestPapers || isLoadingMaterials ? (
-                    <Loader isLoading={isCourseModuleLoading || isLoadingTestPapers || isLoadingMaterials} />
+                  ) : courseStore.isLoading('courseModules') || isLoadingTestPapers || isLoadingMaterials ? (
+                    <Loader
+                      isLoading={courseStore.isLoading('courseModules') || isLoadingTestPapers || isLoadingMaterials}
+                    />
                   ) : (
                     <div className="flex items-center justify-center w-full h-80">
                       <BlankState label="No modules found" />
@@ -175,4 +176,4 @@ export const Course = observer(({ courseId }: IProps) => {
       <UpsertSessionsModal isOpen={state.isOpenUpsertSessionsModal} onClose={onCloseUpsertSessionsModal} />
     </div>
   );
-});
+};

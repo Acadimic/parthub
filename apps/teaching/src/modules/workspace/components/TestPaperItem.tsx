@@ -2,14 +2,13 @@ import { Card } from '@repo/ui/app';
 import { StandardWithLogo, TestPaperInfo } from '@components/common';
 import { TestPaperIconSvg } from '@components/images';
 import { type ITestPaper, useStandardLookups, useSelectorLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
 import Link from 'next/link';
 
 interface IProps {
   testPaper: ITestPaper;
 }
 
-export const TestPaperItem = observer(({ testPaper }: IProps) => {
+export const TestPaperItem = ({ testPaper }: IProps) => {
   const selectorStore = useSelectorLookups();
   const { getStandardsByIds } = useStandardLookups();
   const { setSelectedTestPaperId } = selectorStore;
@@ -30,7 +29,7 @@ export const TestPaperItem = observer(({ testPaper }: IProps) => {
             </div>
           </div>
           <div className="p-3 flex flex-col space-y-3 px-4">
-            <StandardWithLogo standard={getStandardsByIds(testPaper.standards)[0]} />
+            <StandardWithLogo standard={getStandardsByIds(testPaper.standards ?? [])[0]} />
             <div className="max-w-full">
               <div className="font-medium line-clamp-1">{testPaper.name}</div>
               <div className="text-sm text-color-secondary line-clamp-1">Test Paper Description</div>
@@ -43,4 +42,4 @@ export const TestPaperItem = observer(({ testPaper }: IProps) => {
       </Link>
     </Card>
   );
-});
+};

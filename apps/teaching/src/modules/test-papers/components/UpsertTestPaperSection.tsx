@@ -1,7 +1,6 @@
 import { Button, TextInput } from '@repo/ui/app';
 import { SectionCategoryType } from '@enums';
-import { type ITestPaperSection } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type ITestPaperSection, useTestPaperLookups } from '@stores';
 import { useState } from 'react';
 import { DefaultMarkingsModal } from './DefaultMarkingsModal';
 
@@ -10,12 +9,16 @@ interface IProps {
   isLoading: boolean;
 }
 
-export const UpsertTestPaperSection = observer(({ section, isLoading }: IProps) => {
+export const UpsertTestPaperSection = ({ section, isLoading }: IProps) => {
+  const { patchTestPaperSection } = useTestPaperLookups();
   const [isOpenMarkings, setIsOpenMarkings] = useState(false);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    section.setName(e.target.value);
-    section.setSectionCategory(SectionCategoryType.CUSTOM);
+    // One patch, not two: each call replaces the row, so the second would drop the first.
+    patchTestPaperSection(section._id, {
+      name: e.target.value,
+      sectionCategory: SectionCategoryType.CUSTOM,
+    });
   };
 
   const openMarkingsModal = () => {
@@ -40,8 +43,8 @@ export const UpsertTestPaperSection = observer(({ section, isLoading }: IProps) 
         isLoading={isLoading}
         onClose={() => setIsOpenMarkings(false)}
         defaultMarkings={section.defaultMarkings}
-        onSave={(markings) => section.setDefaultMarkings(markings)}
+        onSave={(markings) => patchTestPaperSection(section._id, { defaultMarkings: markings })}
       />
     </>
   );
-});
+};

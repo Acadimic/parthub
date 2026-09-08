@@ -1,7 +1,6 @@
 import { BookOpenTextIcon, FileTextIcon, YoutubeLogoIcon } from '@phosphor-icons/react';
 import { MaterialType } from '@enums';
 import { useMaterialLookups, useTestPaperLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
 import { useMemo } from 'react';
 
 interface IProps {
@@ -9,7 +8,7 @@ interface IProps {
   testPaperIds: string[];
 }
 
-export const MaterialInfo = observer(({ materialIds, testPaperIds }: IProps) => {
+export const MaterialInfo = ({ materialIds, testPaperIds }: IProps) => {
   const materialStore = useMaterialLookups();
   const testPaperStore = useTestPaperLookups();
   const { getMaterialsStatsByMaterialIds } = materialStore;
@@ -61,4 +60,4 @@ export const MaterialInfo = observer(({ materialIds, testPaperIds }: IProps) => 
       )
     </div>
   );
-});
+};

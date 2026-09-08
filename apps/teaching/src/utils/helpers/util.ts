@@ -70,7 +70,7 @@ const getFullCalendarEvent = (meet: IMeet, currentDate: Date): IFullCalendarEven
     start: setTime(currentDate, new Date(meet.startTime)),
     end: setTime(currentDate, new Date(meet.endTime)),
     timezone: meet.timezone,
-    attendees: meet.attendees,
+    attendees: meet.attendees ?? [],
     meetingLink: meet.meetingLink,
     color: meet.color,
     borderColor: 'border-color-border',
@@ -86,7 +86,7 @@ export const getFullCalendarEvents = (meet: IMeet, startDate: Date, endDate: Dat
     while (currentDate <= endDate) {
       if (currentDate >= getStartOfDay(meet.startTime)) {
         const weekNumber = currentDate.getDay();
-        if (meet.weekDays.includes(weekNumber)) sessions.push(getFullCalendarEvent(meet, currentDate));
+        if ((meet.weekDays ?? []).includes(weekNumber)) sessions.push(getFullCalendarEvent(meet, currentDate));
       }
       currentDate = addDaysToDate(currentDate, 1);
     }
@@ -102,7 +102,7 @@ export const getFullCalendarEvents = (meet: IMeet, startDate: Date, endDate: Dat
         currentDate <= meetEndDate
       ) {
         const weekNumber = currentDate.getDay();
-        if (meet.weekDays.includes(weekNumber)) sessions.push(getFullCalendarEvent(meet, currentDate));
+        if ((meet.weekDays ?? []).includes(weekNumber)) sessions.push(getFullCalendarEvent(meet, currentDate));
       }
       currentDate = addDaysToDate(currentDate, 1);
     }

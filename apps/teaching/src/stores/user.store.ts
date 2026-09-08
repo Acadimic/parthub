@@ -61,6 +61,10 @@ export interface IUserState extends IRequestSlice<UserFetch> {
 
   /** Adds an unsaved user with the given permission and returns it, for the caller to select. */
   createUser: (permission: DefaultRole) => IUser;
+  /** Adds an unsaved student and returns it, for the caller to select. */
+  createStudent: () => IUser;
+  /** Adds an unsaved collaborator with the given permission, for the caller to select. */
+  createCollaborator: (permission: DefaultRole) => IUser;
 
   loadLoggedInUsers: () => Promise<void>;
   loadUsers: () => Promise<void>;
@@ -196,6 +200,10 @@ export const useUserStore = create<IUserState>()((set, get) => ({
     get().addUsers([user]);
     return user;
   },
+
+  createStudent: () => get().createUser(DefaultRole.STUDENT),
+
+  createCollaborator: (permission) => get().createUser(permission),
 
   loadLoggedInUsers: () =>
     get().run('loggedInUsers', async () => {

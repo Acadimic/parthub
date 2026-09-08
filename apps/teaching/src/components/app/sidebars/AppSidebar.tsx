@@ -1,7 +1,6 @@
 import { Button, FullLogo, Logo, ToggleTheme } from '@repo/ui/app';
 import { StorageKey } from '@enums';
 import { CaretDoubleRightIcon, CaretLeftIcon } from '@phosphor-icons/react';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { ProfileDropdown } from './components';
@@ -13,7 +12,7 @@ interface IProps {
   children: ReactNode;
 }
 
-export const AppSidebar = observer(({ children }: IProps) => {
+export const AppSidebar = ({ children }: IProps) => {
   const [isLargeDevice, setIsLargeDevice] = useState(false);
 
   useEffect(() => {
@@ -168,4 +167,4 @@ export const AppSidebar = observer(({ children }: IProps) => {
       </main>
     </div>
   );
-});
+};

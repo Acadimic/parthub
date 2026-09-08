@@ -4,18 +4,10 @@ import { CircleIcon, LinkSimpleIcon } from '@phosphor-icons/react';
 import { ColorType, MeetFrequency, PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { MeetService } from '@services';
-import {
-  useStandardLookups,
-  useBatchLookups,
-  useMeetLookups,
-  useSelectedMeet,
-  useSelectorLookups,
-  useUserLookups,
-} from '@stores';
+import { useStandardLookups, useBatchLookups, useMeetLookups, useSelectedMeet, useUserLookups } from '@stores';
 import { dark, light } from '@themes';
 import { WEEK_DAYS_INTEGER_MAPPINGS } from '@utils/constants';
 import { splitCamelCase, successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -37,9 +29,9 @@ const WEEKDAYS: ISelectItem[] = Object.keys(WEEK_DAYS_INTEGER_MAPPINGS).map((key
   value: key,
 }));
 
-export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
-  const selectorStore = useSelectorLookups();
+export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
   const meetStore = useMeetLookups();
+  const { setMeetDate } = meetStore;
   const { patchMeet } = meetStore;
   const batchStore = useBatchLookups();
   const userStore = useUserLookups();
@@ -135,9 +127,9 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
             <Select
               label="Attendees"
               required
-              values={selectedMeet.attendees}
+              values={selectedMeet.attendees ?? []}
               items={[...studentItems, ...collaboratorItems]}
-              onChange={(items) => selectedMeet.setAttendees(items.map((item) => item.value))}
+              onChange={(items) => patchMeet(selectedMeet._id, { attendees: items.map((item) => item.value) })}
               isGrouped
             />
 
@@ -146,27 +138,27 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
                 label="Date"
                 required
                 value={new Date(selectedMeet.startTime)}
-                handleChange={(date) => selectedMeet.setDate(date)}
+                handleChange={(date) => setMeetDate(selectedMeet._id, date)}
               />
 
               <TimeInput
                 label="Start Time"
                 required
                 value={new Date(selectedMeet.startTime)}
-                handleChange={(date) => patchMeet(selectedMeet._id, { startTime: date })}
+                handleChange={(date) => patchMeet(selectedMeet._id, { startTime: date.toISOString() })}
               />
 
               <TimeInput
                 label="End Time"
                 required
                 value={new Date(selectedMeet.endTime)}
-                handleChange={(date) => patchMeet(selectedMeet._id, { endTime: date })}
+                handleChange={(date) => patchMeet(selectedMeet._id, { endTime: date.toISOString() })}
               />
             </div>
             {/* <div className="flex">
             <div
               className="flex items-center gap-1 cursor-pointer"
-              onClick={() => selectedMeet.setIsRepeat(!selectedMeet.isRepeat)}
+              onClick={() => patchMeet(selectedMeet._id, { isRepeat: !selectedMeet.isRepeat })}
             >
               <Checkbox selectedClassName="text-blue-primary" checked={selectedMeet.isRepeat} />
               <span className="text-sm font-medium">Repeat</span>
@@ -188,9 +180,11 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
                 <Select
                   label="Repeat on Days"
                   required
-                  values={selectedMeet.weekDays.map(String)}
+                  values={(selectedMeet.weekDays ?? []).map(String)}
                   items={WEEKDAYS}
-                  onChange={(items) => selectedMeet.setWeekDays(items.map((item) => Number(item.value)))}
+                  onChange={(items) =>
+                    patchMeet(selectedMeet._id, { weekDays: items.map((item) => Number(item.value)) })
+                  }
                   noSort
                 />
               )}
@@ -218,18 +212,18 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
             <Select
               label="Standards"
               required
-              values={selectedMeet.standards}
+              values={selectedMeet.standards ?? []}
               items={getStandardItems()}
-              onChange={(items) => selectedMeet.setStandards(items.map((item) => item.value))}
+              onChange={(items) => patchMeet(selectedMeet._id, { standards: items.map((item) => item.value) })}
               isGrouped
             />
 
             <Select
               label="Batches"
               required
-              values={selectedMeet.batches}
+              values={selectedMeet.batches ?? []}
               items={batchItems}
-              onChange={(items) => selectedMeet.setBatches(items.map((item) => item.value))}
+              onChange={(items) => patchMeet(selectedMeet._id, { batches: items.map((item) => item.value) })}
             />
           </div>
         ) : null
@@ -244,4 +238,4 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
       }
     />
   );
-});
+};

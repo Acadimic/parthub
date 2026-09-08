@@ -3,9 +3,8 @@ import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { Gender, PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { UserService } from '@services';
-import { useSelectedCollaborator, useSelectorLookups, useUserLookups } from '@stores';
+import { useSelectedCollaborator, useUserLookups } from '@stores';
 import { successToast, validateFieldValues } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
 interface IProps {
@@ -13,9 +12,9 @@ interface IProps {
   onClose: () => void;
 }
 
-export const UpsertCollaboratorModal = observer(({ isOpen, onClose }: IProps) => {
-  const selectorStore = useSelectorLookups();
+export const UpsertCollaboratorModal = ({ isOpen, onClose }: IProps) => {
   const userStore = useUserLookups();
+  const { setUserName } = userStore;
   const { patchUser } = userStore;
   const selectedCollaborator = useSelectedCollaborator();
   const { removeUserByUserId } = userStore;
@@ -29,13 +28,13 @@ export const UpsertCollaboratorModal = observer(({ isOpen, onClose }: IProps) =>
   const onChangeFirstName = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedCollaborator) return;
     const value = e.target.value;
-    selectedCollaborator.setFirstName(value);
+    setUserName(selectedCollaborator._id, { firstName: value });
   };
 
   const onChangeLastName = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedCollaborator) return;
     const value = e.target.value;
-    selectedCollaborator.setLastName(value);
+    setUserName(selectedCollaborator._id, { lastName: value });
   };
 
   const onChangeRole = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,4 +160,4 @@ export const UpsertCollaboratorModal = observer(({ isOpen, onClose }: IProps) =>
       />
     </>
   );
-});
+};

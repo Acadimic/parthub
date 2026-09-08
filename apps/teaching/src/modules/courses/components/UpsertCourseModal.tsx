@@ -14,7 +14,6 @@ import {
 } from '@stores';
 import { ALL } from '@utils/constants';
 import { errorToast, successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
@@ -23,11 +22,11 @@ interface IProps {
   onClose: () => void;
 }
 
-export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
+export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
   const { push } = useRouter();
   const selectorStore = useSelectorLookups();
   const courseStore = useCourseLookups();
-  const { patchPlan } = courseStore;
+  const { patchPlan, getCourseSubjectItems } = courseStore;
   const { patchCourse } = courseStore;
   const { selectedCourseId, removeSelectedCourseId } = selectorStore;
   const selectedCoursePlans = useSelectedCoursePlans();
@@ -48,12 +47,12 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
 
   const handleStandardsChange = (values: ISelectItem[]) => {
     if (!selectedCourse) return;
-    selectedCourse.setStandards(values.map((value) => value.value));
+    patchCourse(selectedCourse._id, { standards: values.map((value) => value.value) });
   };
 
   const handleSubjectsChange = (values: ISelectItem[]) => {
     if (!selectedCourse) return;
-    selectedCourse.setSubjects(values.map((value) => value.value));
+    patchCourse(selectedCourse._id, { subjects: values.map((value) => value.value) });
   };
 
   const saveCourse = async () => {
@@ -63,11 +62,11 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
         errorToast({ message: 'Please enter a valid course name.' });
         return;
       }
-      if (selectedCourse.standards.length === 0) {
+      if ((selectedCourse.standards ?? []).length === 0) {
         errorToast({ message: 'Please select at least one standard.' });
         return;
       }
-      if (selectedCourse.attachments.length === 0 && selectedFiles.length === 0) {
+      if ((selectedCourse.attachments ?? []).length === 0 && selectedFiles.length === 0) {
         errorToast({ message: 'Please add at least one course image.' });
         return;
       }
@@ -76,7 +75,7 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
           errorToast({ message: 'Please enter valid amount for each plan.' });
           return;
         }
-        if (plan.amount > plan.realAmount) {
+        if (plan.amount > (plan.realAmount ?? 0)) {
           errorToast({ message: 'Real amount should be greater than or equal to amount.' });
           return;
         }
@@ -136,7 +135,9 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
                 <TextInput
                   label="Course Name"
                   value={selectedCourse.name}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => selectedCourse.setName(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    patchCourse(selectedCourse._id, { name: e.target.value })
+                  }
                   required
                 />
                 <TextArea
@@ -151,14 +152,16 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
                   items={getStandardItems()}
                   required
                   isGrouped
-                  values={selectedCourse.standards}
+                  values={selectedCourse.standards ?? []}
                   onChange={handleStandardsChange}
                   isCloseOnSelect={true}
                 />
                 <Select
                   label="Subjects"
-                  items={[...selectedCourse.subjectItems, { label: 'All', value: ALL }]}
-                  values={selectedCourse.subjects.length || selectedCourse.isNew ? selectedCourse.subjects : [ALL]}
+                  items={[...getCourseSubjectItems(selectedCourse._id), { label: 'All', value: ALL }]}
+                  values={
+                    (selectedCourse.subjects ?? []).length || selectedCourse.isNew ? selectedCourse.subjects : [ALL]
+                  }
                   onChange={handleSubjectsChange}
                 />
                 <div>
@@ -188,7 +191,9 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
                                 label="Plan Name"
                                 value={plan.name}
                                 className="w-32"
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => plan.setName(e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                  patchPlan(plan._id, { name: e.target.value })
+                                }
                                 required
                               />
                             </div>
@@ -200,7 +205,7 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
                                 className="w-32"
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                   const intValue = parseInt(e.target.value);
-                                  if (!isNaN(intValue)) plan.setAmount(Math.abs(intValue));
+                                  if (!isNaN(intValue)) patchPlan(plan._id, { amount: Math.abs(intValue) });
                                   else patchPlan(plan._id, { amount: 0 });
                                 }}
                                 required
@@ -214,7 +219,7 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
                                 value={plan.realAmount === 0 ? '' : plan.realAmount}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                   const intValue = parseInt(e.target.value);
-                                  if (!isNaN(intValue)) plan.setRealAmount(Math.abs(intValue));
+                                  if (!isNaN(intValue)) patchPlan(plan._id, { realAmount: Math.abs(intValue) });
                                   else patchPlan(plan._id, { realAmount: 0 });
                                 }}
                                 required
@@ -242,4 +247,4 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
       />
     </>
   );
-});
+};

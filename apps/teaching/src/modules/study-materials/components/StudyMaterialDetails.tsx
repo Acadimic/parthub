@@ -1,6 +1,5 @@
 import { type IStandard, type ISubject } from '@stores';
 import { getStringFormattedDateWithTime } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   standard: IStandard;
@@ -9,7 +8,7 @@ interface IProps {
   lastUpdatedAt?: string;
 }
 
-export const StudyMaterialDetails = observer(({ standard, subject, count, lastUpdatedAt }: IProps) => {
+export const StudyMaterialDetails = ({ standard, subject, count, lastUpdatedAt }: IProps) => {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col justify-center items-center gap-1">
@@ -36,4 +35,4 @@ export const StudyMaterialDetails = observer(({ standard, subject, count, lastUp
       </div>
     </div>
   );
-});
+};

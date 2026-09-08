@@ -15,7 +15,6 @@ import {
   useTestPaperLookups,
 } from '@stores';
 import { splitCamelCase } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
@@ -44,8 +43,9 @@ interface IState {
   isOpenAddSection: boolean;
 }
 
-export const TestPaper = observer(({ testPaperId }: IProps) => {
+export const TestPaper = ({ testPaperId }: IProps) => {
   const testPaperStore = useTestPaperLookups();
+  const { getSectionQuestions, patchTestPaperSection } = testPaperStore;
   const { patchTestPaper } = testPaperStore;
   const selectorStore = useSelectorLookups();
   const questionStore = useQuestionLookups();
@@ -83,7 +83,7 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
     section: null,
     isOpenAddSection: false,
   });
-  const sections = selectedTestPaper ? getTestPaperSectionsByIds(selectedTestPaper.sections) : [];
+  const sections = selectedTestPaper ? getTestPaperSectionsByIds(selectedTestPaper.sections ?? []) : [];
 
   const setLoading = (bool: boolean) => {
     setState({ isLoading: bool });
@@ -94,7 +94,7 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
     if (!selectedTestPaper || !section) return;
     setSelectedTestPaperSectionId(sectionId);
     createQuestion({
-      standard: selectedTestPaper.standards[0],
+      standard: (selectedTestPaper.standards ?? [])[0],
       questionType: selectedQuestionType,
       section: sectionId,
       markings: section.defaultMarkings[selectedQuestionType],
@@ -142,7 +142,7 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
         state.section.isNew ? TestPaperService.upsertTestPaper(selectedTestPaper) : Promise.resolve(),
         TestPaperService.upsertTestPaperSection(state.section),
       ]);
-      state.section.resetIsNew();
+      patchTestPaperSection(state.section._id, { isNew: false });
       setState({ isOpenAddSection: false, section: null });
     } catch {
     } finally {
@@ -152,7 +152,7 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
 
   const onCloseAddQuestionModal = () => {
     if (state.isLoading || !selectedTestPaperSection || !selectedQuestion) return;
-    getOptionsByIds(selectedQuestion.options).forEach((option) => option.isNew && removeOptionById(option._id));
+    getOptionsByIds(selectedQuestion.options ?? []).forEach((option) => option.isNew && removeOptionById(option._id));
     if (selectedQuestion.isNew) removeQuestionById(selectedQuestion._id);
     removeSelectedQuestionId();
     setState({ isOpenUpsertQuestion: false });
@@ -191,8 +191,10 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
               <div className="flex justify-between w-full items-center relative">
                 <div className="text-sm font-bold text-blue-primary">
                   {section.name}{' '}
-                  <Tooltip title={`${section.questions.length} Question${section.questions.length > 1 ? 's' : ''}`}>
-                    <span>({section.questions.length})</span>
+                  <Tooltip
+                    title={`${getSectionQuestions(section._id).length} Question${getSectionQuestions(section._id).length > 1 ? 's' : ''}`}
+                  >
+                    <span>({getSectionQuestions(section._id).length})</span>
                   </Tooltip>
                 </div>
                 <div className="absolute -right-4">
@@ -223,7 +225,7 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
               <div className="min-h-[100px]">
                 <div className="flex justify-end">
                   <div>
-                    {section.questions.length ? (
+                    {getSectionQuestions(section._id).length ? (
                       <SplitButton
                         menuItems={[
                           {
@@ -244,11 +246,11 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
                   </div>
                 </div>
                 <div className="py-3">
-                  {section.questions.length ? (
+                  {getSectionQuestions(section._id).length ? (
                     <Accordions
                       isIconLast={true}
                       key={section._id}
-                      items={section.questions.map((question, index) => {
+                      items={getSectionQuestions(section._id).map((question, index) => {
                         return {
                           title: <Question question={question} prefix={`Q${index + 1}.`} marks={question.markings} />,
                           component: (
@@ -339,4 +341,4 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
       <GenerateQuestionsModal isOpen={state.isOpenGenerateQuestions} onClose={onCloseGenerateQuestionsModal} />
     </div>
   );
-});
+};

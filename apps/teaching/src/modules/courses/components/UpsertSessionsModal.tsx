@@ -3,9 +3,8 @@ import { Modal, ModalFooter } from '@repo/ui/app';
 import { HorizontalLineWithText } from '@components/others';
 import { type ISelectItem } from '@interfaces';
 import { CourseService } from '@services';
-import { useCourseLookups, useMeetLookups, useSelectedCourse, useSelectorLookups } from '@stores';
+import { useCourseLookups, useMeetLookups, useSelectedCourse } from '@stores';
 import { getFrequencyText, successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 import { SessionsView } from './SessionsView';
 
@@ -14,9 +13,9 @@ interface IProps {
   onClose: () => void;
 }
 
-export const UpsertSessionsModal = observer(({ isOpen, onClose }: IProps) => {
-  const selectorStore = useSelectorLookups();
+export const UpsertSessionsModal = ({ isOpen, onClose }: IProps) => {
   const courseStore = useCourseLookups();
+  const { patchCourse } = courseStore;
   const meetStore = useMeetLookups();
   const selectedCourse = useSelectedCourse();
   const { calculateAndSetCourseStatsByCourseId } = courseStore;
@@ -29,7 +28,7 @@ export const UpsertSessionsModal = observer(({ isOpen, onClose }: IProps) => {
 
   const handleMeetsChange = (values: ISelectItem[]) => {
     if (!selectedCourse) return;
-    selectedCourse.setMeets(values.map((value) => value.value));
+    patchCourse(selectedCourse._id, { meets: values.map((value) => value.value) });
   };
 
   const saveCourseModule = async () => {
@@ -67,11 +66,11 @@ export const UpsertSessionsModal = observer(({ isOpen, onClose }: IProps) => {
                     description: meet.description,
                   }))}
                   required
-                  values={selectedCourse.meets}
+                  values={selectedCourse.meets ?? []}
                   onChange={handleMeetsChange}
                   isGrouped
                 />
-                {selectedCourse.meets.length ? (
+                {(selectedCourse.meets ?? []).length ? (
                   <div className="flex flex-col gap-3 pt-4">
                     <HorizontalLineWithText text="Sessions Preview" />
                     <div>
@@ -95,4 +94,4 @@ export const UpsertSessionsModal = observer(({ isOpen, onClose }: IProps) => {
       />
     </>
   );
-});
+};

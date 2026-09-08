@@ -3,7 +3,6 @@ import { CopyUrl } from '@components/common';
 import { JoiningLink, MeetingTitle } from '@modules/calender/components';
 import { type IMeet } from '@stores';
 import { getFormattedTime, getFrequencyText, getStringFormattedDate } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   meet: IMeet;
@@ -11,7 +10,7 @@ interface IProps {
   isCopyIconOnly?: boolean;
 }
 
-export const MeetItem = observer(({ meet, isSmallJoinable = false, isCopyIconOnly = false }: IProps) => {
+export const MeetItem = ({ meet, isSmallJoinable = false, isCopyIconOnly = false }: IProps) => {
   const onClickMeet = () => {
     if (meet.meetingLink) {
       window.open(meet.meetingLink, '_blank');
@@ -43,4 +42,4 @@ export const MeetItem = observer(({ meet, isSmallJoinable = false, isCopyIconOnl
       </div>
     </Card>
   );
-});
+};

@@ -3,7 +3,6 @@ import { Modal, ModalFooter } from '@repo/ui/app';
 import { PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { useStandardLookups, useSelectorLookups } from '@stores';
-import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
 interface IProps {
@@ -12,7 +11,7 @@ interface IProps {
   handleSelect: (standardId: string, subjectId: string) => void;
 }
 
-export const AddStudyMaterialModal = observer(({ isOpen, onClose, handleSelect }: IProps) => {
+export const AddStudyMaterialModal = ({ isOpen, onClose, handleSelect }: IProps) => {
   const selectorStore = useSelectorLookups();
   const { getStandardItems, getStandardSubjectItems } = useStandardLookups();
   const {
@@ -91,4 +90,4 @@ export const AddStudyMaterialModal = observer(({ isOpen, onClose, handleSelect }
       />
     </>
   );
-});
+};
