@@ -94,6 +94,11 @@ export class InviteService {
       .exec();
   }
 
+  /**
+   * The invitee's own path, like `declineInvite`: not org-scoped, because the caller is not yet a
+   * member of the inviting organization. `UserService` matches the invite's email against the
+   * caller's before acting on the result.
+   */
   async getPendingInviteById(inviteId: string): Promise<InviteDocument | null> {
     return await this.inviteModel
       .findOne({ _id: inviteId, status: InviteStatus.PENDING, _deleted: { $ne: true } })
@@ -101,6 +106,7 @@ export class InviteService {
       .exec();
   }
 
+  /** Also the invitee's own path — see `getPendingInviteById` for why there is no org filter. */
   async acceptPendingInvite(inviteId: string): Promise<InviteDocument | null> {
     return await this.inviteModel
       .findOneAndUpdate(
@@ -132,6 +138,11 @@ export class InviteService {
     };
   }
 
+  /**
+   * The invitee declining. Not org-scoped on purpose: the caller is not a member of the inviting
+   * organization. `UserService.declineInvite` has already checked that the invite's email is the
+   * caller's own, which is the guard that matters here.
+   */
   async declineInvite(inviteId: string): Promise<void> {
     const result = await this.inviteModel
       .findOneAndUpdate({ _id: inviteId, status: InviteStatus.PENDING }, { status: InviteStatus.DECLINED })
@@ -141,16 +152,24 @@ export class InviteService {
     }
   }
 
+  /**
+   * Withdraws a pending invite, for an admin of the inviting organization.
+   *
+   * Deliberately a hard delete: the unique `{ email, org }` index counts soft-deleted rows, so
+   * leaving the document would block ever re-inviting that address.
+   */
   async deleteInvite(inviteId: string): Promise<void> {
-    const result = await this.inviteModel.deleteOne({ _id: inviteId, status: InviteStatus.PENDING }).exec();
+    const org = this.requestContextService.getOrgId();
+    const result = await this.inviteModel.deleteOne({ _id: inviteId, org, status: InviteStatus.PENDING }).exec();
     if (result.deletedCount === 0) {
       throw new NotFoundException('Pending invite not found.');
     }
   }
 
   async resendInvite(inviteId: string): Promise<InviteDto> {
+    const org = this.requestContextService.getOrgId();
     const invite = await this.inviteModel
-      .findOneAndUpdate({ _id: inviteId, status: InviteStatus.PENDING }, { updatedAt: new Date() }, { new: true })
+      .findOneAndUpdate({ _id: inviteId, org, status: InviteStatus.PENDING }, { updatedAt: new Date() }, { new: true })
       .lean<InviteDocument>()
       .exec();
     if (!invite) {

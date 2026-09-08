@@ -49,18 +49,23 @@ export class RoleService {
     return result.map((role) => this.getTransformedRole(role));
   }
 
+  /**
+   * Deliberately a hard delete: the unique `{ role, org }` index counts soft-deleted rows, so
+   * leaving the document would block ever re-creating a role with the same name.
+   */
   async deleteRole(payload: DeleteRoleDto): Promise<void> {
     const { _id, reassignRoleId } = payload;
-    const role = await this.roleModel.findById(_id).lean<RoleDocument>().exec();
+    const org = this.requestContextService.getOrgId();
+    const role = await this.roleModel.findOne({ _id, org }).lean<RoleDocument>().exec();
     if (!role) throw new NotFoundException('Role not found.');
     if (role.isAdmin) throw new ForbiddenException('Cannot delete admin role.');
 
     if (reassignRoleId) {
-      const reassignRole = await this.roleModel.findById(reassignRoleId).lean<RoleDocument>().exec();
+      const reassignRole = await this.roleModel.findOne({ _id: reassignRoleId, org }).lean<RoleDocument>().exec();
       if (!reassignRole) throw new NotFoundException('Reassign role not found.');
     }
 
-    await this.roleModel.deleteOne({ _id, isAdmin: { $ne: true } }).exec();
+    await this.roleModel.deleteOne({ _id, org, isAdmin: { $ne: true } }).exec();
   }
 
   async findByName(org: string | Types.ObjectId, role: string): Promise<RoleDocument | null> {
@@ -70,6 +75,11 @@ export class RoleService {
       .exec();
   }
 
+  /**
+   * Reads roles by id across organizations, on purpose: a user can belong to more than one org,
+   * and the initial-login-data response resolves permissions for all of them at once. The ids
+   * always come from user rows the caller is already entitled to.
+   */
   async getRolesByIds(ids: (string | Types.ObjectId)[]): Promise<RoleDocument[]> {
     return this.roleModel
       .find({ _id: { $in: ids }, _deleted: { $ne: true } })

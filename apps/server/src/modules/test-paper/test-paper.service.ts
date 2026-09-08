@@ -24,10 +24,6 @@ export class TestPaperService {
     return this.testPaperModel.find({ org, _deleted: { $ne: true } }).lean<TestPaperDocument[]>();
   }
 
-  async getTestPaperById(id: string): Promise<TestPaperDocument | null> {
-    return this.testPaperModel.findOne({ _id: id, _deleted: { $ne: true } }).lean<TestPaperDocument>();
-  }
-
   async updateTotalQuestionsAndMarks(
     org: Types.ObjectId,
     testPaperId: string,
