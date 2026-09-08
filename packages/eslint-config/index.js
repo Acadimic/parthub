@@ -41,6 +41,17 @@ const shouldRules = {
     { ignorePrimitives: { string: true, number: true, boolean: true } },
   ],
 
+  // Two rules from typescript-eslint's recommended set need calibrating for this codebase.
+  // They are `error` there, and both are right in spirit, so they stay errors with the option
+  // that matches how the code is actually written.
+  //
+  // `interface IUser extends Instance<typeof User> {}` is the repo's naming pattern for an MST
+  // instance type — 38 declarations across the two Next apps. `with-single-extends` keeps those
+  // while still rejecting a genuinely empty `interface IProps {}`, which is what you want gone.
+  '@typescript-eslint/no-empty-object-type': ['error', { allowInterfaces: 'with-single-extends' }],
+  // `urls.length > 0 && setPresignedUrl(urls[0]);` is used deliberately in a dozen places.
+  '@typescript-eslint/no-unused-expressions': ['error', { allowShortCircuit: true }],
+
   // --- Leave nothing behind ------------------------------------------------------------------
   // An unused binding is either dead code or a rename that was not finished.
   '@typescript-eslint/no-unused-vars': [

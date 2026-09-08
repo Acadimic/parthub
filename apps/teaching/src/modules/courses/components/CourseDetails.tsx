@@ -1,9 +1,7 @@
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 
-interface IProps {}
-
-export const CourseDetails = observer(({}: IProps) => {
+export const CourseDetails = observer(() => {
   const { selectorStore, standardStore } = useStores();
   const { selectedCourse } = selectorStore;
   const { getStandardsByIds } = standardStore;

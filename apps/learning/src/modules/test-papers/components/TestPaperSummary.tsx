@@ -3,10 +3,6 @@ import { useStores } from '@stores';
 import { getTimeString, getTwoDigit } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 
-interface IProps {
-  // timeLeftString: string;
-}
-
 interface IRow {
   label: string;
   value: string;
@@ -14,7 +10,7 @@ interface IRow {
   icon: Icon;
 }
 
-export const TestPaperSummary = observer(({}: IProps) => {
+export const TestPaperSummary = observer(() => {
   const { testPaperStore } = useStores();
   const { exam } = testPaperStore;
 

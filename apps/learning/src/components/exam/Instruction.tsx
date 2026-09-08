@@ -2,9 +2,7 @@ import { Html } from '@components/others';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 
-interface IProps {}
-
-export const Instruction = observer(({}: IProps) => {
+export const Instruction = observer(() => {
   const { testPaperStore } = useStores();
   const { exam } = testPaperStore;
   if (!exam) return null;
