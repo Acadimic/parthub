@@ -1,7 +1,8 @@
-import { IsMongoId, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { BaseOwnedDto } from '../base-owned.dto';
 
 export class ChapterDto extends BaseOwnedDto {
+  @IsNotEmpty()
   @IsMongoId()
   _id: string;
 

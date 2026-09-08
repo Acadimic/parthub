@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsDateString,
   IsMongoId,
+  IsNotEmpty,
   IsNumber,
   IsObject,
   IsOptional,
@@ -32,6 +33,7 @@ export class CourseStatsDto {
  * plugin stamps them from the request context, so anything a client sends is overwritten.
  */
 export class CourseDto extends BaseOwnedDto {
+  @IsNotEmpty()
   @IsMongoId()
   _id: string;
 

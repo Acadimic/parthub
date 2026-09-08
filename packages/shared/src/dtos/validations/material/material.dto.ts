@@ -1,8 +1,9 @@
-import { IsArray, IsEnum, IsMongoId, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { LevelType } from '../../../enums';
 import { BaseOwnedDto } from '../base-owned.dto';
 
 export class MaterialDto extends BaseOwnedDto {
+  @IsNotEmpty()
   @IsMongoId()
   _id: string;
 

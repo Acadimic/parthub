@@ -8,9 +8,9 @@ import { BaseOwnedDto } from '../base-owned.dto';
  * is ignored rather than trusted.
  */
 export class FollowerDto extends BaseOwnedDto {
-  @IsOptional()
+  @IsNotEmpty()
   @IsMongoId()
-  _id?: string;
+  _id: string;
 
   @IsOptional()
   @IsMongoId()

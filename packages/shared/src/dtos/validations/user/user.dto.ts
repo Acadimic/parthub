@@ -1,7 +1,7 @@
 import { AccountType, Gender } from '../../../enums/user.enum';
 import { OrgType } from '../../../enums/org.enum';
 import { DefaultRole } from '../../../enums/role.enum';
-import { Expose, Transform, Type } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -45,7 +45,8 @@ export class CreateUserDto extends RegisterUserDto {
 
 export class UserDto {
   @Expose()
-  @Type(() => IsMongoId)
+  @IsNotEmpty()
+  @IsMongoId()
   _id: string;
 
   @Expose()
@@ -244,7 +245,8 @@ export class FindByOrgIdAndUidDto {
 
 export class OrgDto {
   @Expose()
-  @Type(() => IsMongoId)
+  @IsNotEmpty()
+  @IsMongoId()
   _id: string;
 
   @Expose()

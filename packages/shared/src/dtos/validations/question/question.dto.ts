@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsMongoId, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { LevelType } from '../../../enums';
 import { QuestionType } from '../../../enums';
 import { BaseOwnedDto } from '../base-owned.dto';
@@ -16,6 +16,7 @@ export class MarkingsDto {
 }
 
 export class QuestionDto extends BaseOwnedDto {
+  @IsNotEmpty()
   @IsMongoId()
   _id: string;
 

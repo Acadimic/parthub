@@ -4,9 +4,9 @@ import { BaseOwnedDto } from '../base-owned.dto';
 
 /** The single field list for a reaction, used for both the request body and the response. */
 export class ReactionDto extends BaseOwnedDto {
-  @IsOptional()
+  @IsNotEmpty()
   @IsMongoId()
-  _id?: string;
+  _id: string;
 
   @IsNotEmpty()
   @IsMongoId()

@@ -23,6 +23,7 @@ export class InviteUserDto {
 
 export class InviteDto {
   @IsNotEmpty()
+  @IsMongoId()
   _id: string;
 
   @IsOptional()

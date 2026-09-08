@@ -1,8 +1,18 @@
-import { IsBoolean, IsDateString, IsEnum, IsMongoId, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsMongoId,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { PaperCategoryType, PaperType } from '../../../enums';
 import { BaseOwnedDto } from '../base-owned.dto';
 
 export class TestPaperDto extends BaseOwnedDto {
+  @IsNotEmpty()
   @IsMongoId()
   _id: string;
 
