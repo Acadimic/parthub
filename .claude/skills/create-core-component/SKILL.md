@@ -52,39 +52,49 @@ apps (`apps/learning`, `apps/teaching`, `apps/admin`) consume it as TypeScript s
 
 ## Pattern to Follow
 
+Taken from `core/TextInput/index.tsx`. The label, the `required` asterisk, the error state and the
+helper text are the wrapper's job; the caller passes flags, not markup.
+
 ```tsx
-import { ClassValue } from 'clsx';
-import { ReactNode } from 'react';
 import { cn } from '../../lib/cn';
 import { Label } from '../Label';
 import { ShadcnComponent } from '../../ui/component-name';
 
-export interface IComponentProps extends React.ComponentProps<typeof ShadcnComponent> {
-  id?: string;
-  label?: ReactNode;
-  error?: ReactNode;
-  classNames?: {
-    root?: ClassValue;
-    label?: ClassValue;
-    // component-specific key (e.g. input, trigger)
-    error?: ClassValue;
-  };
+export interface IComponentProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  required?: boolean;
+  error?: boolean;
+  helperText?: string;
+  /** Classes for the control itself; `className` styles the wrapper around it. */
+  inputClassName?: string;
+  leftSection?: React.ReactNode;
+  rightSection?: React.ReactNode;
 }
 
-export const Component = ({ id, label, error, classNames = {}, className, ...props }: IComponentProps) => {
+export const Component = ({ label, required, error, helperText, inputClassName, className, ...rest }: IComponentProps) => {
   return (
-    <div className={cn('grid w-full items-center gap-2', classNames.root)}>
-      {label && (
-        <Label htmlFor={id} className={cn(classNames.label)} required={props.required}>
-          {label}
-        </Label>
+    <div className={className}>
+      {label && <Label label={label} required={required} />}
+      <ShadcnComponent
+        {...rest}
+        className={cn(
+          'text-sm font-medium bg-transparent',
+          error ? 'border-red-primary' : 'border-color-border',
+          inputClassName,
+        )}
+      />
+      {helperText && (
+        <p className={cn('text-xs mt-1', error ? 'text-red-primary' : 'text-color-secondary')}>{helperText}</p>
       )}
-      <ShadcnComponent id={id} className={cn(className)} {...props} />
-      {error && <div className={cn('text-sm text-red-primary', classNames.error)}>{error}</div>}
     </div>
   );
 };
 ```
+
+**`error` is a boolean, `helperText` is the message.** Every input wrapper in the package works
+this way; a wrapper taking `error: ReactNode` would be the odd one out. Colours come from theme
+tokens — see the `style-with-tailwind` skill, and never use shadcn's own `border-input` or
+`ring-ring` class names, which resolve to nothing here.
 
 ## Key Conventions
 

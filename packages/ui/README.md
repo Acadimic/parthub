@@ -18,6 +18,7 @@ packages/ui/src/
   contexts/  colour mode                2 files
   hooks/     useWindowDimensions        2 files
   themes/    light and dark palettes    4 files    consumed by each tailwind.config.js
+             (see the style-with-tailwind skill for the token names)
 ```
 
 The three component layers stack in one direction only. `ui/` knows nothing

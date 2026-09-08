@@ -114,6 +114,8 @@ The `verify-changes` skill has the full sequence.
 
 ## Related skills
 
+- `style-with-tailwind` — the colour tokens, and why a shadcn class name may do nothing here.
+- `build-a-form` — the form, validation and toast pattern the inputs sit in.
 - `create-core-component` — creates the wrapper, and covers adding a shadcn primitive.
 - `add-app-screen` — the page, module and store around the UI you are building.
 - `define-data-shape` — where a prop's type belongs, and why `IColumnData<T>` defaults to `unknown`.

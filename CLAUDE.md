@@ -11,6 +11,8 @@ having to be remembered. Each one is split into **must** (a violation is a defec
 | Skill                   | Use it before                                                         |
 | ----------------------- | --------------------------------------------------------------------- |
 | `use-ui-component`      | writing any UI in a feature — decides what already exists             |
+| `style-with-tailwind`   | writing a className, picking a colour, or editing a theme or config   |
+| `build-a-form`          | any form, edit dialog or upsert modal in an app                       |
 | `create-core-component` | adding a wrapper in `packages/ui/src/core/`, or a shadcn primitive    |
 | `add-app-screen`        | touching an app's `pages/`, `modules/`, `layouts/` or `stores/`       |
 | `add-api-endpoint`      | adding or changing a route in an existing server module               |
