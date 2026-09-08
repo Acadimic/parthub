@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as sgMail from '@sendgrid/mail';
+// A default import, not `import * as`: TypeScript 6 forces esModuleInterop on, and its
+// __importStar helper copies only own enumerable properties — @sendgrid/mail exposes
+// setApiKey and send on the prototype, so a namespace import loses them at runtime.
+import sgMail from '@sendgrid/mail';
 import { SecretsService } from '../../secrets/secrets.service';
 import { Secrets } from '@secrets/secrets';
 import { SendGridDynamicEmailDto, SendGridHtmlEmailDto, SendGridTextEmailDto } from './sendgrid.dto';
