@@ -12,7 +12,8 @@
     "./hooks": "./src/hooks/index.ts",
     "./lib": "./src/lib/index.ts",
     "./themes": "./src/themes/index.ts",
-    "./types": "./src/types/index.ts"
+    "./types": "./src/types/index.ts",
+    "./app": "./src/app/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

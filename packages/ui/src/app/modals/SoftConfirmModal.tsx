@@ -1,4 +1,5 @@
-import { Modal, ModalFooter } from '.';
+import { ModalFooter } from './components';
+import { Modal } from './Modal';
 
 interface IProps {
   isOpen: boolean;

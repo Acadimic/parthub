@@ -1,1 +1,1 @@
-export * from './ErrorBoundary';
+export * from '@parthhub/ui/app';

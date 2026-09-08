@@ -1,4 +1,4 @@
-import { ColorModeContext } from '@components/contexts';
+import { ColorModeContext } from '../../contexts';
 import { Moon, Sun } from '@phosphor-icons/react';
 import { useContext, useEffect, useState } from 'react';
 

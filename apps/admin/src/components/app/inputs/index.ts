@@ -1,2 +1,1 @@
-export * from './Label';
-export * from './TextInput';
+export * from '@parthhub/ui/app';

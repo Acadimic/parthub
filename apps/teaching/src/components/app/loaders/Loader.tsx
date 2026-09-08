@@ -1,4 +1,4 @@
-import { Spinner } from './Spinner';
+import { Spinner } from '@parthhub/ui/app';
 
 interface IProps {
   isLoading: boolean;

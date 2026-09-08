@@ -1,1 +1,1 @@
-export * from './Tooltip';
+export * from '@parthhub/ui/app';

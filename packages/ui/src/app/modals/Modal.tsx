@@ -1,4 +1,4 @@
-import { PositionType } from '@enums';
+import { PositionType } from '@parthhub/shared';
 import { X } from '@phosphor-icons/react';
 import * as React from 'react';
 

@@ -1,4 +1,4 @@
-import { Spinner } from '..';
+import { Spinner } from './Spinner';
 
 interface IProps {
   loading: boolean;

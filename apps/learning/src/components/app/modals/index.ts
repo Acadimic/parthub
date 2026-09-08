@@ -1,4 +1,2 @@
-export * from './components';
+export * from '@parthhub/ui/app';
 export * from './FullScreenModal';
-export * from './Modal';
-export * from './SoftConfirmModal';

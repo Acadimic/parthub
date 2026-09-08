@@ -1,4 +1,2 @@
-export * from './BackdropLoader';
-export * from './FullScreenLoader';
+export * from '@parthhub/ui/app';
 export * from './Loader';
-export * from './Spinner';
