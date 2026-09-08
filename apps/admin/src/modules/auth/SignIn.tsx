@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button, TextInput } from '@parthhub/ui/app';
+import { Button, TextInput } from '@repo/ui/app';
 import { ILoginUser } from '@interfaces';
 import { ArrowCircleLeftIcon, EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
 import { getFirebaseErrorMessage, signIn } from '@utils/firebase';

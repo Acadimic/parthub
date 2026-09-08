@@ -9,7 +9,7 @@ import { capitalize, logOut } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import * as React from 'react';
-import { Menu } from '@parthhub/ui/app';
+import { Menu } from '@repo/ui/app';
 
 export const ProfileDropdown = observer(() => {
   const { push } = useRouter();

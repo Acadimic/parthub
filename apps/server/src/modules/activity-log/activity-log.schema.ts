@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { AccessType, ActivityAction } from '@parthhub/shared';
+import { AccessType, ActivityAction } from '@repo/shared';
 import { HydratedDocument, Types } from 'mongoose';
 
 export type ActivityLogDocument = HydratedDocument<ActivityLog>;

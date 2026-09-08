@@ -1,4 +1,4 @@
-import { Card } from '@parthhub/ui/app';
+import { Card } from '@repo/ui/app';
 import { PresignedImage } from '@components/app/attachments';
 import { StandardWithLogo } from '@components/common';
 import { ICourse, useStores } from '@stores';
@@ -56,7 +56,7 @@ export const CourseCard = observer(({ course }: { course: ICourse }) => {
   );
 });
 
-// import { Button } from '@parthhub/ui/app';
+// import { Button } from '@repo/ui/app';
 // import { DotsNineIcon } from '@phosphor-icons/react';
 // import { ICourse } from '@stores';
 // import { useRouter } from 'next/router';

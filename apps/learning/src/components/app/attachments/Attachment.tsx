@@ -1,7 +1,7 @@
 import { FileExtension, LinkType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { FilePdfIcon, ImagesIcon, LinkSimpleIcon, XIcon, YoutubeLogoIcon } from '@phosphor-icons/react';
-import { Spinner, Tooltip } from '@parthhub/ui/app';
+import { Spinner, Tooltip } from '@repo/ui/app';
 
 interface IProps {
   fileName: string;

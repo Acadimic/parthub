@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@parthhub/shared', '@parthhub/ui'],
+  transpilePackages: ['@repo/shared', '@repo/ui'],
   experimental: {
     optimizePackageImports: ['@phosphor-icons/react'],
   },

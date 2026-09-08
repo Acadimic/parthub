@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { InviteStatus } from '@parthhub/shared';
+import { InviteStatus } from '@repo/shared';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 @Schema({ timestamps: true, virtuals: true })

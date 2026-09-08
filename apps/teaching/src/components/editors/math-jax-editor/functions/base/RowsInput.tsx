@@ -1,4 +1,4 @@
-import { Label, Switch, TextInput } from '@parthhub/ui/app';
+import { Label, Switch, TextInput } from '@repo/ui/app';
 import { useEffect, useState } from 'react';
 import { getEquationInitialContent } from '../../../math-jax-editor/util';
 import { Actions, EquationBlock, EquationEditor, EquationType } from '@components/editors';

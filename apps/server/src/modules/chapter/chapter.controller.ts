@@ -1,10 +1,10 @@
-import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { PermissionItem, Subdomain } from '@repo/shared';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, HttpStatus } from '@nestjs/common';
 import { ChapterService } from './chapter.service';
 import { RequestContextService } from '../../context/request-context.service';
-import { ChapterDto, StandardSubjectQueryDto } from '@parthhub/shared/validations';
+import { ChapterDto, StandardSubjectQueryDto } from '@repo/shared/validations';
 
 @Controller('chapter')
 export class ChapterController {

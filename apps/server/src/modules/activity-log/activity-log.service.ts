@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ActivityAction } from '@parthhub/shared';
+import { ActivityAction } from '@repo/shared';
 import { Model, Types } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
 import { ActivityLogCoreService } from './activity-log-core.service';

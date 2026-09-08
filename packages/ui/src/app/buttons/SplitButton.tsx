@@ -2,7 +2,7 @@ import { IMenuItem } from '../../types';
 import { CaretDownIcon } from '@phosphor-icons/react';
 import * as React from 'react';
 import { Menu } from '../menus';
-import { Button } from '@parthhub/ui/app';
+import { Button } from '@repo/ui/app';
 
 interface IProps {
   text: string;

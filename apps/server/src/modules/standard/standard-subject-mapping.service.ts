@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { StandardSubjectMapping, StandardSubjectMappingDocument } from './standard-subject-mapping.schema';
-import { StandardSubjectMappingDto } from '@parthhub/shared/validations';
+import { StandardSubjectMappingDto } from '@repo/shared/validations';
 
 @Injectable()
 export class StandardSubjectMappingService {

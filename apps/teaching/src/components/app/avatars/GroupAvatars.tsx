@@ -1,5 +1,5 @@
 import { IUser } from '@stores';
-import { Tooltip } from '@parthhub/ui/app';
+import { Tooltip } from '@repo/ui/app';
 import { Avatar } from './Avatar';
 
 interface IProps {

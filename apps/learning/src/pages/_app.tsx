@@ -1,5 +1,5 @@
-import { ErrorBoundaryFallback, FullScreenLoader, InternetStatus } from '@parthhub/ui/app';
-import { ColorModeContext } from '@parthhub/ui/contexts';
+import { ErrorBoundaryFallback, FullScreenLoader, InternetStatus } from '@repo/ui/app';
+import { ColorModeContext } from '@repo/ui/contexts';
 import { Layout, StorageKey, Theme } from '@enums';
 import { AuthLayout, PageLayout, PageNavigationLayout, PublicLayout, SidebarLayout } from '@layouts';
 import { ToastContainer } from '@modules/toasts';

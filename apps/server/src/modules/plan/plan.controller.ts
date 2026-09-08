@@ -1,9 +1,9 @@
-import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { PermissionItem, Subdomain } from '@repo/shared';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, HttpStatus } from '@nestjs/common';
 import { PlanService } from './plan.service';
-import { PlanDto } from '@parthhub/shared/validations';
+import { PlanDto } from '@repo/shared/validations';
 import { RequestContextService } from '../../context/request-context.service';
 
 @Controller('plan')

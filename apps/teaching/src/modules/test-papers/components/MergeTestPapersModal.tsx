@@ -1,5 +1,5 @@
 import { RadioSelection } from '@components/app/selections';
-import { Modal, ModalFooter, SoftConfirmModal, TextInput } from '@parthhub/ui/app';
+import { Modal, ModalFooter, SoftConfirmModal, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { TestPaperService } from '@services';
 import { ITestPaper, useStores } from '@stores';

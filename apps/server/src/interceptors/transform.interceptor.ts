@@ -1,5 +1,5 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
-import { SuccessResponse } from '@parthhub/shared';
+import { SuccessResponse } from '@repo/shared';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 

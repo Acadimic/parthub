@@ -1,4 +1,4 @@
-import { SuccessResponse } from '@parthhub/shared';
+import { SuccessResponse } from '@repo/shared';
 import axios, { AxiosError } from 'axios';
 import { API } from '../enums';
 import { generateAndSetNewToken } from '../utils/firebase';
@@ -43,7 +43,7 @@ const createAxiosInstance = (isUnAuth: boolean, url: string) => {
 
 /**
  * Calls an authenticated endpoint. `T` is the response contract from
- * `@parthhub/shared`, so the caller gets `{ data: T }` rather than `any`.
+ * `@repo/shared`, so the caller gets `{ data: T }` rather than `any`.
  */
 export const callAuthApi = async <T = unknown>(
   url: string,

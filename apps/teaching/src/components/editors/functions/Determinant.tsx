@@ -1,4 +1,4 @@
-import { TextInput } from '@parthhub/ui/app';
+import { TextInput } from '@repo/ui/app';
 import { IFunctionProps } from '@interfaces';
 import { useState } from 'react';
 import RowColEntry from './function-models/RowColEntry';

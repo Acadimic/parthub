@@ -3,7 +3,7 @@ import { ISelectItem } from '@interfaces';
 import { CaretDownIcon, CheckIcon, MagnifyingGlassIcon, SquaresFourIcon, XIcon } from '@phosphor-icons/react';
 import { ALL } from '@utils/constants';
 import * as React from 'react';
-import { TextInput } from '@parthhub/ui/app';
+import { TextInput } from '@repo/ui/app';
 
 const capitalize = (str: string) => (str ? str.charAt(0).toUpperCase() + str.slice(1) : '');
 

@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { PermissionItem } from '@parthhub/shared';
+import { PermissionItem } from '@repo/shared';
 import { Model } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
 import { Role, RoleDocument } from '../role/role.schema';

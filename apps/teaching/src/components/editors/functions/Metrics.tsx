@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { TextInput } from '@parthhub/ui/app';
+import { TextInput } from '@repo/ui/app';
 import { IFunctionProps } from '@interfaces';
 import RowColEntry from './function-models/RowColEntry';
 

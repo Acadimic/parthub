@@ -1,4 +1,4 @@
-import { Button, Menu } from '@parthhub/ui/app';
+import { Button, Menu } from '@repo/ui/app';
 import { CheckIcon, CopyIcon, GitMergeIcon, PencilIcon, PlusIcon, ShareIcon, WarningIcon } from '@phosphor-icons/react';
 import { ITestPaper, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';

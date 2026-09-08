@@ -1,4 +1,4 @@
-import { capitalize, clearLocalStorage, splitCamelCase } from '@parthhub/ui/lib';
+import { capitalize, clearLocalStorage, splitCamelCase } from '@repo/ui/lib';
 import { ISelectItem } from '@interfaces';
 import { IStandard } from '@stores';
 import { WEEK_DAYS_INTEGER_MAPPINGS } from '../constants';

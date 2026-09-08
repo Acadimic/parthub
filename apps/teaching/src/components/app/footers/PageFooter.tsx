@@ -1,7 +1,7 @@
 import { Container } from '@components/others';
 import Link from 'next/link';
 import React from 'react';
-import { FullLogo } from '@parthhub/ui/app';
+import { FullLogo } from '@repo/ui/app';
 
 interface FooterSection {
   title: string;

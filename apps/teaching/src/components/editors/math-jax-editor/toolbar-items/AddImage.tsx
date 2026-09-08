@@ -1,4 +1,4 @@
-import { Label } from '@parthhub/ui/app';
+import { Label } from '@repo/ui/app';
 import { errorToast } from '@utils/helpers';
 import { useState } from 'react';
 import { Actions } from '../Actions';

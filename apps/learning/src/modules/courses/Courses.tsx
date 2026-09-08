@@ -1,4 +1,4 @@
-import { FullScreenLoader } from '@parthhub/ui/app';
+import { FullScreenLoader } from '@repo/ui/app';
 import { Container } from '@components/others';
 import { DotsNineIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';

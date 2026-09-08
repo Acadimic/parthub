@@ -1,5 +1,5 @@
 import { Select } from '@components/app/selects';
-import { Button, TextInput } from '@parthhub/ui/app';
+import { Button, TextInput } from '@repo/ui/app';
 import { Layout } from '@enums';
 import { ISelectItem } from '@interfaces';
 import { HouseIcon } from '@phosphor-icons/react';

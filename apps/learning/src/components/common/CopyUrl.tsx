@@ -1,4 +1,4 @@
-import { Tooltip } from '@parthhub/ui/app';
+import { Tooltip } from '@repo/ui/app';
 import { CopyIcon } from '@phosphor-icons/react';
 import { successToast } from '@utils/helpers';
 

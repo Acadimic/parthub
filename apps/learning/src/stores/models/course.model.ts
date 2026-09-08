@@ -1,4 +1,4 @@
-import type { CourseDto } from '@parthhub/shared';
+import type { CourseDto } from '@repo/shared';
 import { ISelectItem } from '@interfaces';
 import { getRoot, Instance, SnapshotIn, SnapshotOut, types as t } from 'mobx-state-tree';
 import { IStore } from '../root.store';

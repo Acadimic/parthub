@@ -1,8 +1,8 @@
 import React from 'react';
 import { useSvgDrawing } from 'react-hooks-svgdrawing';
 
-import { Button } from '@parthhub/ui/app';
-import { Checkbox } from '@parthhub/ui/core';
+import { Button } from '@repo/ui/app';
+import { Checkbox } from '@repo/ui/core';
 import { IFunctionProps } from '@interfaces';
 
 import { MAX_HEIGHTS, OPTIONS } from '@utils/constants';

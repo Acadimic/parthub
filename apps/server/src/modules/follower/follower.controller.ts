@@ -1,5 +1,5 @@
-import { FollowerDto } from '@parthhub/shared/validations';
-import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { FollowerDto } from '@repo/shared/validations';
+import { PermissionItem, Subdomain } from '@repo/shared';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, HttpStatus } from '@nestjs/common';

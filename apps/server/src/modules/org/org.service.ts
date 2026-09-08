@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { OrgType } from '@parthhub/shared';
-import { OrgDto, UpdateOrgDto } from '@parthhub/shared/validations';
+import { OrgType } from '@repo/shared';
+import { OrgDto, UpdateOrgDto } from '@repo/shared/validations';
 import { Model, Types } from 'mongoose';
 import { CreateOrgDto } from './org.dto';
 import { Org, OrgDocument } from './org.schema';

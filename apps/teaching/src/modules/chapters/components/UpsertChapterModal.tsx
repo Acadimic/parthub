@@ -1,4 +1,4 @@
-import { Modal, ModalFooter, TextInput } from '@parthhub/ui/app';
+import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { ChapterService } from '@services';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';

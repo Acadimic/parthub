@@ -1,4 +1,4 @@
-import { Logo } from '@parthhub/ui/app';
+import { Logo } from '@repo/ui/app';
 import { HeaderTitle } from './HeaderTitle';
 
 interface IProps {

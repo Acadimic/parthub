@@ -1,4 +1,4 @@
-import { Button, FullLogo, Logo, ToggleTheme } from '@parthhub/ui/app';
+import { Button, FullLogo, Logo, ToggleTheme } from '@repo/ui/app';
 import { StorageKey } from '@enums';
 import { CaretDoubleRightIcon, CaretLeftIcon } from '@phosphor-icons/react';
 import { observer } from 'mobx-react-lite';

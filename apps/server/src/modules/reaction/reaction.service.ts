@@ -1,4 +1,4 @@
-import { ReactionDto } from '@parthhub/shared/validations';
+import { ReactionDto } from '@repo/shared/validations';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';

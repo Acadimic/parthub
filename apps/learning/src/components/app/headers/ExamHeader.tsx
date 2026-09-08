@@ -1,7 +1,7 @@
 import { DotsNineIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
-import { ToggleTheme } from '@parthhub/ui/app';
+import { ToggleTheme } from '@repo/ui/app';
 import { Timer } from './';
 
 interface IProps {

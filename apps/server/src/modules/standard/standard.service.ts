@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Standard, StandardDocument } from './standard.schema';
-import { StandardDto } from '@parthhub/shared/validations';
+import { StandardDto } from '@repo/shared/validations';
 
 @Injectable()
 export class StandardService {

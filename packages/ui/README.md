@@ -1,4 +1,4 @@
-# @parthhub/ui
+# @repo/ui
 
 Every shared React component for the `learning`, `teaching` and `admin` apps.
 
@@ -28,15 +28,15 @@ package imports an app.
 
 | Import                  | Contents                                                        |
 | ----------------------- | --------------------------------------------------------------- |
-| `@parthhub/ui`          | `core/`, `contexts/`, `hooks/`                                  |
-| `@parthhub/ui/core`     | the wrappers: Button, TextInput, Select, Modal, Table, ...      |
-| `@parthhub/ui/app`      | the composed layer: SplitButton, DateInput, Carousel, Menu, ... |
-| `@parthhub/ui/ui/*`     | a single shadcn primitive, e.g. `@parthhub/ui/ui/switch`        |
-| `@parthhub/ui/lib`      | `cn`, date helpers, browser-safe utilities, `getProfilePayload` |
-| `@parthhub/ui/types`    | `ISelectItem`, `IMenuItem`, `IColumnData`, `IStep`, `IColor`    |
-| `@parthhub/ui/contexts` | `ColorModeContext`                                              |
-| `@parthhub/ui/hooks`    | `useWindowDimensions`                                           |
-| `@parthhub/ui/themes`   | `light`, `dark`, `getTheme`                                     |
+| `@repo/ui`          | `core/`, `contexts/`, `hooks/`                                  |
+| `@repo/ui/core`     | the wrappers: Button, TextInput, Select, Modal, Table, ...      |
+| `@repo/ui/app`      | the composed layer: SplitButton, DateInput, Carousel, Menu, ... |
+| `@repo/ui/ui/*`     | a single shadcn primitive, e.g. `@repo/ui/ui/switch`        |
+| `@repo/ui/lib`      | `cn`, date helpers, browser-safe utilities, `getProfilePayload` |
+| `@repo/ui/types`    | `ISelectItem`, `IMenuItem`, `IColumnData`, `IStep`, `IColor`    |
+| `@repo/ui/contexts` | `ColorModeContext`                                              |
+| `@repo/ui/hooks`    | `useWindowDimensions`                                           |
+| `@repo/ui/themes`   | `light`, `dark`, `getTheme`                                     |
 
 **`core` and `app` are separate subpaths on purpose.** Fourteen names exist in
 both with a different API: `Breadcrumb`, `Button`, `Card`, `Checkbox`,
@@ -49,7 +49,7 @@ is never re-exported from the root.
 Feature code imports the package directly. There are no pass-through barrels.
 
 ```ts
-import { Button, FullScreenLoader, TextInput } from '@parthhub/ui/app';
+import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { DataTable } from '@components/app/tables';
 ```
 
@@ -64,14 +64,14 @@ into this package later means updating its call sites, so check
 
 ## Rules
 
-1. **Feature code never imports `ui/`.** It imports `@parthhub/ui/core` for a
-   wrapper or `@parthhub/ui/app` for a composed component. Use
+1. **Feature code never imports `ui/`.** It imports `@repo/ui/core` for a
+   wrapper or `@repo/ui/app` for a composed component. Use
    `/create-core-component` to add a wrapper.
 2. **Inside the package, imports are relative.** `../../lib/cn`, not
    `@utils/cn`. An app path alias does not resolve here.
 3. **A component in the package may not read app state.** No `@stores`, no
    `@services`, no MobX. Everything arrives through props.
-4. **Shared data types come from `@parthhub/shared`.** `types/` holds only the
+4. **Shared data types come from `@repo/shared`.** `types/` holds only the
    types that need React, such as a `ReactNode` label.
 5. **One component per file, named after the file.** The folder's `index.ts`
    re-exports it.
@@ -99,10 +99,10 @@ Then run `pnpm typecheck:ui` and typecheck at least one app.
    coupled sibling by relative path cannot move until that sibling does. This is
    easy to miss.
 3. Copy it in, rewrite its aliases to relative paths, and rewrite `@enums` to
-   `@parthhub/shared`.
+   `@repo/shared`.
 4. Delete it from every app, and delete the folder's `index.ts` if nothing local
    is left in it.
-5. Repoint every call site at `@parthhub/ui/app`, including sibling components
+5. Repoint every call site at `@repo/ui/app`, including sibling components
    that imported it by relative path.
 
 ## What deliberately stays in the apps

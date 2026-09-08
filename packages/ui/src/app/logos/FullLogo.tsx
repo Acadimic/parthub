@@ -1,4 +1,4 @@
-import { Theme } from '@parthhub/shared';
+import { Theme } from '@repo/shared';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 

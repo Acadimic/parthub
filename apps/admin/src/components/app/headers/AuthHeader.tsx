@@ -1,4 +1,4 @@
-import { ToggleTheme } from '@parthhub/ui/app';
+import { ToggleTheme } from '@repo/ui/app';
 
 export const AuthHeader = () => {
   return (

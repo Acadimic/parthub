@@ -24,7 +24,7 @@ consistent without duplicating a controller per app.
 7. **Services are app-agnostic and org-scoped.** A service takes `org` as an
    argument and knows nothing about subdomains. The same service method serves
    all three apps.
-8. **Shared request and response types live in `@parthhub/shared`.** DTOs are
+8. **Shared request and response types live in `@repo/shared`.** DTOs are
    validated by the global `ValidationPipe`, which runs with
    `forbidNonWhitelisted`, so an unknown key fails the whole request.
 
@@ -62,7 +62,7 @@ Four pieces, added once.
 ```ts
 // src/decorators/permissions.decorator.ts
 import { SetMetadata } from '@nestjs/common';
-import { PermissionItem } from '@parthhub/shared';
+import { PermissionItem } from '@repo/shared';
 
 export const PERMISSIONS_KEY = 'permissions';
 export const Permissions = (...permissions: PermissionItem[]) => SetMetadata(PERMISSIONS_KEY, permissions);
@@ -71,7 +71,7 @@ export const Permissions = (...permissions: PermissionItem[]) => SetMetadata(PER
 ```ts
 // src/decorators/subdomains.decorator.ts
 import { SetMetadata } from '@nestjs/common';
-import { Subdomain } from '@parthhub/shared';
+import { Subdomain } from '@repo/shared';
 
 export const SUBDOMAINS_KEY = 'subdomains';
 export const Subdomains = (...subdomains: Subdomain[]) => SetMetadata(SUBDOMAINS_KEY, subdomains);
@@ -87,7 +87,7 @@ import { SUBDOMAINS_KEY } from '@decorators/subdomains.decorator';
 import { PermissionService } from '@modules/permissions/permission.service';
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { PermissionItem, Subdomain } from '@repo/shared';
 import { RequestContextService } from '../context/request-context.service';
 
 @Injectable()

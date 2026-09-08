@@ -1,5 +1,5 @@
 import { Select } from '@components/app/selects';
-import { Button, SplitButton, TextInput, Modal } from '@parthhub/ui/app';
+import { Button, SplitButton, TextInput, Modal } from '@repo/ui/app';
 import { PencilIcon, PlusIcon, SquaresFourIcon, TrashIcon } from '@phosphor-icons/react';
 import { Layout } from '@enums';
 import { IPosition, ITarget } from '@interfaces';

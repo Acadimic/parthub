@@ -1,7 +1,7 @@
 import { ClockIcon } from '@phosphor-icons/react';
 import dayjs from 'dayjs';
 import { Popover } from '../popovers';
-import { TextInput } from '@parthhub/ui/app';
+import { TextInput } from '@repo/ui/app';
 
 export interface ITimeInputProps {
   label?: string;

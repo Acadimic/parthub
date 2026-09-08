@@ -1,2 +1,2 @@
-export * from '@parthhub/shared/enums';
+export * from '@repo/shared/enums';
 export * from './calendar.enum';

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { capitalize, clearLocalStorage } from '@parthhub/ui/lib';
+import { capitalize, clearLocalStorage } from '@repo/ui/lib';
 
 import { WEEK_DAYS_INTEGER_MAPPINGS, WEEK_DAYS_MAPPINGS } from '../constants';
 import { logOut as signOut } from '../firebase';

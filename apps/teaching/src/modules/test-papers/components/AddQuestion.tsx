@@ -1,4 +1,4 @@
-import { Button } from '@parthhub/ui/app';
+import { Button } from '@repo/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
 import { IOption, useStores } from '@stores';

@@ -1,5 +1,5 @@
 import { Select } from '@components/app/selects';
-import { Button, Modal, ModalFooter, TextInput } from '@parthhub/ui/app';
+import { Button, Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { PaperType, PositionType, SectionCategoryType, SectionType } from '@enums';
 import { ISelectItem } from '@interfaces';
 import { TestPaperService } from '@services';

@@ -1,5 +1,5 @@
 import { Attachments, IAttachmentProps } from '@components/app/attachments';
-import { Label } from '@parthhub/ui/app';
+import { Label } from '@repo/ui/app';
 import { Html } from '@components/others';
 import { IMaterial, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';

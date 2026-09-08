@@ -1,6 +1,6 @@
 import { Attachment } from '@components/app/attachments';
 import { Avatar } from '@components/app/avatars';
-import { Button, Card, SimpleAccordions } from '@parthhub/ui/app';
+import { Button, Card, SimpleAccordions } from '@repo/ui/app';
 import { DynamicSubtitle } from '@components/common';
 import { CollectionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';

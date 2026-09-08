@@ -1,4 +1,4 @@
-import { Card, CircularProgress, Tooltip } from '@parthhub/ui/app';
+import { Card, CircularProgress, Tooltip } from '@repo/ui/app';
 import { Marking } from '@enums';
 import { CheckIcon, MedalIcon, MinusIcon, PercentIcon, TimerIcon, XIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';

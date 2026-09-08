@@ -1,4 +1,4 @@
-import { DynamicSlider, FullScreenLoader } from '@parthhub/ui/app';
+import { DynamicSlider, FullScreenLoader } from '@repo/ui/app';
 import { Title } from '@components/others';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';

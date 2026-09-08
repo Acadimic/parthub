@@ -1,5 +1,5 @@
 import { AvatarWithName } from '@components/app/avatars';
-import { Label } from '@parthhub/ui/app';
+import { Label } from '@repo/ui/app';
 import { UserIcon } from '@phosphor-icons/react';
 import { DefaultRole } from '@enums';
 import { useStores } from '@stores';

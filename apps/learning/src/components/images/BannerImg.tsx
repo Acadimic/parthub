@@ -1,4 +1,4 @@
-import { PointerSvg } from '@parthhub/ui/app';
+import { PointerSvg } from '@repo/ui/app';
 
 export const BannerImg = () => {
   return (

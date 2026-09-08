@@ -1,6 +1,6 @@
 import { Attachments, UploadFiles } from '@components/app/attachments';
 import { Select } from '@components/app/selects';
-import { Button, Label, Modal, ModalFooter, SimpleAccordions, TextInput } from '@parthhub/ui/app';
+import { Button, Label, Modal, ModalFooter, SimpleAccordions, TextInput } from '@repo/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
 import { FileExtension, PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';

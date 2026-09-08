@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { IColor as ISharedColor, ISelectItem as ISharedSelectItem } from '@parthhub/shared';
+import type { IColor as ISharedColor, ISelectItem as ISharedSelectItem } from '@repo/shared';
 
 export type IColor = ISharedColor;
 

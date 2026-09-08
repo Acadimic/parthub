@@ -1,4 +1,4 @@
-import { PositionType } from '@parthhub/shared';
+import { PositionType } from '@repo/shared';
 import { useRouter } from 'next/router';
 import * as React from 'react';
 

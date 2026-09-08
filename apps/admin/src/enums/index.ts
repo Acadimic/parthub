@@ -1,1 +1,1 @@
-export * from '@parthhub/shared/enums';
+export * from '@repo/shared/enums';

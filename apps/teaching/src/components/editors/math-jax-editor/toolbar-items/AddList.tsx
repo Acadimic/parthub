@@ -1,4 +1,4 @@
-import { Button, Label } from '@parthhub/ui/app';
+import { Button, Label } from '@repo/ui/app';
 import { PlusIcon, XIcon } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';

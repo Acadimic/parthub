@@ -1,4 +1,4 @@
-import { IPosition, IScoreRating, StorageKey } from '@parthhub/shared';
+import { IPosition, IScoreRating, StorageKey } from '@repo/shared';
 import ObjectID from 'bson-objectid';
 import randomColor from 'randomcolor';
 import { IColor } from '../types';

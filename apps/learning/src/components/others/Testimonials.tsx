@@ -1,4 +1,4 @@
-import { DynamicSlider } from '@parthhub/ui/app';
+import { DynamicSlider } from '@repo/ui/app';
 import React from 'react';
 import { Avatar } from '../app/avatars';
 import { Container } from './Container';

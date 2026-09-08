@@ -8,8 +8,8 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { Secrets } from '@secrets/secrets';
 import { SecretsService } from '@secrets/secrets.service';
-import { AccessType, Subdomain } from '@parthhub/shared';
-import { RegisterUserDto, UserDto } from '@parthhub/shared/validations';
+import { AccessType, Subdomain } from '@repo/shared';
+import { RegisterUserDto, UserDto } from '@repo/shared/validations';
 import { INITIAL_LOGIN_DATA_URL } from '@utils/constants';
 import { getRegisterPayload, getSubdomainFromUrl } from '@utils/util';
 import { DecodedIdToken } from 'firebase-admin/auth';

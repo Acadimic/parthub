@@ -1,4 +1,4 @@
-import { FullScreenLoader } from '@parthhub/ui/app';
+import { FullScreenLoader } from '@repo/ui/app';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 

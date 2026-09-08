@@ -1,6 +1,6 @@
 import { FileExtension, LinkType } from '@enums';
 import { FilePdfIcon, ImagesIcon, LinkSimpleIcon, XIcon, YoutubeLogoIcon } from '@phosphor-icons/react';
-import { Tooltip } from '@parthhub/ui/app';
+import { Tooltip } from '@repo/ui/app';
 
 export interface IAttachmentProps {
   fileName: string;

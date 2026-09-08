@@ -1,4 +1,4 @@
-import { ModalFooter } from '@parthhub/ui/app';
+import { ModalFooter } from '@repo/ui/app';
 import { QuestionType } from '@enums';
 import { TestPaperService } from '@services';
 import { useStores } from '@stores';

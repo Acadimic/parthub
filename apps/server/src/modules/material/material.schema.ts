@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { DocumentType, FileExtension, LevelType, LinkType } from '@parthhub/shared';
+import { DocumentType, FileExtension, LevelType, LinkType } from '@repo/shared';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type AttachmentDocument = HydratedDocument<Attachment>;

@@ -1,5 +1,5 @@
 import { Select } from '@components/app/selects';
-import { Modal, ModalFooter } from '@parthhub/ui/app';
+import { Modal, ModalFooter } from '@repo/ui/app';
 import { HorizontalLineWithText } from '@components/others';
 import { ISelectItem } from '@interfaces';
 import { CourseService } from '@services';

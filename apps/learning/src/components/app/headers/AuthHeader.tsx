@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { ToggleTheme, Link, FullLogo } from '@parthhub/ui/app';
+import { ToggleTheme, Link, FullLogo } from '@repo/ui/app';
 
 export const AuthHeader = () => {
   const { pathname } = useRouter();

@@ -1,5 +1,5 @@
 import { UploadFiles } from '@components/app/attachments';
-import { Label, Modal, ModalFooter, TextArea, TextInput } from '@parthhub/ui/app';
+import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
 import { PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { MaterialService } from '@services';

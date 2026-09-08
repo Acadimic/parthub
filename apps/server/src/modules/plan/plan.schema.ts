@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { CurrencyType, PeriodType } from '@parthhub/shared';
+import { CurrencyType, PeriodType } from '@repo/shared';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type PlanDocument = HydratedDocument<Plan>;

@@ -1,5 +1,5 @@
 import { DataTable } from '@components/app/tables';
-import { Button, FullScreenLoader, TextInput } from '@parthhub/ui/app';
+import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { IColumnData } from '@interfaces';
 import { IUser, useStores } from '@stores';

@@ -1,5 +1,5 @@
 import { Select } from '@components/app/selects';
-import { Label, Modal, ModalFooter, TextInput } from '@parthhub/ui/app';
+import { Label, Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { HorizontalLineWithText } from '@components/others';
 import { PositionType } from '@enums';
 import { ISelectItem } from '@interfaces';

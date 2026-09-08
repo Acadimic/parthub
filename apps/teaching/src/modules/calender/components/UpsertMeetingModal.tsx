@@ -1,5 +1,5 @@
 import { Select } from '@components/app/selects';
-import { DateInput, Dropdown, Label, Link, Modal, ModalFooter, TextArea, TextInput, TimeInput } from '@parthhub/ui/app';
+import { DateInput, Dropdown, Label, Link, Modal, ModalFooter, TextArea, TextInput, TimeInput } from '@repo/ui/app';
 import { CircleIcon, LinkSimpleIcon } from '@phosphor-icons/react';
 import { ColorType, MeetFrequency, PositionType } from '@enums';
 import { ISelectItem } from '@interfaces';

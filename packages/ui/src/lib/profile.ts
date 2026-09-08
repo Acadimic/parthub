@@ -15,7 +15,7 @@ export interface IProfileSource {
 /**
  * Builds the body for `POST user/<subdomain>/profile`. The server runs its validation pipe with
  * `forbidNonWhitelisted`, so this must stay a whitelist of `UpdateProfileDto` fields: any extra key
- * makes the whole request fail. Keep it in sync with that DTO in `@parthhub/shared`.
+ * makes the whole request fail. Keep it in sync with that DTO in `@repo/shared`.
  */
 export const getProfilePayload = (user: IProfileSource) => ({
   firstName: user.firstName,

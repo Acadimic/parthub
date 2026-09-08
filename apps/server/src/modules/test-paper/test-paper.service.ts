@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { TestPaper, TestPaperDocument } from './test-paper.schema';
-import { TestPaperDto } from '@parthhub/shared/validations';
+import { TestPaperDto } from '@repo/shared/validations';
 
 @Injectable()
 export class TestPaperService {

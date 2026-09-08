@@ -1,1 +1,1 @@
-export * from '@parthhub/ui/themes';
+export * from '@repo/ui/themes';

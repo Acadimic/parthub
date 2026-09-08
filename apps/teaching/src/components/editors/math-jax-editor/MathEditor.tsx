@@ -1,4 +1,4 @@
-import { Label } from '@parthhub/ui/app';
+import { Label } from '@repo/ui/app';
 import { useEffect, useRef, useState } from 'react';
 import { EditorToolbar } from './EditorToolbar';
 import { EquationActions } from './EquationActions';

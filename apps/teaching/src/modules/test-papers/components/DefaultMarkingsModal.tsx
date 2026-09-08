@@ -1,4 +1,4 @@
-import { Modal, ModalFooter, TextInput } from '@parthhub/ui/app';
+import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { Marking, QuestionType } from '@enums';
 import { DefaultMarkingType } from '@stores';
 import { splitCamelCase } from '@utils/helpers';

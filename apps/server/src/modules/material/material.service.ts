@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Material, MaterialDocument } from './material.schema';
-import { MaterialDto } from '@parthhub/shared/validations';
+import { MaterialDto } from '@repo/shared/validations';
 
 @Injectable()
 export class MaterialService {

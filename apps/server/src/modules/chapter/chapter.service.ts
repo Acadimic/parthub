@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Chapter, ChapterDocument } from './chapter.schema';
-import { ChapterDto, StandardSubjectQueryDto } from '@parthhub/shared/validations';
+import { ChapterDto, StandardSubjectQueryDto } from '@repo/shared/validations';
 
 @Injectable()
 export class ChapterService {

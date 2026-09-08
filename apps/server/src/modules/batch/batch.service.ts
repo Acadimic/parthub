@@ -1,4 +1,4 @@
-import { BatchDto } from '@parthhub/shared/validations';
+import { BatchDto } from '@repo/shared/validations';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';

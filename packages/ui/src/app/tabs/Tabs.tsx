@@ -1,4 +1,4 @@
-import { IconPosition } from '@parthhub/shared';
+import { IconPosition } from '@repo/shared';
 import * as React from 'react';
 
 interface ITab {

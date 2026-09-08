@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Subject, SubjectDocument } from './subject.schema';
-import { SubjectDto } from '@parthhub/shared/validations';
+import { SubjectDto } from '@repo/shared/validations';
 
 @Injectable()
 export class SubjectService {

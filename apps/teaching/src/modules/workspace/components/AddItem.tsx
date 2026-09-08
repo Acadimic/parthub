@@ -1,4 +1,4 @@
-import { Card, Link } from '@parthhub/ui/app';
+import { Card, Link } from '@repo/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
 import React from 'react';
 

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Course, CourseDocument } from './course.schema';
-import { CourseDto } from '@parthhub/shared/validations';
+import { CourseDto } from '@repo/shared/validations';
 
 @Injectable()
 export class CourseService {

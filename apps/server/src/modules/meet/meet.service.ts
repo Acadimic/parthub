@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Meet, MeetDocument } from './meet.schema';
-import { MeetDto } from '@parthhub/shared/validations';
+import { MeetDto } from '@repo/shared/validations';
 
 @Injectable()
 export class MeetService {

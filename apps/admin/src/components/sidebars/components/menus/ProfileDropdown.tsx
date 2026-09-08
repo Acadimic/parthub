@@ -1,4 +1,4 @@
-import { Menu } from '@parthhub/ui/app';
+import { Menu } from '@repo/ui/app';
 import { IMenuItem } from '@interfaces';
 import { SignOutIcon, UserIcon } from '@phosphor-icons/react';
 import { getFirebaseUser } from '@utils/firebase';

@@ -1,4 +1,4 @@
-import { DotIndicator } from '@parthhub/ui/app';
+import { DotIndicator } from '@repo/ui/app';
 
 interface IProps {
   count: number;

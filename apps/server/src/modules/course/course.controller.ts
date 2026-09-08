@@ -1,11 +1,11 @@
-import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { PermissionItem, Subdomain } from '@repo/shared';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, Query, HttpStatus } from '@nestjs/common';
 import { toCourseDto } from './course.mapper';
 import { CourseService } from './course.service';
 import { RequestContextService } from '../../context/request-context.service';
-import { CourseDto } from '@parthhub/shared/validations';
+import { CourseDto } from '@repo/shared/validations';
 
 @Controller('course')
 export class CourseController {

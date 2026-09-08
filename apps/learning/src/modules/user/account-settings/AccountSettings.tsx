@@ -1,5 +1,5 @@
 import { UploadAvatar } from '@components/app/attachments';
-import { Breadcrumb, Card, IBreadcrumbItem, MenuList } from '@parthhub/ui/app';
+import { Breadcrumb, Card, IBreadcrumbItem, MenuList } from '@repo/ui/app';
 import { AccountSettingsType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { IMenuItem } from '@interfaces';

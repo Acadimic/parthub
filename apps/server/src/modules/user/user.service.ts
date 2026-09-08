@@ -9,7 +9,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { AccountType, DEFAULT_PERMISSIONS, DefaultRole, OrgType, PermissionItem, Subdomain } from '@parthhub/shared';
+import { AccountType, DEFAULT_PERMISSIONS, DefaultRole, OrgType, PermissionItem, Subdomain } from '@repo/shared';
 import {
   CreateUserDto,
   FindByOrgIdAndUidDto,
@@ -19,7 +19,7 @@ import {
   UpdateOrgUserDto,
   UpdateProfileDto,
   UserDto,
-} from '@parthhub/shared/validations';
+} from '@repo/shared/validations';
 import { getObjectId } from '@utils/util';
 import { Model, Types } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';

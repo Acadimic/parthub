@@ -4,18 +4,18 @@
   "private": true,
   "packageManager": "pnpm@10.12.1",
   "scripts": {
-    "start:learning": "pnpm --filter @parthhub/learning dev",
-    "start:server": "pnpm --filter @parthhub/server start:dev",
-    "build:shared": "pnpm --filter @parthhub/shared build",
-    "build:learning": "pnpm --filter @parthhub/learning build",
-    "build:server": "pnpm --filter @parthhub/server build",
-    "start:teaching": "pnpm --filter @parthhub/teaching dev",
-    "build:teaching": "pnpm --filter @parthhub/teaching build",
-    "start:admin": "pnpm --filter @parthhub/admin dev",
-    "build:admin": "pnpm --filter @parthhub/admin build",
+    "start:learning": "pnpm --filter @repo/learning dev",
+    "start:server": "pnpm --filter @repo/server start:dev",
+    "build:shared": "pnpm --filter @repo/shared build",
+    "build:learning": "pnpm --filter @repo/learning build",
+    "build:server": "pnpm --filter @repo/server build",
+    "start:teaching": "pnpm --filter @repo/teaching dev",
+    "build:teaching": "pnpm --filter @repo/teaching build",
+    "start:admin": "pnpm --filter @repo/admin dev",
+    "build:admin": "pnpm --filter @repo/admin build",
     "lint": "pnpm -r --if-present run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,scss,css}\"",
-    "typecheck:ui": "pnpm --filter @parthhub/ui typecheck"
+    "typecheck:ui": "pnpm --filter @repo/ui typecheck"
   },
   "devDependencies": {
     "prettier": "^3.3.3"

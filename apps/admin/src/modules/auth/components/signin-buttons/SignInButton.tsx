@@ -1,4 +1,4 @@
-import { Spinner } from '@parthhub/ui/app';
+import { Spinner } from '@repo/ui/app';
 import { AuthButton } from '@enums';
 
 const BUTTON_IMAGES = {

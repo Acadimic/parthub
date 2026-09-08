@@ -1,4 +1,4 @@
-import { FullScreenModal } from '@parthhub/ui/app';
+import { FullScreenModal } from '@repo/ui/app';
 import { ExamLayout } from '@layouts';
 import { TestPaperCard } from '@modules/test-papers/components/TestPaperCard';
 import { ITestPaper } from '@stores';

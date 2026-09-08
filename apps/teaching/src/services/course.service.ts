@@ -1,5 +1,5 @@
 import { ICourse, ICourseModule, IPlan } from '@stores';
-import { CourseDto } from '@parthhub/shared';
+import { CourseDto } from '@repo/shared';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

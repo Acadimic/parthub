@@ -6,7 +6,7 @@ import {
   getStartOfDay,
   setTime,
   splitCamelCase,
-} from '@parthhub/ui/lib';
+} from '@repo/ui/lib';
 import { IFullCalendarEvent, ISelectItem } from '@interfaces';
 import { IBatch, IMeet, IStandard } from '@stores';
 import { MeetFrequency } from '../../enums';

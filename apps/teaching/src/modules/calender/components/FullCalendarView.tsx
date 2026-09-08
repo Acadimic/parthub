@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { ErrorBoundary } from 'react-error-boundary';
 
-import { ErrorBoundaryFallback } from '@parthhub/ui/app';
+import { ErrorBoundaryFallback } from '@repo/ui/app';
 import { CalendarXIcon } from '@phosphor-icons/react';
 import { CalendarType } from '@enums';
 import { DayCellContentArg, DayHeaderContentArg, EventInput } from '@fullcalendar/core';

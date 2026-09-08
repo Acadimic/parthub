@@ -1,4 +1,4 @@
-import { Tooltip } from '@parthhub/ui/app';
+import { Tooltip } from '@repo/ui/app';
 import { Html } from '@components/others';
 import { IFunctionProps } from '@interfaces';
 import {

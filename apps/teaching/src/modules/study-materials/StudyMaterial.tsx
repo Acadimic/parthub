@@ -1,4 +1,4 @@
-import { Accordions, Button, Card, Loader, Menu } from '@parthhub/ui/app';
+import { Accordions, Button, Card, Loader, Menu } from '@repo/ui/app';
 import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { IMaterial, useStores } from '@stores';

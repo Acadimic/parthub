@@ -1,4 +1,4 @@
-import { ModalFooter } from '@parthhub/ui/app';
+import { ModalFooter } from '@repo/ui/app';
 
 interface IProps {
   handleSubmit: () => void;

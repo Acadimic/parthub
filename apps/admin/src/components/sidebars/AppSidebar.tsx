@@ -1,4 +1,4 @@
-import { ToggleTheme } from '@parthhub/ui/app';
+import { ToggleTheme } from '@repo/ui/app';
 import { Theme as Mode, StorageKey } from '@enums';
 import { CaretDoubleRightIcon } from '@phosphor-icons/react';
 import { observer } from 'mobx-react-lite';

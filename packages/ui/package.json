@@ -1,5 +1,5 @@
 {
-  "name": "@parthhub/ui",
+  "name": "@repo/ui",
   "version": "0.1.0",
   "private": true,
   "description": "Shared React UI layer for the Parthhub Next.js apps: shadcn primitives, core wrappers, themes, hooks and browser helpers. Consumed as TypeScript source via next.config transpilePackages.",
@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@parthhub/shared": "workspace:*",
+    "@repo/shared": "workspace:*",
     "@phosphor-icons/react": "^2.1.7",
     "@radix-ui/react-accordion": "^1.2.17",
     "@radix-ui/react-alert-dialog": "^1.1.20",

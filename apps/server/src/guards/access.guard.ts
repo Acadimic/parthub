@@ -5,7 +5,7 @@ import { SUBDOMAINS_KEY } from '@decorators/subdomains.decorator';
 import { PermissionService } from '@modules/permissions/permission.service';
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { PermissionItem, Subdomain } from '@repo/shared';
 import { RequestContextService } from '../context/request-context.service';
 
 /**

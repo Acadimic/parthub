@@ -1,7 +1,7 @@
 import { useAttachment } from '@hooks/attachment.hook';
 import { getRandomColor } from '@utils/helpers';
 import { useEffect, useState } from 'react';
-import { Tooltip } from '@parthhub/ui/app';
+import { Tooltip } from '@repo/ui/app';
 
 interface IProps {
   id: string;

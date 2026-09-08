@@ -1,9 +1,9 @@
-import { PermissionItem, Subdomain } from '@parthhub/shared';
+import { PermissionItem, Subdomain } from '@repo/shared';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, Query, HttpStatus } from '@nestjs/common';
 import { SubjectService } from './subject.service';
-import { SubjectDto } from '@parthhub/shared/validations';
+import { SubjectDto } from '@repo/shared/validations';
 
 @Controller('subject')
 export class SubjectController {

@@ -1,5 +1,5 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
-import { ErrorResponse } from '@parthhub/shared';
+import { ErrorResponse } from '@repo/shared';
 import { FastifyReply } from 'fastify';
 
 @Catch(HttpException)

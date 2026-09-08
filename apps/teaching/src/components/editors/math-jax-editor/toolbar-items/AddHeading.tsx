@@ -1,4 +1,4 @@
-import { Dropdown, Label } from '@parthhub/ui/app';
+import { Dropdown, Label } from '@repo/ui/app';
 import { IMenuItem } from '@interfaces';
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';

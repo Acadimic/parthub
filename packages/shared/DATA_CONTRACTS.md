@@ -49,7 +49,7 @@ What is already right, and worth preserving:
   `ErrorResponse`, and the server's `TransformInterceptor` returns
   `SuccessResponse<T>`.
 - `dtos/index.ts` deliberately keeps the class-validator DTOs out of the root
-  barrel, so importing `@parthhub/shared` in a browser bundle pulls no
+  barrel, so importing `@repo/shared` in a browser bundle pulls no
   validation machinery. Verified: no client file imports the `validations`
   subpath, and no validator code reaches the built chunks.
 
@@ -60,11 +60,11 @@ mistake on either side is ever caught.
 ## The contract, in three parts
 
 **Requests** stay as they are: classes with class-validator decorators, under
-`@parthhub/shared/validations`, imported only by the server. They are runtime
+`@repo/shared/validations`, imported only by the server. They are runtime
 validators first and types second.
 
 **Responses** become plain TypeScript interfaces with no decorators, under a
-new `@parthhub/shared/contracts`. No imports beyond enums, so they are free to
+new `@repo/shared/contracts`. No imports beyond enums, so they are free to
 use in the browser.
 
 **The envelope** is the existing `SuccessResponse<T>` and `ErrorResponse`.
@@ -157,7 +157,7 @@ makes the compiler check the result.
 
 ```ts
 // apps/server/src/modules/course/course.mapper.ts
-import { CourseDto } from '@parthhub/shared/contracts';
+import { CourseDto } from '@repo/shared/contracts';
 import { CourseDocument } from './course.schema';
 
 export const toCourseDto = (course: CourseDocument): CourseDto =>
@@ -284,11 +284,11 @@ Steps 1 and 2 are a single small commit. Step 3 is the one to get right.
 
 | Kind                   | Name              | Location                       |
 | ---------------------- | ----------------- | ------------------------------ |
-| Response for an entity | `CourseDto`       | `@parthhub/shared/contracts`   |
+| Response for an entity | `CourseDto`       | `@repo/shared/contracts`   |
 | Nested response object | `CourseModuleDto` | same file as its parent        |
-| Request body           | `UpsertCourseDto` | `@parthhub/shared/validations` |
-| Query parameters       | `CourseQueryDto`  | `@parthhub/shared/validations` |
-| Envelope               | `SuccessResponse` | `@parthhub/shared`             |
+| Request body           | `UpsertCourseDto` | `@repo/shared/validations` |
+| Query parameters       | `CourseQueryDto`  | `@repo/shared/validations` |
+| Envelope               | `SuccessResponse` | `@repo/shared`             |
 
 One suffix, `Dto`, for both directions, distinguished by the verb prefix on
 requests. Never reuse a validation class as a response type: it drags

@@ -1,4 +1,4 @@
-import { AccessType, Subdomain } from '@parthhub/shared';
+import { AccessType, Subdomain } from '@repo/shared';
 
 export interface IRequestContext {
   userId: string;

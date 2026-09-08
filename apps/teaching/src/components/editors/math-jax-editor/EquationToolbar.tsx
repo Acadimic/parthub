@@ -1,4 +1,4 @@
-import { Modal, Popover } from '@parthhub/ui/app';
+import { Modal, Popover } from '@repo/ui/app';
 import {
   CaretDownIcon,
   DotsNineIcon,

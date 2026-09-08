@@ -1,4 +1,4 @@
-import { Card } from '@parthhub/ui/app';
+import { Card } from '@repo/ui/app';
 import { PresignedImage } from '@components/app/attachments';
 import { CourseInfo, StandardWithLogo } from '@components/common';
 import { ICourse, useStores } from '@stores';

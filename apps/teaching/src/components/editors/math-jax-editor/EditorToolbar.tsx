@@ -1,4 +1,4 @@
-import { Modal, Tooltip } from '@parthhub/ui/app';
+import { Modal, Tooltip } from '@repo/ui/app';
 import { PositionType } from '@enums';
 import { capitalize } from '@utils/helpers';
 import { useEffect, useState } from 'react';

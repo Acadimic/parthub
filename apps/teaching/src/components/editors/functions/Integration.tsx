@@ -1,4 +1,4 @@
-import { Button } from '@parthhub/ui/app';
+import { Button } from '@repo/ui/app';
 import { IFunctionProps, IPosition, ITarget } from '@interfaces';
 import { useState } from 'react';
 import { HtmlEditor } from '..';

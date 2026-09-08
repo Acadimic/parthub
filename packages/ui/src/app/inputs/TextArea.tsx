@@ -1,5 +1,5 @@
-import { Textarea } from '@parthhub/ui/ui/textarea';
-import { Label } from '@parthhub/ui/app';
+import { Textarea } from '@repo/ui/ui/textarea';
+import { Label } from '@repo/ui/app';
 
 interface ITextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;

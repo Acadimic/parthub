@@ -1,6 +1,6 @@
 import { CameraIcon, PlusIcon, XIcon } from '@phosphor-icons/react';
 import { useState } from 'react';
-import { Button, SoftConfirmModal } from '@parthhub/ui/app';
+import { Button, SoftConfirmModal } from '@repo/ui/app';
 import { FileDropZone } from '../selects';
 import { PresignedImage } from './PresignedImage';
 

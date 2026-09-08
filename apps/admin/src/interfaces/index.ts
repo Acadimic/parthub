@@ -17,6 +17,6 @@ export type {
   PermissionConfig,
   PermissionConfigItem,
   PermissionConfigOption,
-} from '@parthhub/shared';
+} from '@repo/shared';
 
-export * from '@parthhub/ui/types';
+export * from '@repo/ui/types';

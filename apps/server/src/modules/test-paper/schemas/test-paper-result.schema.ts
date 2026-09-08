@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Marking, PaperCategoryType, PaperType } from '@parthhub/shared';
+import { Marking, PaperCategoryType, PaperType } from '@repo/shared';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type TestPaperResultDocument = HydratedDocument<TestPaperResult>;

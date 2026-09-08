@@ -1,5 +1,5 @@
-import { CourseDto } from '@parthhub/shared/validations';
-import { AttachmentDto } from '@parthhub/shared';
+import { CourseDto } from '@repo/shared/validations';
+import { AttachmentDto } from '@repo/shared';
 import { Attachment } from '@modules/material/material.schema';
 import { CourseDocument } from './course.schema';
 

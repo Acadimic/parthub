@@ -1,4 +1,4 @@
-import { Accordions, Card, Loader, Menu, Modal, ModalFooter, SplitButton, Tooltip } from '@parthhub/ui/app';
+import { Accordions, Card, Loader, Menu, Modal, ModalFooter, SplitButton, Tooltip } from '@repo/ui/app';
 import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { PositionType, SectionCategoryType, SectionType } from '@enums';

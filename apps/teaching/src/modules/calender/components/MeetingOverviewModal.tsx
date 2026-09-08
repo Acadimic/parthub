@@ -1,4 +1,4 @@
-import { Label, Modal } from '@parthhub/ui/app';
+import { Label, Modal } from '@repo/ui/app';
 import { CopyUrl } from '@components/common';
 import { CalendarBlankIcon, PencilIcon, TrashIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';

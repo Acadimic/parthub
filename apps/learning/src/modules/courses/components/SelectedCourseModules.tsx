@@ -1,4 +1,4 @@
-import { Accordions } from '@parthhub/ui/app';
+import { Accordions } from '@repo/ui/app';
 import { DynamicSubtitle } from '@components/common';
 import { useStores } from '@stores';
 import { getPlural } from '@utils/helpers';

@@ -1,5 +1,5 @@
 {
-  "name": "@parthhub/teaching",
+  "name": "@repo/teaching",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -22,8 +22,8 @@
     "@fullcalendar/resource-timeline": "^6.1.17",
     "@fullcalendar/scrollgrid": "^6.1.17",
     "@fullcalendar/timegrid": "^6.1.17",
-    "@parthhub/shared": "workspace:*",
-    "@parthhub/ui": "workspace:*",
+    "@repo/shared": "workspace:*",
+    "@repo/ui": "workspace:*",
     "@phosphor-icons/react": "^2.1.7",
     "@radix-ui/react-accordion": "^1.2.17",
     "@radix-ui/react-alert-dialog": "^1.1.20",

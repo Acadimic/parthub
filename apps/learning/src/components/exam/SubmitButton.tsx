@@ -1,4 +1,4 @@
-import { Button } from '@parthhub/ui/app';
+import { Button } from '@repo/ui/app';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 

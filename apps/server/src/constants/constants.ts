@@ -1,4 +1,4 @@
-import { Permission } from '@parthhub/shared';
+import { Permission } from '@repo/shared';
 
 export const ORIGIN = [/\.parthhub\.com$/, 'http://localhost:3000'];
 

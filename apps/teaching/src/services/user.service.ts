@@ -1,6 +1,6 @@
 import { IUser } from '@stores';
 import { API, DefaultRole } from '../enums';
-import { getProfilePayload } from '@parthhub/ui/lib';
+import { getProfilePayload } from '@repo/ui/lib';
 import { callAuthApi } from './http.service';
 
 class UserService {

@@ -6,4 +6,4 @@ export * from './base-org.dto';
 // reflect-metadata. They are NOT re-exported here to keep the main barrel safe
 // for client-side (browser) imports. Server code should use the dedicated
 // validations subpath export:
-//   import { RegisterUserDto } from '@parthhub/shared/validations';
+//   import { RegisterUserDto } from '@repo/shared/validations';

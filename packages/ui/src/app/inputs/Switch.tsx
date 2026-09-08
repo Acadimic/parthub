@@ -1,5 +1,5 @@
-import { Switch as SwitchPrimitive } from '@parthhub/ui/ui/switch';
-import { Label } from '@parthhub/ui/app';
+import { Switch as SwitchPrimitive } from '@repo/ui/ui/switch';
+import { Label } from '@repo/ui/app';
 
 export interface ISwitchProps {
   label?: string;

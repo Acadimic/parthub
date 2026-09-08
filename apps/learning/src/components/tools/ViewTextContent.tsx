@@ -1,4 +1,4 @@
-import { FullScreenModal } from '@parthhub/ui/app';
+import { FullScreenModal } from '@repo/ui/app';
 import { Html } from '@components/others';
 import { useMemo, useState } from 'react';
 import { ViewToolbar } from './ViewToolbar';

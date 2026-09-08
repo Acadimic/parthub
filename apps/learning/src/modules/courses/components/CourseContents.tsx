@@ -1,4 +1,4 @@
-import { Accordions } from '@parthhub/ui/app';
+import { Accordions } from '@repo/ui/app';
 import { ICourse, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { CourseContentItem } from './CourseContentItem';

@@ -1,5 +1,5 @@
 import { Select } from '@components/app/selects';
-import { Modal, ModalFooter, TextInput } from '@parthhub/ui/app';
+import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { Gender, PositionType } from '@enums';
 import { ISelectItem } from '@interfaces';
 import { UserService } from '@services';

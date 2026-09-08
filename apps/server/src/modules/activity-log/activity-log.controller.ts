@@ -1,8 +1,8 @@
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ActivityAction, PermissionItem, Subdomain } from '@parthhub/shared';
-import { ActivityLogQueryDto } from '@parthhub/shared/validations';
+import { ActivityAction, PermissionItem, Subdomain } from '@repo/shared';
+import { ActivityLogQueryDto } from '@repo/shared/validations';
 import { Types } from 'mongoose';
 import { ActivityLog } from './activity-log.schema';
 import { ActivityLogService } from './activity-log.service';

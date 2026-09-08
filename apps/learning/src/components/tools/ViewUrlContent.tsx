@@ -1,4 +1,4 @@
-import { FullScreenModal, Loader } from '@parthhub/ui/app';
+import { FullScreenModal, Loader } from '@repo/ui/app';
 import { useAttachment } from '@hooks/attachment.hook';
 import { useEffect, useMemo, useState } from 'react';
 import { HandleContentError } from './HandleContentError';

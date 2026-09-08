@@ -1,5 +1,5 @@
 import { Select } from '@components/app/selects';
-import { Button, Card, ModalFooter, TextInput } from '@parthhub/ui/app';
+import { Button, Card, ModalFooter, TextInput } from '@repo/ui/app';
 import { PencilLineIcon } from '@phosphor-icons/react';
 import { Gender } from '@enums';
 import { UserService } from '@services';

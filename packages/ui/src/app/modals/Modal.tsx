@@ -1,4 +1,4 @@
-import { PositionType } from '@parthhub/shared';
+import { PositionType } from '@repo/shared';
 import { XIcon } from '@phosphor-icons/react';
 import * as React from 'react';
 

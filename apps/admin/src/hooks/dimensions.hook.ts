@@ -1,1 +1,1 @@
-export { useWindowDimensions } from '@parthhub/ui/hooks';
+export { useWindowDimensions } from '@repo/ui/hooks';

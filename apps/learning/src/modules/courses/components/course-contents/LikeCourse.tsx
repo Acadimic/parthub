@@ -1,4 +1,4 @@
-import { Spinner, Tooltip } from '@parthhub/ui/app';
+import { Spinner, Tooltip } from '@repo/ui/app';
 import { CollectionType } from '@enums';
 import { ThumbsUpIcon } from '@phosphor-icons/react';
 import { IMaterial, ITestPaper, useStores } from '@stores';

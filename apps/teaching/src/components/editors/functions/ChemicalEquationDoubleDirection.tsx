@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Button } from '@parthhub/ui/app';
+import { Button } from '@repo/ui/app';
 import { DirectionType } from '@enums';
 import { IFunctionProps, IPosition, ITarget } from '@interfaces';
 import { HtmlEditor } from '..';
