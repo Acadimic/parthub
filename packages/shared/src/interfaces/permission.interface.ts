@@ -8,10 +8,7 @@ export type PermissionConfigOption = {
 export type PermissionConfigItem = {
   label: string;
   description?: string;
-} & (
-  | { value: PermissionItem; scopes?: never }
-  | { value?: never; scopes: Record<string, PermissionItem> }
-);
+} & ({ value: PermissionItem; scopes?: never } | { value?: never; scopes: Record<string, PermissionItem> });
 
 export type PermissionConfig = {
   label: string;

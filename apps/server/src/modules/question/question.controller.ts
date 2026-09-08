@@ -4,7 +4,7 @@ import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, HttpStatus } from '@nestjs/common';
 import { QuestionService } from './question.service';
 import { RequestContextService } from '../../context/request-context.service';
-import { UpsertQuestionDto } from '@parthhub/shared/validations';
+import { QuestionDto } from '@parthhub/shared/validations';
 
 @Controller('question')
 export class QuestionController {
@@ -16,7 +16,7 @@ export class QuestionController {
   @Post('upsert')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_QUESTION)
-  async upsertQuestion(@Body() payload: UpsertQuestionDto) {
+  async upsertQuestion(@Body() payload: QuestionDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.questionService.upsert(userId, org, payload);

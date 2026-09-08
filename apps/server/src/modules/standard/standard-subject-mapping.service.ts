@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { StandardSubjectMapping, StandardSubjectMappingDocument } from './standard-subject-mapping.schema';
-import { UpsertStandardSubjectMappingDto } from './dto/upsert-standard-subject-mapping.dto';
+import { StandardSubjectMappingDto } from '@parthhub/shared/validations';
 
 @Injectable()
 export class StandardSubjectMappingService {
@@ -11,14 +11,14 @@ export class StandardSubjectMappingService {
     private mappingModel: Model<StandardSubjectMappingDocument>,
   ) {}
 
-  async upsert(payload: UpsertStandardSubjectMappingDto): Promise<StandardSubjectMappingDocument> {
+  async upsert(payload: StandardSubjectMappingDto): Promise<StandardSubjectMappingDocument> {
     const { _id } = payload;
     return this.mappingModel
       .findOneAndUpdate({ _id }, { ...payload }, { new: true, upsert: true, runValidators: true })
       .lean<StandardSubjectMappingDocument>();
   }
 
-  async upsertMany(payloads: UpsertStandardSubjectMappingDto[]): Promise<StandardSubjectMappingDocument[]> {
+  async upsertMany(payloads: StandardSubjectMappingDto[]): Promise<StandardSubjectMappingDocument[]> {
     const results: StandardSubjectMappingDocument[] = [];
     for (const payload of payloads) {
       const result = await this.upsert(payload);

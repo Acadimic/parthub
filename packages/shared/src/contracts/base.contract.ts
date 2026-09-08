@@ -17,3 +17,12 @@ export interface BaseFields {
   /** ISO 8601 */
   updatedAt: string;
 }
+
+/**
+ * The response form of an entity's single field list.
+ *
+ * One DTO class per entity serves both directions, so its ownership fields must be optional:
+ * a write body never sends them. On the way out they are always present, and this restores
+ * that, without declaring any field a second time.
+ */
+export type ResponseOf<T> = Omit<T, keyof BaseFields> & BaseFields;

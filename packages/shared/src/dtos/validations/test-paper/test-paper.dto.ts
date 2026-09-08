@@ -1,7 +1,8 @@
 import { IsBoolean, IsDateString, IsEnum, IsMongoId, IsNumber, IsOptional, IsString } from 'class-validator';
-import { PaperCategoryType, PaperType } from '../../../enums/test-paper.enum';
+import { PaperCategoryType, PaperType } from '../../../enums';
+import { BaseOwnedDto } from '../base-owned.dto';
 
-export class UpsertTestPaperDto {
+export class TestPaperDto extends BaseOwnedDto {
   @IsMongoId()
   _id: string;
 

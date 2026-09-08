@@ -1,6 +1,7 @@
 import { IsMongoId, IsNumber, IsOptional, IsString } from 'class-validator';
+import { BaseOwnedDto } from '../base-owned.dto';
 
-export class UpsertChapterDto {
+export class ChapterDto extends BaseOwnedDto {
   @IsMongoId()
   _id: string;
 

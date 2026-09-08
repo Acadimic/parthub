@@ -1,9 +1,9 @@
+import { ReactionDto } from '@parthhub/shared/validations';
 import { PermissionItem, Subdomain } from '@parthhub/shared';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, HttpStatus } from '@nestjs/common';
 import { ReactionService } from './reaction.service';
-import { UpsertReactionDto } from './dto/upsert-reaction.dto';
 import { RequestContextService } from '../../context/request-context.service';
 
 @Controller('reaction')
@@ -16,7 +16,7 @@ export class ReactionController {
   @Post('upsert')
   @Subdomains(Subdomain.LEARN)
   @Permissions(PermissionItem.MANAGE_REACTION)
-  async upsertReaction(@Body() payload: UpsertReactionDto) {
+  async upsertReaction(@Body() payload: ReactionDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.reactionService.upsert(userId, org, payload);

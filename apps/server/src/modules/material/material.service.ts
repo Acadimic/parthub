@@ -2,13 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Material, MaterialDocument } from './material.schema';
-import { UpsertMaterialDto } from '@parthhub/shared/validations';
+import { MaterialDto } from '@parthhub/shared/validations';
 
 @Injectable()
 export class MaterialService {
   constructor(@InjectModel(Material.name) private materialModel: Model<MaterialDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertMaterialDto): Promise<MaterialDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: MaterialDto): Promise<MaterialDocument> {
     const { _id } = payload;
     return this.materialModel
       .findOneAndUpdate(

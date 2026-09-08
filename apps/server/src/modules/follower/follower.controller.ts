@@ -1,9 +1,9 @@
+import { FollowerDto } from '@parthhub/shared/validations';
 import { PermissionItem, Subdomain } from '@parthhub/shared';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, HttpStatus } from '@nestjs/common';
 import { FollowerService } from './follower.service';
-import { UpsertFollowerDto } from './dto/upsert-follower.dto';
 import { RequestContextService } from '../../context/request-context.service';
 
 @Controller('follower')
@@ -16,7 +16,7 @@ export class FollowerController {
   @Post('upsert')
   @Subdomains(Subdomain.LEARN)
   @Permissions(PermissionItem.MANAGE_FOLLOWER)
-  async upsertFollower(@Body() payload: UpsertFollowerDto) {
+  async upsertFollower(@Body() payload: FollowerDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.followerService.upsert(userId, org, payload);

@@ -3,7 +3,7 @@ import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, Query, HttpStatus } from '@nestjs/common';
 import { SubjectService } from './subject.service';
-import { UpsertSubjectDto } from '@parthhub/shared/validations';
+import { SubjectDto } from '@parthhub/shared/validations';
 
 @Controller('subject')
 export class SubjectController {
@@ -12,7 +12,7 @@ export class SubjectController {
   @Post('upsert')
   @Subdomains(Subdomain.ADMIN)
   @Permissions(PermissionItem.MANAGE_SUBJECT)
-  async upsertSubject(@Body() payload: UpsertSubjectDto) {
+  async upsertSubject(@Body() payload: SubjectDto) {
     const data = await this.subjectService.upsert(payload);
     return data;
   }

@@ -1,14 +1,14 @@
+import { FollowerDto } from '@parthhub/shared/validations';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Follower, FollowerDocument } from './follower.schema';
-import { UpsertFollowerDto } from './dto/upsert-follower.dto';
 
 @Injectable()
 export class FollowerService {
   constructor(@InjectModel(Follower.name) private followerModel: Model<FollowerDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertFollowerDto): Promise<FollowerDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: FollowerDto): Promise<FollowerDocument> {
     return this.followerModel
       .findOneAndUpdate(
         { follower: userId, following: payload.following },

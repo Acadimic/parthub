@@ -1,14 +1,14 @@
+import { BookmarkDto } from '@parthhub/shared/validations';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Bookmark, BookmarkDocument } from './bookmark.schema';
-import { UpsertBookmarkDto } from './dto/upsert-bookmark.dto';
 
 @Injectable()
 export class BookmarkService {
   constructor(@InjectModel(Bookmark.name) private bookmarkModel: Model<BookmarkDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertBookmarkDto): Promise<BookmarkDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: BookmarkDto): Promise<BookmarkDocument> {
     return this.bookmarkModel
       .findOneAndUpdate(
         { createdBy: userId, collectionItem: payload.collectionItem, collectionRef: payload.collectionRef },

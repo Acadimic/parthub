@@ -1,6 +1,7 @@
 import { IsArray, IsMongoId, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { BaseOwnedDto } from '../base-owned.dto';
 
-export class UpsertStandardSubjectMappingDto {
+export class StandardSubjectMappingDto extends BaseOwnedDto {
   @IsNotEmpty()
   @IsMongoId()
   _id: string;

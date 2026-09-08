@@ -1,7 +1,8 @@
-import { StandardGroup } from '@parthhub/shared';
+import { StandardGroup } from '../../../enums';
 import { IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { BaseOwnedDto } from '../base-owned.dto';
 
-export class UpsertStandardDto {
+export class StandardDto extends BaseOwnedDto {
   @IsNotEmpty()
   @IsMongoId()
   _id: string;

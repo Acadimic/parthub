@@ -1,7 +1,8 @@
-import { CurrencyType, PeriodType } from '@parthhub/shared';
+import { CurrencyType, PeriodType } from '../../../enums';
 import { IsArray, IsBoolean, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { BaseOwnedDto } from '../base-owned.dto';
 
-export class UpsertPlanDto {
+export class PlanDto extends BaseOwnedDto {
   @IsNotEmpty()
   @IsMongoId()
   _id: string;

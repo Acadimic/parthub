@@ -1,7 +1,8 @@
 import { Type } from 'class-transformer';
 import { IsEnum, IsMongoId, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { LevelType } from '../../../enums/app.enum';
-import { QuestionType } from '../../../enums/question.enum';
+import { LevelType } from '../../../enums';
+import { QuestionType } from '../../../enums';
+import { BaseOwnedDto } from '../base-owned.dto';
 
 export class MarkingsDto {
   @IsNumber()
@@ -14,7 +15,7 @@ export class MarkingsDto {
   unattempted: number;
 }
 
-export class UpsertQuestionDto {
+export class QuestionDto extends BaseOwnedDto {
   @IsMongoId()
   _id: string;
 

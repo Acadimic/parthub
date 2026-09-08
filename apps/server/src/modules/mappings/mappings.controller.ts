@@ -6,9 +6,9 @@ import { RequestContextService } from '../../context/request-context.service';
 import { StudentStandardMappingService } from './services/student-standard-mapping.service';
 import { UserStudentMappingService } from './services/user-student-mapping.service';
 import { UserBatchMappingService } from './services/user-batch-mapping.service';
-import { UpsertStudentStandardMappingDto } from './dto/upsert-student-standard-mapping.dto';
-import { UpsertUserStudentMappingDto } from './dto/upsert-user-student-mapping.dto';
-import { UpsertUserBatchMappingDto } from './dto/upsert-user-batch-mapping.dto';
+import { StudentStandardMappingDto } from '@parthhub/shared/validations';
+import { UserStudentMappingDto } from '@parthhub/shared/validations';
+import { UserBatchMappingDto } from '@parthhub/shared/validations';
 
 @Controller('mapping')
 export class MappingsController {
@@ -22,7 +22,7 @@ export class MappingsController {
   @Post('student-standard/upsert')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MAPPING)
-  async upsertStudentStandard(@Body() payload: UpsertStudentStandardMappingDto) {
+  async upsertStudentStandard(@Body() payload: StudentStandardMappingDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.studentStandardMappingService.upsert(userId, org, payload);
@@ -32,7 +32,7 @@ export class MappingsController {
   @Post('user-student/upsert')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MAPPING)
-  async upsertUserStudent(@Body() payload: UpsertUserStudentMappingDto) {
+  async upsertUserStudent(@Body() payload: UserStudentMappingDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.userStudentMappingService.upsert(userId, org, payload);
@@ -42,7 +42,7 @@ export class MappingsController {
   @Post('user-batch/upsert')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MAPPING)
-  async upsertUserBatch(@Body() payload: UpsertUserBatchMappingDto) {
+  async upsertUserBatch(@Body() payload: UserBatchMappingDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.userBatchMappingService.upsert(userId, org, payload);

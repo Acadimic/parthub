@@ -1,9 +1,6 @@
 import { Permission } from '@parthhub/shared';
 
-export const ORIGIN = [
-  /\.parthhub\.com$/,
-  'http://localhost:3000',
-];
+export const ORIGIN = [/\.parthhub\.com$/, 'http://localhost:3000'];
 
 export const INITIAL_LOGIN_DATA_URL = 'initial-login-data';
 export const REGISTER_URL = 'register';

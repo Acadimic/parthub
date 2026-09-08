@@ -1,9 +1,9 @@
+import { BatchDto } from '@parthhub/shared/validations';
 import { PermissionItem, Subdomain } from '@parthhub/shared';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, HttpStatus } from '@nestjs/common';
 import { BatchService } from './batch.service';
-import { UpsertBatchDto } from './dto/upsert-batch.dto';
 import { RequestContextService } from '../../context/request-context.service';
 
 @Controller('batch')
@@ -16,7 +16,7 @@ export class BatchController {
   @Post('upsert')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_BATCH)
-  async upsertBatch(@Body() payload: UpsertBatchDto) {
+  async upsertBatch(@Body() payload: BatchDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.batchService.upsert(userId, org, payload);

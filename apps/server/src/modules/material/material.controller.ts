@@ -4,7 +4,7 @@ import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, Query, HttpStatus } from '@nestjs/common';
 import { MaterialService } from './material.service';
 import { RequestContextService } from '../../context/request-context.service';
-import { UpsertMaterialDto } from '@parthhub/shared/validations';
+import { MaterialDto } from '@parthhub/shared/validations';
 
 @Controller('material')
 export class MaterialController {
@@ -16,7 +16,7 @@ export class MaterialController {
   @Post('upsert')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MATERIAL)
-  async upsertMaterial(@Body() payload: UpsertMaterialDto) {
+  async upsertMaterial(@Body() payload: MaterialDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.materialService.upsert(userId, org, payload);

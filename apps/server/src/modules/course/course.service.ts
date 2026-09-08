@@ -2,13 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Course, CourseDocument } from './course.schema';
-import { UpsertCourseDto } from '@parthhub/shared/validations';
+import { CourseDto } from '@parthhub/shared/validations';
 
 @Injectable()
 export class CourseService {
   constructor(@InjectModel(Course.name) private courseModel: Model<CourseDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertCourseDto): Promise<CourseDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: CourseDto): Promise<CourseDocument> {
     const { _id } = payload;
     return this.courseModel
       .findOneAndUpdate(

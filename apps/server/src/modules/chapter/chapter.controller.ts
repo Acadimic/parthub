@@ -4,7 +4,7 @@ import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, HttpStatus } from '@nestjs/common';
 import { ChapterService } from './chapter.service';
 import { RequestContextService } from '../../context/request-context.service';
-import { UpsertChapterDto, StandardSubjectQueryDto } from '@parthhub/shared/validations';
+import { ChapterDto, StandardSubjectQueryDto } from '@parthhub/shared/validations';
 
 @Controller('chapter')
 export class ChapterController {
@@ -16,7 +16,7 @@ export class ChapterController {
   @Post('upsert')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_CHAPTER)
-  async upsertChapter(@Body() payload: UpsertChapterDto) {
+  async upsertChapter(@Body() payload: ChapterDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.chapterService.upsert(userId, org, payload);

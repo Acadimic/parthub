@@ -3,7 +3,7 @@ import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, HttpStatus } from '@nestjs/common';
 import { PlanService } from './plan.service';
-import { UpsertPlanDto } from './dto/upsert-plan.dto';
+import { PlanDto } from '@parthhub/shared/validations';
 import { RequestContextService } from '../../context/request-context.service';
 
 @Controller('plan')
@@ -16,7 +16,7 @@ export class PlanController {
   @Post('upsert')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_PLAN)
-  async upsertPlan(@Body() payload: UpsertPlanDto) {
+  async upsertPlan(@Body() payload: PlanDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.planService.upsert(userId, org, payload);

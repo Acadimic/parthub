@@ -1,14 +1,14 @@
+import { ReactionDto } from '@parthhub/shared/validations';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Reaction, ReactionDocument } from './reaction.schema';
-import { UpsertReactionDto } from './dto/upsert-reaction.dto';
 
 @Injectable()
 export class ReactionService {
   constructor(@InjectModel(Reaction.name) private reactionModel: Model<ReactionDocument>) {}
 
-  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: UpsertReactionDto): Promise<ReactionDocument> {
+  async upsert(userId: Types.ObjectId, org: Types.ObjectId, payload: ReactionDto): Promise<ReactionDocument> {
     return this.reactionModel
       .findOneAndUpdate(
         { createdBy: userId, collectionItem: payload.collectionItem, collectionRef: payload.collectionRef },

@@ -5,8 +5,7 @@ import { Controller, Get, Post, Body, Param, Query, HttpStatus } from '@nestjs/c
 import { toCourseDto } from './course.mapper';
 import { CourseService } from './course.service';
 import { RequestContextService } from '../../context/request-context.service';
-import { UpsertCourseDto } from '@parthhub/shared/validations';
-import { CourseDto } from '@parthhub/shared';
+import { CourseDto } from '@parthhub/shared/validations';
 
 @Controller('course')
 export class CourseController {
@@ -18,7 +17,7 @@ export class CourseController {
   @Post('upsert')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.CREATE_COURSE, PermissionItem.EDIT_COURSE)
-  async upsertCourse(@Body() payload: UpsertCourseDto): Promise<CourseDto> {
+  async upsertCourse(@Body() payload: CourseDto): Promise<CourseDto> {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     return toCourseDto(await this.courseService.upsert(userId, org, payload));

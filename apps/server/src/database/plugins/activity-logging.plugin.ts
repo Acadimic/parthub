@@ -65,23 +65,20 @@ export function createActivityLoggingPlugin(activityLogCoreService: ActivityLogC
       this.$locals.wasNew = this.isNew;
     });
 
-    schema.post(
-      'save',
-      async function (this: Document & { _id: Types.ObjectId; $locals: Record<string, unknown> }) {
-        if (!this.$locals.wasNew) return;
+    schema.post('save', async function (this: Document & { _id: Types.ObjectId; $locals: Record<string, unknown> }) {
+      if (!this.$locals.wasNew) return;
 
-        const modelName = (this.constructor as unknown as ModelWithName).modelName;
-        if (!modelName || EXCLUDED_MODELS.has(modelName)) return;
+      const modelName = (this.constructor as unknown as ModelWithName).modelName;
+      if (!modelName || EXCLUDED_MODELS.has(modelName)) return;
 
-        try {
-          const logData = activityLogCoreService.prepareCreateLog(modelName, this._id, getDocumentAsObject(this));
-          const connection = getConnection(this.constructor);
-          await saveActivityLog(connection, logData);
-        } catch (error) {
-          console.error('Failed to log create activity:', error);
-        }
-      },
-    );
+      try {
+        const logData = activityLogCoreService.prepareCreateLog(modelName, this._id, getDocumentAsObject(this));
+        const connection = getConnection(this.constructor);
+        await saveActivityLog(connection, logData);
+      } catch (error) {
+        console.error('Failed to log create activity:', error);
+      }
+    });
 
     schema.pre('findOneAndUpdate', async function (this: Query<unknown, unknown>) {
       const options = this.getOptions() as QueryOptions;

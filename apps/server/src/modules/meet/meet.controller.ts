@@ -3,7 +3,7 @@ import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Delete, Param, HttpStatus } from '@nestjs/common';
 import { MeetService } from './meet.service';
-import { UpsertMeetDto, GetByMeetIdsDto } from './dto/upsert-meet.dto';
+import { MeetDto, GetByMeetIdsDto } from '@parthhub/shared/validations';
 import { RequestContextService } from '../../context/request-context.service';
 
 @Controller('meet')
@@ -16,7 +16,7 @@ export class MeetController {
   @Post('upsert')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_MEET)
-  async upsertMeet(@Body() payload: UpsertMeetDto) {
+  async upsertMeet(@Body() payload: MeetDto) {
     const userId = this.requestContextService.getUserId();
     const org = this.requestContextService.getOrgId();
     const data = await this.meetService.upsert(userId, org, payload);

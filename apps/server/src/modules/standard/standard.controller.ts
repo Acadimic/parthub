@@ -4,8 +4,8 @@ import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, HttpStatus } from '@nestjs/common';
 import { StandardService } from './standard.service';
 import { StandardSubjectMappingService } from './standard-subject-mapping.service';
-import { UpsertStandardDto } from './dto/upsert-standard.dto';
-import { UpsertStandardSubjectMappingDto } from './dto/upsert-standard-subject-mapping.dto';
+import { StandardDto } from '@parthhub/shared/validations';
+import { StandardSubjectMappingDto } from '@parthhub/shared/validations';
 
 @Controller('standard')
 export class StandardController {
@@ -17,7 +17,7 @@ export class StandardController {
   @Post('upsert')
   @Subdomains(Subdomain.ADMIN)
   @Permissions(PermissionItem.MANAGE_STANDARD)
-  async upsertStandard(@Body() payload: UpsertStandardDto) {
+  async upsertStandard(@Body() payload: StandardDto) {
     const data = await this.standardService.upsert(payload);
     return data;
   }
@@ -25,7 +25,7 @@ export class StandardController {
   @Post('bulk-upsert')
   @Subdomains(Subdomain.ADMIN)
   @Permissions(PermissionItem.MANAGE_STANDARD)
-  async bulkUpsertStandards(@Body() payloads: UpsertStandardDto[]) {
+  async bulkUpsertStandards(@Body() payloads: StandardDto[]) {
     const data = await this.standardService.bulkUpsert(payloads);
     return data;
   }
@@ -41,7 +41,7 @@ export class StandardController {
   @Post('mapping/upsert')
   @Subdomains(Subdomain.ADMIN)
   @Permissions(PermissionItem.MANAGE_STANDARD)
-  async upsertMapping(@Body() payload: UpsertStandardSubjectMappingDto) {
+  async upsertMapping(@Body() payload: StandardSubjectMappingDto) {
     const data = await this.standardSubjectMappingService.upsert(payload);
     return data;
   }
@@ -49,7 +49,7 @@ export class StandardController {
   @Post('mapping/bulk-upsert')
   @Subdomains(Subdomain.ADMIN)
   @Permissions(PermissionItem.MANAGE_STANDARD)
-  async bulkUpsertMappings(@Body() payloads: UpsertStandardSubjectMappingDto[]) {
+  async bulkUpsertMappings(@Body() payloads: StandardSubjectMappingDto[]) {
     const data = await this.standardSubjectMappingService.upsertMany(payloads);
     return data;
   }

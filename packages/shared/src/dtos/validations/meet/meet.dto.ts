@@ -1,7 +1,8 @@
-import { ColorType, MeetFrequency, MeetStatus } from '@parthhub/shared';
+import { ColorType, MeetFrequency, MeetStatus } from '../../../enums';
 import { IsArray, IsDateString, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { BaseOwnedDto } from '../base-owned.dto';
 
-export class UpsertMeetDto {
+export class MeetDto extends BaseOwnedDto {
   @IsNotEmpty()
   @IsMongoId()
   _id: string;

@@ -1,6 +1,7 @@
 import { IsMongoId, IsOptional, IsString } from 'class-validator';
+import { BaseOwnedDto } from '../base-owned.dto';
 
-export class UpsertSubjectDto {
+export class SubjectDto extends BaseOwnedDto {
   @IsMongoId()
   _id: string;
 
