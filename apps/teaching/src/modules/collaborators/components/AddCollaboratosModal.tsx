@@ -1,6 +1,7 @@
 import { Card, Modal } from '@repo/ui/app';
 import { UserPlusIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { observer } from 'mobx-react-lite';
+import { type JSX } from 'react';
 
 interface IProps {
   isOpen: boolean;

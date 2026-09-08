@@ -50,25 +50,25 @@
     "tailwind-merge": "^3.6.0"
   },
   "peerDependencies": {
-    "next": "15.0.1",
-    "react": "19.0.0-rc-69d4b800-20241021",
-    "react-dom": "19.0.0-rc-69d4b800-20241021"
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@types/node": "^20",
     "@types/randomcolor": "^0.5.9",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
     "@typescript-eslint/eslint-plugin": "^8.70.0",
     "@typescript-eslint/parser": "^8.70.0",
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.2.1",
-    "next": "15.0.1",
+    "next": "16.3.4",
     "prettier": "^3.9.6",
-    "react": "19.0.0-rc-69d4b800-20241021",
-    "react-dom": "19.0.0-rc-69d4b800-20241021",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "typescript": "^6.0.3"
   }
 }

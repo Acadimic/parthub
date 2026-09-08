@@ -167,7 +167,7 @@ export function HtmlEditor(props: IProps) {
             onFocus={handleFocus}
             onBlur={handleBlur}
             onChange={handleContentChange}
-            onPaste={(e) => {
+            onPaste={(e: React.ClipboardEvent<HTMLElement>) => {
               e.preventDefault();
               let text = e.clipboardData.getData('text/plain');
               text = replaceColor(text);

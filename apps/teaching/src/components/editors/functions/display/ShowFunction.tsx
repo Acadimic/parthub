@@ -25,7 +25,7 @@ import {
 } from '@phosphor-icons/react';
 import { FunctionType } from '@enums';
 import { type ISelectItem, type ITarget } from '@interfaces';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type JSX } from 'react';
 import Brackets from '../Brackets';
 import ChemicalEquation from '../ChemicalEquation';
 import CubeRoot from '../CubeRoot';

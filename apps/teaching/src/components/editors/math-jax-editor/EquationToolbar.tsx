@@ -14,7 +14,7 @@ import {
 import { RenderEquation } from '@components/others';
 import { PositionType } from '@enums';
 import { capitalize } from '@utils/helpers';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import {
   Determinant,
   Fraction,

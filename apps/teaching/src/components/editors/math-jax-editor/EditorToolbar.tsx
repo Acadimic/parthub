@@ -1,7 +1,7 @@
 import { Modal, Tooltip } from '@repo/ui/app';
 import { PositionType } from '@enums';
 import { capitalize } from '@utils/helpers';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import { AddCode, AddContent, AddEquation, AddHeading, AddImage, AddLink, AddList } from './toolbar-items';
 import { type Block, EditorContentType } from './types';
 import { EditorContentIconMap, getEditorInitialContent } from './util';

@@ -113,7 +113,7 @@ export const TextEditor = ({
         //   console.log('####onFocus: ', index);
         //   onFocus(index);
         // }}
-        onClick={(event) => {
+        onClick={(event: React.MouseEvent<HTMLElement>) => {
           event.stopPropagation();
           onFocus(index);
           console.log('####onClick: ', index);
@@ -122,7 +122,7 @@ export const TextEditor = ({
         suppressContentEditableWarning
         // autoFocus={isFocused}
         tagName="span"
-        onPaste={(e) => {
+        onPaste={(e: React.ClipboardEvent<HTMLElement>) => {
           e.preventDefault();
           let text = e.clipboardData.getData('text/plain');
           text = replaceColor(text);
