@@ -1,4 +1,3 @@
-/* eslint-disable react/display-name */
 import { BlankState } from '@components/others';
 import { type IColumnData } from '@interfaces';
 import { ACTIONS } from '@utils/constants';
