@@ -1,11 +1,12 @@
-import { type IToast, toastStore } from '../../stores';
+import { type IToast, type ToastType } from '@interfaces';
+import { useToastStore } from '../../stores';
 
 interface IToastParams {
   message: string;
   description?: string;
 }
 
-const getToastData = (data: IToastParams, type: 'success' | 'error' | 'warning' | 'info'): IToast => {
+const getToastData = (data: IToastParams, type: ToastType): IToast => {
   return {
     id: Date.now(),
     message: data.message,
@@ -16,20 +17,20 @@ const getToastData = (data: IToastParams, type: 'success' | 'error' | 'warning' 
 
 export const successToast = (data: IToastParams) => {
   const toastData: IToast = getToastData(data, 'success');
-  toastStore.addToast(toastData);
+  useToastStore.getState().add(toastData);
 };
 
 export const errorToast = (data: IToastParams) => {
   const toastData: IToast = getToastData(data, 'error');
-  toastStore.addToast(toastData);
+  useToastStore.getState().add(toastData);
 };
 
 export const warnToast = (data: IToastParams) => {
   const toastData: IToast = getToastData(data, 'warning');
-  toastStore.addToast(toastData);
+  useToastStore.getState().add(toastData);
 };
 
 export const infoToast = (data: IToastParams) => {
   const toastData: IToast = getToastData(data, 'info');
-  toastStore.addToast(toastData);
+  useToastStore.getState().add(toastData);
 };

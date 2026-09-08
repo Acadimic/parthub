@@ -1,24 +1,25 @@
 import { XIcon } from '@phosphor-icons/react';
-import { type IToast, toastStore } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type IToast, type ToastType } from '@interfaces';
+import { useToastStore } from '@stores';
 import { useEffect, useState } from 'react';
 
-const variantStyles: Record<string, string> = {
+const variantStyles: Record<ToastType, string> = {
   success: 'bg-green-50 border-green-300 text-green-800',
   error: 'bg-red-50 border-red-300 text-red-800',
   warning: 'bg-yellow-50 border-yellow-300 text-yellow-800',
   info: 'bg-blue-50 border-blue-300 text-blue-800',
 };
 
-const iconByVariant: Record<string, string> = {
+const iconByVariant: Record<ToastType, string> = {
   success: '\u2713',
   error: '\u2717',
   warning: '\u26A0',
   info: '\u2139',
 };
 
-export const Toast = observer(({ toast }: { toast: IToast }) => {
+export const Toast = ({ toast }: { toast: IToast }) => {
   const { id, type, message, description } = toast;
+  const remove = useToastStore((state) => state.remove);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export const Toast = observer(({ toast }: { toast: IToast }) => {
   const onClose = () => {
     setVisible(false);
     setTimeout(() => {
-      toastStore.removeToast(id);
+      remove(id);
     }, 200);
   };
 
@@ -62,4 +63,4 @@ export const Toast = observer(({ toast }: { toast: IToast }) => {
       </button>
     </div>
   );
-});
+};

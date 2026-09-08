@@ -9,3 +9,4 @@ export * from './permission.interface';
 export * from './exam.interface';
 export * from './editor.interface';
 export * from './stat.interface';
+export * from './toast.interface';
