@@ -1,6 +1,6 @@
 import { Button, TextInput } from '@components/app';
 import { ILoginUser } from '@interfaces';
-import { Eye, EyeSlash } from '@phosphor-icons/react';
+import { EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { useSetState } from 'react-use';
@@ -56,9 +56,9 @@ export const EmailPassword = ({ isDisabled, isLoading, handleSubmit, text }: IPr
               rightsection={
                 <div className="" onClick={togglePassword}>
                   {isShowPassword ? (
-                    <EyeSlash weight="thin" className="text-[#929499]" />
+                    <EyeSlashIcon weight="thin" className="text-[#929499]" />
                   ) : (
-                    <Eye weight="thin" className="text-[#929499]" />
+                    <EyeIcon weight="thin" className="text-[#929499]" />
                   )}
                 </div>
               }

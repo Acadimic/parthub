@@ -1,4 +1,4 @@
-import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
+import { WifiHighIcon, WifiSlashIcon } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 
 export const InternetStatus = () => {
@@ -29,7 +29,7 @@ export const InternetStatus = () => {
             isOnline ? 'bg-[#479F60]' : 'bg-[#4087FF]'
           } text-white py-2.5 text-sm font-medium flex gap-2 justify-center items-center`}
         >
-          {isOnline ? <WifiHigh weight="bold" size={18} /> : <WifiSlash weight="bold" size={18} />}
+          {isOnline ? <WifiHighIcon weight="bold" size={18} /> : <WifiSlashIcon weight="bold" size={18} />}
           <p>
             {isOnline
               ? 'Welcome back online!'

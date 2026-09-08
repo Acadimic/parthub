@@ -1,5 +1,5 @@
 import { Modal, ModalFooter, RadioSelection, SoftConfirmModal, TextInput } from '@components/app';
-import { MagnifyingGlass } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { TestPaperService } from '@services';
 import { ITestPaper, useStores } from '@stores';
 import { errorToast } from '@utils/helpers';
@@ -93,7 +93,7 @@ export const MergeTestPapersModal = observer(({ isOpen, onClose, primaryTestPape
                 placeholder="Search Test Paper"
                 value={state.filterString}
                 onChange={(e) => setState({ filterString: e.target.value })}
-                leftsection={<MagnifyingGlass className="w-5 h-5" />}
+                leftsection={<MagnifyingGlassIcon className="w-5 h-5" />}
               />
             </div>
             <div>

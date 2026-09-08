@@ -1,5 +1,5 @@
 import { Button, DataTable, FullScreenLoader, TextInput } from '@components/app';
-import { MagnifyingGlass, Pencil, Plus, Trash } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { DefaultRole } from '@enums';
 import { IColumnData } from '@interfaces';
 import { IUser, useStores } from '@stores';
@@ -140,12 +140,12 @@ export const Collaborators = observer(() => {
         {
           label: 'Edit',
           onClick: editCollaborator,
-          icon: <Pencil weight="bold" className="w-4 h-4" />,
+          icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Delete',
           onClick: () => {},
-          icon: <Trash weight="bold" className="w-4 h-4" />,
+          icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
       width: 96,
@@ -160,11 +160,11 @@ export const Collaborators = observer(() => {
             <div className="">
               <TextInput
                 placeholder="Search Collaborators"
-                leftsection={<MagnifyingGlass weight="bold" className="w-4 h-4" />}
+                leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
               />
             </div>
             <div>
-              <Button leftsection={<Plus weight="bold" className="w-4 h-4" />} onClick={openAddCollaboratorsModal}>
+              <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={openAddCollaboratorsModal}>
                 Add <span className="hidden sm:inline">Collaborators</span>
               </Button>
             </div>

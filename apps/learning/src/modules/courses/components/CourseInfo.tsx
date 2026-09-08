@@ -1,5 +1,5 @@
 import { MaterialType } from '@enums';
-import { BookOpenText, Clock, FileText, VideoCamera, YoutubeLogo } from '@phosphor-icons/react';
+import { BookOpenTextIcon, ClockIcon, FileTextIcon, VideoCameraIcon, YoutubeLogoIcon } from '@phosphor-icons/react';
 import { ICourseStats } from '@stores';
 import { getTwoDigit } from '@utils/helpers';
 
@@ -13,7 +13,7 @@ export const CourseInfo = ({ courseStats }: IProps) => {
       <div className="flex items-center md:gap-4 gap-3 font-medium w-full">
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
-            <YoutubeLogo weight="bold" className="w-auto h-4" />
+            <YoutubeLogoIcon weight="bold" className="w-auto h-4" />
             <div className="">{getTwoDigit(courseStats.videosCount)}</div>
           </div>
           <div className="capitalize">
@@ -22,7 +22,7 @@ export const CourseInfo = ({ courseStats }: IProps) => {
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
-            <BookOpenText weight="bold" className="w-auto h-4" />
+            <BookOpenTextIcon weight="bold" className="w-auto h-4" />
             <div className="">{getTwoDigit(courseStats.readingsCount)}</div>
           </div>
           <div className="capitalize">
@@ -32,7 +32,7 @@ export const CourseInfo = ({ courseStats }: IProps) => {
         {/* <Divider orientation="vertical" className="h-10" /> */}
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
-            <FileText weight="bold" className="w-auto h-4" />
+            <FileTextIcon weight="bold" className="w-auto h-4" />
             <div className="">{getTwoDigit(courseStats.testsCount)}</div>
           </div>
           <div className="capitalize">
@@ -41,7 +41,7 @@ export const CourseInfo = ({ courseStats }: IProps) => {
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
-            <VideoCamera weight="bold" className="w-auto h-4" />
+            <VideoCameraIcon weight="bold" className="w-auto h-4" />
             <div className="">{getTwoDigit(courseStats.meetsCount)}</div>
           </div>
           <div className="capitalize">
@@ -50,7 +50,7 @@ export const CourseInfo = ({ courseStats }: IProps) => {
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
-            <Clock weight="bold" className="w-auto h-4" />
+            <ClockIcon weight="bold" className="w-auto h-4" />
             <div className="">
               {getTwoDigit(
                 courseStats.testsDurationMins + courseStats.materialsDurationMins + courseStats.meetsDurationMins,

@@ -1,4 +1,4 @@
-import { BookOpenText, Clock, YoutubeLogo } from '@phosphor-icons/react';
+import { BookOpenTextIcon, ClockIcon, YoutubeLogoIcon } from '@phosphor-icons/react';
 import { MaterialType } from '@enums';
 import { IMaterialStat } from '@stores';
 
@@ -12,7 +12,7 @@ export const MaterialInfo = ({ materialStat }: IProps) => {
       <div className="flex items-center gap-4 font-medium w-full">
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
-            <YoutubeLogo weight="bold" className="w-auto h-4" />
+            <YoutubeLogoIcon weight="bold" className="w-auto h-4" />
             <div className="">{materialStat.count}</div>
           </div>
           <div className="capitalize">
@@ -21,7 +21,7 @@ export const MaterialInfo = ({ materialStat }: IProps) => {
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
-            <BookOpenText weight="bold" className="w-auto h-4" />
+            <BookOpenTextIcon weight="bold" className="w-auto h-4" />
             <div className="">{materialStat.count}</div>
           </div>
           <div className="capitalize">
@@ -30,7 +30,7 @@ export const MaterialInfo = ({ materialStat }: IProps) => {
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
-            <Clock weight="bold" className="w-auto h-4" />
+            <ClockIcon weight="bold" className="w-auto h-4" />
             <div className="">{materialStat.durationMins}</div>
           </div>
           <div className="">

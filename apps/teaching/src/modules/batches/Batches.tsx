@@ -1,5 +1,5 @@
 import { Button, DataTable, FullScreenLoader, GroupAvatars, TextInput } from '@components/app';
-import { MagnifyingGlass, Pencil, Plus, Trash } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { IColumnData } from '@interfaces';
 import { IBatch, useStores } from '@stores';
 import { ACTIONS } from '@utils/constants';
@@ -100,12 +100,12 @@ export const Batches = observer(() => {
         {
           label: 'Edit',
           onClick: editBatch,
-          icon: <Pencil weight="bold" className="w-4 h-4" />,
+          icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Delete',
           onClick: () => {},
-          icon: <Trash weight="bold" className="w-4 h-4" />,
+          icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
       width: 96,
@@ -124,11 +124,11 @@ export const Batches = observer(() => {
             <div className="">
               <TextInput
                 placeholder="Search Batches"
-                leftsection={<MagnifyingGlass weight="bold" className="w-4 h-4" />}
+                leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
               />
             </div>
             <div>
-              <Button leftsection={<Plus weight="bold" className="w-4 h-4" />} onClick={openUpsertBatchModal}>
+              <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={openUpsertBatchModal}>
                 Add <span className="hidden sm:inline">Batches</span>
               </Button>
             </div>

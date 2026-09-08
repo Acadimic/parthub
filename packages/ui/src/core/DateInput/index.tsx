@@ -1,5 +1,5 @@
 import { PopoverContent, Popover as ShadcnPopover, PopoverTrigger } from '../../ui/popover';
-import { CalendarBlank } from '@phosphor-icons/react';
+import { CalendarBlankIcon } from '@phosphor-icons/react';
 import * as React from 'react';
 import { TextInput } from '../TextInput';
 
@@ -45,7 +45,7 @@ export const DateInput = ({
             placeholder={placeholder}
             readOnly
             value={formatDate(value)}
-            rightSection={<CalendarBlank weight="bold" className="w-4 h-4" />}
+            rightSection={<CalendarBlankIcon weight="bold" className="w-4 h-4" />}
             disabled={disabled}
           />
         </div>

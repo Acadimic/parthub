@@ -2,7 +2,7 @@ import { SimpleAccordions } from '@components/app';
 import { StandardWithLogo } from '@components/common';
 import { CourseItemType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
-import { CaretDoubleRight } from '@phosphor-icons/react';
+import { CaretDoubleRightIcon } from '@phosphor-icons/react';
 import { ICourseModule, useStores } from '@stores';
 import { getPlural } from '@utils/helpers';
 import { CourseDayTab } from './CourseDayTab';
@@ -83,7 +83,7 @@ export const CourseSidebarContent = () => {
         <div>
           <div className="py-4 w-full flex justify-end items-center pr-3">
             <button onClick={handleCourseMenuClick} className="p-1 rounded hover:bg-background-secondary">
-              <CaretDoubleRight
+              <CaretDoubleRightIcon
                 weight="bold"
                 className={`w-5 h-5 transition ${isCourseMenuOpen ? 'rotate-180' : 'text-blue-primary'}`}
               />

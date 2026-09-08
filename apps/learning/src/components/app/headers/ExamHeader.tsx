@@ -1,4 +1,4 @@
-import { DotsNine } from '@phosphor-icons/react';
+import { DotsNineIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { Timer, ToggleTheme } from './';
@@ -27,7 +27,7 @@ export const ExamHeader = observer(({ isPractice, toggleTimer, isActiveTimer, ha
               } justify-start items-center font-bold text-sm space-x-2`}
             >
               <div className="">
-                <DotsNine weight="bold" className="w-5 h-5 text-blue-primary" />
+                <DotsNineIcon weight="bold" className="w-5 h-5 text-blue-primary" />
               </div>
               <div className="truncate">{title}</div>
             </div>

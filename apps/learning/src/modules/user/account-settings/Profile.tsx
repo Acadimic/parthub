@@ -1,6 +1,6 @@
 import { Button, Card, ModalFooter, Select, TextInput } from '@components/app';
 import { Gender } from '@enums';
-import { PencilLine } from '@phosphor-icons/react';
+import { PencilLineIcon } from '@phosphor-icons/react';
 import { UserService } from '@services';
 import { useStores } from '@stores';
 import { errorToast, formatPhoneNumber, successToast, validateEmail } from '@utils/helpers';
@@ -121,7 +121,7 @@ export const Profile = observer(() => {
                 className="px-0 py-0 text-sm text-color-secondary hover:text-blue-primary"
                 isSubtle
                 text={state.isEditing ? 'Close' : 'Edit'}
-                leftsection={<PencilLine />}
+                leftsection={<PencilLineIcon />}
                 onClick={() => toggleEdit(!state.isEditing)}
                 isLoading={state.isLoading}
               />

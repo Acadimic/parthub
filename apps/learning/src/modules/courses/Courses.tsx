@@ -1,6 +1,6 @@
 import { FullScreenLoader } from '@components/app';
 import { Container } from '@components/others';
-import { DotsNine } from '@phosphor-icons/react';
+import { DotsNineIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { CourseCard } from './components/CourseCard';
@@ -32,7 +32,7 @@ export const Courses = observer(({ isFilter }: IProps) => {
                     <div className="font-medium py-3 border-b border-color-border">
                       <div className="flex items-center space-x-2">
                         <div>
-                          <DotsNine weight="bold" className="w-6 h-6" />
+                          <DotsNineIcon weight="bold" className="w-6 h-6" />
                         </div>
                         <div className="text-base md:text-xl">{getStandardById(standardId)?.name} Courses</div>
                       </div>

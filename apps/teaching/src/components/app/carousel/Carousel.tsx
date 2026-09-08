@@ -1,4 +1,4 @@
-import { CaretLeft, CaretRight, Circle } from '@phosphor-icons/react';
+import { CaretLeftIcon, CaretRightIcon, CircleIcon } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
 interface CarouselProps {
@@ -68,13 +68,13 @@ export const Carousel = ({
             onClick={goToPrevious}
             className="absolute left-2 top-1/2 -translate-y-1/2 bg-background-paper hover:bg-background-paper shadow-md p-1.5 rounded-full border border-color-border"
           >
-            <CaretLeft weight="bold" className="w-4 h-4" />
+            <CaretLeftIcon weight="bold" className="w-4 h-4" />
           </button>
           <button
             onClick={goToNext}
             className="absolute right-2 top-1/2 -translate-y-1/2 bg-background-paper hover:bg-background-paper shadow-md p-1.5 rounded-full border border-color-border"
           >
-            <CaretRight weight="bold" className="w-4 h-4" />
+            <CaretRightIcon weight="bold" className="w-4 h-4" />
           </button>
         </>
       )}
@@ -82,7 +82,7 @@ export const Carousel = ({
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
           {items.map((_, index) => (
             <button key={index} onClick={() => goToIndex(index)} className="p-0.5">
-              <Circle
+              <CircleIcon
                 weight="fill"
                 className={`w-2 h-2 ${index === activeIndex ? 'text-color-primary' : 'text-color-secondary'}`}
               />

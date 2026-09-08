@@ -10,7 +10,7 @@ import {
   TextInput,
   TimeInput,
 } from '@components/app';
-import { Circle, LinkSimple } from '@phosphor-icons/react';
+import { CircleIcon, LinkSimpleIcon } from '@phosphor-icons/react';
 import { ColorType, MeetFrequency, PositionType } from '@enums';
 import { ISelectItem } from '@interfaces';
 import { MeetService } from '@services';
@@ -91,7 +91,7 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
                     menuItems={Object.values(ColorType).map((item) => ({
                       label: capitalize(item),
                       icon: (
-                        <Circle
+                        <CircleIcon
                           weight="fill"
                           style={{ color: colorObject.colors[item]?.primary }}
                           className={` w-5 h-5`}
@@ -102,7 +102,7 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
                     selected={selectedMeet.color}
                     component={
                       <div className="h-full px-0">
-                        <Circle
+                        <CircleIcon
                           weight="fill"
                           style={{ color: colorObject.colors[selectedMeet.color]?.primary }}
                           className={`w-5 h-5`}
@@ -204,7 +204,7 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
                 className="text-xs"
                 href="https://meet.google.com/getalink"
                 target="_blank"
-                leftsection={<LinkSimple />}
+                leftsection={<LinkSimpleIcon />}
                 isSubtle
               >
                 Generate meeting link powered by Google Meet

@@ -1,5 +1,5 @@
 import { useCourse } from '@hooks/course.hook';
-import { Check, Circle } from '@phosphor-icons/react';
+import { CheckIcon, CircleIcon } from '@phosphor-icons/react';
 import { ICourseModule, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 
@@ -25,9 +25,9 @@ export const CourseDayTab = observer(({ courseModule }: IProps) => {
       <div className="flex items-center space-x-2.5 w-full">
         <div className="rounded-full border border-color-border">
           {isAllCompleted ? (
-            <Check weight="bold" className="w-5 h-5 p-1 bg-green-primary text-white rounded-full" />
+            <CheckIcon weight="bold" className="w-5 h-5 p-1 bg-green-primary text-white rounded-full" />
           ) : (
-            <Circle
+            <CircleIcon
               weight="fill"
               className={`w-5 h-5 ${isPartiallyCompleted ? 'text-yellow-primary' : 'text-color-light'}`}
             />

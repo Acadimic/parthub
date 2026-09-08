@@ -1,6 +1,6 @@
 import { Button, FullLogo, Logo, ToggleTheme } from '@components/app';
 import { StorageKey } from '@enums';
-import { CaretDoubleRight, CaretLeft } from '@phosphor-icons/react';
+import { CaretDoubleRightIcon, CaretLeftIcon } from '@phosphor-icons/react';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
@@ -91,7 +91,7 @@ export const AppSidebar = observer(({ children }: IProps) => {
       </div>
       <div className="p-4 flex justify-end">
         <button onClick={handleDrawerClick} className="p-1 rounded hover:bg-background-secondary">
-          <CaretDoubleRight
+          <CaretDoubleRightIcon
             weight="bold"
             className={`w-5 h-5 transition ${open ? 'rotate-180' : 'text-blue-primary'}`}
           />
@@ -143,7 +143,7 @@ export const AppSidebar = observer(({ children }: IProps) => {
                 ) : (
                   <Button
                     className="px-0"
-                    leftsection={<CaretLeft weight="bold" className="w-6 h-6" />}
+                    leftsection={<CaretLeftIcon weight="bold" className="w-6 h-6" />}
                     isSubtle
                     onClick={back}
                   >

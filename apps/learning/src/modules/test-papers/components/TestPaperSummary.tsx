@@ -1,4 +1,4 @@
-import { CheckCircle, Icon, MinusCircle, RadioButton, Timer } from '@phosphor-icons/react';
+import { CheckCircleIcon, Icon, MinusCircleIcon, RadioButtonIcon, TimerIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';
 import { getTimeString, getTwoDigit } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
@@ -23,16 +23,16 @@ export const TestPaperSummary = observer(({}: IProps) => {
   const { attemptedCount, numberOfQuestions, markedForReviews, timeLeft } = exam;
 
   const rows = [
-    { icon: Timer, label: 'Time Left', value: getTimeString(timeLeft), className: 'w-16' },
-    { icon: CheckCircle, label: 'Attempted', value: String(getTwoDigit(attemptedCount)), className: '' },
+    { icon: TimerIcon, label: 'Time Left', value: getTimeString(timeLeft), className: 'w-16' },
+    { icon: CheckCircleIcon, label: 'Attempted', value: String(getTwoDigit(attemptedCount)), className: '' },
     {
-      icon: MinusCircle,
+      icon: MinusCircleIcon,
       label: 'Unattempted',
       value: String(getTwoDigit(numberOfQuestions - attemptedCount)),
       className: '',
     },
     {
-      icon: RadioButton,
+      icon: RadioButtonIcon,
       label: 'Marked For Review',
       value: String(getTwoDigit(markedForReviews.length)),
       className: '',

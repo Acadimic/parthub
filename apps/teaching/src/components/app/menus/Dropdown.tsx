@@ -1,4 +1,4 @@
-import { CaretDown } from '@phosphor-icons/react';
+import { CaretDownIcon } from '@phosphor-icons/react';
 import { IMenuItem } from '@interfaces';
 import { Button } from '../buttons';
 import { Menu } from './Menu';
@@ -15,7 +15,7 @@ export const Dropdown = ({ menuItems, selected, component }: IDropdownProps) => 
       menuItems={menuItems}
       component={
         <div className="border border-color-border">
-          <Button isSubtle className="px-4 py-1.5" rightsection={<CaretDown weight="bold" />}>
+          <Button isSubtle className="px-4 py-1.5" rightsection={<CaretDownIcon weight="bold" />}>
             {component || selected}
           </Button>
         </div>

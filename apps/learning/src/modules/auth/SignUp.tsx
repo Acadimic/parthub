@@ -1,7 +1,7 @@
 import { Button, TextInput, ToggleTheme } from '@components/app';
 import { HorizontalLineWithText, Policy } from '@components/others';
 import { ILoginUser } from '@interfaces';
-import { ArrowCircleLeft, Eye, EyeSlash } from '@phosphor-icons/react';
+import { ArrowCircleLeftIcon, EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
 import { createFirebaseUser, fetchSignInMethods, FirebaseError, getFirebaseErrorMessage } from '@utils/firebase';
 import { errorToast, getRedirectUri, isValidEmail } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
@@ -88,7 +88,7 @@ export const SignUp = observer(() => {
               className="flex items-center space-x-1.5 text-blue-primary font-medium text-sm mb-3 md:my-6"
               href={'/'}
             >
-              <ArrowCircleLeft className="h-5 w-5" />
+              <ArrowCircleLeftIcon className="h-5 w-5" />
               <span>Go Back</span>
             </Link>
             <div>
@@ -102,9 +102,9 @@ export const SignUp = observer(() => {
                   rightsection={
                     <div className="" onClick={togglePassword}>
                       {isShowPassword ? (
-                        <EyeSlash weight="thin" className="text-[#929499]" />
+                        <EyeSlashIcon weight="thin" className="text-[#929499]" />
                       ) : (
-                        <Eye weight="thin" className="text-[#929499]" />
+                        <EyeIcon weight="thin" className="text-[#929499]" />
                       )}
                     </div>
                   }

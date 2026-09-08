@@ -1,6 +1,6 @@
 import { Button, DataTable, PresignedImage, TextInput } from '@components/app';
 import { IColumnData } from '@interfaces';
-import { MagnifyingGlass, Pencil, Plus, Trash } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { IStandard, useStores } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { observer } from 'mobx-react-lite';
@@ -82,12 +82,12 @@ export const Standards = observer(() => {
         {
           label: 'Edit',
           onClick: onOpenEditModal,
-          icon: <Pencil weight="bold" className="w-4 h-4" />,
+          icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Delete',
           onClick: () => {},
-          icon: <Trash weight="bold" className="w-4 h-4" />,
+          icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
       width: 96,
@@ -101,11 +101,11 @@ export const Standards = observer(() => {
           <div className="">
             <TextInput
               placeholder="Search Standard"
-              leftsection={<MagnifyingGlass weight="bold" className="w-4 h-4" />}
+              leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
             />
           </div>
           <div>
-            <Button leftsection={<Plus weight="bold" className="w-4 h-4" />} onClick={onOpenCreateModal}>
+            <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={onOpenCreateModal}>
               Create <span className="hidden sm:inline">Standard</span>
             </Button>
           </div>

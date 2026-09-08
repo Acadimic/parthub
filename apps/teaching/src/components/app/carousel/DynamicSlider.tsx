@@ -1,4 +1,4 @@
-import { CaretLeft, CaretRight, Circle } from '@phosphor-icons/react';
+import { CaretLeftIcon, CaretRightIcon, CircleIcon } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 interface DynamicSliderProps {
@@ -107,7 +107,7 @@ export const DynamicSlider = ({
               onClick={goToPrevious}
               className="bg-background-paper hover:bg-background-paper shadow-md z-10 p-1.5 rounded-full"
             >
-              <CaretLeft weight="bold" className="w-4 h-4" />
+              <CaretLeftIcon weight="bold" className="w-4 h-4" />
             </button>
           </div>
           <div className="absolute right-2 top-1/2 -translate-y-1/2 border border-color-border rounded-full">
@@ -115,7 +115,7 @@ export const DynamicSlider = ({
               onClick={goToNext}
               className="bg-background-paper hover:bg-background-paper shadow-md z-10 p-1.5 rounded-full"
             >
-              <CaretRight weight="bold" className="w-4 h-4" />
+              <CaretRightIcon weight="bold" className="w-4 h-4" />
             </button>
           </div>
         </>
@@ -124,7 +124,7 @@ export const DynamicSlider = ({
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
           {Array.from({ length: maxIndex + 1 }).map((_, index) => (
             <button key={index} onClick={() => goToIndex(index * itemsPerView)} className="p-0.5">
-              <Circle weight="fill" className="w-2 h-2 text-color-secondary" />
+              <CircleIcon weight="fill" className="w-2 h-2 text-color-secondary" />
             </button>
           ))}
         </div>

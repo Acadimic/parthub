@@ -1,5 +1,5 @@
 import { IMenuItem } from '@interfaces';
-import { CaretDown } from '@phosphor-icons/react';
+import { CaretDownIcon } from '@phosphor-icons/react';
 import * as React from 'react';
 import { Menu } from '../menus';
 import { Button } from '@parthhub/ui/app';
@@ -18,7 +18,7 @@ export const SplitButton = ({ text, menuItems, onClick }: IProps) => {
         menuItems={menuItems}
         component={
           <Button className="!rounded-l-none !rounded-r-sm h-full px-2 md:px-2 border-0">
-            <CaretDown weight="fill" className="w-5" />
+            <CaretDownIcon weight="fill" className="w-5" />
           </Button>
         }
         className="!px-0 border-l border-color-border"

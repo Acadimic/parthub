@@ -1,6 +1,6 @@
 import { Button, DataTable, FullScreenLoader, TextInput } from '@components/app';
 import { PresignedImage } from '@components/app/attachments/PresignedImage';
-import { MagnifyingGlass, Pencil, Plus, Trash } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { ICourse, useStores } from '@stores';
 import { ACTIONS, ALL } from '@utils/constants';
 import { observer } from 'mobx-react-lite';
@@ -129,17 +129,17 @@ export const Courses = observer(() => {
         {
           label: 'Add Modules',
           onClick: onClickCourse,
-          icon: <Plus weight="bold" className="w-4 h-4" />,
+          icon: <PlusIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Edit Course',
           onClick: onOpenEditCourseModal,
-          icon: <Pencil weight="bold" className="w-4 h-4" />,
+          icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Delete',
           onClick: () => {},
-          icon: <Trash weight="bold" className="w-4 h-4" />,
+          icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
       width: 96,
@@ -158,11 +158,11 @@ export const Courses = observer(() => {
             <div className="">
               <TextInput
                 placeholder="Search Course"
-                leftsection={<MagnifyingGlass weight="bold" className="w-4 h-4" />}
+                leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
               />
             </div>
             <div>
-              <Button leftsection={<Plus weight="bold" className="w-4 h-4" />} onClick={onOpenAddCourseModal}>
+              <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={onOpenAddCourseModal}>
                 Add <span className="hidden sm:inline">Course</span>
               </Button>
             </div>

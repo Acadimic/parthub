@@ -1,4 +1,4 @@
-import { Clock } from '@phosphor-icons/react';
+import { ClockIcon } from '@phosphor-icons/react';
 import dayjs from 'dayjs';
 import { Popover } from '../popovers';
 import { TextInput } from '@parthhub/ui/app';
@@ -43,7 +43,7 @@ export const TimeInput = ({ value, label, handleChange, required, isDisabled, cl
           label={label}
           type="text"
           placeholder="Select Time"
-          rightsection={<Clock className="w-5 h-5 text-color-text" />}
+          rightsection={<ClockIcon className="w-5 h-5 text-color-text" />}
           readOnly
           value={value ? dayjs(value).format('hh:mm A') : ''}
           required={required}

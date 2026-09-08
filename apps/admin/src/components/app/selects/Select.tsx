@@ -1,6 +1,6 @@
 import { BlankState } from '@components/others';
 import { ISelectItem } from '@interfaces';
-import { CaretDown, Check, MagnifyingGlass, SquaresFour, X } from '@phosphor-icons/react';
+import { CaretDownIcon, CheckIcon, MagnifyingGlassIcon, SquaresFourIcon, XIcon } from '@phosphor-icons/react';
 import { ALL } from '@utils/constants';
 import * as React from 'react';
 import { TextInput } from '../inputs';
@@ -159,7 +159,7 @@ const SelectElement = ({
         className="w-full bg-background-primary m-0 font-medium text-sm flex py-2 px-3 cursor-pointer items-center space-x-1 border-b border-x border-color-border hover:text-blue-primary text-left"
         onClick={() => handleSelect(option)}
       >
-        <Check
+        <CheckIcon
           weight="bold"
           className="w-4 h-4 mr-1 flex-shrink-0"
           style={{ visibility: selected ? 'visible' : 'hidden' }}
@@ -168,7 +168,7 @@ const SelectElement = ({
           <div className="truncate capitalize w-full">{option.label}</div>
           {option.description && <div className="truncate text-xs text-color-secondary">{option.description}</div>}
         </div>
-        <X
+        <XIcon
           weight="bold"
           className="w-4 h-4 opacity-60 flex-shrink-0"
           style={{ visibility: selected ? 'visible' : 'hidden' }}
@@ -183,7 +183,7 @@ const SelectElement = ({
         <TextInput
           label={label}
           placeholder={placeholder || (label ? `Select ${label}` : 'Select')}
-          rightsection={rightsection || <CaretDown weight="bold" className="w-4 h-5" />}
+          rightsection={rightsection || <CaretDownIcon weight="bold" className="w-4 h-5" />}
           readOnly
           required={required}
           value={capitalize(selectedValues.map((item) => item.label).join(', '))}
@@ -201,7 +201,7 @@ const SelectElement = ({
           )}
           <div className="border border-color-border border-t rounded-t-sm bg-background-primary">
             <div className="flex items-center px-3 py-1.5 border-b border-color-border">
-              <MagnifyingGlass className="w-5 h-5 text-blue-primary mr-2 flex-shrink-0" />
+              <MagnifyingGlassIcon className="w-5 h-5 text-blue-primary mr-2 flex-shrink-0" />
               <input
                 type="text"
                 placeholder={label ? `Search ${label}` : 'Search'}
@@ -222,7 +222,7 @@ const SelectElement = ({
               Object.entries(groupedItems).map(([group, groupItems]) => (
                 <div key={group}>
                   <div className="flex items-center text-xs font-medium text-color-secondary px-3 py-2 border-b border-x border-color-border bg-background-primary capitalize space-x-2">
-                    <SquaresFour className="text-blue-primary h-4 w-4" />
+                    <SquaresFourIcon className="text-blue-primary h-4 w-4" />
                     <div>{group}</div>
                   </div>
                   {groupItems.map(renderOption)}

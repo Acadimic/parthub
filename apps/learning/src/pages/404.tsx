@@ -1,6 +1,6 @@
 import { Button } from '@components/app';
 import { Layout } from '@enums';
-import { ArrowLeft } from '@phosphor-icons/react';
+import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
 
 const FourOhFour = () => {
@@ -16,7 +16,11 @@ const FourOhFour = () => {
           clicked may be broken or removed for our space.
         </div>
         <div>
-          <Button text="Back" leftsection={<ArrowLeft weight="bold" className="w-4 h-4" />} onClick={() => push('/')} />
+          <Button
+            text="Back"
+            leftsection={<ArrowLeftIcon weight="bold" className="w-4 h-4" />}
+            onClick={() => push('/')}
+          />
         </div>
       </div>
     </div>

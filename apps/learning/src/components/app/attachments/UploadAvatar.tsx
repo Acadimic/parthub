@@ -1,4 +1,4 @@
-import { Camera, Plus, X } from '@phosphor-icons/react';
+import { CameraIcon, PlusIcon, XIcon } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { Button } from '../buttons';
 import { SoftConfirmModal } from '../modals';
@@ -34,7 +34,9 @@ export const UploadAvatar = ({ file, url, setFile, removeFile }: IProps) => {
   const buttonComponent = (
     <Button
       isSubtle
-      leftsection={fileUrl ? <X weight="bold" className="w-4 h-4" /> : <Plus weight="bold" className="w-4 h-4" />}
+      leftsection={
+        fileUrl ? <XIcon weight="bold" className="w-4 h-4" /> : <PlusIcon weight="bold" className="w-4 h-4" />
+      }
       text={fileUrl ? 'Remove' : 'Upload'}
       className="text-xs px-2 font-medium w-full"
       onClick={fileUrl ? () => setIsOpenConfirmation(true) : undefined}
@@ -48,7 +50,7 @@ export const UploadAvatar = ({ file, url, setFile, removeFile }: IProps) => {
           {fileUrl ? (
             <PresignedImage isStatic={url ? false : true} url={fileUrl} className="w-full h-full rounded-full" />
           ) : (
-            <Camera className="w-12 h-12 text-color-secondary" />
+            <CameraIcon className="w-12 h-12 text-color-secondary" />
           )}
         </div>
         <div className="absolute rounded-full bg-background-primary -bottom-3 w-full border border-color-border">

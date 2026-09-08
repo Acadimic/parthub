@@ -1,5 +1,5 @@
 import { AvatarWithName, Label } from '@components/app';
-import { User } from '@phosphor-icons/react';
+import { UserIcon } from '@phosphor-icons/react';
 import { DefaultRole } from '@enums';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
@@ -29,7 +29,7 @@ export const ViewMeetAttendees = observer(({ attendeeIds, isStudents, isTeachers
       <div className="flex items-center text-sm text-color-secondary">
         {!noLabel && (
           <div className="flex items-center gap-2">
-            <User weight="bold" className="w-4 h-4" />
+            <UserIcon weight="bold" className="w-4 h-4" />
             <Label label={label} />
           </div>
         )}

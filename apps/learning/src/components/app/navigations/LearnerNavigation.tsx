@@ -1,4 +1,4 @@
-import { Book, House, Icon, PaperPlane, Video } from '@phosphor-icons/react';
+import { BookIcon, HouseIcon, Icon, PaperPlaneIcon, VideoIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
 import { Link } from '../links';
 
@@ -13,22 +13,22 @@ export const learnerRoutes: INavigation[] = [
   {
     name: 'Home',
     route: '/',
-    icon: House,
+    icon: HouseIcon,
   },
   {
     name: 'Learning',
     route: '/learning',
-    icon: Book,
+    icon: BookIcon,
   },
   {
     name: 'Courses',
     route: '/courses',
-    icon: PaperPlane,
+    icon: PaperPlaneIcon,
   },
   {
     name: 'Sessions',
     route: '/sessions',
-    icon: Video,
+    icon: VideoIcon,
   },
 ];
 

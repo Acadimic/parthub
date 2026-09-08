@@ -1,5 +1,5 @@
 import { Accordions, Button, Card, Loader, Menu } from '@components/app';
-import { Pencil, Plus, Trash, UploadSimple } from '@phosphor-icons/react';
+import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { IMaterial, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
@@ -99,7 +99,7 @@ export const StudyMaterial = observer(({ standardId, subjectId }: IProps) => {
       </Card>
       <div>
         <div className="flex justify-end">
-          <Button leftsection={<Plus weight="bold" className="w-4 h-4" />} onClick={onOpenAddModal}>
+          <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={onOpenAddModal}>
             Add <span className="hidden sm:inline">Content</span>
           </Button>
         </div>
@@ -119,22 +119,22 @@ export const StudyMaterial = observer(({ standardId, subjectId }: IProps) => {
                         {
                           label: 'Add Material',
                           onClick: () => editMaterial(material),
-                          icon: <Plus weight="bold" className="w-4 h-4" />,
+                          icon: <PlusIcon weight="bold" className="w-4 h-4" />,
                         },
                         {
                           label: 'Edit Material',
                           onClick: () => editMaterial(material),
-                          icon: <Pencil weight="bold" className="w-4 h-4" />,
+                          icon: <PencilIcon weight="bold" className="w-4 h-4" />,
                         },
                         {
                           label: 'Generate Material',
                           onClick: () => generateMaterial(material),
-                          icon: <UploadSimple weight="bold" className="w-4 h-4" />,
+                          icon: <UploadSimpleIcon weight="bold" className="w-4 h-4" />,
                         },
                         {
                           label: 'Delete Material',
                           onClick: () => {},
-                          icon: <Trash weight="bold" className="w-4 h-4" />,
+                          icon: <TrashIcon weight="bold" className="w-4 h-4" />,
                         },
                       ]}
                       className=""

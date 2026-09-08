@@ -1,6 +1,6 @@
 import { Button, DataTable, FullScreenLoader, TextInput, Tooltip } from '@components/app';
 import { CopyUrl } from '@components/common';
-import { MagnifyingGlass, Pencil, Plus, Trash } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { IColumnData } from '@interfaces';
 import {
   JoiningLink,
@@ -144,12 +144,12 @@ export const Sessions = observer(() => {
         {
           label: 'Edit',
           onClick: handleEditMeet,
-          icon: <Pencil weight="bold" className="w-4 h-4" />,
+          icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Delete',
           onClick: () => {},
-          icon: <Trash weight="bold" className="w-4 h-4" />,
+          icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
       width: 96,
@@ -168,12 +168,12 @@ export const Sessions = observer(() => {
             <div className="">
               <TextInput
                 placeholder="Search Sessions"
-                leftsection={<MagnifyingGlass weight="bold" className="w-4 h-4" />}
+                leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
               />
             </div>
             <div>
               <Button
-                leftsection={<Plus weight="bold" className="w-4 h-4" />}
+                leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
                 onClick={() => handleCreateMeet(new Date())}
               >
                 Add <span className="hidden sm:inline">Session</span>

@@ -1,7 +1,7 @@
 import { ISelectItem } from '../../types';
 import { PopoverContent, Popover as ShadcnPopover, PopoverTrigger } from '../../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../../ui/command';
-import { CaretDown, Check, X } from '@phosphor-icons/react';
+import { CaretDownIcon, CheckIcon, XIcon } from '@phosphor-icons/react';
 import { cn } from '../../lib/cn';
 import * as React from 'react';
 import { TextInput } from '../TextInput';
@@ -111,7 +111,7 @@ const SelectElement = ({
           <TextInput
             label={label}
             placeholder={placeholder || (label ? `Select ${label}` : 'Select')}
-            rightSection={rightSection || <CaretDown weight="bold" className="w-4 h-5" />}
+            rightSection={rightSection || <CaretDownIcon weight="bold" className="w-4 h-5" />}
             readOnly
             required={required}
             value={displayValue}
@@ -150,14 +150,14 @@ const SelectElement = ({
                       onSelect={() => handleSelect(item)}
                       className="font-medium text-sm py-2 px-3 cursor-pointer border-b border-color-border hover:!text-blue-primary rounded-none"
                     >
-                      <Check className={cn('w-4 h-4 mr-1.5', isSelected ? 'opacity-100' : 'opacity-0')} />
+                      <CheckIcon className={cn('w-4 h-4 mr-1.5', isSelected ? 'opacity-100' : 'opacity-0')} />
                       <div className="flex-1 truncate">
                         <div className="truncate capitalize">{item.label}</div>
                         {item.description && (
                           <div className="truncate text-xs text-color-secondary">{item.description}</div>
                         )}
                       </div>
-                      <X className={cn('w-4 h-4 opacity-60', isSelected ? 'opacity-60' : 'opacity-0')} />
+                      <XIcon className={cn('w-4 h-4 opacity-60', isSelected ? 'opacity-60' : 'opacity-0')} />
                     </CommandItem>
                   );
                 })}

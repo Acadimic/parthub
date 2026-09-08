@@ -1,7 +1,7 @@
 import { Button } from '@components/app';
 import { Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
-import { Plus } from '@phosphor-icons/react';
+import { PlusIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
 import { IOption, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
@@ -53,7 +53,7 @@ export const AddQuestion = observer(() => {
                 <Button
                   isSecondary
                   text="Add Option"
-                  leftsection={<Plus weight="bold" className="w-4 h-4" />}
+                  leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
                   onClick={handleAddOption}
                 />
               </div>

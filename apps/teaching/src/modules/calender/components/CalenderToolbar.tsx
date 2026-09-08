@@ -1,5 +1,13 @@
 import { Button, Dropdown, Menu } from '@components/app';
-import { CaretLeft, CaretRight, GridFour, GridNine, ListBullets, Plus, Rows } from '@phosphor-icons/react';
+import {
+  CaretLeftIcon,
+  CaretRightIcon,
+  GridFourIcon,
+  GridNineIcon,
+  ListBulletsIcon,
+  PlusIcon,
+  RowsIcon,
+} from '@phosphor-icons/react';
 import { CalendarType, FCCalendarType } from '@enums';
 import { CalendarTypeMap } from '@utils/constants';
 import {
@@ -25,10 +33,10 @@ interface IProps {
 }
 
 export const CalenderViewIconMap = {
-  [FCCalendarType.DAY]: <Rows weight="bold" size={16} />,
-  [FCCalendarType.WEEK]: <GridFour weight="bold" size={16} />,
-  [FCCalendarType.MONTH]: <GridNine weight="bold" size={16} />,
-  [FCCalendarType.LIST]: <ListBullets weight="bold" size={16} />,
+  [FCCalendarType.DAY]: <RowsIcon weight="bold" size={16} />,
+  [FCCalendarType.WEEK]: <GridFourIcon weight="bold" size={16} />,
+  [FCCalendarType.MONTH]: <GridNineIcon weight="bold" size={16} />,
+  [FCCalendarType.LIST]: <ListBulletsIcon weight="bold" size={16} />,
 };
 
 export const CustomToolbar = ({
@@ -97,10 +105,10 @@ export const CustomToolbar = ({
             Today
           </button>
           <button className="p-1 rounded hover:bg-background-secondary" onClick={handlePrev}>
-            <CaretLeft className="w-5 h-5" />
+            <CaretLeftIcon className="w-5 h-5" />
           </button>
           <button className="p-1 rounded hover:bg-background-secondary" onClick={handleNext}>
-            <CaretRight className="w-5 h-5" />
+            <CaretRightIcon className="w-5 h-5" />
           </button>
           <div className="font-semibold text-md md:text-lg truncate max-w-[120px] md:max-w-full">
             {calendarType === CalendarType.DAY ? (
@@ -123,7 +131,7 @@ export const CustomToolbar = ({
           </div>
         </div>
         <div className="w-full flex justify-between md:justify-end items-center gap-3 md:gap-5">
-          <Button leftsection={<Plus weight="bold" size={16} />} onClick={() => handleCreateMeet(date)}>
+          <Button leftsection={<PlusIcon weight="bold" size={16} />} onClick={() => handleCreateMeet(date)}>
             <span className="block md:block">Create</span>
           </Button>
           <div className="flex items-center gap-2 md:gap-2">

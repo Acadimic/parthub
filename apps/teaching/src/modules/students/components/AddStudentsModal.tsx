@@ -1,5 +1,5 @@
 import { Card, Modal } from '@components/app';
-import { UserPlus, UsersThree } from '@phosphor-icons/react';
+import { UserPlusIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {
@@ -20,13 +20,13 @@ export const AddStudentsModal = observer(
   ({ isOpen, onClose, openUpsertStudentModal, openBulkAddStudentsModal }: IProps) => {
     const addStudentsItems: IAddStudentItem[] = [
       {
-        icon: <UserPlus weight="bold" className="w-5 h-5" />,
+        icon: <UserPlusIcon weight="bold" className="w-5 h-5" />,
         label: 'Add Student Manually',
         onClick: openUpsertStudentModal,
         description: 'Enter details to create a student profile.',
       },
       {
-        icon: <UsersThree weight="bold" className="w-5 h-5" />,
+        icon: <UsersThreeIcon weight="bold" className="w-5 h-5" />,
         label: 'Bulk Add Students Manually',
         onClick: openBulkAddStudentsModal,
         description: 'Enter multiple student details at once into a table.',

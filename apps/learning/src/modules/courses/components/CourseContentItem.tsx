@@ -1,6 +1,6 @@
 import { ModuleContentType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
-import { BookOpenText, Check, ClipboardText, Video } from '@phosphor-icons/react';
+import { BookOpenTextIcon, CheckIcon, ClipboardTextIcon, VideoIcon } from '@phosphor-icons/react';
 import { IMaterial, ITestPaper, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useMemo } from 'react';
@@ -15,11 +15,11 @@ interface IProps {
 }
 
 const ICON_MAPS = {
-  [ModuleContentType.VIDEO]: <Video className="w-5 h-5" />,
-  [ModuleContentType.READING]: <BookOpenText className="w-5 h-5" />,
-  [ModuleContentType.TEST_PAPER]: <ClipboardText className="w-5 h-5" />,
+  [ModuleContentType.VIDEO]: <VideoIcon className="w-5 h-5" />,
+  [ModuleContentType.READING]: <BookOpenTextIcon className="w-5 h-5" />,
+  [ModuleContentType.TEST_PAPER]: <ClipboardTextIcon className="w-5 h-5" />,
   [ModuleContentType.COMPLETED]: (
-    <Check weight="bold" className="w-5 h-5 p-1 bg-green-primary text-white rounded-full" />
+    <CheckIcon weight="bold" className="w-5 h-5 p-1 bg-green-primary text-white rounded-full" />
   ),
 };
 

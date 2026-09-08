@@ -1,5 +1,5 @@
 import { Accordions, Button, Loader, Menu, SplitButton } from '@components/app';
-import { DownloadSimple, Pencil, Plus } from '@phosphor-icons/react';
+import { DownloadSimpleIcon, PencilIcon, PlusIcon } from '@phosphor-icons/react';
 import { BlankState, TitleWithIcon } from '@components/others';
 import { MaterialInfo } from '@modules/study-materials/components';
 import { ICourseModule, useStores } from '@stores';
@@ -88,7 +88,7 @@ export const Course = observer(({ courseId }: IProps) => {
                       {
                         label: 'Import Modules',
                         onClick: () => {},
-                        icon: <DownloadSimple weight="bold" className="w-4 h-4" />,
+                        icon: <DownloadSimpleIcon weight="bold" className="w-4 h-4" />,
                       },
                     ]}
                   />
@@ -115,17 +115,17 @@ export const Course = observer(({ courseId }: IProps) => {
                                   {
                                     label: 'Edit',
                                     onClick: () => onEditCourseModule(courseModule),
-                                    icon: <Pencil weight="bold" className="w-4 h-4" />,
+                                    icon: <PencilIcon weight="bold" className="w-4 h-4" />,
                                   },
                                   {
                                     label: 'Add Study Materials',
                                     onClick: () => {},
-                                    icon: <Plus weight="bold" className="w-4 h-4" />,
+                                    icon: <PlusIcon weight="bold" className="w-4 h-4" />,
                                   },
                                   {
                                     label: 'Add Test Papers',
                                     onClick: () => {},
-                                    icon: <Plus weight="bold" className="w-4 h-4" />,
+                                    icon: <PlusIcon weight="bold" className="w-4 h-4" />,
                                   },
                                 ]}
                                 className=""

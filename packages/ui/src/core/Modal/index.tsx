@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../../ui/sheet';
 import { cn } from '../../lib/cn';
-import { X } from '@phosphor-icons/react';
+import { XIcon } from '@phosphor-icons/react';
 import * as React from 'react';
 
 type PositionType = 'left' | 'right' | 'top' | 'bottom';
@@ -65,7 +65,7 @@ export const Modal = ({
           <SheetTitle className="md:text-base font-bold">{title}</SheetTitle>
           {!withoutClose && (
             <button onClick={closeModal} className="p-0 hover:bg-transparent">
-              <X weight="bold" className="w-4 h-4 hover:text-blue-primary" />
+              <XIcon weight="bold" className="w-4 h-4 hover:text-blue-primary" />
             </button>
           )}
         </SheetHeader>

@@ -1,6 +1,6 @@
 import { Accordions, Card, Loader, Menu, Modal, ModalFooter, SplitButton, Tooltip } from '@components/app';
 import { ChapterName } from '@components/common/ChapterName';
-import { Pencil, Plus, Trash, UploadSimple } from '@phosphor-icons/react';
+import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { PositionType, SectionCategoryType, SectionType } from '@enums';
 import { TestPaperService } from '@services';
@@ -188,17 +188,17 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
                       {
                         label: 'Edit Section',
                         onClick: () => editSection(section),
-                        icon: <Pencil weight="bold" className="w-4 h-4" />,
+                        icon: <PencilIcon weight="bold" className="w-4 h-4" />,
                       },
                       {
                         label: 'Add New Section',
                         onClick: () => addNewSection(),
-                        icon: <Plus weight="bold" className="w-4 h-4" />,
+                        icon: <PlusIcon weight="bold" className="w-4 h-4" />,
                       },
                       {
                         label: 'Delete Section',
                         onClick: () => {},
-                        icon: <Trash weight="bold" className="w-4 h-4" />,
+                        icon: <TrashIcon weight="bold" className="w-4 h-4" />,
                       },
                     ]}
                     className=""
@@ -216,12 +216,12 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
                           {
                             label: 'Add Question',
                             onClick: () => onOpenAddQuestionModal(section._id),
-                            icon: <Plus weight="bold" className="w-4 h-4" />,
+                            icon: <PlusIcon weight="bold" className="w-4 h-4" />,
                           },
                           {
                             label: 'Generate Questions',
                             onClick: () => onOpenGenerateQuestionsModal(section._id),
-                            icon: <UploadSimple weight="bold" className="w-4 h-4" />,
+                            icon: <UploadSimpleIcon weight="bold" className="w-4 h-4" />,
                           },
                         ]}
                         text="Add Question"
@@ -250,12 +250,12 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
                                       {
                                         label: 'Edit Question',
                                         onClick: () => editQuestion(question._id, section._id),
-                                        icon: <Pencil weight="bold" className="w-4 h-4" />,
+                                        icon: <PencilIcon weight="bold" className="w-4 h-4" />,
                                       },
                                       {
                                         label: 'Delete Question',
                                         onClick: () => {},
-                                        icon: <Trash weight="bold" className="w-4 h-4" />,
+                                        icon: <TrashIcon weight="bold" className="w-4 h-4" />,
                                       },
                                     ]}
                                     className=""
@@ -282,12 +282,12 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
                           {
                             label: 'Add Question',
                             onClick: () => onOpenAddQuestionModal(section._id),
-                            icon: <Plus weight="bold" className="w-4 h-4" />,
+                            icon: <PlusIcon weight="bold" className="w-4 h-4" />,
                           },
                           {
                             label: 'Generate Questions',
                             onClick: () => onOpenGenerateQuestionsModal(section._id),
-                            icon: <UploadSimple weight="bold" className="w-4 h-4" />,
+                            icon: <UploadSimpleIcon weight="bold" className="w-4 h-4" />,
                           },
                         ]}
                         text="Add Question"

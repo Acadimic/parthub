@@ -1,5 +1,5 @@
 import { Tooltip } from '@components/app';
-import { Copy } from '@phosphor-icons/react';
+import { CopyIcon } from '@phosphor-icons/react';
 import { successToast } from '@utils/helpers';
 
 interface IProps {
@@ -16,7 +16,7 @@ export const CopyUrl = ({ url, isCopyIconOnly = false }: IProps) => {
   return (
     <div className="flex items-center gap-2 cursor-pointer justify-between" onClick={handleCopyLink}>
       <Tooltip title="Copy">
-        <Copy className="w-6 h-6" />
+        <CopyIcon className="w-6 h-6" />
       </Tooltip>
       {isCopyIconOnly ? null : (
         <div className="text-xs text-blue-primary !font-normal flex flex-col">

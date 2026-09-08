@@ -1,7 +1,7 @@
 import { Button, Select, TextInput } from '@components/app';
 import { Layout } from '@enums';
 import { ISelectItem } from '@interfaces';
-import { House } from '@phosphor-icons/react';
+import { HouseIcon } from '@phosphor-icons/react';
 import { useState } from 'react';
 
 const HomePage = () => {
@@ -25,7 +25,7 @@ const HomePage = () => {
         <Button text="Primary" onClick={onClick} />
       </div>
       <div>
-        <TextInput label="Hello Input" placeholder="Search Google Maps" leftsection={<House />} />
+        <TextInput label="Hello Input" placeholder="Search Google Maps" leftsection={<HouseIcon />} />
       </div>
       <div>
         <Select

@@ -1,5 +1,5 @@
 import { Button, DataTable, FullScreenLoader, TextInput } from '@components/app';
-import { MagnifyingGlass, Pencil, Plus, Trash } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { IColumnData } from '@interfaces';
 import { IUser, useStores } from '@stores';
 import { ACTIONS } from '@utils/constants';
@@ -160,12 +160,12 @@ export const Students = observer(() => {
         {
           label: 'Edit',
           onClick: editStudent,
-          icon: <Pencil weight="bold" className="w-4 h-4" />,
+          icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Delete',
           onClick: () => {},
-          icon: <Trash weight="bold" className="w-4 h-4" />,
+          icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
       width: 96,
@@ -180,11 +180,11 @@ export const Students = observer(() => {
             <div className="">
               <TextInput
                 placeholder="Search Students"
-                leftsection={<MagnifyingGlass weight="bold" className="w-4 h-4" />}
+                leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
               />
             </div>
             <div>
-              <Button leftsection={<Plus weight="bold" className="w-4 h-4" />} onClick={openAddStudentsModal}>
+              <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={openAddStudentsModal}>
                 Add <span className="hidden sm:inline">Students</span>
               </Button>
             </div>

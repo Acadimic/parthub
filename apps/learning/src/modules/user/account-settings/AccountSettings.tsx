@@ -2,7 +2,7 @@ import { Breadcrumb, Card, IBreadcrumbItem, MenuList, UploadAvatar } from '@comp
 import { AccountSettingsType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { IMenuItem } from '@interfaces';
-import { GearSix, LockKey, User } from '@phosphor-icons/react';
+import { GearSixIcon, LockKeyIcon, UserIcon } from '@phosphor-icons/react';
 import { UserService } from '@services';
 import { useStores } from '@stores';
 import { AccountSettingsRoutes } from '@utils/constants';
@@ -46,13 +46,13 @@ export const AccountSettings = observer(() => {
     {
       label: AccountSettingsType.PROFILE,
       onClick: () => push(AccountSettingsRoutes[AccountSettingsType.PROFILE]),
-      icon: <User weight="bold" className="w-5 h-5 text-inherit" />,
+      icon: <UserIcon weight="bold" className="w-5 h-5 text-inherit" />,
       isCurrent: isProfile,
     },
     {
       label: AccountSettingsType.SECURITY,
       onClick: () => push(AccountSettingsRoutes[AccountSettingsType.SECURITY]),
-      icon: <LockKey weight="bold" className="w-5 h-5 text-inherit" />,
+      icon: <LockKeyIcon weight="bold" className="w-5 h-5 text-inherit" />,
       isCurrent: isSecurity,
     },
   ];
@@ -68,19 +68,19 @@ export const AccountSettings = observer(() => {
               {
                 label: AccountSettingsType.ACCOUNT_SETTINGS,
                 href: AccountSettingsRoutes[AccountSettingsType.ACCOUNT_SETTINGS],
-                icon: <GearSix weight="bold" className="w-3 h-3" />,
+                icon: <GearSixIcon weight="bold" className="w-3 h-3" />,
               },
               isProfile
                 ? {
                     label: AccountSettingsType.PROFILE,
                     href: AccountSettingsRoutes[AccountSettingsType.PROFILE],
-                    icon: <User weight="bold" className="w-3 h-3" />,
+                    icon: <UserIcon weight="bold" className="w-3 h-3" />,
                   }
                 : isSecurity
                   ? {
                       label: AccountSettingsType.SECURITY,
                       href: AccountSettingsRoutes[AccountSettingsType.SECURITY],
-                      icon: <LockKey weight="bold" className="w-3 h-3" />,
+                      icon: <LockKeyIcon weight="bold" className="w-3 h-3" />,
                     }
                   : null,
             ].filter(Boolean) as IBreadcrumbItem[]

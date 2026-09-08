@@ -1,4 +1,4 @@
-import { ChatsCircle, GameController, GrainsSlash, House, Lifebuoy } from '@phosphor-icons/react';
+import { ChatsCircleIcon, GameControllerIcon, GrainsSlashIcon, HouseIcon, LifebuoyIcon } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 
 interface ISidebarMenu {
@@ -21,7 +21,7 @@ export const Routes: ISidebarRoute[] = [
       {
         name: 'Home',
         route: '/home',
-        icon: House,
+        icon: HouseIcon,
       },
     ],
   },
@@ -31,12 +31,12 @@ export const Routes: ISidebarRoute[] = [
       {
         name: 'Subjects',
         route: '/subjects',
-        icon: GameController,
+        icon: GameControllerIcon,
       },
       {
         name: 'Standards',
         route: '/standards',
-        icon: GrainsSlash,
+        icon: GrainsSlashIcon,
       },
     ],
   },
@@ -46,12 +46,12 @@ export const Routes: ISidebarRoute[] = [
       {
         name: 'Community',
         route: '/community',
-        icon: ChatsCircle,
+        icon: ChatsCircleIcon,
       },
       {
         name: 'Support',
         route: 'https://www.parthhub.com/contact-us',
-        icon: Lifebuoy,
+        icon: LifebuoyIcon,
         isOpenInNewTab: true,
       },
     ],

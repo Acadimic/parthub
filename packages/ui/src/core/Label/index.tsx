@@ -1,4 +1,4 @@
-import { Asterisk } from '@phosphor-icons/react';
+import { AsteriskIcon } from '@phosphor-icons/react';
 import { cn } from '../../lib/cn';
 
 interface ILabelProps {
@@ -14,7 +14,7 @@ export const Label = ({ children, label, required, htmlFor, className }: ILabelP
     <label htmlFor={htmlFor} className={cn('text-sm font-semibold py-1', className)}>
       <div className="text-color-primary flex items-center space-x-1.5">
         <div>{label || children}</div>
-        {required && <Asterisk weight="bold" className="text-red-primary w-3 h-3" />}
+        {required && <AsteriskIcon weight="bold" className="text-red-primary w-3 h-3" />}
       </div>
     </label>
   );

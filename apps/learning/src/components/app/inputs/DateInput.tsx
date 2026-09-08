@@ -1,4 +1,4 @@
-import { CalendarBlank } from '@phosphor-icons/react';
+import { CalendarBlankIcon } from '@phosphor-icons/react';
 import dayjs from 'dayjs';
 import { Popover } from '../popovers';
 import { TextInput } from '@parthhub/ui/app';
@@ -40,7 +40,7 @@ export const DateInput = ({ value, label, handleChange, required, isDisabled }: 
           label={label}
           type="text"
           placeholder="Select Date"
-          rightsection={<CalendarBlank className="w-5 h-5 text-color-text" />}
+          rightsection={<CalendarBlankIcon className="w-5 h-5 text-color-text" />}
           readOnly
           value={value ? dayjs(value).format('MMM, DD, YYYY') : ''}
           required={required}

@@ -1,6 +1,6 @@
 import { Label, Modal } from '@components/app';
 import { CopyUrl } from '@components/common';
-import { CalendarBlank, Pencil, Trash } from '@phosphor-icons/react';
+import { CalendarBlankIcon, PencilIcon, TrashIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';
 import { getFormattedTime, getFrequencyText, getFullFormattedDate } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
@@ -42,16 +42,16 @@ export const MeetingOverviewModal = observer(({ isOpen, onClose, openEditModal, 
             <MeetingTitle meet={selectedMeet} className="text-lg" />
             <div className="flex items-center gap-3">
               <div className="cursor-pointer p-1" onClick={handleEditModal}>
-                <Pencil className="w-4 h-4" />
+                <PencilIcon className="w-4 h-4" />
               </div>
               <div className="cursor-pointer p-1" onClick={handleDeleteModal}>
-                <Trash className="w-4 h-4" />
+                <TrashIcon className="w-4 h-4" />
               </div>
             </div>
           </div>
           <div className="text-xs font-medium flex flex-col gap-1.5 px-0.5">
             <div className="flex items-center gap-2 text-sm font-medium text-color-secondary">
-              <CalendarBlank weight="bold" className="w-4 h-4" />
+              <CalendarBlankIcon weight="bold" className="w-4 h-4" />
               <Label label="Date and Time" />
             </div>
             <div>

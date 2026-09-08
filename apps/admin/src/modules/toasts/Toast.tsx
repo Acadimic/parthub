@@ -1,4 +1,4 @@
-import { X } from '@phosphor-icons/react';
+import { XIcon } from '@phosphor-icons/react';
 import { IToast, toastStore } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
@@ -58,7 +58,7 @@ export const Toast = observer(({ toast }: { toast: IToast }) => {
         }}
         aria-label="Close"
       >
-        <X className="w-4 h-4" />
+        <XIcon className="w-4 h-4" />
       </button>
     </div>
   );

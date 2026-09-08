@@ -1,5 +1,5 @@
 import { useAttachment } from '@hooks/attachment.hook';
-import { Image as Img } from '@phosphor-icons/react';
+import { ImageIcon as Img } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 interface IProps {

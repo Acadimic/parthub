@@ -2,7 +2,7 @@ import { Avatar } from '@components/app';
 import { AccountSettingsType } from '@enums';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { IMenuItem } from '@interfaces';
-import { Check, GearSix, SignOut } from '@phosphor-icons/react';
+import { CheckIcon, GearSixIcon, SignOutIcon } from '@phosphor-icons/react';
 import { IUser, useStores } from '@stores';
 import { AccountSettingsRoutes } from '@utils/constants';
 import { capitalize, logOut } from '@utils/helpers';
@@ -25,7 +25,7 @@ export const ProfileDropdown = observer(() => {
   const items: IMenuItem[] = [
     {
       label: AccountSettingsType.ACCOUNT_SETTINGS,
-      icon: <GearSix className="w-4 h-4" />,
+      icon: <GearSixIcon className="w-4 h-4" />,
       onClick: () => {
         if (isSmallScreen) {
           push(AccountSettingsRoutes[AccountSettingsType.ACCOUNT_SETTINGS]);
@@ -36,7 +36,7 @@ export const ProfileDropdown = observer(() => {
     },
     {
       label: 'Logout',
-      icon: <SignOut className="w-4 h-4" />,
+      icon: <SignOutIcon className="w-4 h-4" />,
       onClick: handleLogout,
     },
   ];
@@ -98,7 +98,7 @@ export const ProfileDropdown = observer(() => {
                           </div>
                         </div>
                       </div>
-                      <Check
+                      <CheckIcon
                         weight="bold"
                         size={16}
                         className={`${isSelected ? 'text-blue-primary' : 'text-transparent'}`}

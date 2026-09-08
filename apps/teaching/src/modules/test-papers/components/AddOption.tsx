@@ -1,6 +1,6 @@
 import { Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
-import { X } from '@phosphor-icons/react';
+import { XIcon } from '@phosphor-icons/react';
 import { IOption } from '@stores';
 import { observer } from 'mobx-react-lite';
 
@@ -27,7 +27,7 @@ export const AddOption = observer(({ option, index, handleRemoveOption }: IProps
         </div>
         {index !== 0 && (
           <div className="cursor-pointer" onClick={() => handleRemoveOption(option)}>
-            <X weight="bold" className="w-4 h-4" />
+            <XIcon weight="bold" className="w-4 h-4" />
           </div>
         )}
       </div>

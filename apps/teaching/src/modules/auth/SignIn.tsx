@@ -1,5 +1,5 @@
 import { Button, TextInput, ToggleTheme } from '@components/app';
-import { ArrowCircleLeft, Eye, EyeSlash } from '@phosphor-icons/react';
+import { ArrowCircleLeftIcon, EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
 import { HorizontalLineWithText, Policy } from '@components/others';
 import { ILoginUser } from '@interfaces';
 import { fetchSignInMethods, getFirebaseErrorMessage, signIn } from '@utils/firebase';
@@ -88,7 +88,7 @@ export const SignIn = observer(() => {
               className="flex items-center space-x-1.5 text-blue-primary font-medium text-sm mb-3 md:my-6"
               href={'/'}
             >
-              <ArrowCircleLeft className="h-5 w-5" />
+              <ArrowCircleLeftIcon className="h-5 w-5" />
               <span>Go Back</span>
             </Link>
             <div>
@@ -102,9 +102,9 @@ export const SignIn = observer(() => {
                   rightsection={
                     <div className="" onClick={togglePassword}>
                       {isShowPassword ? (
-                        <EyeSlash weight="thin" className="text-[#929499]" />
+                        <EyeSlashIcon weight="thin" className="text-[#929499]" />
                       ) : (
-                        <Eye weight="thin" className="text-[#929499]" />
+                        <EyeIcon weight="thin" className="text-[#929499]" />
                       )}
                     </div>
                   }

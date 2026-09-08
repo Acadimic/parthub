@@ -2,7 +2,7 @@ import { Button } from '@components/app';
 import { SubmitButton } from '@components/exam';
 import { Marking } from '@enums';
 import { TestPaperSection } from '@modules/test-papers/components/exam-items';
-import { CaretDoubleRight } from '@phosphor-icons/react';
+import { CaretDoubleRightIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';
 import { getPlural } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
@@ -100,7 +100,7 @@ export const ExamSidebar = observer(
               className="bg-blue-gradient h-10 w-6 flex justify-center items-center rounded-l-md app-shadow"
               onClick={handleClick}
             >
-              <CaretDoubleRight weight="bold" className={`text-white w-4 h-4 ${isOpen ? '' : 'rotate-180'}`} />
+              <CaretDoubleRightIcon weight="bold" className={`text-white w-4 h-4 ${isOpen ? '' : 'rotate-180'}`} />
             </button>
           </div>
           <div className={`${isOpen ? 'block' : 'hidden'} flex flex-col h-full transition-slowest`}>

@@ -1,6 +1,6 @@
 import { Menu } from '@components/app';
 import { IMenuItem } from '@interfaces';
-import { SignOut, User } from '@phosphor-icons/react';
+import { SignOutIcon, UserIcon } from '@phosphor-icons/react';
 import { getFirebaseUser } from '@utils/firebase';
 import { logOut } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
@@ -18,12 +18,12 @@ export const ProfileDropdown = observer(() => {
   const items: IMenuItem[] = [
     {
       label: 'Profile',
-      icon: <User className="w-4 h-4" />,
+      icon: <UserIcon className="w-4 h-4" />,
       onClick: () => push('/profile'),
     },
     {
       label: 'Logout',
-      icon: <SignOut className="w-4 h-4" />,
+      icon: <SignOutIcon className="w-4 h-4" />,
       onClick: handleLogout,
     },
   ];

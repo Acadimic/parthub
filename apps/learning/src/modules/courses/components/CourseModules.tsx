@@ -2,7 +2,7 @@ import { Breadcrumb, IBreadcrumbItem, Modal } from '@components/app';
 import { StandardWithLogo } from '@components/common';
 import { useCourse } from '@hooks/course.hook';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
-import { List } from '@phosphor-icons/react';
+import { ListIcon } from '@phosphor-icons/react';
 import { House } from '@phosphor-icons/react/dist/ssr';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
@@ -40,7 +40,7 @@ export const CourseModules = observer(() => {
                     ? {
                         label: 'Menu',
                         href: '#',
-                        icon: <List weight="bold" className="w-4 h-4" />,
+                        icon: <ListIcon weight="bold" className="w-4 h-4" />,
                         onClick: openCourseOverview,
                       }
                     : null,

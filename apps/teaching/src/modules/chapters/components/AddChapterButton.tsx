@@ -1,5 +1,5 @@
 import { Button, Modal, SplitButton } from '@components/app';
-import { Gear, Plus } from '@phosphor-icons/react';
+import { GearIcon, PlusIcon } from '@phosphor-icons/react';
 import { PositionType } from '@enums';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
@@ -51,7 +51,11 @@ export const AddChapterButton = observer(({ standard, subject, isSecondary }: IP
   return (
     <>
       {isSecondary ? (
-        <Button onClick={onCreateChapter} leftsection={<Plus weight="bold" className="w-4 h-4" />} text="Add Chapter" />
+        <Button
+          onClick={onCreateChapter}
+          leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
+          text="Add Chapter"
+        />
       ) : (
         <>
           <SplitButton
@@ -59,12 +63,12 @@ export const AddChapterButton = observer(({ standard, subject, isSecondary }: IP
               {
                 label: 'Add Chapter',
                 onClick: onCreateChapter,
-                icon: <Plus weight="bold" className="w-4 h-4" />,
+                icon: <PlusIcon weight="bold" className="w-4 h-4" />,
               },
               {
                 label: 'Manage Chapters',
                 onClick: onOpenManageChaptersModal,
-                icon: <Gear weight="bold" className="w-4 h-4" />,
+                icon: <GearIcon weight="bold" className="w-4 h-4" />,
               },
             ]}
             text="Add Chapter"

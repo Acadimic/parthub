@@ -1,5 +1,5 @@
 import { IStep } from '@interfaces';
-import { Check } from '@phosphor-icons/react';
+import { CheckIcon } from '@phosphor-icons/react';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {
@@ -31,7 +31,7 @@ export const Stepper = observer(({ steps, activeStep }: IProps) => {
                   }`}
                 >
                   {isCompleted ? (
-                    <Check weight="bold" className="w-3.5 h-3.5" />
+                    <CheckIcon weight="bold" className="w-3.5 h-3.5" />
                   ) : (
                     <div className="w-2 h-2 rounded-full bg-current" />
                   )}

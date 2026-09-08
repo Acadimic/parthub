@@ -1,4 +1,4 @@
-import { X } from '@phosphor-icons/react';
+import { XIcon } from '@phosphor-icons/react';
 import { Button } from '../buttons';
 
 interface IProps {
@@ -16,7 +16,7 @@ export const Confirm = ({ onForceClose, onCancel, message }: IProps) => {
             <div className="font-medium text-lg text[#464E5F]">Confirm Leave?</div>
             <div>
               <button onClick={onCancel} className="bg-transparent">
-                <X className="font-bold w-5 h-5 text-gray-400" />
+                <XIcon className="font-bold w-5 h-5 text-gray-400" />
               </button>
             </div>
           </div>

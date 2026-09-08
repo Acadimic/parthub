@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from '../../ui/dropdown-menu';
 import { cn } from '../../lib/cn';
-import { DotsThreeOutlineVertical } from '@phosphor-icons/react';
+import { DotsThreeOutlineVerticalIcon } from '@phosphor-icons/react';
 import * as React from 'react';
 
 export interface IMenuItem {
@@ -31,7 +31,7 @@ export const Menu = ({ items, trigger, data, className, header }: IMenuProps) =>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className={cn('inline cursor-pointer', className || 'px-2.5')}>
-          {trigger || <DotsThreeOutlineVertical weight="fill" className="h-5 w-5" />}
+          {trigger || <DotsThreeOutlineVerticalIcon weight="fill" className="h-5 w-5" />}
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent

@@ -1,4 +1,4 @@
-import { CaretRight } from '@phosphor-icons/react';
+import { CaretRightIcon } from '@phosphor-icons/react';
 import NextLink from 'next/link';
 import * as React from 'react';
 
@@ -22,7 +22,7 @@ export const Breadcrumb = ({ items }: IBreadcrumbProps) => {
           const isLast = index === items.length - 1;
           return (
             <li key={item.label} className="flex items-center space-x-1.5">
-              {index > 0 && <CaretRight weight="bold" className="w-3 h-3 text-color-secondary" />}
+              {index > 0 && <CaretRightIcon weight="bold" className="w-3 h-3 text-color-secondary" />}
               {isLast ? (
                 <span className="text-xs font-bold text-color-primary">{item.label}</span>
               ) : (

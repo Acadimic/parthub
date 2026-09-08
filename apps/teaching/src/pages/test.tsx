@@ -3,7 +3,7 @@ import { Modal } from '@components/app/modals';
 import { Block, HtmlEditor, MathEditor } from '@components/editors';
 import { RightSquareBracket } from '@components/editors/functions/DymaicBrackets';
 import { serializeBlocks } from '@components/editors/math-jax-editor/util';
-import { Pencil, Plus, SquaresFour, Trash } from '@phosphor-icons/react';
+import { PencilIcon, PlusIcon, SquaresFourIcon, TrashIcon } from '@phosphor-icons/react';
 import { Layout } from '@enums';
 import { IPosition, ITarget } from '@interfaces';
 import { getCombineValue } from '@utils/helpers';
@@ -63,7 +63,7 @@ const TestPage = () => {
         <TextInput
           label="Hello Input"
           placeholder="Search Google Maps"
-          leftsection={<SquaresFour className="w-5 h-5" />}
+          leftsection={<SquaresFourIcon className="w-5 h-5" />}
         />
       </div>
       <div>
@@ -94,17 +94,17 @@ const TestPage = () => {
           {
             label: 'Add Questions',
             onClick: () => {},
-            icon: <Plus weight="bold" className="w-4 h-4" />,
+            icon: <PlusIcon weight="bold" className="w-4 h-4" />,
           },
           {
             label: 'Edit Details',
             onClick: () => {},
-            icon: <Pencil weight="bold" className="w-4 h-4" />,
+            icon: <PencilIcon weight="bold" className="w-4 h-4" />,
           },
           {
             label: 'Delete',
             onClick: () => {},
-            icon: <Trash weight="bold" className="w-4 h-4" />,
+            icon: <TrashIcon weight="bold" className="w-4 h-4" />,
           },
         ]}
         onClick={() => {}}

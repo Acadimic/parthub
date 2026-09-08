@@ -57,7 +57,7 @@ export const CourseCard = observer(({ course }: { course: ICourse }) => {
 });
 
 // import { Button } from '@components/app';
-// import { DotsNine } from '@phosphor-icons/react';
+// import { DotsNineIcon } from '@phosphor-icons/react';
 // import { ICourse } from '@stores';
 // import { useRouter } from 'next/router';
 
@@ -89,7 +89,7 @@ export const CourseCard = observer(({ course }: { course: ICourse }) => {
 //     <>
 //       <div className="box-shadow border border-color-border rounded-sm flex flex-col space-y-6 p-4 bg-background-secondary">
 //         <div className="flex justify-start items-center space-x-3">
-//           <DotsNine className="w-4 h-4 text-blue-primary" />
+//           <DotsNineIcon className="w-4 h-4 text-blue-primary" />
 //           <div className="text-sm font-semibold truncate">{course.name}</div>
 //         </div>
 //         <div className="flex justify-center space-x-8 items-center">

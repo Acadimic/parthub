@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { ErrorBoundaryFallback } from '@components/app/error';
-import { CalendarX } from '@phosphor-icons/react';
+import { CalendarXIcon } from '@phosphor-icons/react';
 import { CalendarType } from '@enums';
 import { DayCellContentArg, DayHeaderContentArg, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -41,7 +41,7 @@ export const DayCellContent = ({ date, dayNumberText, view: { type } }: DayCellC
 const EmptyListView = () => {
   return (
     <div className="flex flex-col items-center justify-center h-full py-12 px-4">
-      <CalendarX className="w-12 h-12 text-text-secondary mb-4" />
+      <CalendarXIcon className="w-12 h-12 text-text-secondary mb-4" />
       <h6 className="text-lg font-semibold text-text-primary mb-2">No Events Scheduled</h6>
       <p className="text-sm text-text-secondary text-center max-w-md">
         There are no events scheduled for this time period. Click the + create button to add a new event.

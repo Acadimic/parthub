@@ -1,5 +1,5 @@
 import { Card, Link } from '@components/app';
-import { Plus } from '@phosphor-icons/react';
+import { PlusIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 interface IProps {
@@ -27,7 +27,7 @@ export const AddItem: React.FC<IProps> = ({ text, href, isDisabled = false }) =>
       {' '}
       <Link isSecondary href={href} disabled={isDisabled} className="w-full h-full">
         <div className="flex justify-center py-4">
-          <Plus weight="bold" className="w-8 h-8" />
+          <PlusIcon weight="bold" className="w-8 h-8" />
         </div>
         {text}{' '}
       </Link>

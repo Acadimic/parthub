@@ -1,5 +1,5 @@
 import { Button } from '@components/app';
-import { DotsNine } from '@phosphor-icons/react';
+import { DotsNineIcon } from '@phosphor-icons/react';
 import { ITestPaper } from '@stores';
 import { useRouter } from 'next/router';
 
@@ -45,7 +45,7 @@ export const TestPaperCard = ({ paper, handleOpen }: IProps) => {
       <div className="box-shadow border border-color-border rounded-sm flex flex-col space-y-6 p-4 bg-background-primary">
         <div className="flex justify-start items-center space-x-3">
           <div className="w-5 h-5">
-            <DotsNine className="w-5 h-5 text-blue-primary" />
+            <DotsNineIcon className="w-5 h-5 text-blue-primary" />
           </div>
           <div className="text-sm font-semibold truncate">{paper.name}</div>
         </div>

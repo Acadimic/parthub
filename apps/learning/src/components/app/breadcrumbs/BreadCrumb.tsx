@@ -1,5 +1,5 @@
 import { Link, Menu } from '@components/app';
-import { CaretRight, DotsThree } from '@phosphor-icons/react';
+import { CaretRightIcon, DotsThreeIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
 import * as React from 'react';
 
@@ -41,12 +41,12 @@ export const Breadcrumb = ({ items }: IProps) => {
     const visibleStart = items.slice(0, isMoreItems ? threshold : items.length);
 
     visibleStart.forEach((item, i) => {
-      if (i > 0) result.push(<CaretRight key={`sep-${i}`} className="w-4 h-4 text-color-secondary mx-1" />);
+      if (i > 0) result.push(<CaretRightIcon key={`sep-${i}`} className="w-4 h-4 text-color-secondary mx-1" />);
       result.push(<BreadcrumbItem key={item.label} item={item} />);
     });
 
     if (isMoreItems) {
-      result.push(<CaretRight key="sep-more" className="w-4 h-4 text-color-secondary mx-1" />);
+      result.push(<CaretRightIcon key="sep-more" className="w-4 h-4 text-color-secondary mx-1" />);
       result.push(
         <div key="more">
           <Menu
@@ -55,13 +55,13 @@ export const Breadcrumb = ({ items }: IProps) => {
               onClick: () => push(item.href),
               icon: item.icon,
             }))}
-            component={<DotsThree weight="bold" className="w-5 h-5 cursor-pointer" />}
+            component={<DotsThreeIcon weight="bold" className="w-5 h-5 cursor-pointer" />}
           />
         </div>,
       );
 
       items.slice(items.length - threshold, items.length).forEach((item, i) => {
-        result.push(<CaretRight key={`sep-end-${i}`} className="w-4 h-4 text-color-secondary mx-1" />);
+        result.push(<CaretRightIcon key={`sep-end-${i}`} className="w-4 h-4 text-color-secondary mx-1" />);
         result.push(<BreadcrumbItem key={item.label} item={item} />);
       });
     }

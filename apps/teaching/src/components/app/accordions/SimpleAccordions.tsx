@@ -1,4 +1,4 @@
-import { CaretRight } from '@phosphor-icons/react';
+import { CaretRightIcon } from '@phosphor-icons/react';
 import * as React from 'react';
 import { IAccordionItem } from './Accordions';
 
@@ -30,7 +30,7 @@ export const SimpleAccordions = ({ items, openIndexes, isIconLast }: IProps) => 
             <div className={`font-medium capitalize w-full text-left ${isIconLast ? 'mr-2' : 'ml-2'}`}>
               {item.title}
             </div>
-            <CaretRight
+            <CaretRightIcon
               weight="bold"
               className={`w-4 h-4 text-color-primary transition-transform duration-200 flex-shrink-0 ${opens[index] ? 'rotate-90' : ''}`}
             />

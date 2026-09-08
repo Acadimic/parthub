@@ -1,4 +1,4 @@
-import { Check } from '@phosphor-icons/react';
+import { CheckIcon } from '@phosphor-icons/react';
 import { observer } from 'mobx-react-lite';
 
 const steps = ['Select campaign settings', 'Create an ad group'];
@@ -12,7 +12,7 @@ function StepIcon({ active, completed }: StepIconProps) {
   return (
     <div className="flex items-center h-[22px]">
       {completed ? (
-        <Check weight="bold" className="w-[18px] h-[18px] text-violet-primary z-10" />
+        <CheckIcon weight="bold" className="w-[18px] h-[18px] text-violet-primary z-10" />
       ) : (
         <div className={`w-2 h-2 rounded-full ${active ? 'bg-violet-primary' : 'bg-[#eaeaf0] dark:bg-grey-primary'}`} />
       )}

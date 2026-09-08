@@ -1,5 +1,5 @@
 import { Button, DataTable, FullScreenLoader, Link, TextInput } from '@components/app';
-import { MagnifyingGlass, Pencil, Plus, Trash } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { IMaterialStat, useStores } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { getStringFormattedDate } from '@utils/helpers';
@@ -90,17 +90,17 @@ export const StudyMaterials = observer(() => {
         {
           label: 'Add Contents',
           onClick: handleClickEditOrAddContents,
-          icon: <Plus weight="bold" className="w-4 h-4" />,
+          icon: <PlusIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Edit Contents',
           onClick: handleClickEditOrAddContents,
-          icon: <Pencil weight="bold" className="w-4 h-4" />,
+          icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Delete All',
           onClick: () => {},
-          icon: <Trash weight="bold" className="w-4 h-4" />,
+          icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
       width: 96,
@@ -119,11 +119,11 @@ export const StudyMaterials = observer(() => {
             <div className="">
               <TextInput
                 placeholder="Search Test Paper"
-                leftsection={<MagnifyingGlass weight="bold" className="w-4 h-4" />}
+                leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
               />
             </div>
             <div>
-              <Button leftsection={<Plus weight="bold" className="w-4 h-4" />} onClick={onOpenAddModal}>
+              <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={onOpenAddModal}>
                 Add <span className="hidden sm:inline">Study Materials</span>
               </Button>
             </div>

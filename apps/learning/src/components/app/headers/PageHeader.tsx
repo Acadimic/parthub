@@ -1,5 +1,5 @@
 import { Button, FullLogo, HamburgerIcon, Link, ToggleTheme } from '@components/app';
-import { CaretDown, MagnifyingGlass } from '@phosphor-icons/react';
+import { CaretDownIcon, MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
@@ -15,7 +15,7 @@ const SearchBar = () => {
           className="flex-1 pl-4 py-3 pr-0 text-sm bg-transparent outline-none rounded-l-full"
         />
         <button className="bg-color-primary hover:bg-blue-700 rounded-full p-2 mr-2" aria-label="search">
-          <MagnifyingGlass weight="bold" className="w-4 h-4 text-color-opposite" />
+          <MagnifyingGlassIcon weight="bold" className="w-4 h-4 text-color-opposite" />
         </button>
       </div>
     </div>
@@ -46,7 +46,7 @@ export const PageHeader = observer(() => {
                 <Button
                   isSubtle
                   className="text-color-primary px-3 ml-4 hover:border hover:border-color-border py-1.5"
-                  rightsection={<CaretDown weight="bold" className="w-4 h-4 text-color-primary" />}
+                  rightsection={<CaretDownIcon weight="bold" className="w-4 h-4 text-color-primary" />}
                 >
                   Explore
                 </Button>

@@ -1,5 +1,5 @@
 import { Button, Menu } from '@components/app';
-import { Check, Copy, GitMerge, Pencil, Plus, Share, Warning } from '@phosphor-icons/react';
+import { CheckIcon, CopyIcon, GitMergeIcon, PencilIcon, PlusIcon, ShareIcon, WarningIcon } from '@phosphor-icons/react';
 import { ITestPaper, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useSetState } from 'react-use';
@@ -45,7 +45,7 @@ export const TestPaperDetails = observer(({ testPaper, addNewSection }: IProps) 
       <div className="flex justify-between flex-wrap w-full text-sm font-semibold items-center gap-4">
         <div className="w-[200px] flex space-x-2">
           <div>
-            <Copy weight="bold" className="w-5 h-5" />
+            <CopyIcon weight="bold" className="w-5 h-5" />
           </div>
           <div className="truncate">{testPaper.webLink}</div>
         </div>
@@ -67,9 +67,9 @@ export const TestPaperDetails = observer(({ testPaper, addNewSection }: IProps) 
               text={isPublished ? 'Published' : 'Publish'}
               leftsection={
                 isPublished ? (
-                  <Check weight="bold" className="w-5 h-5 text-green-primary" />
+                  <CheckIcon weight="bold" className="w-5 h-5 text-green-primary" />
                 ) : (
-                  <Warning weight="bold" className="w-5 h-5 text-yellow-primary" />
+                  <WarningIcon weight="bold" className="w-5 h-5 text-yellow-primary" />
                 )
               }
               isSecondary={isPublished}
@@ -81,22 +81,22 @@ export const TestPaperDetails = observer(({ testPaper, addNewSection }: IProps) 
                 {
                   label: 'Edit Paper',
                   onClick: () => {},
-                  icon: <Pencil weight="bold" className="w-4 h-4" />,
+                  icon: <PencilIcon weight="bold" className="w-4 h-4" />,
                 },
                 {
                   label: 'Publish Paper',
                   onClick: () => {},
-                  icon: <Share weight="bold" className="w-4 h-4" />,
+                  icon: <ShareIcon weight="bold" className="w-4 h-4" />,
                 },
                 {
                   label: 'Add New Section',
                   onClick: addNewSection,
-                  icon: <Plus weight="bold" className="w-4 h-4" />,
+                  icon: <PlusIcon weight="bold" className="w-4 h-4" />,
                 },
                 {
                   label: 'Merge Test Paper',
                   onClick: openMergeTestPapersModal,
-                  icon: <GitMerge weight="bold" className="w-4 h-4" />,
+                  icon: <GitMergeIcon weight="bold" className="w-4 h-4" />,
                 },
               ]}
               className=""

@@ -1,5 +1,5 @@
 import { Select } from '@components/app';
-import { Article } from '@phosphor-icons/react';
+import { ArticleIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
 import { ISelectItem } from '@interfaces';
 import { useStores } from '@stores';
@@ -41,7 +41,7 @@ export const SelectQuestionType = observer(() => {
             items={Object.values(QuestionType).map((type) => ({ label: splitCamelCase(type), value: type }))}
             isSingleSelect
             values={[selectedQuestionType]}
-            leftsection={<Article weight="bold" className="w-5 h-5" />}
+            leftsection={<ArticleIcon weight="bold" className="w-5 h-5" />}
             placeholder="Select question type"
           />
         </div>

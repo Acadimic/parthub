@@ -1,5 +1,5 @@
 import { Button } from '@components/app';
-import { Pencil, Plus } from '@phosphor-icons/react';
+import { PencilIcon, PlusIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { ChapterService } from '@services';
 import { useStores } from '@stores';
@@ -53,7 +53,7 @@ export const Chapters = observer(({ standard, subject }: IProps) => {
     <>
       <div className="flex flex-col space-y-4">
         <div className="flex justify-end">
-          <Button leftsection={<Plus weight="bold" className="w-4 h-4" />} onClick={onCreateChapter}>
+          <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={onCreateChapter}>
             Add <span className="hidden sm:inline">Chapter</span>
           </Button>
         </div>
@@ -65,7 +65,7 @@ export const Chapters = observer(({ standard, subject }: IProps) => {
             >
               <div>{chapter.name}</div>
               <div className="cursor-pointer" onClick={() => onEditChapter(chapter._id)}>
-                <Pencil weight="bold" className="w-4 h-4" />
+                <PencilIcon weight="bold" className="w-4 h-4" />
               </div>
             </div>
           ))}

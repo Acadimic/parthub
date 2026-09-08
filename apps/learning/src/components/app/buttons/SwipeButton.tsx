@@ -1,4 +1,4 @@
-import { CaretDoubleRight, Check } from '@phosphor-icons/react';
+import { CaretDoubleRightIcon, CheckIcon } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 interface SwipeButtonProps {
@@ -115,9 +115,9 @@ export const SwipeButton: React.FC<SwipeButtonProps> = ({
       >
         <div className="h-full flex items-center justify-center">
           {isCompleted ? (
-            <Check weight="bold" className="text-white w-5 h-5" />
+            <CheckIcon weight="bold" className="text-white w-5 h-5" />
           ) : (
-            <CaretDoubleRight weight="bold" className="text-blue-primary w-5 h-5" />
+            <CaretDoubleRightIcon weight="bold" className="text-blue-primary w-5 h-5" />
           )}
         </div>
       </div>

@@ -11,7 +11,7 @@ import {
 } from '@components/app';
 import { Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
-import { Plus } from '@phosphor-icons/react';
+import { PlusIcon } from '@phosphor-icons/react';
 import { FileExtension, PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { ISelectItem } from '@interfaces';
@@ -139,7 +139,7 @@ export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
                   <div>
                     <Button
                       text="Add Link"
-                      leftsection={<Plus weight="bold" className="w-4 h-4" />}
+                      leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
                       onClick={onAddLinkAttachment}
                       isSubtle
                     />

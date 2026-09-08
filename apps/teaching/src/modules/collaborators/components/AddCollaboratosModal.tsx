@@ -1,5 +1,5 @@
 import { Card, Modal } from '@components/app';
-import { UserPlus, UsersThree } from '@phosphor-icons/react';
+import { UserPlusIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {
@@ -20,13 +20,13 @@ export const AddCollaboratorsModal = observer(
   ({ isOpen, onClose, openUpsertCollaboratorModal, openBulkAddCollaboratorsModal }: IProps) => {
     const addCollaboratorsItems: IAddCollaboratorItem[] = [
       {
-        icon: <UserPlus weight="bold" className="w-5 h-5" />,
+        icon: <UserPlusIcon weight="bold" className="w-5 h-5" />,
         label: 'Add Collaborator Manually',
         onClick: openUpsertCollaboratorModal,
         description: 'Enter details to create a collaborator profile.',
       },
       {
-        icon: <UsersThree weight="bold" className="w-5 h-5" />,
+        icon: <UsersThreeIcon weight="bold" className="w-5 h-5" />,
         label: 'Bulk Add Collaborators Manually',
         onClick: openBulkAddCollaboratorsModal,
         description: 'Enter multiple collaborator details at once into a table.',

@@ -1,4 +1,4 @@
-import { BookOpenText, FileText, YoutubeLogo } from '@phosphor-icons/react';
+import { BookOpenTextIcon, FileTextIcon, YoutubeLogoIcon } from '@phosphor-icons/react';
 import { MaterialType } from '@enums';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
@@ -29,13 +29,13 @@ export const MaterialInfo = observer(({ materialIds, testPaperIds }: IProps) => 
       <div className="flex items-center gap-2 text-sm font-medium">
         <div className="flex gap-2">
           <div className="flex items-center gap-1">
-            <YoutubeLogo weight="bold" className="w-auto h-4" />
+            <YoutubeLogoIcon weight="bold" className="w-auto h-4" />
             <div className="capitalize">
               {materialsInfo.types[MaterialType.VIDEO]} <span className="">{MaterialType.VIDEO}s</span>
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <BookOpenText weight="bold" className="w-auto h-4" />
+            <BookOpenTextIcon weight="bold" className="w-auto h-4" />
             <div className="capitalize">
               {materialsInfo.types[MaterialType.READING]} <span className="">{MaterialType.READING}s</span>
             </div>
@@ -46,7 +46,7 @@ export const MaterialInfo = observer(({ materialIds, testPaperIds }: IProps) => 
         </div>
         <div className="flex gap-1">
           <div className="flex items-center gap-1">
-            <FileText weight="bold" className="w-auto h-4" />
+            <FileTextIcon weight="bold" className="w-auto h-4" />
             <div className="capitalize">
               {testPaperIds.length}
               <span className=""> Tests</span>

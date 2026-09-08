@@ -1,5 +1,5 @@
 import { PositionType } from '@parthhub/shared';
-import { X } from '@phosphor-icons/react';
+import { XIcon } from '@phosphor-icons/react';
 import * as React from 'react';
 
 interface IProps {
@@ -52,7 +52,7 @@ export function Modal({
             <div className="md:text-base font-bold">{title}</div>
             {!withoutClose && (
               <button className="p-0 hover:bg-transparent" onClick={closeModal}>
-                <X weight="bold" className="w-4 h-4 hover:text-blue-primary" />
+                <XIcon weight="bold" className="w-4 h-4 hover:text-blue-primary" />
               </button>
             )}
           </div>

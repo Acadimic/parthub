@@ -1,4 +1,4 @@
-import { CloudArrowUp } from '@phosphor-icons/react';
+import { CloudArrowUpIcon } from '@phosphor-icons/react';
 import { getPlural } from '@utils/helpers';
 import { Button } from '../buttons';
 import { FileDropZone, IFileUploadProps } from '../selects';
@@ -20,7 +20,7 @@ export const UploadFiles = ({ ...props }: IFileUploadProps) => {
         </div>
         <div className="text-xs text-color-secondary font-medium">or</div>
         <div className="mt-2 flex flex-col items-center">
-          <Button text="Browse Files" leftsection={<CloudArrowUp weight="regular" className="w-5 h-5" />} />
+          <Button text="Browse Files" leftsection={<CloudArrowUpIcon weight="regular" className="w-5 h-5" />} />
         </div>
       </div>
     </FileDropZone>

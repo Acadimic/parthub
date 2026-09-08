@@ -1,5 +1,5 @@
 import { ColorModeContext } from '../../contexts';
-import { Moon, Sun } from '@phosphor-icons/react';
+import { MoonIcon, SunIcon } from '@phosphor-icons/react';
 import { useContext, useEffect, useState } from 'react';
 
 export const ToggleTheme = () => {
@@ -19,9 +19,9 @@ export const ToggleTheme = () => {
     <div className="relative">
       <button className="p-1 rounded hover:bg-background-secondary" onClick={colorMode.toggleColorMode}>
         {isDark ? (
-          <Sun className="w-4 h-4 md:w-5 md:h-5 text-color-text" weight="bold" />
+          <SunIcon className="w-4 h-4 md:w-5 md:h-5 text-color-text" weight="bold" />
         ) : (
-          <Moon className="w-4 h-4 md:w-5 md:h-5 text-color-text" weight="bold" />
+          <MoonIcon className="w-4 h-4 md:w-5 md:h-5 text-color-text" weight="bold" />
         )}
       </button>
     </div>
