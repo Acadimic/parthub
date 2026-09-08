@@ -19,6 +19,8 @@ having to be remembered. Each one is split into **must** (a violation is a defec
 | `add-server-module`     | creating a server module, a Mongoose schema, or editing `app.module`  |
 | `define-data-shape`     | declaring any interface, enum, DTO, MST model or Mongoose schema      |
 | `write-comments`        | writing comments, docblocks, or any suppression that needs a reason   |
+| `extend-a-package`      | editing a `packages/*` manifest, export, or adding a dependency       |
+| `upgrade-a-dependency`  | bumping any version, or recovering from a breaking upgrade            |
 | `verify-changes`        | reporting a change complete, and before every commit                  |
 
 Longer-form reasoning lives in `.claude/plans/API_CONVENTIONS.md` and

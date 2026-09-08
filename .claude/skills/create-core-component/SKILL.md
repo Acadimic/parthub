@@ -139,8 +139,9 @@ Then check the file against the ones already there:
   shadcn; it is inert, so leave it rather than churn the file.
 - Keep the `React.forwardRef` shape and the `cn(...)` class merge as generated — a wrapper depends
   on being able to pass `className` through.
-- Icons come from `@phosphor-icons/react`, not `lucide-react`. If the generated file imports
-  lucide, swap the icon for its Phosphor equivalent.
+- Icons in a wrapper or in feature code come from `@phosphor-icons/react`. A generated primitive
+  keeps whatever it came with: nine of them import `lucide-react`, which is why that package is a
+  `packages/ui` dependency. Leave those as they are rather than churning the file.
 - Theme colours come from `packages/ui/src/themes` through the `tw-colors` plugin, so prefer
   `text-color-primary` / `bg-background-secondary` / `text-red-primary` over raw palette classes
   when you touch the classes at all.

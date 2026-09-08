@@ -67,6 +67,14 @@ files.
 - Check `git status` before committing for files you did not mean to touch — a stray `--fix`,
   a Prettier run over a wider glob than intended, or a deletion you did not notice.
 
+## After a dependency change
+
+`upgrade-a-dependency` has a longer ladder for that case: a duplicate-instance check after
+install, the fact that `skipLibCheck` hides library type breaks until your own code touches them,
+and a server smoke run — loading the compiled graph exercises no database, no Fastify plugin and no
+middleware, so a server-side upgrade is not verified until the process has actually served
+`/health`.
+
 ## There are no tests
 
 This repo has no test suite: no `test` script, no spec files. Typecheck, lint and build are the

@@ -91,3 +91,6 @@ pnpm typecheck:ui        # the package is consumed as source, so breakage surfac
 ```
 
 Then typecheck every workspace that imports the shape — see the `verify-changes` skill.
+
+Adding a **subpath** rather than a type, or touching a package's manifest, dependencies or barrels,
+is the `extend-a-package` skill.
