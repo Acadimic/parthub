@@ -17,6 +17,7 @@ having to be remembered. Each one is split into **must** (a violation is a defec
 | `add-app-screen`        | touching an app's `pages/`, `modules/`, `layouts/` or `stores/`       |
 | `add-api-endpoint`      | adding or changing a route in an existing server module               |
 | `add-server-module`     | creating a server module, a Mongoose schema, or editing `app.module`  |
+| `query-with-mongoose`   | any query, schema or index in `apps/server`                           |
 | `define-data-shape`     | declaring any interface, enum, DTO, MST model or Mongoose schema      |
 | `write-comments`        | writing comments, docblocks, or any suppression that needs a reason   |
 | `extend-a-package`      | editing a `packages/*` manifest, export, or adding a dependency       |

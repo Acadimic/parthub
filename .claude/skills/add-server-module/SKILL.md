@@ -146,7 +146,8 @@ export class BatchModule {}
 
 ## Steps
 
-1. Run `define-data-shape` to settle where the types live: the DTO belongs in `packages/shared`.
+1. Run `define-data-shape` to settle where the types live: the DTO belongs in `packages/shared`,
+   and `query-with-mongoose` for the schema, index and query conventions.
 2. Write the schema (`extends BaseSchema`, `HydratedDocument`, `SchemaFactory`, the indexes).
 3. Write the module with `forFeature`.
 4. Write the service — org-scoped, soft-delete aware, `| null` where a lookup can miss.

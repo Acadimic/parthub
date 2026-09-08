@@ -116,6 +116,8 @@ upsertBatch = async (payload: IBatchUpsert) => callAuthApi(url, API.POST, payloa
 
 ## Related skills
 
+- `query-with-mongoose` — the query filters that make rules 2 to 4 above true, plus indexes,
+  `lean`, and which operations the plugins hook.
 - `add-server-module` — the module, schema and wiring around the route, and what the request
   pipeline already does for you.
 - `define-data-shape` — where the DTO and any new enum value belong.
