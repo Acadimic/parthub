@@ -3,7 +3,17 @@ import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-ico
 import { BlankState } from '@components/others';
 import { PositionType, SectionCategoryType, SectionType } from '@enums';
 import { TestPaperService } from '@services';
-import { type IQuestion, type ITestPaperSection, useStores } from '@stores';
+import {
+  type IQuestion,
+  type ITestPaperSection,
+  useStandardLookups,
+  useQuestionLookups,
+  useSelectedQuestion,
+  useSelectedTestPaper,
+  useSelectedTestPaperSection,
+  useSelectorLookups,
+  useTestPaperLookups,
+} from '@stores';
 import { splitCamelCase } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
@@ -35,30 +45,33 @@ interface IState {
 }
 
 export const TestPaper = observer(({ testPaperId }: IProps) => {
-  const { testPaperStore, selectorStore, questionStore, standardStore } = useStores();
+  const testPaperStore = useTestPaperLookups();
+  const { patchTestPaper } = testPaperStore;
+  const selectorStore = useSelectorLookups();
+  const questionStore = useQuestionLookups();
   const {
-    selectedTestPaper,
     setSelectedTestPaperSectionId,
     selectedQuestionType,
     setSelectedUpsertQuestionStep,
-    selectedTestPaperSection,
-    selectedQuestion,
     removeSelectedQuestionId,
     setSelectedQuestionId,
     setSelectedTestPaperId,
     setSelectedSolutionId,
   } = selectorStore;
+  const selectedTestPaperSection = useSelectedTestPaperSection();
+  const selectedTestPaper = useSelectedTestPaper();
+  const selectedQuestion = useSelectedQuestion();
   const {
     getTestPaperSectionById,
     getTestPaperSectionsByIds,
     loadTestPaperSectionsWithQuestions,
     createTestPaperSection,
     loadTestPapers,
-    isLoadingTestPapers,
-    isLoadedTestPapers,
-    isLoadingTestPaperSections,
   } = testPaperStore;
-  const { loadOrgChapters, getChapterById } = standardStore;
+  const isLoadingTestPapers = testPaperStore.isLoading('testPapers');
+  const isLoadedTestPapers = testPaperStore.isLoaded('testPapers');
+  const isLoadingTestPaperSections = testPaperStore.isLoading('testPaperSections');
+  const { loadOrgChapters } = useStandardLookups();
   const { getOptionsByIds, createQuestion, removeOptionById, removeQuestionById, getSolutionByQuestionId } =
     questionStore;
   const { push } = useRouter();
@@ -124,7 +137,7 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
     try {
       setState({ isLoading: true });
       const sectionIds = [...new Set([...selectedTestPaper.sections, state.section._id])];
-      if (state.section.isNew) selectedTestPaper.setSections(sectionIds);
+      if (state.section.isNew) patchTestPaper(selectedTestPaper._id, { sections: sectionIds });
       await Promise.all([
         state.section.isNew ? TestPaperService.upsertTestPaper(selectedTestPaper) : Promise.resolve(),
         TestPaperService.upsertTestPaperSection(state.section),

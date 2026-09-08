@@ -3,7 +3,7 @@ import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { Gender, PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { UserService } from '@services';
-import { useStores } from '@stores';
+import { useSelectedCollaborator, useSelectorLookups, useUserLookups } from '@stores';
 import { successToast, validateFieldValues } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
@@ -14,8 +14,10 @@ interface IProps {
 }
 
 export const UpsertCollaboratorModal = observer(({ isOpen, onClose }: IProps) => {
-  const { selectorStore, userStore } = useStores();
-  const { selectedCollaborator } = selectorStore;
+  const selectorStore = useSelectorLookups();
+  const userStore = useUserLookups();
+  const { patchUser } = userStore;
+  const selectedCollaborator = useSelectedCollaborator();
   const { removeUserByUserId } = userStore;
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,17 +41,17 @@ export const UpsertCollaboratorModal = observer(({ isOpen, onClose }: IProps) =>
   const onChangeRole = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedCollaborator) return;
     const value = e.target.value;
-    selectedCollaborator.setDesignation(value);
+    patchUser(selectedCollaborator._id, { designation: value });
   };
 
   const onChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedCollaborator) return;
-    selectedCollaborator.setEmail(e.target.value);
+    patchUser(selectedCollaborator._id, { email: e.target.value.toLowerCase() });
   };
 
   const handleGenderChange = (values: ISelectItem[]) => {
     if (!values.length || !selectedCollaborator) return;
-    selectedCollaborator.setGender(values[0].value as Gender);
+    patchUser(selectedCollaborator._id, { gender: values[0].value as Gender });
   };
 
   const handleSaveCollaborator = async () => {
@@ -74,7 +76,7 @@ export const UpsertCollaboratorModal = observer(({ isOpen, onClose }: IProps) =>
       // An invite creates no member yet; the store entry was only a form model, so drop it
       // instead of showing a collaborator that does not exist on the server.
       if (isNewCollaborator) removeUserByUserId(selectedCollaborator._id);
-      else selectedCollaborator.resetIsNew();
+      else patchUser(selectedCollaborator._id, { isNew: false });
       onClose();
     } catch (error) {
       console.error(error);

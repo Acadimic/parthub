@@ -1,3 +1,4 @@
+import { type MeetDto } from '@repo/shared';
 import { type IMeet } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
@@ -11,7 +12,7 @@ class MeetService {
 
   getMeets = async () => {
     const url = 'meet/all';
-    const resData = await callAuthApi(url, API.GET);
+    const resData = await callAuthApi<MeetDto[]>(url, API.GET);
     return resData;
   };
 }

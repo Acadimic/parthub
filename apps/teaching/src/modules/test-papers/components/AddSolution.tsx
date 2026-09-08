@@ -5,9 +5,17 @@ import { Html } from '@components/others';
 import { Marking, QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
-import { type MarkingType, useStores } from '@stores';
+import {
+  type MarkingType,
+  useStandardLookups,
+  useQuestionLookups,
+  useSelectedQuestion,
+  useSelectedSolution,
+  useSelectedTestPaper,
+  useSelectedTestPaperSection,
+  useSelectorLookups,
+} from '@stores';
 import { defaultMarkings } from '@utils/constants';
-import { getStandardSelectItem } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
 import { SelectQuestionType } from './SelectQuestionType';
@@ -15,10 +23,16 @@ import { type Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
 
 export const AddSolution = observer(() => {
-  const { selectorStore, questionStore, standardStore } = useStores();
-  const { selectedQuestion, selectedTestPaper, selectedTestPaperSection, selectedSolution } = selectorStore;
+  const selectorStore = useSelectorLookups();
+  const questionStore = useQuestionLookups();
+  const { patchQuestion } = questionStore;
+  const { patchOption } = questionStore;
+  const selectedTestPaperSection = useSelectedTestPaperSection();
+  const selectedTestPaper = useSelectedTestPaper();
+  const selectedSolution = useSelectedSolution();
+  const selectedQuestion = useSelectedQuestion();
   const { getOptionsByIds, upsertSolution } = questionStore;
-  const { getStandardsByIds, getStandardById, getStandardSubjectChapters } = standardStore;
+  const { getStandardSubjectItems, getStandardItemsByIds, getChapterItems } = useStandardLookups();
   const [marks, setMarks] = useState<Record<string, number>>(defaultMarkings[QuestionType.SINGLE_CHOICE]);
 
   const handleCheckboxOptionClick = (optionId: string) => {
@@ -26,7 +40,7 @@ export const AddSolution = observer(() => {
     const options = getOptionsByIds(selectedQuestion.options);
     const option = options.find((item) => item._id === optionId);
     if (!option) return;
-    option.setIsCorrect(!option.isCorrect);
+    patchOption(option._id, { isCorrect: !option.isCorrect });
   };
 
   const handleRadioOptionClick = (optionId: string) => {
@@ -35,12 +49,13 @@ export const AddSolution = observer(() => {
     const option = options.find((item) => item._id === optionId);
     if (!option) return;
     options.forEach((item) => item.setIsCorrect(false));
-    option.setIsCorrect(true);
+    patchOption(option._id, { isCorrect: true });
   };
 
   const handleStandardChange = (values: ISelectItem[]) => {
+    if (!selectedQuestion) return;
     const value = values[0].value;
-    selectedQuestion?.setStandard(value);
+    patchQuestion(selectedQuestion._id, { standard: value });
   };
 
   const handleSolutionTextChange = (blocks: Block[]) => {
@@ -59,7 +74,7 @@ export const AddSolution = observer(() => {
     Object.values(Marking).forEach((marking) => {
       if (!saveMarks[marking]) saveMarks[marking] = 0;
     });
-    selectedQuestion.setMarkings(saveMarks as MarkingType);
+    patchQuestion(selectedQuestion._id, { markings: saveMarks as MarkingType });
   };
 
   useEffect(() => {
@@ -159,9 +174,7 @@ export const AddSolution = observer(() => {
             <div className="flex flex-col md:flex-row gap-2.5">
               <Select
                 label="Standards"
-                items={getStandardsByIds(selectedTestPaper.standards).map((standard) =>
-                  getStandardSelectItem(standard),
-                )}
+                items={getStandardItemsByIds(selectedTestPaper.standards)}
                 required
                 isGrouped
                 values={[selectedQuestion.standard]}
@@ -170,9 +183,9 @@ export const AddSolution = observer(() => {
               />
               <Select
                 label="Subject"
-                items={getStandardById(selectedQuestion.standard)?.subjectItems || []}
+                items={getStandardSubjectItems(selectedQuestion.standard) || []}
                 values={selectedQuestion.subject ? [selectedQuestion.subject] : []}
-                onChange={(values) => selectedQuestion.setSubject(values[0]?.value)}
+                onChange={(values) => patchQuestion(selectedQuestion._id, { subject: values[0]?.value })}
                 isSingleSelect
                 isDisabled={!selectedQuestion.standard}
               />
@@ -183,13 +196,11 @@ export const AddSolution = observer(() => {
                   <div className="w-full flex-1">
                     <Select
                       label="Chapter"
-                      items={[
-                        ...getStandardSubjectChapters(selectedQuestion.standard, selectedQuestion.subject).map(
-                          (chapter) => ({ label: chapter.name, value: chapter._id }),
-                        ),
-                      ]}
+                      items={getChapterItems(selectedQuestion.standard, selectedQuestion.subject)}
                       values={selectedQuestion.chapter ? [selectedQuestion.chapter] : []}
-                      onChange={(values) => values[0] && selectedQuestion.setChapter(values[0]?.value)}
+                      onChange={(values) =>
+                        values[0] && patchQuestion(selectedQuestion._id, { chapter: values[0]?.value })
+                      }
                       isSingleSelect
                       required
                     />

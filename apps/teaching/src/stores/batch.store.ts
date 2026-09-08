@@ -1,148 +1,201 @@
-import { type IBatchStat, type ISelectItem } from '@interfaces';
-import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
-import { BatchService } from '../services';
-import { getBatchSelectItem, getObjectId } from '../utils/helpers';
-import { Batch, type IBatch, type IUser, type IUserBatchMapping, UserBatchMapping } from './models';
-import { type IStore } from './root.store';
+import {
+  type BatchDto,
+  type ClientEntity,
+  type IRequestSlice,
+  type UserBatchMappingDto,
+  createRequestSlice,
+} from '@repo/shared';
+import { type ISelectItem } from '@interfaces';
+import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
+import { BatchService, MappingService } from '../services';
+import { getObjectId } from '../utils/helpers';
+import { useSelectorStore } from './selector.store';
+import { type IUser, isStudentUser, useUserStore } from './user.store';
 
-export const BatchStore = t
-  .model({
-    batchMaps: t.map(Batch),
-    userBatchMaps: t.map(UserBatchMapping),
-    isLoadingBatchesData: t.optional(t.boolean, false),
-    isLoadedBatchesData: t.optional(t.boolean, false),
-  })
-  .views((self) => ({
-    get rootStore() {
-      return getRoot<IStore>(self);
-    },
+export type IBatch = ClientEntity<BatchDto>;
+export type IUserBatchMapping = ClientEntity<UserBatchMappingDto>;
 
-    get batches(): IBatch[] {
-      return Array.from(self.batchMaps.values());
-    },
+/** The fetches this store tracks. */
+type BatchFetch = 'batchesData';
 
-    get userBatchMappings(): IUserBatchMapping[] {
-      return Array.from(self.userBatchMaps.values());
-    },
+export interface IBatchState extends IRequestSlice<BatchFetch> {
+  batchMap: Record<string, IBatch>;
+  userBatchMap: Record<string, IUserBatchMapping>;
 
-    getBatchById(batchId: string): IBatch | undefined {
-      return batchId ? self.batchMaps.get(batchId) : undefined;
-    },
-  }))
-  .actions((self) => ({
-    addBatch: (batch: IBatch) => {
-      if (!batch) return;
-      const batchId = batch._id;
-      const isBatch = self.batchMaps.has(batchId);
-      if (isBatch) self.batchMaps.set(batchId, batch);
-      else self.batchMaps.put(batch);
-    },
+  getBatchById: (batchId: string) => IBatch | undefined;
+  getBatches: () => IBatch[];
+  getBatchesByIds: (batchIds: string[]) => IBatch[];
+  getBatchesByStandardId: (standardId: string) => IBatch[];
+  getBatchesByStandardIds: (standardIds: string[]) => IBatch[];
+  getUserBatchMappings: () => IUserBatchMapping[];
+  getBatchItems: () => ISelectItem[];
+  /** Every user mapped to a batch, students and staff alike. Reads the user store. */
+  getBatchMembers: (batchId: string) => IUser[];
+  /** Non-student members of a batch. Reads the user store — see `useBatchLookups`. */
+  getBatchCollaborators: (batchId: string) => IUser[];
+  getBatchCollaboratorIds: (batchId: string) => string[];
+  /** Student members of a batch. Reads the user store — see `useBatchLookups`. */
+  getBatchStudents: (batchId: string) => IUser[];
+  getBatchStudentIds: (batchId: string) => string[];
 
-    addUserBatchMapping: (userBatchMapping: IUserBatchMapping) => {
-      if (!userBatchMapping) return;
-      const userBatchMappingId = userBatchMapping._id;
-      const isUserBatchMapping = self.userBatchMaps.has(userBatchMappingId);
-      if (isUserBatchMapping) self.userBatchMaps.set(userBatchMappingId, userBatchMapping);
-      else self.userBatchMaps.put(userBatchMapping);
-    },
+  addBatches: (batches: IBatch[]) => void;
+  addUserBatchMappings: (mappings: IUserBatchMapping[]) => void;
+  patchBatch: (batchId: string, fields: Partial<IBatch>) => void;
+  removeBatchById: (batchId: string) => void;
+  removeUserBatchMappingByUserIdAndBatchId: (userId: string, batchId: string) => void;
 
-    removeUserBatchMappingByUserIdAndBatchId: (userId: string, batchId: string) => {
-      const userBatchMapping = self.userBatchMappings.find(
-        (mapping) => mapping.user === userId && mapping.batch === batchId,
-      );
-      if (userBatchMapping) self.userBatchMaps.delete(userBatchMapping._id);
-    },
+  /** Adds an unsaved batch and returns it, for the caller to select. */
+  createBatch: (name: string, standardId: string) => IBatch;
 
-    removeBatchById: (batchId: string) => {
-      const batch = self.batchMaps.get(batchId);
-      if (batch) self.batchMaps.delete(batchId);
-    },
-  }))
-  .actions((self) => ({
-    addBatches: (batches: IBatch[]) => {
-      if (!batches) return;
-      batches.forEach((batch) => self.addBatch(batch));
-    },
+  loadBatchesData: () => Promise<void>;
+  reset: () => void;
+}
 
-    addUserBatchMappings: (userBatchMappings: IUserBatchMapping[]) => {
-      if (!userBatchMappings) return;
-      userBatchMappings.forEach((mapping) => self.addUserBatchMapping(mapping));
-    },
-  }))
-  .actions((self) => ({
-    loadBatchesData: flow(function* () {
-      self.isLoadingBatchesData = true;
-      const result = yield BatchService.getBatchesData();
-      if (!result?.data) {
-        self.isLoadingBatchesData = false;
-        return;
-      }
-      const { batches, userBatchMappings } = result.data;
-      self.addBatches(batches);
-      self.addUserBatchMappings(userBatchMappings);
-      self.isLoadedBatchesData = true;
-      self.isLoadingBatchesData = false;
+const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
+  rows.reduce<Record<string, T>>((map, row) => {
+    map[row._id] = row;
+    return map;
+  }, {});
+
+export const useBatchStore = create<IBatchState>()((set, get) => ({
+  batchMap: {},
+  userBatchMap: {},
+  ...createRequestSlice(['batchesData'], set, get),
+
+  getBatchById: (batchId) => (batchId ? get().batchMap[batchId] : undefined),
+
+  getBatches: () => Object.values(get().batchMap),
+
+  getBatchesByIds: (batchIds) => {
+    const { batchMap } = get();
+    return batchIds.map((batchId) => batchMap[batchId]).filter((batch): batch is IBatch => !!batch);
+  },
+
+  getBatchesByStandardId: (standardId) =>
+    get()
+      .getBatches()
+      .filter((batch) => batch.standard === standardId),
+
+  getBatchesByStandardIds: (standardIds) =>
+    get()
+      .getBatches()
+      .filter((batch) => batch.standard && standardIds.includes(batch.standard)),
+
+  getUserBatchMappings: () => Object.values(get().userBatchMap),
+
+  getBatchItems: () =>
+    get()
+      .getBatches()
+      .map((batch) => ({ label: batch.name, value: batch._id, group: batch.standard })),
+
+  getBatchMembers: (batchId) => {
+    const userIds = get()
+      .getUserBatchMappings()
+      .filter((mapping) => mapping.batch === batchId)
+      .map((mapping) => mapping.user);
+    return useUserStore.getState().getUsersByIds(userIds);
+  },
+
+  getBatchCollaborators: (batchId) =>
+    get()
+      .getBatchMembers(batchId)
+      .filter((user) => !isStudentUser(user)),
+
+  getBatchCollaboratorIds: (batchId) =>
+    get()
+      .getBatchCollaborators(batchId)
+      .map((user) => user._id),
+
+  getBatchStudents: (batchId) =>
+    get()
+      .getBatchMembers(batchId)
+      .filter((user) => isStudentUser(user)),
+
+  getBatchStudentIds: (batchId) =>
+    get()
+      .getBatchStudents(batchId)
+      .map((user) => user._id),
+
+  addBatches: (batches) => {
+    set((state) => ({ batchMap: { ...state.batchMap, ...keyById(batches) } }));
+  },
+
+  addUserBatchMappings: (mappings) => {
+    set((state) => ({ userBatchMap: { ...state.userBatchMap, ...keyById(mappings) } }));
+  },
+
+  patchBatch: (batchId, fields) => {
+    set((state) => {
+      const batch = state.batchMap[batchId];
+      if (!batch) return state;
+      return { batchMap: { ...state.batchMap, [batchId]: { ...batch, ...fields } } };
+    });
+  },
+
+  removeBatchById: (batchId) => {
+    set((state) => {
+      const { [batchId]: removed, ...batchMap } = state.batchMap;
+      return removed ? { batchMap } : state;
+    });
+  },
+
+  removeUserBatchMappingByUserIdAndBatchId: (userId, batchId) => {
+    const mapping = get()
+      .getUserBatchMappings()
+      .find((item) => item.user === userId && item.batch === batchId);
+    if (!mapping) return;
+    set((state) => {
+      const { [mapping._id]: removed, ...userBatchMap } = state.userBatchMap;
+      return removed ? { userBatchMap } : state;
+    });
+  },
+
+  createBatch: (name, standardId) => {
+    const batch: IBatch = {
+      _id: getObjectId(),
+      name,
+      standard: standardId,
+      year: new Date().getFullYear(),
+      isNew: true,
+    };
+    get().addBatches([batch]);
+    return batch;
+  },
+
+  loadBatchesData: () =>
+    get().run('batchesData', async () => {
+      // Two requests, because two routes. This used to call `batch/all` alone and destructure
+      // `{ batches, userBatchMappings }` from it — that route returns a plain array, so both were
+      // `undefined` and a guard swallowed it: batches never loaded at all.
+      const [batches, mappings] = await Promise.all([
+        BatchService.getBatches(),
+        MappingService.getOrgUserBatchMappings(),
+      ]);
+      if (batches?.data) get().addBatches(batches.data);
+      if (mappings?.data) get().addUserBatchMappings(mappings.data);
     }),
 
-    createBatch: (name: string, standard: string) => {
-      const batch = Batch.create({
-        _id: getObjectId(),
-        name,
-        isNew: true,
-        standard,
-        year: new Date().getFullYear(),
-        ...self.rootStore.selectorStore.selectedData,
-      });
-      self.addBatch(batch);
-      self.rootStore.selectorStore.setSelectedBatchId(batch._id);
-      return batch;
-    },
-  }))
-  .views((self) => ({
-    getBatchesByIds(ids: string[]): IBatch[] {
-      const items: IBatch[] = [];
-      ids.forEach((id) => {
-        const item = self.getBatchById(id);
-        if (item) items.push(item);
-      });
-      return items;
-    },
+  reset: () => {
+    set({ batchMap: {}, userBatchMap: {} });
+    get().resetRequests();
+  },
+}));
 
-    getBatchesByStandardIds(standardIds: string[]): IBatch[] {
-      return self.batches.filter((batch) => standardIds.includes(batch.standard));
-    },
+/**
+ * The store's lookups, subscribed to the state they read.
+ *
+ * `getBatchCollaborators` and `getBatchStudents` resolve users through the user store, so this
+ * subscribes to **both**: subscribing only to this store would leave a member list stale when a
+ * user is loaded or renamed. See decision 4 in the migration plan.
+ */
+export const useBatchLookups = (): IBatchState => {
+  useUserStore(useShallow((state) => state.userMap));
+  return useBatchStore(useShallow((state) => state));
+};
 
-    getBatchesByStandardId(standard: string): IBatch[] {
-      return self.batches.filter((batch) => batch.standard === standard);
-    },
-
-    getBatchCollaborators(batchId: string): IUser[] {
-      const maps = self.userBatchMappings.filter((mapping) => mapping.batch === batchId);
-      const users = getRoot<IStore>(self).userStore.getUsersByIds(maps.map((mapping) => mapping.user));
-      return users.filter((user) => !user.isStudent);
-    },
-
-    getBatchStudents(batchId: string): IUser[] {
-      const maps = self.userBatchMappings.filter((mapping) => mapping.batch === batchId);
-      const users = getRoot<IStore>(self).userStore.getUsersByIds(maps.map((mapping) => mapping.user));
-      return users.filter((user) => user.isStudent);
-    },
-
-    get batchItems(): ISelectItem[] {
-      return self.batches.map((batch) => getBatchSelectItem(batch));
-    },
-  }))
-  .views((self) => ({
-    getBatchCollaboratorIds(batchId: string): string[] {
-      return self.getBatchCollaborators(batchId).map((user) => user._id);
-    },
-    getBatchStudentIds(batchId: string): string[] {
-      const maps = self.userBatchMappings.filter((mapping) => mapping.batch === batchId);
-      const users = getRoot<IStore>(self).userStore.getUsersByIds(maps.map((mapping) => mapping.user));
-      return users.filter((user) => user.isStudent).map((user) => user._id);
-    },
-  }));
-
-export type IBatchStore = Instance<typeof BatchStore>;
-
-export type { IBatchStat };
+/** The selected batch, or `undefined`. Replaces `selectorStore.selectedBatch`. */
+export const useSelectedBatch = (): IBatch | undefined => {
+  const selectedBatchId = useSelectorStore((state) => state.selectedBatchId);
+  return useBatchStore((state) => (selectedBatchId ? state.batchMap[selectedBatchId] : undefined));
+};

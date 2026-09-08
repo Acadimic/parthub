@@ -2,7 +2,15 @@ import { Accordions, Button, Loader, Menu, SplitButton } from '@repo/ui/app';
 import { DownloadSimpleIcon, PencilIcon, PlusIcon } from '@phosphor-icons/react';
 import { BlankState, TitleWithIcon } from '@components/others';
 import { MaterialInfo } from '@modules/study-materials/components';
-import { type ICourseModule, useStores } from '@stores';
+import {
+  type ICourseModule,
+  useCourseLookups,
+  useMaterialLookups,
+  useMeetLookups,
+  useSelectedCourse,
+  useSelectorLookups,
+  useTestPaperLookups,
+} from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
@@ -20,12 +28,19 @@ interface IState {
 
 export const Course = observer(({ courseId }: IProps) => {
   const { push } = useRouter();
-  const { selectorStore, courseStore, materialStore, testPaperStore, meetStore } = useStores();
-  const { selectedCourseId, selectedCourse, setSelectedCourseModuleId } = selectorStore;
+  const selectorStore = useSelectorLookups();
+  const courseStore = useCourseLookups();
+  const materialStore = useMaterialLookups();
+  const testPaperStore = useTestPaperLookups();
+  const meetStore = useMeetLookups();
+  const { selectedCourseId, setSelectedCourseModuleId } = selectorStore;
+  const selectedCourse = useSelectedCourse();
   const { isCourseModuleLoading, getCourseModulesByCourseId, loadCourseModules, createCourseModule, getCourseById } =
     courseStore;
-  const { loadStandardsMaterials, isLoadingMaterials } = materialStore;
-  const { loadTestPapers, isLoadingTestPapers } = testPaperStore;
+  const { loadStandardsMaterials } = materialStore;
+  const isLoadingMaterials = materialStore.isLoading('materials');
+  const { loadTestPapers } = testPaperStore;
+  const isLoadingTestPapers = testPaperStore.isLoading('testPapers');
   const { loadMeets, getMeetsByIds } = meetStore;
   const [state, setState] = useSetState<IState>({
     isOpenUpsertCourseModuleModal: false,

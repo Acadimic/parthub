@@ -1,7 +1,7 @@
 import { Card } from '@repo/ui/app';
 import { StandardWithLogo, TestPaperInfo } from '@components/common';
 import { TestPaperIconSvg } from '@components/images';
-import { type ITestPaper, useStores } from '@stores';
+import { type ITestPaper, useStandardLookups, useSelectorLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 import Link from 'next/link';
 
@@ -10,8 +10,8 @@ interface IProps {
 }
 
 export const TestPaperItem = observer(({ testPaper }: IProps) => {
-  const { standardStore, selectorStore } = useStores();
-  const { getStandardsByIds } = standardStore;
+  const selectorStore = useSelectorLookups();
+  const { getStandardsByIds } = useStandardLookups();
   const { setSelectedTestPaperId } = selectorStore;
 
   const handleClick = () => {

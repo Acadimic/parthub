@@ -1,6 +1,7 @@
 import { type IStandardSubjectQuery } from '@interfaces';
 import { type IChapter } from '@stores';
 import { API } from '../enums';
+import { type ChapterDto } from '@repo/shared';
 import { callAuthApi } from './http.service';
 
 class ChapterService {
@@ -12,13 +13,13 @@ class ChapterService {
 
   getStandardSubjectChapters = async (payload: IStandardSubjectQuery) => {
     const url = 'chapter/standard/subject/all';
-    const resData = await callAuthApi(url, API.POST, payload);
+    const resData = await callAuthApi<ChapterDto[]>(url, API.POST, payload);
     return resData;
   };
 
   getOrgChapters = async () => {
     const url = 'chapter/all';
-    const resData = await callAuthApi(url, API.GET);
+    const resData = await callAuthApi<ChapterDto[]>(url, API.GET);
     return resData;
   };
 }

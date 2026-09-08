@@ -10,6 +10,8 @@ export type {
   ITarget,
   IFunctionProps,
   IPosition,
+  IToast,
+  ToastType,
   IEditorCellMap,
   IBatchStat,
   IMaterialStat,

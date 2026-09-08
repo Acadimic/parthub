@@ -1,227 +1,301 @@
-import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import {
+  type ClientEntity,
+  type CourseDto,
+  type CourseStatsDto,
+  type ICourseModuleFields,
+  type IRequestSlice,
+  type PlanDto,
+  createRequestSlice,
+} from '@repo/shared';
+import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { CurrencyType, MaterialType, PeriodType } from '../enums';
 import { CourseService, PlanService } from '../services';
-import { capitalize, getObjectId } from '../utils/helpers';
-import { Course, CourseModule, type ICourse, type ICourseModule, type ICourseStats, type IPlan, Plan } from './models';
-import { type IStore } from './root.store';
+import { capitalize, getObjectId, getSlug } from '../utils/helpers';
+import { useMaterialStore } from './material.store';
+import { useMeetStore } from './meet.store';
+import { useSelectorStore } from './selector.store';
+import { useStandardStore } from './standard.store';
+import { useTestPaperStore } from './test-paper.store';
 
-export const CourseStore = t
-  .model({
-    courseMaps: t.map(Course),
-    planMaps: t.map(Plan),
-    courseModuleMaps: t.map(CourseModule),
-    isCourseLoading: t.optional(t.boolean, false),
-    isCourseLoaded: t.optional(t.boolean, false),
-    isPlanLoading: t.optional(t.boolean, false),
-    isCourseModuleLoading: t.optional(t.boolean, false),
-  })
-  .views((self) => ({
-    get rootStore() {
-      return getRoot<IStore>(self);
-    },
+export type ICourse = ClientEntity<CourseDto>;
+export type IPlan = ClientEntity<PlanDto>;
+export type ICourseModule = ICourseModuleFields & { isNew?: boolean };
+export type ICourseStats = CourseStatsDto;
 
-    get courses() {
-      return Array.from(self.courseMaps.values());
-    },
+/** The fetches this store tracks. */
+type CourseFetch = 'courses' | 'plans' | 'courseModules';
 
-    get plans() {
-      return Array.from(self.planMaps.values());
-    },
+export interface ICourseState extends IRequestSlice<CourseFetch> {
+  courseMap: Record<string, ICourse>;
+  planMap: Record<string, IPlan>;
+  courseModuleMap: Record<string, ICourseModule>;
 
-    get courseModules() {
-      return Array.from(self.courseModuleMaps.values());
-    },
-  }))
-  .views((self) => ({
-    getCourseById(courseId: string): ICourse | undefined {
-      return courseId ? self.courseMaps.get(courseId) : undefined;
-    },
+  getCourseById: (courseId: string) => ICourse | undefined;
+  getCourseModuleById: (courseModuleId: string) => ICourseModule | undefined;
+  getCourses: () => ICourse[];
+  getPlans: () => IPlan[];
+  getCourseModules: () => ICourseModule[];
+  getCourseModulesByCourseId: (courseId: string) => ICourseModule[];
+  getPlansByCourseId: (courseId: string) => IPlan[];
+  /** A course's subjects as select items, led by a "None" entry. Was a view on the model. */
+  getCourseSubjectItems: (courseId: string) => { label: string; value: string }[];
 
-    getCourseModuleById(courseModuleId: string): ICourseModule | undefined {
-      return courseModuleId ? self.courseModuleMaps.get(courseModuleId) : undefined;
-    },
+  addCourses: (courses: ICourse[]) => void;
+  addPlans: (plans: IPlan[]) => void;
+  addCourseModules: (courseModules: ICourseModule[]) => void;
+  patchCourse: (courseId: string, fields: Partial<ICourse>) => void;
+  patchPlan: (planId: string, fields: Partial<IPlan>) => void;
+  patchCourseModule: (courseModuleId: string, fields: Partial<ICourseModule>) => void;
+  /** Renames a course module and keeps its slug in step. */
+  renameCourseModule: (courseModuleId: string, name: string) => void;
+  removeCourseById: (courseId: string) => void;
+  removeCourseModuleById: (courseModuleId: string) => void;
 
-    getCourseModulesByCourseId(courseId: string): ICourseModule[] {
-      return self.courseModules.filter((courseModule) => courseModule.course === courseId);
-    },
-  }))
-  .actions((self) => ({
-    addCourse: (course: ICourse) => {
-      if (!course) return;
-      const courseId = course._id;
-      const isCourse = self.courseMaps.has(courseId);
-      if (isCourse) self.courseMaps.set(courseId, course);
-      else self.courseMaps.put(course);
-    },
+  /** Adds an unsaved course with its monthly and yearly plans; returns it for the caller to select. */
+  createCourse: () => ICourse;
+  createPlan: (courseId: string, order: number, period: PeriodType) => IPlan;
+  /** Adds an unsaved module and returns it, for the caller to select. */
+  createCourseModule: (courseId: string) => ICourseModule;
+  /** Recomputes a course's roll-ups from its modules and stores them on the course. */
+  calculateAndSetCourseStatsByCourseId: (courseId: string) => ICourseStats | undefined;
 
-    addPlan: (plan: IPlan) => {
-      if (!plan) return;
-      const planId = plan._id;
-      const isPlan = self.planMaps.has(planId);
-      if (isPlan) self.planMaps.set(planId, plan);
-      else self.planMaps.put(plan);
-    },
+  loadCourses: () => Promise<void>;
+  loadCoursePlans: (courseId: string) => Promise<void>;
+  loadCourseModules: (courseId: string) => Promise<void>;
+  reset: () => void;
+}
 
-    addCourseModule: (courseModule: ICourseModule) => {
-      if (!courseModule) return;
-      const courseModuleId = courseModule._id;
-      const isPresent = self.courseModuleMaps.has(courseModuleId);
-      if (isPresent) self.courseModuleMaps.set(courseModuleId, courseModule);
-      else self.courseModuleMaps.put(courseModule);
-    },
-  }))
-  .actions((self) => ({
-    addCourses: (courses: ICourse[]) => {
-      if (!courses) return;
-      courses.forEach((course) => self.addCourse(course));
-    },
+const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
+  rows.reduce<Record<string, T>>((map, row) => {
+    map[row._id] = row;
+    return map;
+  }, {});
 
-    addPlans: (plans: IPlan[]) => {
-      if (!plans) return;
-      plans.forEach((plan) => self.addPlan(plan));
-    },
+export const useCourseStore = create<ICourseState>()((set, get) => ({
+  courseMap: {},
+  planMap: {},
+  courseModuleMap: {},
+  ...createRequestSlice(['courses', 'plans', 'courseModules'], set, get),
 
-    addCourseModules: (courseModules: ICourseModule[]) => {
-      if (!courseModules) return;
-      courseModules.forEach((courseModule) => self.addCourseModule(courseModule));
-    },
+  getCourseById: (courseId) => (courseId ? get().courseMap[courseId] : undefined),
 
-    removeCourseById: (courseId: string) => {
-      self.courseMaps.delete(courseId);
-    },
+  getCourseModuleById: (courseModuleId) => (courseModuleId ? get().courseModuleMap[courseModuleId] : undefined),
 
-    removeCourseModuleById: (courseModuleId: string) => {
-      self.courseModuleMaps.delete(courseModuleId);
-    },
-  }))
-  .actions((self) => ({
-    loadCourses: flow(function* () {
-      self.isCourseLoading = true;
-      const result = yield CourseService.getCourses();
-      console.log('###result: ', result);
-      if (!result?.data) {
-        self.isCourseLoading = false;
-        return;
-      }
-      self.addCourses(result.data);
-      self.isCourseLoading = false;
-      self.isCourseLoaded = true;
+  getCourses: () => Object.values(get().courseMap),
+
+  getPlans: () => Object.values(get().planMap),
+
+  getCourseModules: () => Object.values(get().courseModuleMap),
+
+  getCourseModulesByCourseId: (courseId) =>
+    get()
+      .getCourseModules()
+      .filter((courseModule) => courseModule.course === courseId),
+
+  getPlansByCourseId: (courseId) =>
+    get()
+      .getPlans()
+      .filter((plan) => (plan.courses ?? []).includes(courseId)),
+
+  getCourseSubjectItems: (courseId) => {
+    const course = get().getCourseById(courseId);
+    const items = [{ label: 'None', value: '' }];
+    if (!course) return items;
+    // Subjects resolve through the standard store; see `useCourseLookups` for the subscription.
+    useStandardStore
+      .getState()
+      .getSubjectsByIds(course.subjects ?? [])
+      .forEach((subject) => {
+        if (!items.some((item) => item.value === subject._id)) items.push({ label: subject.name, value: subject._id });
+      });
+    return items;
+  },
+
+  addCourses: (courses) => {
+    set((state) => ({ courseMap: { ...state.courseMap, ...keyById(courses) } }));
+  },
+
+  addPlans: (plans) => {
+    set((state) => ({ planMap: { ...state.planMap, ...keyById(plans) } }));
+  },
+
+  addCourseModules: (courseModules) => {
+    set((state) => ({ courseModuleMap: { ...state.courseModuleMap, ...keyById(courseModules) } }));
+  },
+
+  patchCourse: (courseId, fields) => {
+    set((state) => {
+      const course = state.courseMap[courseId];
+      if (!course) return state;
+      return { courseMap: { ...state.courseMap, [courseId]: { ...course, ...fields } } };
+    });
+  },
+
+  patchPlan: (planId, fields) => {
+    set((state) => {
+      const plan = state.planMap[planId];
+      if (!plan) return state;
+      return { planMap: { ...state.planMap, [planId]: { ...plan, ...fields } } };
+    });
+  },
+
+  patchCourseModule: (courseModuleId, fields) => {
+    set((state) => {
+      const courseModule = state.courseModuleMap[courseModuleId];
+      if (!courseModule) return state;
+      return { courseModuleMap: { ...state.courseModuleMap, [courseModuleId]: { ...courseModule, ...fields } } };
+    });
+  },
+
+  renameCourseModule: (courseModuleId, name) => {
+    get().patchCourseModule(courseModuleId, { name, slug: getSlug(name) });
+  },
+
+  removeCourseById: (courseId) => {
+    set((state) => {
+      const { [courseId]: removed, ...courseMap } = state.courseMap;
+      return removed ? { courseMap } : state;
+    });
+  },
+
+  removeCourseModuleById: (courseModuleId) => {
+    set((state) => {
+      const { [courseModuleId]: removed, ...courseModuleMap } = state.courseModuleMap;
+      return removed ? { courseModuleMap } : state;
+    });
+  },
+
+  createPlan: (courseId, order, period) => {
+    const plan: IPlan = {
+      _id: getObjectId(),
+      name: capitalize(period),
+      courses: [courseId],
+      meets: [],
+      amount: 0,
+      realAmount: 0,
+      currency: CurrencyType.INR,
+      interval: 1,
+      period,
+      order,
+      isRecommended: period === PeriodType.YEARLY,
+      isNew: true,
+    };
+    get().addPlans([plan]);
+    return plan;
+  },
+
+  createCourse: () => {
+    const courseId = getObjectId();
+    const course: ICourse = {
+      _id: courseId,
+      name: '',
+      slug: '',
+      standards: [],
+      subjects: [],
+      // A course lists itself, which is how a bundle of courses is represented.
+      courses: [courseId],
+      meets: [],
+      order: get().getCourses().length,
+      isNew: true,
+    };
+    get().addCourses([course]);
+    get().createPlan(courseId, 0, PeriodType.MONTHLY);
+    get().createPlan(courseId, 1, PeriodType.YEARLY);
+    return course;
+  },
+
+  createCourseModule: (courseId) => {
+    const courseModule: ICourseModule = {
+      _id: getObjectId(),
+      course: courseId,
+      name: '',
+      slug: '',
+      day: get().getCourseModulesByCourseId(courseId).length + 1,
+      materials: [],
+      testPapers: [],
+      meets: [],
+      isNew: true,
+    };
+    get().addCourseModules([courseModule]);
+    return courseModule;
+  },
+
+  calculateAndSetCourseStatsByCourseId: (courseId) => {
+    const course = get().getCourseById(courseId);
+    if (!course) return undefined;
+    const courseModules = get().getCourseModulesByCourseId(courseId);
+    const materialIds = courseModules.flatMap((courseModule) => courseModule.materials ?? []);
+    const testPaperIds = courseModules.flatMap((courseModule) => courseModule.testPapers ?? []);
+    // Read-once cross-store reads: this runs from a handler, never during render.
+    const testPapers = useTestPaperStore.getState().getTestPapersByIds(testPaperIds);
+    const materialsStats = useMaterialStore.getState().getMaterialsStatsByMaterialIds(materialIds);
+    const meetsDurationMins = useMeetStore
+      .getState()
+      .getMeetsByIds(course.meets ?? [])
+      .reduce((total, meet) => total + (meet.durationMins ?? 0), 0);
+    const stats: ICourseStats = {
+      daysCount: courseModules.length,
+      videosCount: materialsStats.types[MaterialType.VIDEO],
+      readingsCount: materialsStats.types[MaterialType.READING],
+      testsCount: testPaperIds.length,
+      meetsCount: (course.meets ?? []).length,
+      testsDurationMins: testPapers.reduce((total, testPaper) => total + (testPaper.durationMins ?? 0), 0),
+      materialsDurationMins: materialsStats.durationMins,
+      meetsDurationMins,
+    };
+    get().patchCourse(courseId, { stats });
+    return stats;
+  },
+
+  loadCourses: () =>
+    get().run('courses', async () => {
+      const result = await CourseService.getCourses();
+      if (result?.data) get().addCourses(result.data);
     }),
 
-    loadCoursePlans: flow(function* (courseId: string) {
-      self.isPlanLoading = true;
-      const result = yield PlanService.getCoursePlans(courseId);
-      if (!result?.data) {
-        self.isPlanLoading = false;
-        return;
-      }
-      self.addPlans(result.data);
-      self.isPlanLoading = false;
+  loadCoursePlans: (courseId) =>
+    get().run('plans', async () => {
+      const result = await PlanService.getCoursePlans(courseId);
+      if (result?.data) get().addPlans(result.data);
     }),
 
-    loadCourseModules: flow(function* (courseId: string) {
-      self.isCourseModuleLoading = true;
-      const result = yield CourseService.getCourseModulesByCourseId(courseId);
-      if (!result?.data) {
-        self.isCourseModuleLoading = false;
-        return;
-      }
-      self.addCourseModules(result.data);
-      self.isCourseModuleLoading = false;
+  loadCourseModules: (courseId) =>
+    get().run('courseModules', async () => {
+      const result = await CourseService.getCourseModulesByCourseId(courseId);
+      if (result?.data) get().addCourseModules(result.data);
     }),
-  }))
-  .actions((self) => ({
-    createPlan: (courseId: string, order: number, period: PeriodType) => {
-      const plan = Plan.create({
-        _id: getObjectId(),
-        name: capitalize(period),
-        courses: [courseId],
-        meets: [],
-        amount: 0,
-        realAmount: 0,
-        currency: CurrencyType.INR,
-        interval: 1,
-        period,
-        order,
-        isRecommended: period === PeriodType.YEARLY,
-        isNew: true,
-        ...self.rootStore.selectorStore.selectedData,
-      });
-      self.addPlan(plan);
-      return plan;
-    },
-  }))
-  .actions((self) => ({
-    createCourse: () => {
-      const order = self.courses.length;
-      const id = getObjectId();
-      const course = Course.create({
-        _id: id,
-        name: '',
-        slug: '',
-        standards: [],
-        subjects: [],
-        courses: [id],
-        meets: [],
-        order,
-        isNew: true,
-        ...self.rootStore.selectorStore.selectedData,
-      });
-      self.addCourse(course);
-      self.createPlan(course._id, 0, PeriodType.MONTHLY);
-      self.createPlan(course._id, 1, PeriodType.YEARLY);
-      self.rootStore.selectorStore.setSelectedCourseId(course._id);
-      return course;
-    },
 
-    createCourseModule: (courseId: string) => {
-      const courseModulesLength = self.getCourseModulesByCourseId(courseId).length;
-      const courseModule = CourseModule.create({
-        _id: getObjectId(),
-        course: courseId,
-        name: '',
-        slug: '',
-        day: courseModulesLength + 1,
-        materials: [],
-        testPapers: [],
-        isNew: true,
-        ...self.rootStore.selectorStore.selectedData,
-      });
-      self.addCourseModule(courseModule);
-      self.rootStore.selectorStore.setSelectedCourseModuleId(courseModule._id);
-      return courseModule;
-    },
+  reset: () => {
+    set({ courseMap: {}, planMap: {}, courseModuleMap: {} });
+    get().resetRequests();
+  },
+}));
 
-    calculateAndSetCourseStatsByCourseId(courseId: string): ICourseStats | undefined {
-      const course = self.getCourseById(courseId);
-      if (!course) return;
-      const courseModules = self.getCourseModulesByCourseId(courseId);
-      const materialsIds = courseModules.map((courseModule) => courseModule.materials).flat();
-      const testsIds = courseModules.map((courseModule) => courseModule.testPapers).flat();
-      const testPapers = self.rootStore.testPaperStore.getTestPapersByIds(testsIds);
-      const testsDurationMins = testPapers.reduce((total, testPaper) => total + testPaper.durationMins, 0);
-      const materialsStats = self.rootStore.materialStore.getMaterialsStatsByMaterialIds(materialsIds);
-      const meetsDurationMins = self.rootStore.meetStore
-        .getMeetsByIds(course.meets)
-        .reduce((total, meet) => total + meet.durationMins, 0);
-      const stats = {
-        daysCount: courseModules.length,
-        videosCount: materialsStats.types[MaterialType.VIDEO],
-        readingsCount: materialsStats.types[MaterialType.READING],
-        testsCount: testsIds.length,
-        meetsCount: course.meets.length,
-        testsDurationMins,
-        materialsDurationMins: materialsStats.durationMins,
-        meetsDurationMins,
-      };
-      course.stats = stats;
-      return stats;
-    },
-  }))
-  .views((self) => ({
-    plansByCourseId(courseId: string) {
-      return self.plans.filter((plan) => plan.courses.includes(courseId));
-    },
-  }));
+/**
+ * The store's lookups, subscribed to the state they read.
+ *
+ * `getCourseSubjectItems` resolves subjects through the standard store, so this subscribes to both.
+ */
+export const useCourseLookups = (): ICourseState => {
+  useStandardStore(useShallow((state) => state.subjectMap));
+  return useCourseStore(useShallow((state) => state));
+};
 
-export type ICourseStore = Instance<typeof CourseStore>;
+/** The selected course, or `undefined`. Replaces `selectorStore.selectedCourse`. */
+export const useSelectedCourse = (): ICourse | undefined => {
+  const selectedCourseId = useSelectorStore((state) => state.selectedCourseId);
+  return useCourseStore((state) => (selectedCourseId ? state.courseMap[selectedCourseId] : undefined));
+};
+
+/** The selected course module, or `undefined`. Replaces `selectorStore.selectedCourseModule`. */
+export const useSelectedCourseModule = (): ICourseModule | undefined => {
+  const selectedId = useSelectorStore((state) => state.selectedCourseModuleId);
+  return useCourseStore((state) => (selectedId ? state.courseModuleMap[selectedId] : undefined));
+};
+
+/** The selected course's plans. Replaces `selectorStore.selectedCoursePlans`. */
+export const useSelectedCoursePlans = (): IPlan[] => {
+  const selectedCourseId = useSelectorStore((state) => state.selectedCourseId);
+  return useCourseStore(useShallow((state) => state.getPlansByCourseId(selectedCourseId)));
+};

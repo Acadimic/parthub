@@ -10,8 +10,8 @@ export const Workspace = observer(() => {
   const { courseStore, testPaperStore, materialStore, loadHomePageData, isLoadingHomePageData, isLoadedHomePageData } =
     useStores();
 
-  const { courses } = courseStore;
-  const { testPapers } = testPaperStore;
+  const courses = courseStore.getCourses();
+  const testPapers = testPaperStore.getTestPapers();
   const { materialStats } = materialStore;
 
   useEffect(() => {

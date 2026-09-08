@@ -1,5 +1,5 @@
 import { Html } from '@components/others';
-import { type IQuestion, useStores } from '@stores';
+import { type IQuestion, useQuestionLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {
@@ -8,7 +8,7 @@ interface IProps {
 }
 
 export const Solution = observer(({ question, prefix }: IProps) => {
-  const { questionStore } = useStores();
+  const questionStore = useQuestionLookups();
   const { getSolutionByQuestionId } = questionStore;
   const solution = getSolutionByQuestionId(question._id);
 

@@ -1,6 +1,6 @@
 import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { ChapterService } from '@services';
-import { useStores } from '@stores';
+import { useStandardLookups, useStandardStore, useSelectedChapter, useSelectorLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
@@ -10,16 +10,26 @@ interface IProps {
 }
 
 export const UpsertChapterModal = observer(({ isOpen, onClose }: IProps) => {
-  const { selectorStore, standardStore } = useStores();
-  const { selectedChapter } = selectorStore;
+  const selectorStore = useSelectorLookups();
+  const standardStore = useStandardLookups();
+  const { patchChapter } = standardStore;
+  const { selectedChapterId } = selectorStore;
+  // `selectedChapter` was an MST view over the standard store. The id still comes
+  // from MST (tracked by `observer`); the row now comes from the Zustand store.
+  const selectedChapter = standardStore.getChapterById(selectedChapterId);
   const [isLoading, setIsLoading] = useState(false);
 
   const saveChapter = async () => {
-    if (!selectedChapter) return;
+    const chapterId = selectedChapter?._id;
+    if (!chapterId) return;
     try {
       setIsLoading(true);
-      await ChapterService.upsertChapter(selectedChapter);
-      selectedChapter.resetIsNew();
+      // Read the row back rather than posting `selectedChapter`: the store holds immutable rows, so
+      // the copy captured during render does not carry an edit made after it.
+      const chapter = useStandardStore.getState().getChapterById(chapterId);
+      if (!chapter) return;
+      await ChapterService.upsertChapter(chapter);
+      useStandardStore.getState().patchChapter(chapterId, { isNew: false });
       onClose();
     } catch (error) {
       console.log(error);
@@ -49,7 +59,7 @@ export const UpsertChapterModal = observer(({ isOpen, onClose }: IProps) => {
             label="Chapter Name"
             required
             value={selectedChapter.name}
-            onChange={(e) => selectedChapter.setName(e.target.value)}
+            onChange={(e) => patchChapter(selectedChapter._id, { name: e.target.value })}
           />
         </div>
       }

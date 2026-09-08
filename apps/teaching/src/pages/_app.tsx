@@ -3,7 +3,7 @@ import { ColorModeContext } from '@repo/ui/contexts';
 import { Layout, StorageKey, Theme } from '@enums';
 import { AuthLayout, SidebarLayout } from '@layouts';
 import { ToastContainer } from '@modules/toasts';
-import { useStores } from '@stores';
+import { useUserLookups } from '@stores';
 import '@styles/calendar.scss';
 import '@styles/globals.scss';
 import { loadFirebaseUser } from '@utils/firebase';
@@ -41,8 +41,10 @@ const config = {
 type ThemeMode = 'light' | 'dark';
 
 function App({ Component, pageProps }: AppPropsWithLayout) {
-  const { userStore } = useStores();
-  const { isLoadingLoggedInUsers, isLoadedLoggedInUsers, loadLoggedInUsers } = userStore;
+  const userStore = useUserLookups();
+  const { loadLoggedInUsers } = userStore;
+  const isLoadingLoggedInUsers = userStore.isLoading('loggedInUsers');
+  const isLoadedLoggedInUsers = userStore.isLoaded('loggedInUsers');
   const { route, push } = useRouter();
   const { layout } = Component;
   const [isReady, setIsReady] = useState(false);

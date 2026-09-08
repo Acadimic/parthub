@@ -8,7 +8,7 @@ import {
   splitCamelCase,
 } from '@repo/ui/lib';
 import { type IFullCalendarEvent, type ISelectItem } from '@interfaces';
-import { type IBatch, type IMeet, type IStandard } from '@stores';
+import { type IBatch, type IMeet } from '@stores';
 import { MeetFrequency } from '../../enums';
 import { WEEK_DAYS_INTEGER_MAPPINGS } from '../constants';
 import { logOut as signOut } from '../firebase';
@@ -41,10 +41,6 @@ export const getFrequencyText = (weekDayIntegers: number[], startTime: string | 
   if (weekDayIntegers.length === 7 && continuous) return 'Daily';
   if (continuous) return `${firstDay} - ${WEEK_DAYS_INTEGER_MAPPINGS[currentDay]}`;
   return dayString;
-};
-
-export const getStandardSelectItem = (standard: IStandard): ISelectItem => {
-  return { label: standard.name, value: standard._id, group: standard.group };
 };
 
 export const validateFieldValues = <T extends object>(obj: T, fields: string[]): string[] => {

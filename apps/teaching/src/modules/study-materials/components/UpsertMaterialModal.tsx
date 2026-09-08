@@ -7,7 +7,13 @@ import { useAttachment } from '@hooks/attachment.hook';
 import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
 import { MaterialService } from '@services';
-import { type IAttachment, useStores } from '@stores';
+import {
+  type IAttachment,
+  useStandardLookups,
+  useMaterialLookups,
+  useSelectedMaterial,
+  useSelectorLookups,
+} from '@stores';
 import { successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
@@ -22,10 +28,15 @@ interface IProps {
 }
 
 export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
-  const { selectorStore, materialStore, standardStore } = useStores();
-  const { selectedMaterial, selectedStandardId, selectedSubjectId } = selectorStore;
+  const selectorStore = useSelectorLookups();
+  const materialStore = useMaterialLookups();
+  const { removeAttachment } = materialStore;
+  const { patchMaterial } = materialStore;
+  const { addAttachment } = materialStore;
+  const { selectedStandardId, selectedSubjectId } = selectorStore;
+  const selectedMaterial = useSelectedMaterial();
   const { addLinkAttachment } = materialStore;
-  const { getStandardSubjectChapters } = standardStore;
+  const { getStandardSubjectChapters } = useStandardLookups();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const chapters = getStandardSubjectChapters(selectedStandardId, selectedSubjectId);
@@ -61,8 +72,8 @@ export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
   };
 
   const handleChapterChange = (values: ISelectItem[]) => {
-    if (!values.length) return;
-    selectedMaterial?.setChapter(values[0].value);
+    if (!values.length || !selectedMaterial) return;
+    patchMaterial(selectedMaterial._id, { chapter: values[0].value });
   };
 
   const handleContentTextChange = (blocks: Block[]) => {
@@ -79,7 +90,7 @@ export const UpsertMaterialModal = observer(({ isOpen, onClose }: IProps) => {
       attachments?.forEach((attachment) => selectedMaterial.addAttachment(attachment));
       await MaterialService.upsertMaterial(selectedMaterial);
       setSelectedFiles([]);
-      selectedMaterial?.resetIsNew();
+      patchMaterial(selectedMaterial._id, { isNew: false });
       successToast({ message: 'Content saved successfully!' });
       onClose();
     } catch (error) {

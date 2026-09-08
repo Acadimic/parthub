@@ -4,7 +4,16 @@ import { HorizontalLineWithText } from '@components/others';
 import { PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { CourseService } from '@services';
-import { useStores } from '@stores';
+import {
+  useStandardLookups,
+  useCourseLookups,
+  useMaterialLookups,
+  useMeetLookups,
+  useSelectedCourse,
+  useSelectedCourseModule,
+  useSelectorLookups,
+  useTestPaperLookups,
+} from '@stores';
 import { getFrequencyText, successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
@@ -17,13 +26,21 @@ interface IProps {
 }
 
 export const UpsertCourseModuleModal = observer(({ isOpen, onClose }: IProps) => {
-  const { selectorStore, standardStore, courseStore, materialStore, testPaperStore, meetStore } = useStores();
-  const { selectedCourse, selectedCourseModule, removeSelectedCourseModuleId } = selectorStore;
+  const selectorStore = useSelectorLookups();
+  const courseStore = useCourseLookups();
+  const { patchCourseModule } = courseStore;
+  const materialStore = useMaterialLookups();
+  const testPaperStore = useTestPaperLookups();
+  const meetStore = useMeetLookups();
+  const { removeSelectedCourseModuleId } = selectorStore;
+  const selectedCourseModule = useSelectedCourseModule();
+  const selectedCourse = useSelectedCourse();
   const { getTestPapersByStandardIds } = testPaperStore;
-  const { getSubjectById } = standardStore;
+  const { getSubjectById } = useStandardLookups();
   const { removeCourseModuleById, calculateAndSetCourseStatsByCourseId } = courseStore;
-  const { materialsByStandardIds } = materialStore;
-  const { meets, getMeetsByIds } = meetStore;
+  const { getMaterialsByStandardIds } = materialStore;
+  const { getMeetsByIds } = meetStore;
+  const meets = meetStore.getMeets();
   const [isLoading, setIsLoading] = useState(false);
 
   const closeModal = async () => {
@@ -54,7 +71,7 @@ export const UpsertCourseModuleModal = observer(({ isOpen, onClose }: IProps) =>
       calculateAndSetCourseStatsByCourseId(selectedCourse._id);
       await CourseService.upsertCourseModule(selectedCourseModule);
       await CourseService.upsertCourse(selectedCourse);
-      selectedCourseModule.resetIsNew();
+      patchCourseModule(selectedCourseModule._id, { isNew: false });
       removeSelectedCourseModuleId();
       successToast({ message: 'Module added successfully.' });
       onClose();
@@ -85,7 +102,7 @@ export const UpsertCourseModuleModal = observer(({ isOpen, onClose }: IProps) =>
                 />
                 <Select
                   label="Study Materials"
-                  items={materialsByStandardIds(selectedCourse.standards).map((material) => ({
+                  items={getMaterialsByStandardIds(selectedCourse.standards).map((material) => ({
                     label: material.name,
                     value: material._id,
                     group: getSubjectById(material.subject)?.name,

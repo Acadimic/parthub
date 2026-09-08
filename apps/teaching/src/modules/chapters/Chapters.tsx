@@ -2,7 +2,7 @@ import { Button } from '@repo/ui/app';
 import { PencilIcon, PlusIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { ChapterService } from '@services';
-import { useStores } from '@stores';
+import { useStandardLookups, useSelectedChapter, useSelectorLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
@@ -18,10 +18,19 @@ interface IState {
 }
 
 export const Chapters = observer(({ standard, subject }: IProps) => {
-  const { standardStore, selectorStore } = useStores();
-  const { setSelectedChapterId, selectedChapter } = selectorStore;
-  const { getStandardSubjectChapters, createChapter, removeChapterById, getStandardById, getSubjectById } =
-    standardStore;
+  const selectorStore = useSelectorLookups();
+  const { setSelectedChapterId, selectedChapterId } = selectorStore;
+  const {
+    getStandardSubjectChapters,
+    createChapter,
+    removeChapterById,
+    getStandardById,
+    getSubjectById,
+    getChapterById,
+  } = useStandardLookups();
+  // `selectedChapter` was an MST view over the standard store. The id still comes
+  // from MST (tracked by `observer`); the row now comes from the Zustand store.
+  const selectedChapter = getChapterById(selectedChapterId);
   const chapters = getStandardSubjectChapters(standard, subject);
   const [state, setState] = useSetState<IState>({
     isOpenChapterModal: false,
@@ -33,7 +42,8 @@ export const Chapters = observer(({ standard, subject }: IProps) => {
   };
 
   const onCreateChapter = () => {
-    createChapter(standard, subject);
+    // The store used to select the draft itself; selection is the caller's job now.
+    setSelectedChapterId(createChapter(standard, subject)._id);
     setState({ isOpenChapterModal: true });
   };
 

@@ -1,7 +1,14 @@
 import { ModalFooter } from '@repo/ui/app';
 import { QuestionType } from '@enums';
 import { TestPaperService } from '@services';
-import { useStores } from '@stores';
+import {
+  useQuestionLookups,
+  useSelectedQuestion,
+  useSelectedSolution,
+  useSelectedTestPaper,
+  useSelectedTestPaperSection,
+  useSelectorLookups,
+} from '@stores';
 import { errorToast, successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 
@@ -12,16 +19,16 @@ interface IProps {
 }
 
 export const UpsertQuestionFooter = observer(({ onClose, setLoading, isLoading }: IProps) => {
-  const { selectorStore, questionStore } = useStores();
-  const {
-    selectedUpsertQuestionStep,
-    setSelectedUpsertQuestionStep,
-    selectedQuestion,
-    selectedTestPaperSection,
-    selectedTestPaper,
-    selectedSolution,
-    removeSelectedSolutionId,
-  } = selectorStore;
+  const selectorStore = useSelectorLookups();
+  const questionStore = useQuestionLookups();
+  const { patchSolution } = questionStore;
+  const { patchQuestion } = questionStore;
+  const { patchOption } = questionStore;
+  const { selectedUpsertQuestionStep, setSelectedUpsertQuestionStep, removeSelectedSolutionId } = selectorStore;
+  const selectedTestPaperSection = useSelectedTestPaperSection();
+  const selectedTestPaper = useSelectedTestPaper();
+  const selectedSolution = useSelectedSolution();
+  const selectedQuestion = useSelectedQuestion();
   const { getOptionsByIds } = questionStore;
 
   const handleNext = () => {
@@ -65,11 +72,11 @@ export const UpsertQuestionFooter = observer(({ onClose, setLoading, isLoading }
       successToast({ message: 'Question added successfully!' });
       setTimeout(() => {
         if (selectedQuestion.isNew) {
-          selectedQuestion.resetIsNew();
-          options.forEach((option) => option.resetIsNew());
+          patchQuestion(selectedQuestion._id, { isNew: false });
+          options.forEach((option) => patchOption(option._id, { isNew: false }));
         }
         if (selectedSolution?.isNew) {
-          selectedSolution.resetIsNew();
+          patchSolution(selectedSolution._id, { isNew: false });
         }
         selectedTestPaper.updateTotalQuestionsAndMarks();
         removeSelectedSolutionId();

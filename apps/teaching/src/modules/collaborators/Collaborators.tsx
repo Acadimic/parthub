@@ -3,7 +3,7 @@ import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { DefaultRole } from '@enums';
 import { type IColumnData } from '@interfaces';
-import { type IUser, useStores } from '@stores';
+import { type IUser, useSelectorLookups, useUserLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { getStringFormattedDate, getStringFormattedDateWithTime } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
@@ -20,9 +20,12 @@ interface IState {
 
 export const Collaborators = observer(() => {
   const { push } = useRouter();
-  const { selectorStore, userStore } = useStores();
+  const selectorStore = useSelectorLookups();
+  const userStore = useUserLookups();
   const { setSelectedCollaboratorId } = selectorStore;
-  const { createCollaborator, isLoadingUsers, collaborators, removeNewUsers } = userStore;
+  const { createCollaborator, removeNewUsers } = userStore;
+  const isLoadingUsers = userStore.isLoading('users');
+  const collaborators = userStore.getCollaborators();
   const [state, setState] = useSetState<IState>({
     isOpenUpsertCollaboratorModal: false,
     isOpenBulkAddCollaboratorsModal: false,

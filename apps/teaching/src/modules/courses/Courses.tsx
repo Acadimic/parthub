@@ -3,7 +3,7 @@ import { type IColumnData } from '@interfaces';
 import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { PresignedImage } from '@components/app/attachments';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { type ICourse, useStores } from '@stores';
+import { type ICourse, useStandardLookups, useCourseLookups, useSelectorLookups } from '@stores';
 import { ACTIONS, ALL } from '@utils/constants';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
@@ -17,10 +17,14 @@ interface IState {
 
 export const Courses = observer(() => {
   const { push } = useRouter();
-  const { courseStore, selectorStore, standardStore } = useStores();
+  const courseStore = useCourseLookups();
+  const selectorStore = useSelectorLookups();
   const { setSelectedCourseId } = selectorStore;
-  const { isCourseLoading, isCourseLoaded, courses, createCourse, loadCourses } = courseStore;
-  const { getStandardsByIds, getSubjectsByIds } = standardStore;
+  const { createCourse, loadCourses } = courseStore;
+  const isCourseLoading = courseStore.isLoading('courses');
+  const isCourseLoaded = courseStore.isLoaded('courses');
+  const courses = courseStore.getCourses();
+  const { getStandardNamesText, getSubjectNamesText } = useStandardLookups();
   const [state, setState] = useSetState<IState>({
     isOpenAddModal: false,
   });
@@ -74,18 +78,12 @@ export const Courses = observer(() => {
     {
       label: 'Standards',
       dataKey: 'standards',
-      valueFormatter: (row: ICourse) =>
-        getStandardsByIds(row.standards)
-          .map((standard) => standard.name)
-          .join(', '),
+      valueFormatter: (row: ICourse) => getStandardNamesText(row.standards),
     },
     {
       label: 'Subjects',
       dataKey: 'subjects',
-      valueFormatter: (row: ICourse) =>
-        getSubjectsByIds(row.subjects)
-          .map((subject) => subject.name)
-          .join(', ') || ALL,
+      valueFormatter: (row: ICourse) => getSubjectNamesText(row.subjects) || ALL,
     },
     {
       label: 'Total Modules',

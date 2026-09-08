@@ -1,7 +1,7 @@
 import { Attachments, type IAttachmentProps } from '@components/app/attachments';
 import { Label } from '@repo/ui/app';
 import { Html } from '@components/others';
-import { type IMaterial, useStores } from '@stores';
+import { type IMaterial } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { ChapterName } from '@components/common/ChapterName';
 
@@ -11,9 +11,6 @@ interface IProps {
 }
 
 export const StudyMaterialView = observer(({ material, otherAttachments }: IProps) => {
-  const { standardStore } = useStores();
-  const { getChapterById } = standardStore;
-
   return (
     <div className="w-full">
       <div className="">

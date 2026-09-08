@@ -1,7 +1,7 @@
 import { Card } from '@repo/ui/app';
 import { PresignedImage } from '@components/app/attachments';
 import { CourseInfo, StandardWithLogo } from '@components/common';
-import { type ICourse, useStores } from '@stores';
+import { type ICourse, useStandardLookups, useSelectorLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 import Link from 'next/link';
 
@@ -10,8 +10,8 @@ interface IProps {
 }
 
 export const CourseItem = observer(({ course }: IProps) => {
-  const { standardStore, selectorStore } = useStores();
-  const { getStandardsByIds } = standardStore;
+  const selectorStore = useSelectorLookups();
+  const { getStandardsByIds } = useStandardLookups();
   const { setSelectedCourseId } = selectorStore;
 
   const handleClick = () => {

@@ -3,7 +3,7 @@ import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { BatchService } from '@services';
-import { useStores } from '@stores';
+import { useStandardLookups, useBatchLookups, useSelectedBatch, useSelectorLookups, useUserLookups } from '@stores';
 import { successToast, validateFieldValues } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
@@ -26,11 +26,15 @@ interface IState {
 const year = new Date().getFullYear();
 
 export const UpsertBatchModal = observer(({ isOpen, onClose }: IProps) => {
-  const { batchStore, selectorStore, standardStore, userStore } = useStores();
+  const batchStore = useBatchLookups();
+  const { patchBatch } = batchStore;
+  const selectorStore = useSelectorLookups();
+  const userStore = useUserLookups();
   const { createBatch, loadBatchesData, getBatchStudentIds, getBatchCollaboratorIds, removeBatchById } = batchStore;
-  const { selectedBatch } = selectorStore;
-  const { standardItems } = standardStore;
-  const { students, collaborators } = userStore;
+  const selectedBatch = useSelectedBatch();
+  const { getStandardItems } = useStandardLookups();
+  const students = userStore.getStudents();
+  const collaborators = userStore.getCollaborators();
   const [state, setState] = useSetState<IState>({
     name: '',
     standard: '',
@@ -76,13 +80,13 @@ export const UpsertBatchModal = observer(({ isOpen, onClose }: IProps) => {
       if (errors.length) return;
       const batch = selectedBatch || createBatch(state.name, state.standard);
       batch.setName(state.name);
-      batch.setStandard(state.standard);
-      batch.setYear(state.year);
+      patchBatch(batch._id, { standard: state.standard });
+      patchBatch(batch._id, { year: state.year });
       const isNewBatch = batch.isNew;
       await BatchService.upsertBatch({ batch, users: [...state.collaborators, ...state.students] });
       successToast({ message: isNewBatch ? 'Batch created successfully!' : 'Batch updated successfully!' });
       await loadBatchesData();
-      batch.resetIsNew();
+      patchBatch(batch._id, { isNew: false });
       onClose();
     } catch (error) {
       console.error(error);
@@ -136,7 +140,7 @@ export const UpsertBatchModal = observer(({ isOpen, onClose }: IProps) => {
               </div>
               <Select
                 label="Standard"
-                items={standardItems}
+                items={getStandardItems()}
                 required
                 values={state.standard ? [state.standard] : []}
                 onChange={handleStandardChange}

@@ -2,7 +2,7 @@ import { Select } from '@components/app/selects';
 import { Modal, ModalFooter } from '@repo/ui/app';
 import { PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
-import { useStores } from '@stores';
+import { useStandardLookups, useSelectorLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
@@ -13,8 +13,8 @@ interface IProps {
 }
 
 export const AddStudyMaterialModal = observer(({ isOpen, onClose, handleSelect }: IProps) => {
-  const { selectorStore, standardStore } = useStores();
-  const { standardItems, getStandardById } = standardStore;
+  const selectorStore = useSelectorLookups();
+  const { getStandardItems, getStandardSubjectItems } = useStandardLookups();
   const {
     selectedStandardId,
     selectedSubjectId,
@@ -61,7 +61,7 @@ export const AddStudyMaterialModal = observer(({ isOpen, onClose, handleSelect }
             <div className="flex flex-col space-y-3">
               <Select
                 label="Standard"
-                items={standardItems}
+                items={getStandardItems()}
                 required
                 isGrouped
                 values={selectedStandardId ? [selectedStandardId] : []}
@@ -70,7 +70,7 @@ export const AddStudyMaterialModal = observer(({ isOpen, onClose, handleSelect }
               />
               <Select
                 label="Subject"
-                items={selectedStandardId ? getStandardById(selectedStandardId)?.subjectItems || [] : []}
+                items={selectedStandardId ? getStandardSubjectItems(selectedStandardId) || [] : []}
                 values={selectedSubjectId ? [selectedSubjectId] : []}
                 onChange={handleSubjectChange}
                 isSingleSelect

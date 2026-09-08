@@ -3,7 +3,7 @@ import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { type IColumnData } from '@interfaces';
-import { type IBatch, useStores } from '@stores';
+import { type IBatch, useStandardLookups, useBatchLookups, useSelectorLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
@@ -18,17 +18,14 @@ interface IState {
 
 export const Batches = observer(() => {
   const { push } = useRouter();
-  const { selectorStore, batchStore, standardStore } = useStores();
+  const selectorStore = useSelectorLookups();
+  const batchStore = useBatchLookups();
   const { setSelectedBatchId } = selectorStore;
-  const { getStandardById } = standardStore;
-  const {
-    batches,
-    isLoadingBatchesData,
-    isLoadedBatchesData,
-    getBatchCollaborators,
-    getBatchStudents,
-    loadBatchesData,
-  } = batchStore;
+  const { getStandardById } = useStandardLookups();
+  const { getBatchCollaborators, getBatchStudents, loadBatchesData } = batchStore;
+  const batches = batchStore.getBatches();
+  const isLoadingBatchesData = batchStore.isLoading('batchesData');
+  const isLoadedBatchesData = batchStore.isLoaded('batchesData');
   const [state, setState] = useSetState<IState>({
     isOpenUpsertBatchModal: false,
     isLoading: false,

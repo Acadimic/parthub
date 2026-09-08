@@ -1,6 +1,6 @@
 import { Accordions } from '@repo/ui/app';
 import { StudyMaterialView } from '@modules/study-materials/components';
-import { type ICourseModule, type IMaterial, type ITestPaper, useStores } from '@stores';
+import { type ICourseModule, type IMaterial, type ITestPaper, useMaterialLookups, useTestPaperLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {
@@ -8,7 +8,8 @@ interface IProps {
 }
 
 export const CourseModuleView = observer(({ courseModule }: IProps) => {
-  const { materialStore, testPaperStore } = useStores();
+  const materialStore = useMaterialLookups();
+  const testPaperStore = useTestPaperLookups();
   const { getMaterialsByIds } = materialStore;
   const { getTestPapersByIds } = testPaperStore;
 

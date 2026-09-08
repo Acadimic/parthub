@@ -1,5 +1,5 @@
 import { type IFullCalendarEvent } from '@interfaces';
-import { type IMeet, useStores } from '@stores';
+import { type IMeet, useMeetLookups, useSelectorLookups } from '@stores';
 import { useSetState } from 'react-use';
 
 interface IState {
@@ -8,7 +8,8 @@ interface IState {
 }
 
 export const useMeetHooks = () => {
-  const { meetStore, selectorStore } = useStores();
+  const meetStore = useMeetLookups();
+  const selectorStore = useSelectorLookups();
   const { createMeet } = meetStore;
   const { setSelectedMeetId, setSelectedCalenderEvent } = selectorStore;
 

@@ -3,7 +3,7 @@ import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
 import { PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { MaterialService } from '@services';
-import { useStores } from '@stores';
+import { useStandardLookups, useMaterialLookups, useSelectedMaterial, useSelectorLookups } from '@stores';
 import { getGeneratedMaterialPrompt } from '@utils/ai/prompts';
 import { errorToast, successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
@@ -47,9 +47,13 @@ const isYouTubeVideoValid = async (url: string) => {
 };
 
 export const GenerateMaterialModal = observer(({ isOpen, onClose }: IProps) => {
-  const { selectorStore, materialStore, standardStore } = useStores();
-  const { selectedMaterial, removeSelectedMaterialId } = selectorStore;
-  const { getStandardById, getSubjectById, getChapterById } = standardStore;
+  const selectorStore = useSelectorLookups();
+  const materialStore = useMaterialLookups();
+  const { patchMaterial } = materialStore;
+  const { addAttachment } = materialStore;
+  const { removeSelectedMaterialId } = selectorStore;
+  const selectedMaterial = useSelectedMaterial();
+  const { getStandardById, getSubjectById, getChapterById } = useStandardLookups();
   const { addLinkAttachment } = materialStore;
   const { uploadFilesToS3 } = useAttachment();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -81,7 +85,7 @@ export const GenerateMaterialModal = observer(({ isOpen, onClose }: IProps) => {
       const text = state.materialText.replace(/\\/g, '\\\\');
       const materialContent = getTextWithEquationBlocksString(JSON.parse(text || '[]'));
       const videoLinks: IVideo[] = JSON.parse(state.youtubeVideos || '[]');
-      selectedMaterial.setContent(materialContent);
+      patchMaterial(selectedMaterial._id, { content: materialContent });
       console.log('####materialContent: ', selectedMaterial.content);
       // if (materialContent) return;
       const attachments = await uploadFilesToS3(selectedMaterial._id, selectedFiles);
@@ -96,7 +100,7 @@ export const GenerateMaterialModal = observer(({ isOpen, onClose }: IProps) => {
       await MaterialService.upsertMaterial(selectedMaterial);
       setSelectedFiles([]);
       setState(initialState);
-      if (selectedMaterial.isNew) selectedMaterial?.resetIsNew();
+      if (selectedMaterial.isNew) patchMaterial(selectedMaterial._id, { isNew: false });
       successToast({ message: `Material generated successfully!` });
       setTimeout(() => {
         removeSelectedMaterialId();

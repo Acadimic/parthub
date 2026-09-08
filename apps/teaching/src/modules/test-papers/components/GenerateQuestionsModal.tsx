@@ -4,7 +4,7 @@ import { ArticleIcon, EqualizerIcon } from '@phosphor-icons/react';
 import { LevelType, PositionType, QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { TestPaperService } from '@services';
-import { useStores } from '@stores';
+import { useQuestionLookups, useSelectedTestPaper, useSelectedTestPaperSection, useSelectorLookups } from '@stores';
 import { getGeneratedQuestionsPrompt } from '@utils/ai/prompts';
 import { errorToast, splitCamelCase, successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
@@ -35,8 +35,13 @@ interface IQuestionObject {
 }
 
 export const GenerateQuestionsModal = observer(({ isOpen, onClose }: IProps) => {
-  const { selectorStore, questionStore } = useStores();
-  const { selectedTestPaperSection, selectedTestPaper, removeSelectedQuestionId } = selectorStore;
+  const selectorStore = useSelectorLookups();
+  const questionStore = useQuestionLookups();
+  const { patchQuestion } = questionStore;
+  const { patchOption } = questionStore;
+  const { removeSelectedQuestionId } = selectorStore;
+  const selectedTestPaperSection = useSelectedTestPaperSection();
+  const selectedTestPaper = useSelectedTestPaper();
   const {
     createQuestion,
     getOptionsByIds,
@@ -107,7 +112,7 @@ export const GenerateQuestionsModal = observer(({ isOpen, onClose }: IProps) => 
         getOptionsByIds(question.options).forEach((option, index) => {
           console.log('####questionObject.options[index].optionText: ', questionObject.options[index].optionText);
           option.setOption(getTextAndEquationBlocksString(questionObject.options[index].optionText));
-          option.setIsCorrect(questionObject.options[index].isCorrect || false);
+          patchOption(option._id, { isCorrect: questionObject.options[index].isCorrect || false });
         });
         upsertSolution(question._id, getTextAndEquationBlocksString(questionObject.solutionText || ''));
         return question;
@@ -128,8 +133,8 @@ export const GenerateQuestionsModal = observer(({ isOpen, onClose }: IProps) => 
       successToast({ message: `${questions.length} questions generated successfully!` });
       setTimeout(() => {
         questions.forEach((question) => {
-          question.resetIsNew();
-          getOptionsByIds(question.options).forEach((option) => option.resetIsNew());
+          patchQuestion(question._id, { isNew: false });
+          getOptionsByIds(question.options).forEach((option) => patchOption(option._id, { isNew: false }));
           getSolutionByQuestionId(question._id)?.resetIsNew();
         });
         selectedTestPaper.updateTotalQuestionsAndMarks();

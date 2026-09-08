@@ -11,7 +11,7 @@ import {
   ViewMeetAttendees,
 } from '@modules/calender/components';
 import { useMeetHooks } from '@modules/calender/hooks';
-import { type IMeet, useStores } from '@stores';
+import { type IMeet, useMeetLookups, useSelectorLookups, useUserLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import {
   addDaysToDate,
@@ -27,8 +27,13 @@ import { useEffect } from 'react';
 
 export const Sessions = observer(() => {
   const { push } = useRouter();
-  const { selectorStore, userStore, meetStore } = useStores();
-  const { meets, isLoadingMeets, loadMeets, isLoadedMeets } = meetStore;
+  const selectorStore = useSelectorLookups();
+  const userStore = useUserLookups();
+  const meetStore = useMeetLookups();
+  const { loadMeets } = meetStore;
+  const meets = meetStore.getMeets();
+  const isLoadingMeets = meetStore.isLoading('meets');
+  const isLoadedMeets = meetStore.isLoaded('meets');
   const {
     state,
     handleCreateMeet,

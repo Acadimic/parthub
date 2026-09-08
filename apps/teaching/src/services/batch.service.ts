@@ -1,23 +1,25 @@
-import { type IBatchUpsert, type IBatchUser } from '@interfaces';
+import { type BatchDto } from '@repo/shared';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
 class BatchService {
-  upsertBatch = async (payload: IBatchUpsert) => {
+  /**
+   * `POST batch/upsert` takes a `BatchDto` and nothing else.
+   *
+   * This used to post `{ batch, users }`, which the server's `forbidNonWhitelisted` pipe rejects —
+   * neither key is a `BatchDto` property. Batch membership goes through
+   * `MappingService.upsertUserBatchMapping`, which is the only route that accepts it.
+   */
+  upsertBatch = async (payload: BatchDto) => {
     const url = 'batch/upsert';
-    const resData = await callAuthApi(url, API.POST, payload);
+    const resData = await callAuthApi<BatchDto>(url, API.POST, payload);
     return resData;
   };
 
-  upsertBatchUserMappings = async (payloads: IBatchUser[]) => {
-    const url = 'batch/upsert/mappings';
-    const resData = await callAuthApi(url, API.POST, payloads);
-    return resData;
-  };
-
-  getBatchesData = async () => {
+  /** `GET batch/all` returns the org's batches as a plain array. */
+  getBatches = async () => {
     const url = 'batch/all';
-    const resData = await callAuthApi(url, API.GET);
+    const resData = await callAuthApi<BatchDto[]>(url, API.GET);
     return resData;
   };
 }

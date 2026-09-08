@@ -1,3 +1,4 @@
+import { type InitialDataDto, type UserDto } from '@repo/shared';
 import { type IUser } from '@stores';
 import { API, DefaultRole } from '../enums';
 import { getProfilePayload } from '@repo/ui/lib';
@@ -6,7 +7,7 @@ import { callAuthApi } from './http.service';
 class UserService {
   getInitialLoginData = async () => {
     const url = 'user/initial-login-data';
-    return await callAuthApi(url, API.GET);
+    return await callAuthApi<InitialDataDto>(url, API.GET);
   };
 
   /** The signed-in user's own profile (account settings / onboarding). */
@@ -17,7 +18,7 @@ class UserService {
 
   getOrgUsers = async () => {
     const url = 'user/all';
-    return await callAuthApi(url, API.GET);
+    return await callAuthApi<UserDto[]>(url, API.GET);
   };
 
   /** Invites create a pending invite; the member record is created when they first sign in. */

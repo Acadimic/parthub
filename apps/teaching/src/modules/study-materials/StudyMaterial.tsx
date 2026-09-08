@@ -1,7 +1,13 @@
 import { Accordions, Button, Card, Loader, Menu } from '@repo/ui/app';
 import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
-import { type IMaterial, useStores } from '@stores';
+import {
+  type IMaterial,
+  useStandardLookups,
+  useMaterialLookups,
+  useSelectedMaterial,
+  useSelectorLookups,
+} from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
@@ -20,25 +26,18 @@ interface IState {
 
 export const StudyMaterial = observer(({ standardId, subjectId }: IProps) => {
   const { push } = useRouter();
-  const { selectorStore, standardStore, materialStore } = useStores();
-  const { getStandardById, getSubjectById, loadStandardSubjectChapters } = standardStore;
-  const {
-    selectedMaterial,
-    setSelectedMaterialId,
-    removeSelectedMaterialId,
-    setSelectedStandardId,
-    setSelectedSubjectId,
-  } = selectorStore;
-  const {
-    loadStandardSubjectMaterials,
-    standardSubjectMaterials,
-    createMaterial,
-    removeMaterialById,
-    isLoadingMaterials,
-  } = materialStore;
+  const selectorStore = useSelectorLookups();
+  const materialStore = useMaterialLookups();
+  const { getStandardById, getSubjectById, loadStandardSubjectChapters } = useStandardLookups();
+  const { setSelectedMaterialId, removeSelectedMaterialId, setSelectedStandardId, setSelectedSubjectId } =
+    selectorStore;
+  const selectedMaterial = useSelectedMaterial();
+  const { loadStandardSubjectMaterials, getStandardSubjectMaterials, createMaterial, removeMaterialById } =
+    materialStore;
+  const isLoadingMaterials = materialStore.isLoading('materials');
   const standard = getStandardById(standardId);
   const subject = getSubjectById(subjectId);
-  const materials = standardSubjectMaterials(standardId, subjectId);
+  const materials = getStandardSubjectMaterials(standardId, subjectId);
   const [state, setState] = useSetState<IState>({
     isOpenUpsertModal: false,
     isOpenGenerateModal: false,

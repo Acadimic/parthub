@@ -3,7 +3,7 @@ import { Button, Card, ModalFooter, TextInput } from '@repo/ui/app';
 import { PencilLineIcon } from '@phosphor-icons/react';
 import { Gender } from '@enums';
 import { UserService } from '@services';
-import { useStores } from '@stores';
+import { useSelectedUser, useSelectorLookups, useUserLookups } from '@stores';
 import { errorToast, formatPhoneNumber, successToast, validateEmail } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
@@ -22,8 +22,10 @@ interface IState {
 }
 
 export const Profile = observer(() => {
-  const { selectorStore } = useStores();
-  const { selectedUser } = selectorStore;
+  const selectorStore = useSelectorLookups();
+  const userStore = useUserLookups();
+  const { patchUser } = userStore;
+  const selectedUser = useSelectedUser();
   const [state, setState] = useSetState<IState>({
     firstName: selectedUser?.firstName || '',
     lastName: selectedUser?.lastName || '',
@@ -83,10 +85,10 @@ export const Profile = observer(() => {
       setState({ isLoading: true });
       selectedUser.setFirstName(state.firstName);
       selectedUser.setLastName(state.lastName);
-      selectedUser.setCountryCode(state.countryCode);
-      selectedUser.setPhoneNumber(phoneNumber);
-      selectedUser.setDesignation(state.designation);
-      selectedUser.setGender(state.gender);
+      patchUser(selectedUser._id, { countryCode: state.countryCode });
+      patchUser(selectedUser._id, { phoneNumber: phoneNumber });
+      patchUser(selectedUser._id, { designation: state.designation });
+      patchUser(selectedUser._id, { gender: state.gender });
       await UserService.updateProfile(selectedUser);
       successToast({ message: 'Profile updated successfully!' });
       toggleEdit(false);

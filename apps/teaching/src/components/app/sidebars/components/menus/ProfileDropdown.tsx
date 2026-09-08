@@ -3,7 +3,7 @@ import { AccountSettingsType } from '@enums';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IMenuItem } from '@interfaces';
 import { CheckIcon, GearSixIcon, SignOutIcon } from '@phosphor-icons/react';
-import { type IUser, useStores } from '@stores';
+import { type IUser, useSelectedUser, useSelectorLookups, useUserLookups } from '@stores';
 import { AccountSettingsRoutes } from '@utils/constants';
 import { capitalize, logOut } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
@@ -13,9 +13,12 @@ import { Menu } from '@repo/ui/app';
 
 export const ProfileDropdown = observer(() => {
   const { push } = useRouter();
-  const { selectorStore, userStore } = useStores();
-  const { selectedUser, selectUserAndOrgLeader } = selectorStore;
-  const { loggedInUsers, getOrgById } = userStore;
+  const selectorStore = useSelectorLookups();
+  const userStore = useUserLookups();
+  const { selectUserAndOrgLeader } = selectorStore;
+  const selectedUser = useSelectedUser();
+  const { getOrgById } = userStore;
+  const loggedInUsers = userStore.getLoggedInUsers();
   const { isSmallScreen } = useWindowDimensions();
 
   const handleLogout = () => {

@@ -5,7 +5,13 @@ import { PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { type ISelectItem } from '@interfaces';
 import { CourseService } from '@services';
-import { useStores } from '@stores';
+import {
+  useStandardLookups,
+  useCourseLookups,
+  useSelectedCourse,
+  useSelectedCoursePlans,
+  useSelectorLookups,
+} from '@stores';
 import { ALL } from '@utils/constants';
 import { errorToast, successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
@@ -19,9 +25,14 @@ interface IProps {
 
 export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
   const { push } = useRouter();
-  const { selectorStore, standardStore, courseStore } = useStores();
-  const { selectedCourseId, selectedCourse, removeSelectedCourseId, selectedCoursePlans } = selectorStore;
-  const { standardItems } = standardStore;
+  const selectorStore = useSelectorLookups();
+  const courseStore = useCourseLookups();
+  const { patchPlan } = courseStore;
+  const { patchCourse } = courseStore;
+  const { selectedCourseId, removeSelectedCourseId } = selectorStore;
+  const selectedCoursePlans = useSelectedCoursePlans();
+  const selectedCourse = useSelectedCourse();
+  const { getStandardItems } = useStandardLookups();
   const { removeCourseById, loadCoursePlans, calculateAndSetCourseStatsByCourseId } = courseStore;
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -80,11 +91,11 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
       }
       setIsLoading(true);
       const attachments = await uploadFilesToS3(selectedCourse._id, selectedFiles);
-      attachments && selectedCourse.setAttachments(attachments);
+      attachments && patchCourse(selectedCourse._id, { attachments: attachments });
       calculateAndSetCourseStatsByCourseId(selectedCourse._id);
       await CourseService.upsertCourseAndPlans({ course: selectedCourse, plans: selectedCoursePlans });
-      selectedCourse.resetIsNew();
-      selectedCoursePlans.forEach((plan) => plan.resetIsNew());
+      patchCourse(selectedCourse._id, { isNew: false });
+      selectedCoursePlans.forEach((plan) => patchPlan(plan._id, { isNew: false }));
       successToast({ message: 'Course and plans created successfully.' });
       setTimeout(() => {
         push(
@@ -132,12 +143,12 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
                   label="Course Description"
                   value={selectedCourse.description || ''}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    selectedCourse.setDescription(e.target.value)
+                    patchCourse(selectedCourse._id, { description: e.target.value })
                   }
                 />
                 <Select
                   label="Standards"
-                  items={standardItems}
+                  items={getStandardItems()}
                   required
                   isGrouped
                   values={selectedCourse.standards}
@@ -190,7 +201,7 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                   const intValue = parseInt(e.target.value);
                                   if (!isNaN(intValue)) plan.setAmount(Math.abs(intValue));
-                                  else plan.setAmount(0);
+                                  else patchPlan(plan._id, { amount: 0 });
                                 }}
                                 required
                               />
@@ -204,7 +215,7 @@ export const UpsertCourseModal = observer(({ isOpen, onClose }: IProps) => {
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                   const intValue = parseInt(e.target.value);
                                   if (!isNaN(intValue)) plan.setRealAmount(Math.abs(intValue));
-                                  else plan.setRealAmount(0);
+                                  else patchPlan(plan._id, { realAmount: 0 });
                                 }}
                                 required
                               />

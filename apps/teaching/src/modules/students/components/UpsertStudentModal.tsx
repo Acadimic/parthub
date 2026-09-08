@@ -3,7 +3,7 @@ import { DateInput, Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { Gender, PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { UserService } from '@services';
-import { useStores } from '@stores';
+import { useStandardLookups, useSelectedStudent, useSelectorLookups, useUserLookups } from '@stores';
 import { getFormattedDate, successToast, validateFieldValues } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
@@ -14,10 +14,12 @@ interface IProps {
 }
 
 export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
-  const { userStore, selectorStore, standardStore } = useStores();
+  const userStore = useUserLookups();
+  const { patchUser } = userStore;
+  const selectorStore = useSelectorLookups();
   const { getStudentStandardsByStudentId, loadStudentStandardMappings, removeUserByUserId } = userStore;
-  const { selectedStudent } = selectorStore;
-  const { standardItems } = standardStore;
+  const selectedStudent = useSelectedStudent();
+  const { getStandardItems } = useStandardLookups();
   const [isLoading, setIsLoading] = useState(false);
 
   const closeModal = () => {
@@ -39,7 +41,7 @@ export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
 
   const onChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedStudent) return;
-    selectedStudent.setEmail(e.target.value);
+    patchUser(selectedStudent._id, { email: e.target.value.toLowerCase() });
   };
 
   const onChangeDob = (date: Date) => {
@@ -49,7 +51,7 @@ export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
 
   const handleGenderChange = (values: ISelectItem[]) => {
     if (!values.length || !selectedStudent) return;
-    selectedStudent.setGender(values[0].value as Gender);
+    patchUser(selectedStudent._id, { gender: values[0].value as Gender });
   };
 
   const handleStandardsChange = (values: ISelectItem[]) => {
@@ -64,7 +66,7 @@ export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
       setIsLoading(true);
       const errors = validateFieldValues(selectedStudent, ['firstName', 'lastName', 'name', 'email', 'standards']);
       if (errors.length) return;
-      if (!selectedStudent.gender) selectedStudent.setGender(Gender.OTHER);
+      if (!selectedStudent.gender) patchUser(selectedStudent._id, { gender: Gender.OTHER });
       if (isNewStudent) await UserService.inviteStudent(selectedStudent);
       else await UserService.updateStudent(selectedStudent);
       successToast({ message: isNewStudent ? 'Student invited successfully!' : 'Student updated successfully!' });
@@ -72,7 +74,7 @@ export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
       // An invite creates no member yet; the store entry was only a form model, so drop it
       // instead of showing a student that does not exist on the server.
       if (isNewStudent) removeUserByUserId(selectedStudent._id);
-      else selectedStudent.resetIsNew();
+      else patchUser(selectedStudent._id, { isNew: false });
       onClose();
     } catch (error) {
       console.error(error);
@@ -122,7 +124,7 @@ export const UpsertStudentModal = observer(({ isOpen, onClose }: IProps) => {
                 />
                 <Select
                   label="Enrolled Standards"
-                  items={standardItems}
+                  items={getStandardItems()}
                   values={
                     selectedStudent?.isNew
                       ? selectedStudent.standards

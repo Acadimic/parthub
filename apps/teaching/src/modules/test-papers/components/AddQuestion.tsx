@@ -1,7 +1,7 @@
 import { Button } from '@repo/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
-import { type IOption, useStores } from '@stores';
+import { type IOption, useQuestionLookups, useSelectedQuestion, useSelectorLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { AddOption } from './AddOption';
 import { SelectQuestionType } from './SelectQuestionType';
@@ -9,8 +9,9 @@ import { type Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
 
 export const AddQuestion = observer(() => {
-  const { selectorStore, questionStore } = useStores();
-  const { selectedQuestion } = selectorStore;
+  const selectorStore = useSelectorLookups();
+  const questionStore = useQuestionLookups();
+  const selectedQuestion = useSelectedQuestion();
   const { getOptionsByIds, createOption, removeOptionById } = questionStore;
 
   const handleQuestionTextChange = (blocks: Block[]) => {

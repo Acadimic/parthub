@@ -1,6 +1,6 @@
 import { Card } from '@repo/ui/app';
 import { MaterialInfo, StandardWithLogo } from '@components/common';
-import { type IMaterialStat, useStores } from '@stores';
+import { type IMaterialStat, useStandardLookups, useMaterialLookups, useSelectorLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 import Link from 'next/link';
 
@@ -9,8 +9,9 @@ interface IProps {
 }
 
 export const MaterialItem = observer(({ materialStat }: IProps) => {
-  const { standardStore, selectorStore, materialStore } = useStores();
-  const { getStandardById, getSubjectById } = standardStore;
+  const selectorStore = useSelectorLookups();
+  const materialStore = useMaterialLookups();
+  const { getStandardById, getSubjectById } = useStandardLookups();
   const { setSelectedStandardId, setSelectedSubjectId } = selectorStore;
   const { getMaterialsStatsByMaterialIds } = materialStore;
 

@@ -1,7 +1,7 @@
 import { Label, Modal } from '@repo/ui/app';
 import { CopyUrl } from '@components/common';
 import { CalendarBlankIcon, PencilIcon, TrashIcon } from '@phosphor-icons/react';
-import { useStores } from '@stores';
+import { useSelectedMeet, useSelectorLookups, useUserLookups } from '@stores';
 import { getFormattedTime, getFrequencyText, getFullFormattedDate } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { JoiningLink } from './JoiningLink';
@@ -16,8 +16,10 @@ interface IProps {
 }
 
 export const MeetingOverviewModal = observer(({ isOpen, onClose, openEditModal, openDeleteModal }: IProps) => {
-  const { selectorStore, userStore } = useStores();
-  const { selectedMeet, selectedCalenderEvent } = selectorStore;
+  const selectorStore = useSelectorLookups();
+  const userStore = useUserLookups();
+  const { selectedCalenderEvent } = selectorStore;
+  const selectedMeet = useSelectedMeet();
 
   if (!selectedMeet || !selectedCalenderEvent) return null;
 

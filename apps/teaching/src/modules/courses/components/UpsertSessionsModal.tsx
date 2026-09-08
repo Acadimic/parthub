@@ -3,7 +3,7 @@ import { Modal, ModalFooter } from '@repo/ui/app';
 import { HorizontalLineWithText } from '@components/others';
 import { type ISelectItem } from '@interfaces';
 import { CourseService } from '@services';
-import { useStores } from '@stores';
+import { useCourseLookups, useMeetLookups, useSelectedCourse, useSelectorLookups } from '@stores';
 import { getFrequencyText, successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
@@ -15,10 +15,12 @@ interface IProps {
 }
 
 export const UpsertSessionsModal = observer(({ isOpen, onClose }: IProps) => {
-  const { selectorStore, courseStore, meetStore } = useStores();
-  const { selectedCourse } = selectorStore;
+  const selectorStore = useSelectorLookups();
+  const courseStore = useCourseLookups();
+  const meetStore = useMeetLookups();
+  const selectedCourse = useSelectedCourse();
   const { calculateAndSetCourseStatsByCourseId } = courseStore;
-  const { meets } = meetStore;
+  const meets = meetStore.getMeets();
   const [isLoading, setIsLoading] = useState(false);
 
   const closeModal = () => {

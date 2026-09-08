@@ -4,7 +4,14 @@ import { CircleIcon, LinkSimpleIcon } from '@phosphor-icons/react';
 import { ColorType, MeetFrequency, PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { MeetService } from '@services';
-import { useStores } from '@stores';
+import {
+  useStandardLookups,
+  useBatchLookups,
+  useMeetLookups,
+  useSelectedMeet,
+  useSelectorLookups,
+  useUserLookups,
+} from '@stores';
 import { dark, light } from '@themes';
 import { WEEK_DAYS_INTEGER_MAPPINGS } from '@utils/constants';
 import { splitCamelCase, successToast } from '@utils/helpers';
@@ -31,11 +38,16 @@ const WEEKDAYS: ISelectItem[] = Object.keys(WEEK_DAYS_INTEGER_MAPPINGS).map((key
 }));
 
 export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
-  const { selectorStore, meetStore, standardStore, batchStore, userStore } = useStores();
-  const { selectedMeet } = selectorStore;
-  const { standardItems } = standardStore;
-  const { batchItems } = batchStore;
-  const { studentItems, collaboratorItems } = userStore;
+  const selectorStore = useSelectorLookups();
+  const meetStore = useMeetLookups();
+  const { patchMeet } = meetStore;
+  const batchStore = useBatchLookups();
+  const userStore = useUserLookups();
+  const selectedMeet = useSelectedMeet();
+  const { getStandardItems } = useStandardLookups();
+  const batchItems = batchStore.getBatchItems();
+  const studentItems = userStore.getStudentItems();
+  const collaboratorItems = userStore.getCollaboratorItems();
   const { removeMeetById } = meetStore;
   const [isLoading, setIsLoading] = useState(false);
 
@@ -51,7 +63,7 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
     try {
       setIsLoading(true);
       await MeetService.upsertMeet(selectedMeet);
-      selectedMeet.resetIsNew();
+      patchMeet(selectedMeet._id, { isNew: false });
       successToast({ message: 'Session successfully scheduled.' });
       handleClose();
     } catch (error) {
@@ -87,7 +99,7 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
                           className={` w-5 h-5`}
                         />
                       ),
-                      onClick: () => selectedMeet.setColor(item),
+                      onClick: () => patchMeet(selectedMeet._id, { color: item }),
                     }))}
                     selected={selectedMeet.color}
                     component={
@@ -107,7 +119,7 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
                   label="Title"
                   required
                   value={selectedMeet.title}
-                  onChange={(e) => selectedMeet.setTitle(e.target.value)}
+                  onChange={(e) => patchMeet(selectedMeet._id, { title: e.target.value })}
                   placeholder="Enter meeting title"
                 />
               </div>
@@ -116,7 +128,7 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
             <TextArea
               label="Description"
               value={selectedMeet.description}
-              onChange={(e) => selectedMeet.setDescription(e.target.value)}
+              onChange={(e) => patchMeet(selectedMeet._id, { description: e.target.value })}
               placeholder="Enter meeting description"
             />
 
@@ -141,14 +153,14 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
                 label="Start Time"
                 required
                 value={new Date(selectedMeet.startTime)}
-                handleChange={(date) => selectedMeet.setStartTime(date)}
+                handleChange={(date) => patchMeet(selectedMeet._id, { startTime: date })}
               />
 
               <TimeInput
                 label="End Time"
                 required
                 value={new Date(selectedMeet.endTime)}
-                handleChange={(date) => selectedMeet.setEndTime(date)}
+                handleChange={(date) => patchMeet(selectedMeet._id, { endTime: date })}
               />
             </div>
             {/* <div className="flex">
@@ -166,7 +178,9 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
                 required
                 values={[selectedMeet.frequency]}
                 items={Object.values(MeetFrequency).map((item) => ({ value: item, label: splitCamelCase(item) }))}
-                onChange={(items) => items[0] && selectedMeet.setFrequency(items[0].value as MeetFrequency)}
+                onChange={(items) =>
+                  items[0] && patchMeet(selectedMeet._id, { frequency: items[0].value as MeetFrequency })
+                }
                 noSort
                 isSingleSelect
               />
@@ -187,7 +201,7 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
                 label="Meeting Link"
                 required
                 value={selectedMeet.meetingLink}
-                onChange={(e) => selectedMeet.setMeetingLink(e.target.value)}
+                onChange={(e) => patchMeet(selectedMeet._id, { meetingLink: e.target.value })}
                 placeholder="Enter meeting link"
               />
               <Link
@@ -205,7 +219,7 @@ export const UpsertMeetingModal = observer(({ isOpen, onClose }: IProps) => {
               label="Standards"
               required
               values={selectedMeet.standards}
-              items={standardItems}
+              items={getStandardItems()}
               onChange={(items) => selectedMeet.setStandards(items.map((item) => item.value))}
               isGrouped
             />

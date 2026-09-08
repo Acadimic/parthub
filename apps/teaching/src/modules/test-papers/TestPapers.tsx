@@ -2,7 +2,13 @@ import { type IColumnData } from '@interfaces';
 import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, Link, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { type ITestPaper, useStores } from '@stores';
+import {
+  type ITestPaper,
+  useStandardLookups,
+  useSelectedTestPaper,
+  useSelectorLookups,
+  useTestPaperLookups,
+} from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
@@ -16,10 +22,15 @@ interface IState {
 
 export const TestPapers = observer(() => {
   const { push } = useRouter();
-  const { testPaperStore, selectorStore, standardStore } = useStores();
-  const { setSelectedTestPaperId, setSelectedTestPaperSectionId, selectedTestPaper } = selectorStore;
-  const { isLoadingTestPapers, createTestPaper, testPapers, loadTestPapers, isLoadedTestPapers } = testPaperStore;
-  const { getStandardsByIds, getSubjectsByIds } = standardStore;
+  const testPaperStore = useTestPaperLookups();
+  const selectorStore = useSelectorLookups();
+  const { setSelectedTestPaperId, setSelectedTestPaperSectionId } = selectorStore;
+  const selectedTestPaper = useSelectedTestPaper();
+  const { createTestPaper, loadTestPapers } = testPaperStore;
+  const isLoadingTestPapers = testPaperStore.isLoading('testPapers');
+  const testPapers = testPaperStore.getTestPapers();
+  const isLoadedTestPapers = testPaperStore.isLoaded('testPapers');
+  const { getStandardNamesText, getSubjectNamesText } = useStandardLookups();
   const [state, setState] = useSetState<IState>({
     isOpenCreateModal: false,
   });
@@ -68,18 +79,12 @@ export const TestPapers = observer(() => {
     {
       label: 'Standards',
       dataKey: 'standards',
-      valueFormatter: (row) =>
-        getStandardsByIds(row.standards)
-          .map((standard) => standard.name)
-          .join(', '),
+      valueFormatter: (row) => getStandardNamesText(row.standards),
     },
     {
       label: 'Subjects',
       dataKey: 'subjects',
-      valueFormatter: (row) =>
-        getSubjectsByIds(row.subjects)
-          .map((subject) => subject.name)
-          .join(', '),
+      valueFormatter: (row) => getSubjectNamesText(row.subjects),
     },
     {
       label: 'Total Sections',

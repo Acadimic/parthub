@@ -2,7 +2,7 @@ import { RadioSelection } from '@components/app/selections';
 import { Modal, ModalFooter, SoftConfirmModal, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { TestPaperService } from '@services';
-import { type ITestPaper, useStores } from '@stores';
+import { type ITestPaper, useTestPaperLookups } from '@stores';
 import { errorToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
@@ -23,8 +23,9 @@ interface IState {
 }
 
 export const MergeTestPapersModal = observer(({ isOpen, onClose, primaryTestPaperId }: IProps) => {
-  const { testPaperStore } = useStores();
-  const { testPapers, addTestPaper, loadTestPaperSectionsWithQuestions, getTestPaperById } = testPaperStore;
+  const testPaperStore = useTestPaperLookups();
+  const { addTestPaper, loadTestPaperSectionsWithQuestions, getTestPaperById } = testPaperStore;
+  const testPapers = testPaperStore.getTestPapers();
   const [state, setState] = useSetState<IState>({
     isLoading: false,
     secondaryTestPaperId: '',

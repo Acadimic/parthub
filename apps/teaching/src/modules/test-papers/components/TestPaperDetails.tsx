@@ -1,6 +1,6 @@
 import { Button, Menu } from '@repo/ui/app';
 import { CheckIcon, CopyIcon, GitMergeIcon, PencilIcon, PlusIcon, ShareIcon, WarningIcon } from '@phosphor-icons/react';
-import { type ITestPaper, useStores } from '@stores';
+import { type ITestPaper, useStandardLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useSetState } from 'react-use';
 import { MergeTestPapersModal } from './MergeTestPapersModal';
@@ -15,17 +15,14 @@ interface IState {
 }
 
 export const TestPaperDetails = observer(({ testPaper, addNewSection }: IProps) => {
-  const { standardStore } = useStores();
   const { isPublished, standards } = testPaper;
-  const { getStandardsByIds } = standardStore;
+  const { getStandardNamesText } = useStandardLookups();
   const [state, setState] = useSetState<IState>({
     isOpenMergeTestPapersModal: false,
   });
-
   const openMergeTestPapersModal = () => {
     setState({ isOpenMergeTestPapersModal: true });
   };
-
   const onCloseMergeTestPapersModal = () => {
     setState({ isOpenMergeTestPapersModal: false });
   };
@@ -36,11 +33,7 @@ export const TestPaperDetails = observer(({ testPaper, addNewSection }: IProps) 
         <div>
           <h1 className="font-semibold text-lg md:text-lg text-center">{testPaper.name}</h1>
         </div>
-        <div className="text-sm font-medium">
-          {getStandardsByIds(standards)
-            .map((standard) => standard.name)
-            .join(', ')}
-        </div>
+        <div className="text-sm font-medium">{getStandardNamesText(standards)}</div>
       </div>
       <div className="flex justify-between flex-wrap w-full text-sm font-semibold items-center gap-4">
         <div className="w-[200px] flex space-x-2">

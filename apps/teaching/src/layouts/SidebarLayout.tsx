@@ -1,6 +1,6 @@
 import { AppSidebar } from '@components/app/sidebars';
 import { FullScreenLoader } from '@repo/ui/app';
-import { useStores } from '@stores';
+import { useUserLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
 
@@ -9,8 +9,8 @@ interface IProps {
 }
 
 export const SidebarLayout = observer(({ children }: IProps) => {
-  const { isLoadingInitialData, isLoadedInitialData, loadInitialData, userStore } = useStores();
-  const { isLoadedLoggedInUsers } = userStore;
+  const userStore = useUserLookups();
+  const isLoadedLoggedInUsers = userStore.isLoaded('loggedInUsers');
 
   const isLoaded = isLoadedInitialData && !isLoadingInitialData && isLoadedLoggedInUsers;
 

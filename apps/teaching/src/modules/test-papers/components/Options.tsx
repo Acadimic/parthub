@@ -1,7 +1,7 @@
 import { CheckboxSelection, RadioSelection } from '@components/app/selections';
 import { Html } from '@components/others';
 import { QuestionType } from '@enums';
-import { type IQuestion, useStores } from '@stores';
+import { type IQuestion, useQuestionLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {
@@ -9,7 +9,7 @@ interface IProps {
 }
 
 export const Options = observer(({ question }: IProps) => {
-  const { questionStore } = useStores();
+  const questionStore = useQuestionLookups();
   const { getOptionsByIds, getOptionById } = questionStore;
 
   return (

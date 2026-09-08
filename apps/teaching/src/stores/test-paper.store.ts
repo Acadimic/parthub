@@ -1,168 +1,195 @@
-import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import {
+  type ClientEntity,
+  type DefaultMarkingType,
+  type IRequestSlice,
+  type ITestPaperSectionFields,
+  type TestPaperDto,
+  createRequestSlice,
+} from '@repo/shared';
+import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { PaperType, type SectionCategoryType, type SectionType } from '../enums';
 import { TestPaperService } from '../services';
 import { getObjectId } from '../utils/helpers';
-import {
-  type DefaultMarkingType,
-  type ITestPaper,
-  type ITestPaperSection,
-  type ITestPaperSnapshotIn,
-  TestPaper,
-  TestPaperSection,
-} from './models';
-import { type IStore } from './root.store';
+import { useQuestionStore } from './question.store';
+import { useSelectorStore } from './selector.store';
 
-export const TestPaperStore = t
-  .model({
-    testPaperMaps: t.map(TestPaper),
-    testPaperSectionMaps: t.map(TestPaperSection),
-    isLoadingTestPapers: t.optional(t.boolean, false),
-    isLoadedTestPapers: t.optional(t.boolean, false),
-    isLoadingTestPaperSections: t.optional(t.boolean, false),
-    isLoadedTestPaperSections: t.optional(t.boolean, false),
-  })
-  .views((self) => ({
-    get rootStore() {
-      return getRoot<IStore>(self);
-    },
+export type ITestPaper = ClientEntity<TestPaperDto>;
+export type ITestPaperSection = ITestPaperSectionFields & { isNew?: boolean };
 
-    getTestPaperById(testPaperId: string): ITestPaper | undefined {
-      return testPaperId ? self.testPaperMaps.get(testPaperId) : undefined;
-    },
+/** The fetches this store tracks. */
+type TestPaperFetch = 'testPapers' | 'testPaperSections';
 
-    getTestPaperSectionById(testPaperSectionId: string): ITestPaperSection | undefined {
-      return testPaperSectionId ? self.testPaperSectionMaps.get(testPaperSectionId) : undefined;
-    },
+export interface ITestPaperState extends IRequestSlice<TestPaperFetch> {
+  testPaperMap: Record<string, ITestPaper>;
+  testPaperSectionMap: Record<string, ITestPaperSection>;
 
-    get testPapers(): ITestPaper[] {
-      return Array.from(self.testPaperMaps.values());
-    },
+  getTestPaperById: (testPaperId: string) => ITestPaper | undefined;
+  getTestPaperSectionById: (sectionId: string) => ITestPaperSection | undefined;
+  getTestPapers: () => ITestPaper[];
+  getTestPaperSections: () => ITestPaperSection[];
+  getTestPapersByIds: (testPaperIds: string[]) => ITestPaper[];
+  getTestPaperSectionsByIds: (sectionIds: string[]) => ITestPaperSection[];
+  getTestPapersByStandardIds: (standardIds: string[]) => ITestPaper[];
 
-    get testPaperSections(): ITestPaperSection[] {
-      return Array.from(self.testPaperSectionMaps.values());
-    },
-  }))
-  .views((self) => ({
-    getTestPapersByIds(ids: string[]): ITestPaper[] {
-      const items: ITestPaper[] = [];
-      ids.forEach((id) => {
-        const item = self.getTestPaperById(id);
-        if (item) items.push(item);
-      });
-      return items;
-    },
+  addTestPapers: (testPapers: ITestPaper[]) => void;
+  addTestPaperSections: (sections: ITestPaperSection[]) => void;
+  patchTestPaper: (testPaperId: string, fields: Partial<ITestPaper>) => void;
+  patchTestPaperSection: (sectionId: string, fields: Partial<ITestPaperSection>) => void;
+  removeTestPaper: (testPaperId: string) => void;
+  removeTestPaperSection: (sectionId: string) => void;
 
-    getTestPaperSectionsByIds(ids: string[]): ITestPaperSection[] {
-      const items: ITestPaperSection[] = [];
-      ids.forEach((id) => {
-        const item = self.getTestPaperSectionById(id);
-        if (item) items.push(item);
-      });
-      return items;
-    },
+  /** Adds an unsaved test paper and returns it, for the caller to select. */
+  createTestPaper: () => ITestPaper;
+  /** Adds an unsaved section and returns it, for the caller to select. */
+  createTestPaperSection: (
+    sectionType: SectionType,
+    sectionCategory: SectionCategoryType,
+    defaultMarkings: DefaultMarkingType,
+  ) => ITestPaperSection;
 
-    getTestPapersByStandardIds(standardIds: string[]): ITestPaper[] {
-      const items: ITestPaper[] = [];
-      self.testPapers.forEach((item) => {
-        if (item.standards.some((standardId) => standardIds.includes(standardId))) items.push(item);
-      });
-      return items;
-    },
-  }))
-  .actions((self) => ({
-    // Accepts a snapshot: callers pass raw API data, which MST turns into an instance on put().
-    addTestPaper: (obj: ITestPaperSnapshotIn) => {
-      if (!obj) return;
-      const objId = obj._id;
-      const isObj = self.testPaperMaps.has(objId);
-      if (isObj) self.testPaperMaps.set(objId, obj);
-      else self.testPaperMaps.put(obj);
-    },
+  loadTestPapers: () => Promise<void>;
+  /** Loads a paper's sections and, with them, the questions/options/solutions they contain. */
+  loadTestPaperSectionsWithQuestions: (testPaperId: string) => Promise<void>;
+  reset: () => void;
+}
 
-    addTestPaperSection: (obj: ITestPaperSection) => {
-      if (!obj) return;
-      const objId = obj._id;
-      const isObj = self.testPaperSectionMaps.has(objId);
-      if (isObj) self.testPaperSectionMaps.set(objId, obj);
-      else self.testPaperSectionMaps.put(obj);
-    },
+const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
+  rows.reduce<Record<string, T>>((map, row) => {
+    map[row._id] = row;
+    return map;
+  }, {});
 
-    removeTestPaper: (id: string) => {
-      self.testPaperMaps.delete(id);
-    },
+export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
+  testPaperMap: {},
+  testPaperSectionMap: {},
+  ...createRequestSlice(['testPapers', 'testPaperSections'], set, get),
 
-    removeTestPaperCategry: (id: string) => {
-      self.testPaperSectionMaps.delete(id);
-    },
-  }))
-  .actions((self) => ({
-    addTestPapers: (objects: ITestPaper[]) => {
-      objects.forEach((obj) => self.addTestPaper(obj));
-    },
+  getTestPaperById: (testPaperId) => (testPaperId ? get().testPaperMap[testPaperId] : undefined),
 
-    addTestPaperSections: (objects: ITestPaperSection[]) => {
-      objects.forEach((obj) => self.addTestPaperSection(obj));
-    },
-  }))
-  .actions((self) => ({
-    loadTestPapers: flow(function* () {
-      if (self.isLoadingTestPapers) return;
-      self.isLoadingTestPapers = true;
-      const result = yield TestPaperService.getTestPapers();
-      if (result?.data) self.addTestPapers(result.data);
-      self.isLoadingTestPapers = false;
-      self.isLoadedTestPapers = true;
+  getTestPaperSectionById: (sectionId) => (sectionId ? get().testPaperSectionMap[sectionId] : undefined),
+
+  getTestPapers: () => Object.values(get().testPaperMap),
+
+  getTestPaperSections: () => Object.values(get().testPaperSectionMap),
+
+  getTestPapersByIds: (testPaperIds) => {
+    const { testPaperMap } = get();
+    return testPaperIds.map((id) => testPaperMap[id]).filter((row): row is ITestPaper => !!row);
+  },
+
+  getTestPaperSectionsByIds: (sectionIds) => {
+    const { testPaperSectionMap } = get();
+    return sectionIds.map((id) => testPaperSectionMap[id]).filter((row): row is ITestPaperSection => !!row);
+  },
+
+  getTestPapersByStandardIds: (standardIds) =>
+    get()
+      .getTestPapers()
+      .filter((testPaper) => (testPaper.standards ?? []).some((standardId) => standardIds.includes(standardId))),
+
+  addTestPapers: (testPapers) => {
+    set((state) => ({ testPaperMap: { ...state.testPaperMap, ...keyById(testPapers) } }));
+  },
+
+  addTestPaperSections: (sections) => {
+    set((state) => ({ testPaperSectionMap: { ...state.testPaperSectionMap, ...keyById(sections) } }));
+  },
+
+  patchTestPaper: (testPaperId, fields) => {
+    set((state) => {
+      const testPaper = state.testPaperMap[testPaperId];
+      if (!testPaper) return state;
+      return { testPaperMap: { ...state.testPaperMap, [testPaperId]: { ...testPaper, ...fields } } };
+    });
+  },
+
+  patchTestPaperSection: (sectionId, fields) => {
+    set((state) => {
+      const section = state.testPaperSectionMap[sectionId];
+      if (!section) return state;
+      return { testPaperSectionMap: { ...state.testPaperSectionMap, [sectionId]: { ...section, ...fields } } };
+    });
+  },
+
+  removeTestPaper: (testPaperId) => {
+    set((state) => {
+      const { [testPaperId]: removed, ...testPaperMap } = state.testPaperMap;
+      return removed ? { testPaperMap } : state;
+    });
+  },
+
+  removeTestPaperSection: (sectionId) => {
+    set((state) => {
+      const { [sectionId]: removed, ...testPaperSectionMap } = state.testPaperSectionMap;
+      return removed ? { testPaperSectionMap } : state;
+    });
+  },
+
+  createTestPaper: () => {
+    const testPaper: ITestPaper = {
+      _id: getObjectId(),
+      name: '',
+      slug: '',
+      standards: [],
+      sections: [],
+      paperType: PaperType.QUIZ,
+      isNew: true,
+    };
+    get().addTestPapers([testPaper]);
+    return testPaper;
+  },
+
+  createTestPaperSection: (sectionType, sectionCategory, defaultMarkings) => {
+    const section: ITestPaperSection = {
+      _id: getObjectId(),
+      name: '',
+      sectionType,
+      sectionCategory,
+      defaultMarkings,
+      isNew: true,
+    };
+    get().addTestPaperSections([section]);
+    return section;
+  },
+
+  loadTestPapers: () =>
+    get().run('testPapers', async () => {
+      const result = await TestPaperService.getTestPapers();
+      if (result?.data) get().addTestPapers(result.data);
     }),
 
-    loadTestPaperSectionsWithQuestions: flow(function* (testPaperId: string) {
-      self.isLoadingTestPaperSections = true;
-      const result = yield TestPaperService.getTestPaperSectionsWithQuestions(testPaperId);
-      if (result?.data) {
-        const { sections, questions, options, solutions } = result.data;
-        self.addTestPaperSections(sections);
-        self.rootStore.questionStore.addQuestions(questions);
-        self.rootStore.questionStore.addOptions(options);
-        self.rootStore.questionStore.addSolutions(solutions);
-      }
-      self.isLoadingTestPaperSections = false;
-      self.isLoadedTestPaperSections = true;
+  loadTestPaperSectionsWithQuestions: (testPaperId) =>
+    get().run('testPaperSections', async () => {
+      const result = await TestPaperService.getTestPaperSectionsWithQuestions(testPaperId);
+      if (!result?.data) return;
+      const { sections, questions, options, solutions } = result.data;
+      get().addTestPaperSections(sections);
+      // The questions come back with the sections, so this store fills the question store. A
+      // one-way write between stores, which needs no subscription.
+      const questionStore = useQuestionStore.getState();
+      questionStore.addQuestions(questions);
+      questionStore.addOptions(options);
+      questionStore.addSolutions(solutions);
     }),
-  }))
-  .actions((self) => ({
-    createTestPaper: () => {
-      const testPaper = TestPaper.create({
-        _id: getObjectId(),
-        name: '',
-        slug: '',
-        isNew: true,
-        standards: [],
-        sections: [],
-        paperType: PaperType.QUIZ,
-        ...self.rootStore.selectorStore.selectedData,
-      });
-      self.addTestPaper(testPaper);
-      self.rootStore.selectorStore.setSelectedTestPaperId(testPaper._id);
-      return testPaper;
-    },
 
-    createTestPaperSection: (
-      sectionType: SectionType,
-      sectionCategory: SectionCategoryType,
-      defaultMarkings: DefaultMarkingType,
-    ) => {
-      const testPaperSection = TestPaperSection.create({
-        _id: getObjectId(),
-        name: '',
-        isNew: true,
-        sectionType,
-        sectionCategory,
-        defaultMarkings,
-        ...self.rootStore.selectorStore.selectedData,
-      });
-      self.addTestPaperSection(testPaperSection);
-      self.rootStore.selectorStore.setSelectedTestPaperSectionId(testPaperSection._id);
-      return testPaperSection;
-    },
-  }));
+  reset: () => {
+    set({ testPaperMap: {}, testPaperSectionMap: {} });
+    get().resetRequests();
+  },
+}));
 
-export type ITestPaperStore = Instance<typeof TestPaperStore>;
+/** The store's lookups, subscribed to its state. */
+export const useTestPaperLookups = (): ITestPaperState => useTestPaperStore(useShallow((state) => state));
+
+/** The selected test paper, or `undefined`. Replaces `selectorStore.selectedTestPaper`. */
+export const useSelectedTestPaper = (): ITestPaper | undefined => {
+  const selectedTestPaperId = useSelectorStore((state) => state.selectedTestPaperId);
+  return useTestPaperStore((state) => (selectedTestPaperId ? state.testPaperMap[selectedTestPaperId] : undefined));
+};
+
+/** The selected section, or `undefined`. Replaces `selectorStore.selectedTestPaperSection`. */
+export const useSelectedTestPaperSection = (): ITestPaperSection | undefined => {
+  const selectedId = useSelectorStore((state) => state.selectedTestPaperSectionId);
+  return useTestPaperStore((state) => (selectedId ? state.testPaperSectionMap[selectedId] : undefined));
+};

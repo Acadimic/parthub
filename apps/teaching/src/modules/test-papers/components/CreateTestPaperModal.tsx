@@ -3,7 +3,14 @@ import { Button, Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { PaperType, PositionType, SectionCategoryType, SectionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { TestPaperService } from '@services';
-import { type DefaultMarkingType, type ITestPaperSection, useStores } from '@stores';
+import {
+  type DefaultMarkingType,
+  type ITestPaperSection,
+  useStandardLookups,
+  useSelectedTestPaper,
+  useSelectorLookups,
+  useTestPaperLookups,
+} from '@stores';
 import { ALL, defaultMarkings } from '@utils/constants';
 import { getYears, successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
@@ -18,9 +25,13 @@ interface IProps {
 
 export const CreateTestPaperModal = observer(({ isOpen, onClose }: IProps) => {
   const { push } = useRouter();
-  const { selectorStore, standardStore, testPaperStore } = useStores();
-  const { selectedTestPaper, setSelectedTestPaperId, setSelectedTestPaperSectionId } = selectorStore;
-  const { standardItems, getStandardById, getSubjectById, getStandardsSubjectItems } = standardStore;
+  const selectorStore = useSelectorLookups();
+  const testPaperStore = useTestPaperLookups();
+  const { patchTestPaper } = testPaperStore;
+  const { setSelectedTestPaperId, setSelectedTestPaperSectionId } = selectorStore;
+  const selectedTestPaper = useSelectedTestPaper();
+  const standardStore = useStandardLookups();
+  const { getStandardItems, getStandardById, getSubjectById, getStandardsSubjectItems } = standardStore;
   const { removeTestPaper, createTestPaperSection, addTestPaper, getTestPaperSectionsByIds } = testPaperStore;
   const [isOpenMarkings, setIsOpenMarkings] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,13 +76,13 @@ export const CreateTestPaperModal = observer(({ isOpen, onClose }: IProps) => {
           return section;
         });
         const sectionIds = testPaperSections.map((section) => section._id);
-        selectedTestPaper.setSections(sectionIds);
+        patchTestPaper(selectedTestPaper._id, { sections: sectionIds });
         await Promise.all(testPaperSections.map((section) => TestPaperService.upsertTestPaperSection(section)));
         testPaperSections.forEach((section) => section.resetIsNew());
       }
       const result = await TestPaperService.upsertTestPaper(selectedTestPaper);
       if (result.data) addTestPaper(result.data);
-      selectedTestPaper.resetIsNew();
+      patchTestPaper(selectedTestPaper._id, { isNew: false });
       setSelectedTestPaperSectionId(testPaperSections[0]._id);
       successToast({ message: 'Test paper created successfully.' });
       setTimeout(() => {
@@ -92,10 +103,9 @@ export const CreateTestPaperModal = observer(({ isOpen, onClose }: IProps) => {
     if (!selectedTestPaper) return;
     const { standards, subjects, year } = selectedTestPaper;
     if (standards.length && year) {
-      const standardNames = standardStore.getStandardsByIds(standards).map((standard) => standard.name);
-      const subjectNames = standardStore.getSubjectsByIds(subjects).map((subject) => subject.name);
-      let newName = `${standardNames.join(', ')}`;
-      if (subjectNames.length) newName += ` - ${subjectNames.join(', ')}`;
+      const subjectNamesText = standardStore.getSubjectNamesText(subjects);
+      let newName = standardStore.getStandardNamesText(standards);
+      if (subjectNamesText) newName += ` - ${subjectNamesText}`;
       if (year) newName += ` - ${year}`;
       selectedTestPaper.setName(newName);
       setIsVisibleMore(true);
@@ -116,7 +126,7 @@ export const CreateTestPaperModal = observer(({ isOpen, onClose }: IProps) => {
               <div className="flex flex-col space-y-3">
                 <Select
                   label="Standards"
-                  items={standardItems}
+                  items={getStandardItems()}
                   required
                   isGrouped
                   values={selectedTestPaper.standards}
@@ -144,7 +154,9 @@ export const CreateTestPaperModal = observer(({ isOpen, onClose }: IProps) => {
                     label="Paper Type"
                     items={Object.values(PaperType).map((item) => ({ label: item, value: item }))}
                     values={[selectedTestPaper.paperType]}
-                    onChange={(values) => values[0] && selectedTestPaper.setPaperType(values[0].value as PaperType)}
+                    onChange={(values) =>
+                      values[0] && patchTestPaper(selectedTestPaper._id, { paperType: values[0].value as PaperType })
+                    }
                     isSingleSelect
                   />
                   <TextInput

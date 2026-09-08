@@ -1,5 +1,5 @@
 import { type ICourse, type ICourseModule, type IPlan } from '@stores';
-import { type CourseDto } from '@repo/shared';
+import { type CourseDto, type ICourseModuleFields } from '@repo/shared';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
@@ -30,7 +30,7 @@ class CourseService {
 
   getCourseModulesByCourseId = async (courseId: string) => {
     const url = `/course/course/modules/${courseId}`;
-    const resData = await callAuthApi(url, API.GET);
+    const resData = await callAuthApi<ICourseModuleFields[]>(url, API.GET);
     return resData;
   };
 }

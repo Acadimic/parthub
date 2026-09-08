@@ -2,7 +2,7 @@ import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { type IColumnData } from '@interfaces';
-import { type IUser, useStores } from '@stores';
+import { type IUser, useSelectorLookups, useUserLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { getStringFormattedDate, getStringFormattedDateWithTime } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
@@ -19,17 +19,14 @@ interface IState {
 
 export const Students = observer(() => {
   const { push } = useRouter();
-  const { selectorStore, userStore } = useStores();
+  const selectorStore = useSelectorLookups();
+  const userStore = useUserLookups();
   const { setSelectedStudentId } = selectorStore;
-  const {
-    createStudent,
-    isLoadingUsers,
-    isLoadedUsers,
-    students,
-    getStudentStandardsByStudentId,
-    getStudentEnrolledDateByStudentId,
-    removeNewUsers,
-  } = userStore;
+  const { createStudent, getStudentStandardsByStudentId, getStudentEnrolledDateByStudentId, removeNewUsers } =
+    userStore;
+  const isLoadingUsers = userStore.isLoading('users');
+  const isLoadedUsers = userStore.isLoaded('users');
+  const students = userStore.getStudents();
   const [state, setState] = useSetState<IState>({
     isOpenUpsertStudentModal: false,
     isOpenBulkAddStudentsModal: false,

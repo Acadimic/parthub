@@ -1,7 +1,7 @@
 import { Card } from '@repo/ui/app';
 import { MeetItem } from '@components/common';
 import { BlankState } from '@components/others';
-import { type ICourse, useStores } from '@stores';
+import { type ICourse, useMeetLookups } from '@stores';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {
@@ -9,7 +9,7 @@ interface IProps {
 }
 
 export const SessionsView = observer(({ course }: IProps) => {
-  const { meetStore } = useStores();
+  const meetStore = useMeetLookups();
   const { getMeetsByIds } = meetStore;
   const meets = getMeetsByIds(course.meets);
 

@@ -1,168 +1,221 @@
-import { type IMaterialStat, type IStandardSubjectQuery, type IMaterialInfo } from '@interfaces';
-import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import {
+  type AttachmentDto,
+  type ClientEntity,
+  type IRequestSlice,
+  type MaterialDto,
+  createRequestSlice,
+} from '@repo/shared';
+import { type IMaterialInfo, type IMaterialStat, type IStandardSubjectQuery } from '@interfaces';
+import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { DocumentType, FileExtension, LevelType, LinkType, MaterialType } from '../enums';
 import { MaterialService } from '../services';
-import { getObjectId } from '../utils/helpers';
-import { Attachment, type IAttachment, type IMaterial, Material } from './models';
-import { type IStore } from './root.store';
+import { getObjectId, getSlug } from '../utils/helpers';
+import { useSelectorStore } from './selector.store';
 
-export const MaterialStore = t
-  .model({
-    materialMaps: t.map(Material),
-    materialStats: t.optional(t.array(t.frozen<IMaterialStat>()), []),
-    isLoading: t.optional(t.boolean, false),
-    isLoaded: t.optional(t.boolean, false),
-    isLoadingMaterials: t.optional(t.boolean, false),
-    isLoadedMaterials: t.optional(t.boolean, false),
-  })
-  .views((self) => ({
-    get rootStore() {
-      return getRoot<IStore>(self);
-    },
+export type IMaterial = ClientEntity<MaterialDto>;
+export type IAttachment = AttachmentDto & { isNew?: boolean };
 
-    get materials(): IMaterial[] {
-      return Array.from(self.materialMaps.values());
-    },
+/** The fetches this store tracks. */
+type MaterialFetch = 'materialStats' | 'materials';
 
-    getMaterialById(materialId: string): IMaterial | undefined {
-      return materialId ? self.materialMaps.get(materialId) : undefined;
-    },
-  }))
-  .actions((self) => ({
-    addMaterial: (material: IMaterial) => {
-      if (!material) return;
-      const materialId = material._id;
-      const isMaterial = self.materialMaps.has(materialId);
-      if (isMaterial) self.materialMaps.set(materialId, material);
-      else self.materialMaps.put(material);
-    },
+export interface IMaterialState extends IRequestSlice<MaterialFetch> {
+  materialMap: Record<string, IMaterial>;
+  /** Roll-ups the dashboard shows; server-computed, not per-material rows. */
+  materialStats: IMaterialStat[];
 
-    removeMaterialById: (materialId: string) => {
-      self.materialMaps.delete(materialId);
-    },
-  }))
-  .actions((self) => ({
-    addMaterials: (materials: IMaterial[]) => {
-      if (!materials) return;
-      materials.forEach((material) => self.addMaterial(material));
-    },
-  }))
-  .views((self) => ({
-    standardSubjectMaterials(standard: string, subject: string): IMaterial[] {
-      return self.materials.filter((material) => material.standard === standard && material.subject === subject);
-    },
+  getMaterialById: (materialId: string) => IMaterial | undefined;
+  getMaterials: () => IMaterial[];
+  getMaterialsByIds: (materialIds: string[]) => IMaterial[];
+  getStandardSubjectMaterials: (standardId: string, subjectId: string) => IMaterial[];
+  getMaterialsByStandardIds: (standardIds: string[]) => IMaterial[];
+  /** Duration and per-type counts across a set of materials. */
+  getMaterialsStatsByMaterialIds: (materialIds: string[]) => IMaterialInfo;
 
-    getMaterialsByIds(ids: string[]): IMaterial[] {
-      const items: IMaterial[] = [];
-      ids.forEach((id) => {
-        const item = self.getMaterialById(id);
-        if (item) items.push(item);
+  addMaterials: (materials: IMaterial[]) => void;
+  patchMaterial: (materialId: string, fields: Partial<IMaterial>) => void;
+  /** Renames a material and keeps its slug in step. */
+  renameMaterial: (materialId: string, name: string) => void;
+  removeMaterialById: (materialId: string) => void;
+  addAttachment: (materialId: string, attachment: IAttachment) => void;
+  removeAttachment: (materialId: string, attachmentId: string) => void;
+  /** Adds an empty link attachment to a material and returns it. */
+  addLinkAttachment: (materialId: string) => IAttachment;
+
+  /** Adds an unsaved material and returns it, for the caller to select. */
+  createMaterial: (standardId: string, subjectId: string) => IMaterial;
+
+  loadMaterialStats: () => Promise<void>;
+  loadStandardSubjectMaterials: (query: IStandardSubjectQuery) => Promise<void>;
+  loadStandardsMaterials: (standardIds: string[]) => Promise<void>;
+  reset: () => void;
+}
+
+const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
+  rows.reduce<Record<string, T>>((map, row) => {
+    map[row._id] = row;
+    return map;
+  }, {});
+
+/** A link attachment that plays as video rather than opening as a document. */
+const VIDEO_LINK_TYPES: LinkType[] = [LinkType.YOUTUBE, LinkType.VIDEO];
+
+const isVideo = (attachment: AttachmentDto): boolean =>
+  attachment.fileType === DocumentType.VIDEO ||
+  (attachment.fileType === DocumentType.LINK &&
+    !!attachment.linkType &&
+    VIDEO_LINK_TYPES.includes(attachment.linkType));
+
+const isDocument = (attachment: AttachmentDto): boolean =>
+  attachment.fileType === DocumentType.FILE ||
+  (attachment.fileType === DocumentType.LINK &&
+    !!attachment.linkType &&
+    !VIDEO_LINK_TYPES.includes(attachment.linkType));
+
+/** How long a new material is assumed to take. */
+const DEFAULT_DURATION_MINS = 30;
+
+export const useMaterialStore = create<IMaterialState>()((set, get) => ({
+  materialMap: {},
+  materialStats: [],
+  ...createRequestSlice(['materialStats', 'materials'], set, get),
+
+  getMaterialById: (materialId) => (materialId ? get().materialMap[materialId] : undefined),
+
+  getMaterials: () => Object.values(get().materialMap),
+
+  getMaterialsByIds: (materialIds) => {
+    const { materialMap } = get();
+    return materialIds.map((id) => materialMap[id]).filter((material): material is IMaterial => !!material);
+  },
+
+  getStandardSubjectMaterials: (standardId, subjectId) =>
+    get()
+      .getMaterials()
+      .filter((material) => material.standard === standardId && material.subject === subjectId),
+
+  getMaterialsByStandardIds: (standardIds) =>
+    get()
+      .getMaterials()
+      .filter((material) => material.standard && standardIds.includes(material.standard)),
+
+  getMaterialsStatsByMaterialIds: (materialIds) => {
+    const counts: Record<MaterialType, number> = { [MaterialType.VIDEO]: 0, [MaterialType.READING]: 0 };
+    let durationMins = 0;
+    get()
+      .getMaterialsByIds(materialIds)
+      .forEach((material) => {
+        durationMins += material.durationMins ?? 0;
+        const attachments = material.attachments ?? [];
+        const videos = attachments.filter(isVideo).length;
+        const documents = attachments.filter(isDocument).length;
+        counts[MaterialType.VIDEO] += videos;
+        // A material with neither still counts as one reading, so it is never invisible.
+        counts[MaterialType.READING] += documents || (videos ? 0 : 1);
       });
-      return items;
-    },
-  }))
-  .actions((self) => ({
-    loadMaterialStats: flow(function* () {
-      self.isLoading = true;
-      const result = yield MaterialService.getMaterials();
-      self.isLoading = false;
-      if (!result?.data) return;
-      self.isLoaded = true;
-      self.materialStats = result.data;
+    return { durationMins, types: counts };
+  },
+
+  addMaterials: (materials) => {
+    set((state) => ({ materialMap: { ...state.materialMap, ...keyById(materials) } }));
+  },
+
+  patchMaterial: (materialId, fields) => {
+    set((state) => {
+      const material = state.materialMap[materialId];
+      if (!material) return state;
+      return { materialMap: { ...state.materialMap, [materialId]: { ...material, ...fields } } };
+    });
+  },
+
+  renameMaterial: (materialId, name) => {
+    get().patchMaterial(materialId, { name, slug: getSlug(name) });
+  },
+
+  removeMaterialById: (materialId) => {
+    set((state) => {
+      const { [materialId]: removed, ...materialMap } = state.materialMap;
+      return removed ? { materialMap } : state;
+    });
+  },
+
+  addAttachment: (materialId, attachment) => {
+    const material = get().getMaterialById(materialId);
+    if (!material) return;
+    get().patchMaterial(materialId, { attachments: [...(material.attachments ?? []), attachment] });
+  },
+
+  removeAttachment: (materialId, attachmentId) => {
+    const material = get().getMaterialById(materialId);
+    if (!material) return;
+    get().patchMaterial(materialId, {
+      attachments: (material.attachments ?? []).filter((item) => item._id !== attachmentId),
+    });
+  },
+
+  addLinkAttachment: (materialId) => {
+    const attachment: IAttachment = {
+      _id: getObjectId(),
+      fileName: '',
+      url: '',
+      documentType: DocumentType.LINK,
+      fileType: DocumentType.LINK,
+      fileExtension: FileExtension.OTHER,
+      linkType: LinkType.YOUTUBE,
+      reference: '',
+      tag: '',
+      isUploaded: false,
+      isNew: true,
+    };
+    get().addAttachment(materialId, attachment);
+    return attachment;
+  },
+
+  createMaterial: (standardId, subjectId) => {
+    const material: IMaterial = {
+      _id: getObjectId(),
+      name: '',
+      slug: '',
+      standard: standardId,
+      subject: subjectId,
+      order: get().getStandardSubjectMaterials(standardId, subjectId).length,
+      durationMins: DEFAULT_DURATION_MINS,
+      level: LevelType.EASY,
+      isNew: true,
+    };
+    get().addMaterials([material]);
+    return material;
+  },
+
+  loadMaterialStats: () =>
+    get().run('materialStats', async () => {
+      const result = await MaterialService.getMaterials();
+      if (result?.data) set({ materialStats: result.data });
     }),
 
-    loadStandardSubjectMaterials: flow(function* (payload: IStandardSubjectQuery) {
-      self.isLoadingMaterials = true;
-      const result = yield MaterialService.getStandardSubjectMaterials(payload);
-      self.isLoadingMaterials = false;
-      if (!result?.data) return;
-      self.isLoadedMaterials = true;
-      self.addMaterials(result?.data);
+  loadStandardSubjectMaterials: (query) =>
+    get().run('materials', async () => {
+      const result = await MaterialService.getStandardSubjectMaterials(query);
+      if (result?.data) get().addMaterials(result.data);
     }),
 
-    loadStandardsMaterials: flow(function* (standards: string[]) {
-      self.isLoadingMaterials = true;
-      const result = yield MaterialService.getStandardsMaterials(standards);
-      self.isLoadingMaterials = false;
-      if (!result?.data) return;
-      self.isLoadedMaterials = true;
-      self.addMaterials(result?.data);
+  loadStandardsMaterials: (standardIds) =>
+    get().run('materials', async () => {
+      const result = await MaterialService.getStandardsMaterials(standardIds);
+      if (result?.data) get().addMaterials(result.data);
     }),
 
-    createMaterial: (standard: string, subject: string) => {
-      const order = self.standardSubjectMaterials(standard, subject).length;
-      const material = Material.create({
-        _id: getObjectId(),
-        name: '',
-        slug: '',
-        order,
-        isNew: true,
-        standard,
-        subject,
-        durationMins: 30,
-        level: LevelType.EASY,
-        ...self.rootStore.selectorStore.selectedData,
-      });
-      self.addMaterial(material);
-      self.rootStore.selectorStore.setSelectedMaterialId(material._id);
-      return material;
-    },
+  reset: () => {
+    set({ materialMap: {}, materialStats: [] });
+    get().resetRequests();
+  },
+}));
 
-    addLinkAttachment: (): IAttachment | null => {
-      const selectedMaterial = self.rootStore.selectorStore.selectedMaterial;
-      if (!selectedMaterial) return null;
-      const attachment = Attachment.create({
-        _id: getObjectId(),
-        fileName: '',
-        url: '',
-        documentType: DocumentType.LINK,
-        fileType: DocumentType.LINK,
-        fileExtension: FileExtension.OTHER,
-        linkType: LinkType.YOUTUBE,
-        reference: '',
-        tag: '',
-        isUploaded: false,
-        isNew: true,
-      });
-      selectedMaterial.addAttachment(attachment);
-      return attachment;
-    },
-  }))
-  .views((self) => ({
-    materialsByStandardIds(standardIds: string[]): IMaterial[] {
-      return self.materials.filter((material) => standardIds.includes(material.standard));
-    },
+/** The store's lookups, subscribed to its state. */
+export const useMaterialLookups = (): IMaterialState => useMaterialStore(useShallow((state) => state));
 
-    getMaterialsStatsByMaterialIds: (materialIds: string[]): IMaterialInfo => {
-      const materials = self.getMaterialsByIds(materialIds);
-      const materialCountMap: Record<MaterialType, number> = {
-        [MaterialType.VIDEO]: 0,
-        [MaterialType.READING]: 0,
-      };
-      let durationMins = 0;
-      materials.forEach((material) => {
-        durationMins += material.durationMins;
-        const videos = material.attachments.filter(
-          (attachment) =>
-            attachment.fileType === DocumentType.VIDEO ||
-            (attachment.fileType === DocumentType.LINK &&
-              attachment.linkType &&
-              [(LinkType.YOUTUBE, LinkType.VIDEO)].includes(attachment.linkType)),
-        ).length;
-        const documents = material.attachments.filter(
-          (attachment) =>
-            attachment.fileType === DocumentType.FILE ||
-            (attachment.fileType === DocumentType.LINK &&
-              attachment.linkType &&
-              ![(LinkType.YOUTUBE, LinkType.VIDEO)].includes(attachment.linkType)),
-        ).length;
-        materialCountMap[MaterialType.VIDEO] += videos;
-        materialCountMap[MaterialType.READING] += documents ? documents : videos ? 0 : 1;
-      });
-      return { durationMins, types: materialCountMap };
-    },
-  }));
-
-export type IMaterialStore = Instance<typeof MaterialStore>;
-
-export type { IMaterialStat };
+/** The selected material, or `undefined`. Replaces `selectorStore.selectedMaterial`. */
+export const useSelectedMaterial = (): IMaterial | undefined => {
+  const selectedMaterialId = useSelectorStore((state) => state.selectedMaterialId);
+  return useMaterialStore((state) => (selectedMaterialId ? state.materialMap[selectedMaterialId] : undefined));
+};

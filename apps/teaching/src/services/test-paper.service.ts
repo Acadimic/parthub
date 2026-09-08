@@ -1,3 +1,4 @@
+import { type TestPaperDto, type TestPaperSectionsResponse } from '@repo/shared';
 import { type IMergeTestPapers, type IUpsertBulkSectionQuestions, type IUpsertSectionQuestion } from '@interfaces';
 import { type ITestPaper, type ITestPaperSection, type ITestPaperSnapshotIn } from '@stores';
 import { API } from '../enums';
@@ -31,13 +32,13 @@ class TestPaperService {
 
   getTestPapers = async () => {
     const url = 'test-paper/all';
-    const resData = await callAuthApi(url, API.GET);
+    const resData = await callAuthApi<TestPaperDto[]>(url, API.GET);
     return resData;
   };
 
   getTestPaperSectionsWithQuestions = async (testPaperId: string) => {
     const url = `test-paper/sections-with-questions/${testPaperId}`;
-    const resData = await callAuthApi(url, API.GET);
+    const resData = await callAuthApi<TestPaperSectionsResponse>(url, API.GET);
     return resData;
   };
 

@@ -12,7 +12,7 @@ import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IFullCalendarEvent } from '@interfaces';
-import { useStores } from '@stores';
+import { useUserLookups } from '@stores';
 import { dark, light } from '@themes';
 import { CalendarViewMap } from '@utils/constants';
 import { getFormattedTime } from '@utils/helpers';
@@ -52,7 +52,7 @@ const EmptyListView = () => {
 
 const EventContentDefaultView = observer(
   ({ event, calenderType }: { event: EventInput; calenderType: CalendarType }) => {
-    const { userStore } = useStores();
+    const userStore = useUserLookups();
     const { getUsersByIds } = userStore;
     const attendees = getUsersByIds(event.extendedProps?.attendees || []);
     const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
@@ -95,7 +95,7 @@ export const FullCalendarView = observer(({ onEventClick, onDateClick }: IProps)
   const { selectorStore, meetStore } = useStores();
   const { selectedCalenderType, setSelectedCalenderType, setSelectedCalenderDate, selectedCalenderDate } =
     selectorStore;
-  const { meets } = meetStore;
+  const meets = meetStore.getMeets();
   const { isSmallScreen } = useWindowDimensions();
 
   const now = new Date();

@@ -2,12 +2,15 @@ import { Select } from '@components/app/selects';
 import { ArticleIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
-import { useStores } from '@stores';
+import { useQuestionLookups, useSelectorLookups } from '@stores';
 import { splitCamelCase } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 
 export const SelectQuestionType = observer(() => {
-  const { selectorStore, questionStore } = useStores();
+  const selectorStore = useSelectorLookups();
+  const questionStore = useQuestionLookups();
+  const { patchQuestion } = questionStore;
+  const { patchOption } = questionStore;
   const { selectedQuestion, selectedQuestionType, setSelectedQuestionType, setSelectedUpsertQuestionStep } =
     selectorStore;
   const { getOptionsByIds, getNewOptions } = questionStore;
@@ -16,8 +19,8 @@ export const SelectQuestionType = observer(() => {
     if (!selectedQuestion) return;
     const value = values[0].value as QuestionType;
     const previousQuestionType = selectedQuestion.questionType;
-    selectedQuestion.setQuestionType(value);
-    getOptionsByIds(selectedQuestion.options).forEach((option) => option.setIsCorrect(false));
+    patchQuestion(selectedQuestion._id, { questionType: value });
+    getOptionsByIds(selectedQuestion.options).forEach((option) => patchOption(option._id, { isCorrect: false }));
     setSelectedQuestionType(value);
     if (
       (value === QuestionType.SINGLE_CHOICE || value === QuestionType.MULTIPLE_CHOICE) &&
