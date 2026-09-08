@@ -169,7 +169,7 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
           if (error) throw error;
           continue;
         }
-        const write = op.updateOne || op.updateMany;
+        const write = op.updateOne ?? op.updateMany;
         if (!write) continue;
         const update = write.update as UpdateObject | undefined;
         if (!update || Array.isArray(update)) continue;

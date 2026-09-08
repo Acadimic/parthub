@@ -18,7 +18,7 @@
     "typecheck:ui": "pnpm --filter @repo/ui typecheck"
   },
   "devDependencies": {
-    "prettier": "^3.3.3"
+    "prettier": "^3.9.6"
   },
   "volta": {
     "node": "24.20.0"

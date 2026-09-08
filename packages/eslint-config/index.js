@@ -25,10 +25,7 @@ const shouldRules = {
   // --- Say what a thing is -------------------------------------------------------------------
   // A type-only import reads as a type and is erased at compile time. Inline, so a module that
   // exports both a type and a value still needs only one import statement.
-  '@typescript-eslint/consistent-type-imports': [
-    'warn',
-    { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
-  ],
+  '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports', fixStyle: 'inline-type-imports' }],
   // One shape declaration style, so a reader knows where to look for a model.
   '@typescript-eslint/consistent-type-definitions': ['warn', 'interface'],
   '@typescript-eslint/array-type': ['warn', { default: 'array' }],
@@ -126,13 +123,11 @@ const layerRules = {
         patterns: [
           {
             group: APP_ALIASES,
-            message:
-              'packages/ui cannot import an app. Take the value as a prop instead (README rule 3).',
+            message: 'packages/ui cannot import an app. Take the value as a prop instead (README rule 3).',
           },
           {
             group: ['mobx', 'mobx-*'],
-            message:
-              'A component here may not read app state. Everything arrives through props (README rule 3).',
+            message: 'A component here may not read app state. Everything arrives through props (README rule 3).',
           },
           {
             group: ['@repo/ui', '@repo/ui/*'],
@@ -145,8 +140,7 @@ const layerRules = {
         paths: [
           {
             name: '..',
-            message:
-              'Import the defining module (../loaders/Spinner), never the barrel above it (README rule 6).',
+            message: 'Import the defining module (../loaders/Spinner), never the barrel above it (README rule 6).',
           },
           {
             name: '.',
