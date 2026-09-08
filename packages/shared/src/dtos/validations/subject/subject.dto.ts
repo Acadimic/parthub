@@ -15,9 +15,9 @@ export class SubjectDto extends BaseOwnedDto {
 
   @IsOptional()
   @IsString()
-  description?: string;
+  description?: string | null;
 
   @IsOptional()
   @IsString()
-  logo?: string;
+  logo?: string | null;
 }
