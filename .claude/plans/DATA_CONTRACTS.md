@@ -282,10 +282,10 @@ Steps 1 and 2 are a single small commit. Step 3 is the one to get right.
 
 ## Naming rules
 
-| Kind                   | Name              | Location                       |
-| ---------------------- | ----------------- | ------------------------------ |
+| Kind                   | Name              | Location                   |
+| ---------------------- | ----------------- | -------------------------- |
 | Response for an entity | `CourseDto`       | `@repo/shared/contracts`   |
-| Nested response object | `CourseModuleDto` | same file as its parent        |
+| Nested response object | `CourseModuleDto` | same file as its parent    |
 | Request body           | `UpsertCourseDto` | `@repo/shared/validations` |
 | Query parameters       | `CourseQueryDto`  | `@repo/shared/validations` |
 | Envelope               | `SuccessResponse` | `@repo/shared`             |

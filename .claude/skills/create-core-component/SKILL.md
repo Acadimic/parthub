@@ -6,13 +6,17 @@ description: >
   primitives directly. Instead, create or use a core wrapper that adds label, error, and a
   consistent API, imported from `@repo/ui/core`.
 when_to_use: >
-  Trigger when: (1) a feature module needs a UI element that has no core wrapper yet,
-  (2) someone asks to add a form field, input, select, dialog, or any UI primitive to a feature,
-  (3) you see a direct import from `@repo/ui/ui/*` in feature code.
+  Trigger when a UI element is needed and no core wrapper exists for it yet, which is step 3 of
+  the `use-ui-component` skill. That skill is the entry point for any UI work and decides whether
+  a wrapper is needed at all; this one creates it. Also trigger on a direct import from
+  `@repo/ui/ui/*` in feature code, which means a wrapper is missing.
 argument-hint: "[component-name]"
 ---
 
 # Create Core Component
+
+Reach this skill through `use-ui-component`, which checks first whether an app component or an
+existing wrapper already covers the need. Only create a new wrapper when neither does.
 
 All shared React UI lives in the `@repo/ui` workspace package (`packages/ui`). The three Next.js
 apps (`apps/learning`, `apps/teaching`, `apps/admin`) consume it as TypeScript source through
@@ -20,11 +24,13 @@ apps (`apps/learning`, `apps/teaching`, `apps/admin`) consume it as TypeScript s
 
 ## Architecture Rules
 
-1. **Two-layer component system (inside `packages/ui/src`):**
+1. **Three-layer component system (inside `packages/ui/src`):**
    - `ui/<name>.tsx` — Raw shadcn primitives (kebab-case files). NEVER import these in app feature code.
    - `core/<Name>/index.tsx` — Wrappers that compose `ui/` primitives with label, error, and a consistent
      props API. Exported from `core/index.ts`, which is what `@repo/ui` and
-     `@repo/ui/core` expose.
+     `@repo/ui/core` expose. **This is what you create here.**
+   - `app/<group>/<Name>.tsx` — Components composed from several wrappers, exposed on
+     `@repo/ui/app`.
 
 2. **Feature code** (`modules/`, `layouts/`, `pages/` in any app) imports wrappers from
    `@repo/ui/core` and composed components from `@repo/ui/app`. There are no pass-through

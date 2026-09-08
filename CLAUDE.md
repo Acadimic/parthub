@@ -55,6 +55,7 @@ pnpm --filter @repo/ui <script>
   - `packages/ui/src/ui/` — Raw shadcn primitives. **Never import these in feature code.**
   - `packages/ui/src/core/` — Wrappers adding label, error, consistent API. Feature code (`modules/`, `layouts/`, `pages/`) imports them from `@repo/ui/core`. Use the `/create-core-component` skill to create new wrappers.
   - `packages/ui/src/app/` — Components composed from `core/` (SplitButton, DateInput, Carousel, Menu, ...). Feature code imports them from `@repo/ui/app`.
+  - **Before writing any UI in a feature, use the `/use-ui-component` skill.** It decides whether an existing app component or core wrapper already covers the need, and if not, has you create the core wrapper first via `/create-core-component` and compose from it. Never hand-roll a shared control or import a raw primitive.
 - **Auth:** Firebase Authentication (email/password + Google/Microsoft OAuth). Token management and refresh in `src/utils/firebase/`.
 - **HTTP:** Axios with separate auth/unauth callers in `src/services/http.service.ts`. Request interceptor adds Bearer token + permission headers.
 - **Styling:** TailwindCSS 3 + MUI 6 + Emotion CSS-in-JS. Light/dark theme via `tw-colors` plugin and `ColorModeContext`.
