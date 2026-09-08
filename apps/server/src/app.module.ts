@@ -37,6 +37,7 @@ import { AppService } from './app.service';
 import { ContextModule } from './context/context.module';
 import { RequestContextService } from './context/request-context.service';
 import { registerGlobalPlugins } from './database/plugins/register-plugins';
+import { AccessGuard } from './guards/access.guard';
 import { AuthGuard } from './guards/auth.guard';
 import { ActivityLogCoreModule } from './modules/activity-log/activity-log-core.module';
 import { ActivityLogCoreService } from './modules/activity-log/activity-log-core.service';
@@ -127,6 +128,11 @@ import { SecretsService } from './secrets/secrets.service';
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      // Registered second so it runs after AuthGuard has populated the request context.
+      provide: APP_GUARD,
+      useClass: AccessGuard,
     },
     AppService,
   ],

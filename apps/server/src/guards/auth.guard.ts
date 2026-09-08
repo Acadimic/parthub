@@ -13,6 +13,7 @@ import { RegisterUserDto, UserDto } from '@parthhub/shared/validations';
 import { INITIAL_LOGIN_DATA_URL } from '@utils/constants';
 import { getRegisterPayload, getSubdomainFromUrl } from '@utils/util';
 import { DecodedIdToken } from 'firebase-admin/auth';
+import { timingSafeEqual } from 'node:crypto';
 import { ClsService } from 'nestjs-cls';
 import { IRequestContext } from '../context/request-context.interface';
 
@@ -109,6 +110,13 @@ export class AuthGuard implements CanActivate {
     return this.userService.transformUser(user as UserDocument);
   }
 
+  /** Constant-time compare so a wrong key cannot be guessed byte by byte from response timing. */
+  matchesApiKey(presented: string, expected: string): boolean {
+    const a = new TextEncoder().encode(presented);
+    const b = new TextEncoder().encode(expected);
+    return a.length === b.length && timingSafeEqual(a, b);
+  }
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = this.getRequest(context);
     const url = (request as any).url as string;
@@ -129,13 +137,17 @@ export class AuthGuard implements CanActivate {
       return true;
     }
     if (isPrivate) {
+      // A private route is machine-to-machine only. A wrong or missing key is rejected outright;
+      // it must never fall through to Firebase auth, which would let any signed-in user in.
       accessType = AccessType.PRIVATE;
-      const headers = request.headers as unknown as Record<string, string>;
-      const apiKey = this.secretsService.get(Secrets.PRIVATE_API_KEY) as string;
-      if (headers && apiKey && [headers['api-key']].includes(apiKey)) {
-        this.setMinimalRequestContext({ apiRoute, accessType, subdomain, timezone, timezoneOffset });
-        return true;
+      const presented = this.getHeaderValue(context, 'api-key') as string;
+      const expected = this.secretsService.get(Secrets.PRIVATE_API_KEY) as string;
+      if (!expected) throw new UnauthorizedException('Private API key is not configured.');
+      if (!presented || !this.matchesApiKey(presented, expected)) {
+        throw new UnauthorizedException('Invalid API key.');
       }
+      this.setMinimalRequestContext({ apiRoute, accessType, subdomain, timezone, timezoneOffset });
+      return true;
     }
 
     const user: UserDto = await this.validateAndGetUser(context, accessType);
