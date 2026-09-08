@@ -10,3 +10,5 @@ export * from './exam.interface';
 export * from './editor.interface';
 export * from './stat.interface';
 export * from './toast.interface';
+export * from './request.interface';
+export * from './entity.interface';

@@ -75,9 +75,15 @@ export class MeetDto extends BaseOwnedDto {
   @IsEnum(MeetFrequency)
   frequency?: MeetFrequency;
 
+  /**
+   * Dates on which a recurring meet is skipped. ISO 8601 strings, not `Date`: every timestamp
+   * crosses the wire as a string (see the serialization rules on `BaseFields`), and the client
+   * holds them as strings too.
+   */
   @IsOptional()
   @IsArray()
-  cancelledDates?: Date[];
+  @IsDateString({}, { each: true })
+  cancelledDates?: string[];
 }
 
 export class GetByMeetIdsDto {
