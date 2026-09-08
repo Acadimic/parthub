@@ -14,7 +14,6 @@ module.exports = {
     './src/modules/**/*.{js,ts,jsx,tsx}',
     './src/layouts/**/*.{js,ts,jsx,tsx}',
     '../../packages/ui/src/**/*.{ts,tsx}',
-    '../../packages/ui/src/**/*.{ts,tsx}',
   ],
   theme: {
     extend: {

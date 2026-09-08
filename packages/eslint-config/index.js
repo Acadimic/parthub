@@ -140,12 +140,18 @@ const layerRules = {
               'Inside the package, import the module that defines the component relatively (README rules 2 and 6).',
           },
         ],
-        // `paths` is an exact match, so this catches `from '..'` without touching '../lib/cn'.
+        // `paths` is an exact match, so these catch `from '..'` and `from '.'` without touching
+        // a real relative module such as '../lib/cn'.
         paths: [
           {
             name: '..',
             message:
               'Import the defining module (../loaders/Spinner), never the barrel above it (README rule 6).',
+          },
+          {
+            name: '.',
+            message:
+              "Importing the folder's own index.ts is circular. Import the sibling module directly (README rule 6).",
           },
         ],
       },
