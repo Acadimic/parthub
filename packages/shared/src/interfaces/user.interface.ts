@@ -6,4 +6,5 @@ export interface ICreateFirebaseUser {
 export interface ILoginUser {
   email: string;
   password: string;
+  reCaptchaToken?: string;
 }

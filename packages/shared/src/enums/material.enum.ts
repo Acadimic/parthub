@@ -33,3 +33,16 @@ export enum MaterialType {
   VIDEO = 'video',
   READING = 'reading',
 }
+
+export enum ContentType {
+  SYLLABUS = 'syllabus',
+  INDEX = 'index',
+  CHAPTER = 'chapter',
+  BOOK = 'book',
+  NOTE = 'note',
+  PAPER = 'paper',
+  ANSWER = 'answer',
+  REFERENCE = 'reference',
+  APPENDIX = 'appendix',
+  OTHER = 'other',
+}

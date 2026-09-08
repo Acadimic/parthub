@@ -12,11 +12,27 @@
     "./validations": {
       "types": "./dist/dtos/validations/index.d.ts",
       "default": "./dist/dtos/validations/index.js"
+    },
+    "./enums": {
+      "types": "./dist/enums/index.d.ts",
+      "default": "./dist/enums/index.js"
+    },
+    "./interfaces": {
+      "types": "./dist/interfaces/index.d.ts",
+      "default": "./dist/interfaces/index.js"
     }
   },
   "typesVersions": {
     "*": {
-      "validations": ["dist/dtos/validations/index.d.ts"]
+      "validations": [
+        "dist/dtos/validations/index.d.ts"
+      ],
+      "enums": [
+        "dist/enums/index.d.ts"
+      ],
+      "interfaces": [
+        "dist/interfaces/index.d.ts"
+      ]
     }
   },
   "scripts": {

@@ -19,5 +19,5 @@ export class RegisterUserDto {
 
   @IsMongoId()
   @IsNotEmpty()
-  orgId: string;
+  org: string;
 }

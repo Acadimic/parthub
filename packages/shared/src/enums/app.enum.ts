@@ -22,3 +22,23 @@ export enum ColorType {
   VIOLET = 'violet',
   GREY = 'grey',
 }
+
+export enum DirectionType {
+  UP = 'up',
+  DOWN = 'down',
+  LEFT = 'left',
+  RIGHT = 'right',
+}
+
+export enum IconPosition {
+  START = 'start',
+  END = 'end',
+  TOP = 'top',
+  BOTTOM = 'bottom',
+}
+
+export enum AccountSettingsType {
+  ACCOUNT_SETTINGS = 'Account Settings',
+  PROFILE = 'Profile',
+  SECURITY = 'Security',
+}

@@ -6,3 +6,5 @@ export * from './test-paper.interface';
 export * from './common.interface';
 export * from './app.interface';
 export * from './permission.interface';
+export * from './exam.interface';
+export * from './editor.interface';

@@ -17,3 +17,5 @@ export * from './role.enum';
 export * from './meet.enum';
 export * from './plan.enum';
 export * from './subdomain.enum';
+export * from './auth.enum';
+export * from './editor.enum';
