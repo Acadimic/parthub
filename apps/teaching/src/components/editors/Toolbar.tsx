@@ -1,5 +1,5 @@
 import { Tooltip } from '@repo/ui/app';
-import { ITarget } from '@interfaces';
+import { type ITarget } from '@interfaces';
 import {
   ArrowUDownLeftIcon,
   ArrowUUpRightIcon,

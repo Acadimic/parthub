@@ -1,10 +1,10 @@
-import { ISubjectGraphData } from '@interfaces';
-import { Instance, getRoot, types as t } from 'mobx-state-tree';
+import { type ISubjectGraphData } from '@interfaces';
+import { type Instance, getRoot, types as t } from 'mobx-state-tree';
 import { Marking, PaperCategoryType, PaperType } from '../../enums';
 import { getMinutesString, groupBy } from '../../utils/helpers';
-import { IStore } from '../root.store';
-import { IQuestion } from './question.model';
-import { ITestPaperSection } from './test-paper-section.model';
+import { type IStore } from '../root.store';
+import { type IQuestion } from './question.model';
+import { type ITestPaperSection } from './test-paper-section.model';
 
 export interface IQuestionWiseTimeTakenMap {
   [questionId: string]: number; // time in seconds
@@ -252,11 +252,12 @@ export const Exam = t
 
     canShowAnswer: (questionId: string): boolean => {
       if (self.isSubmitted) return true;
-      else if (self.isPractice) {
+      if (self.isPractice) {
         const answers = self.getAnswersByQuestionId(questionId);
         const responses = self.getResponsesByQuestionId(questionId);
         return responses.length === answers.length;
-      } else return false;
+      }
+      return false;
     },
 
     get sectionObjects(): ITestPaperSection[] {
@@ -306,7 +307,7 @@ export const Exam = t
       const summaryCount: ISummaryCount = {
         notVisited: self.numberOfQuestions - self.visited.length,
         notAnswered: self.visited.length - answered,
-        answered: answered,
+        answered,
         markedForReview: self.markedForReviews.length,
         answeredAndMarkedForReview: self.markedForReviews.filter((questionId) => self.isResponded(questionId)).length,
       };

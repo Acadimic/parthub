@@ -1,4 +1,4 @@
-import { flow, Instance, types as t } from 'mobx-state-tree';
+import { flow, type Instance, types as t } from 'mobx-state-tree';
 import { DocumentType, FileExtension, LevelType, LinkType } from '../../enums';
 import { ReactionService } from '../../services';
 import { BaseOrgOwnerModel, BaseTimestampModel } from './base-models';

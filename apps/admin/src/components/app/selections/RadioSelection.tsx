@@ -1,5 +1,5 @@
 import { Html } from '@components/others';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import * as React from 'react';
 import { Label } from '@repo/ui/app';
 
@@ -25,7 +25,7 @@ export const RadioSelection = ({
   selectedClassName,
 }: IProps) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    handleClick((event.target as HTMLInputElement).value);
+    handleClick(event.target.value);
   };
 
   const isSelected = (option: ISelectItem) => option.value === selectedValue;

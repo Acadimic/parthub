@@ -1,7 +1,7 @@
-import { CourseDto } from '@repo/shared/validations';
-import { AttachmentDto } from '@repo/shared';
-import { Attachment } from '@modules/material/material.schema';
-import { CourseDocument } from './course.schema';
+import { type CourseDto } from '@repo/shared/validations';
+import { type AttachmentDto } from '@repo/shared';
+import { type Attachment } from '@modules/material/material.schema';
+import { type CourseDocument } from './course.schema';
 
 const toAttachmentDto = (attachment: Attachment & { _id?: unknown }): AttachmentDto => ({
   _id: String(attachment._id ?? ''),

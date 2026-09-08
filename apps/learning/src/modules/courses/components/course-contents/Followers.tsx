@@ -1,5 +1,5 @@
 import { RectangleSkeleton } from '@repo/ui/app';
-import { IUser } from '@stores';
+import { type IUser } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
 

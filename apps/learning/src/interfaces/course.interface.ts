@@ -1,4 +1,4 @@
-import { IMaterial, ITestPaper } from '@stores';
+import { type IMaterial, type ITestPaper } from '@stores';
 
 export interface ICourseContentItem {
   courseId: string;

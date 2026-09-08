@@ -1,4 +1,4 @@
-import { IFunctionProps } from '@interfaces';
+import { type IFunctionProps } from '@interfaces';
 import { errorToast } from '@utils/helpers';
 import { useState } from 'react';
 import { FunctionFooter } from './components';

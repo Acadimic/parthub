@@ -1,4 +1,4 @@
-import { Attachment, IAttachmentProps } from './Attachment';
+import { Attachment, type IAttachmentProps } from './Attachment';
 
 interface IProps {
   attachments: IAttachmentProps[];

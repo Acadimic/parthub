@@ -1,4 +1,4 @@
-import { BookIcon, HouseIcon, Icon, PaperPlaneIcon, VideoIcon } from '@phosphor-icons/react';
+import { BookIcon, HouseIcon, type Icon, PaperPlaneIcon, VideoIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
 import { Link } from '@repo/ui/app';
 

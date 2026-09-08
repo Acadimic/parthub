@@ -1,7 +1,7 @@
 import { CheckboxSelection, RadioSelection } from '@components/app/selections';
 import { Html } from '@components/others';
 import { QuestionType } from '@enums';
-import { IQuestion, useStores } from '@stores';
+import { type IQuestion, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {

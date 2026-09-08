@@ -1,5 +1,5 @@
 import { toPayload } from '@repo/ui/lib';
-import { IFollower } from '@stores';
+import { type IFollower } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

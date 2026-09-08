@@ -1,8 +1,8 @@
-import { ISelectItem } from '@interfaces';
-import { Instance, SnapshotIn, getRoot, types as t } from 'mobx-state-tree';
+import { type ISelectItem } from '@interfaces';
+import { type Instance, type SnapshotIn, getRoot, types as t } from 'mobx-state-tree';
 import { PaperCategoryType, PaperType } from '../../enums';
 import { getSlug } from '../../utils/helpers';
-import { IStore } from '../root.store';
+import { type IStore } from '../root.store';
 import { BaseOrgOwnerModel, BaseTimestampModel } from './base-models';
 
 export const TestPaper = t

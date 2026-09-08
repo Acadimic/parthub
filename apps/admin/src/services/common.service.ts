@@ -1,4 +1,4 @@
-import { IPresignedPutUrlsRequest } from '@interfaces';
+import { type IPresignedPutUrlsRequest } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi, callDefaultApi } from './http.service';
 

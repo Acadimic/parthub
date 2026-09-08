@@ -1,5 +1,5 @@
 import { AuthButton } from '@enums';
-import { FirebaseError, getFirebaseErrorMessage, signInWithGoogle } from '@utils/firebase';
+import { type FirebaseError, getFirebaseErrorMessage, signInWithGoogle } from '@utils/firebase';
 import { errorToast, getRedirectUri } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useState } from 'react';

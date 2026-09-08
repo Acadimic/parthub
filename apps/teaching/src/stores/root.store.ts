@@ -1,16 +1,16 @@
 // import makeInspectable from 'mobx-devtools-mst';
-import { Instance, SnapshotIn, applySnapshot, destroy, flow, types as t } from 'mobx-state-tree';
+import { type Instance, type SnapshotIn, applySnapshot, destroy, flow, types as t } from 'mobx-state-tree';
 import { useMemo } from 'react';
 import { CommonService } from '../services';
-import { BatchStore, IBatchStore } from './batch.store';
-import { CourseStore, ICourseStore } from './course.store';
-import { IMaterialStore, MaterialStore } from './material.store';
-import { IMeetStore, MeetStore } from './meet.store';
-import { IQuestionStore, QuestionStore } from './question.store';
-import { ISelectorStore, SelectorStore } from './selector.store';
-import { IStandardStore, StandardStore } from './standard.store';
-import { ITestPaperStore, TestPaperStore } from './test-paper.store';
-import { IUserStore, UserStore } from './user.store';
+import { BatchStore, type IBatchStore } from './batch.store';
+import { CourseStore, type ICourseStore } from './course.store';
+import { type IMaterialStore, MaterialStore } from './material.store';
+import { type IMeetStore, MeetStore } from './meet.store';
+import { type IQuestionStore, QuestionStore } from './question.store';
+import { type ISelectorStore, SelectorStore } from './selector.store';
+import { type IStandardStore, StandardStore } from './standard.store';
+import { type ITestPaperStore, TestPaperStore } from './test-paper.store';
+import { type IUserStore, UserStore } from './user.store';
 
 export const RootStore = t
   .model('RootStore', {

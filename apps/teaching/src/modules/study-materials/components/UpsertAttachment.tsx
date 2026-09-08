@@ -1,8 +1,8 @@
 import { Select } from '@components/app/selects';
 import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { LinkType } from '@enums';
-import { ISelectItem } from '@interfaces';
-import { IAttachment } from '@stores';
+import { type ISelectItem } from '@interfaces';
+import { type IAttachment } from '@stores';
 import { validateLinkAttachment } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 

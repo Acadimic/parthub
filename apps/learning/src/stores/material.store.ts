@@ -1,10 +1,10 @@
-import { IStandardSubjectQuery, IMaterialInfo } from '@interfaces';
-import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { type IStandardSubjectQuery, type IMaterialInfo } from '@interfaces';
+import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { DocumentType, LevelType, LinkType, MaterialType } from '../enums';
 import { MaterialService } from '../services';
 import { getObjectId } from '../utils/helpers';
-import { IAttachment, IMaterial, Material } from './models';
-import { IStore } from './root.store';
+import { type IAttachment, type IMaterial, Material } from './models';
+import { type IStore } from './root.store';
 
 export interface IMaterialStat {
   standard: string;

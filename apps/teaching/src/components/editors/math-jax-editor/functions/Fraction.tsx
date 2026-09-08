@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Actions } from '../';
 import { EquationEditor } from '../EquationEditor';
-import { EquationBlock, FractionNode } from '../types';
+import { type EquationBlock, type FractionNode } from '../types';
 
 interface IProps {
   block: FractionNode;

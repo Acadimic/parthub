@@ -1,7 +1,7 @@
 import { Select } from '@components/app/selects';
 import { Modal, ModalFooter } from '@repo/ui/app';
 import { PositionType } from '@enums';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';

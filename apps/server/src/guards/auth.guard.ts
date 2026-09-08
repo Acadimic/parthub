@@ -25,13 +25,13 @@ interface AuthRequest {
   user?: UserDto;
 }
 
-type ContextPayload = {
+interface ContextPayload {
   apiRoute: string;
   accessType: AccessType;
   subdomain?: Subdomain;
   timezone?: string;
   timezoneOffset?: string;
-};
+}
 
 @Injectable()
 export class AuthGuard implements CanActivate {

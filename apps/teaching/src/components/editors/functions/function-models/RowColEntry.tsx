@@ -1,4 +1,4 @@
-import { IEditorCellMap, IPosition, ITarget } from '@interfaces';
+import { type IEditorCellMap, type IPosition, type ITarget } from '@interfaces';
 import { useEffect, useState } from 'react';
 import { FunctionFooter } from '../components';
 import { HtmlEditor } from '@components/editors';

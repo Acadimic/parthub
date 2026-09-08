@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';
 import { EquationEditor } from '../EquationEditor';
-import { EquationBlock, SuperscriptNode } from '../types';
+import { type EquationBlock, type SuperscriptNode } from '../types';
 
 interface IProps {
   block: SuperscriptNode;

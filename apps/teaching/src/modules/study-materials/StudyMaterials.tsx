@@ -1,8 +1,8 @@
-import { IColumnData } from '@interfaces';
+import { type IColumnData } from '@interfaces';
 import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, Link, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { IMaterialStat, useStores } from '@stores';
+import { type IMaterialStat, useStores } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { getStringFormattedDate } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';

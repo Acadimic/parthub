@@ -1,11 +1,11 @@
 import { Button } from '@repo/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
-import { IOption, useStores } from '@stores';
+import { type IOption, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { AddOption } from './AddOption';
 import { SelectQuestionType } from './SelectQuestionType';
-import { Block, MathEditor } from '@components/editors';
+import { type Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
 
 export const AddQuestion = observer(() => {

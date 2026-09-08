@@ -1,5 +1,5 @@
 import { BlankState } from '@components/others';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import { CaretDownIcon, CheckIcon, MagnifyingGlassIcon, SquaresFourIcon, XIcon } from '@phosphor-icons/react';
 import { ALL } from '@utils/constants';
 import * as React from 'react';

@@ -1,5 +1,5 @@
 import { QuestionType } from '@enums';
-import { IGeneratedMaterialPrompt, IGeneratedQuestionsPrompt } from '@interfaces';
+import { type IGeneratedMaterialPrompt, type IGeneratedQuestionsPrompt } from '@interfaces';
 import { splitCamelCase } from '@utils/helpers';
 
 const typesText = `

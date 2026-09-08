@@ -1,4 +1,4 @@
-import { EquationBlock, TableNode } from '../types';
+import { type EquationBlock, type TableNode } from '../types';
 import { RowsInput } from './base/RowsInput';
 
 interface IProps {

@@ -1,5 +1,5 @@
-import { QuestionType } from '@enums';
-import { MarkingType } from '@stores';
+import { type QuestionType } from '@enums';
+import { type MarkingType } from '@stores';
 
 export interface ICreateQuestion {
   standard: string;

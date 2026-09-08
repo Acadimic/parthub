@@ -1,6 +1,6 @@
-import { ISelectItem } from '@interfaces';
-import { Instance, getRoot, types as t } from 'mobx-state-tree';
-import { IStore } from '../root.store';
+import { type ISelectItem } from '@interfaces';
+import { type Instance, getRoot, types as t } from 'mobx-state-tree';
+import { type IStore } from '../root.store';
 
 export const Standard = t
   .model('Standard', {

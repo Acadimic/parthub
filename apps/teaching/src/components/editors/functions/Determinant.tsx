@@ -1,5 +1,5 @@
 import { TextInput } from '@repo/ui/app';
-import { IFunctionProps, IEditorCellMap } from '@interfaces';
+import { type IFunctionProps, type IEditorCellMap } from '@interfaces';
 import { useState } from 'react';
 import RowColEntry from './function-models/RowColEntry';
 

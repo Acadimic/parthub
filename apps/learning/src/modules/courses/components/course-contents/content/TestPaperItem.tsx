@@ -1,7 +1,7 @@
 import { FullScreenModal } from '@repo/ui/app';
 import { ExamLayout } from '@layouts';
 import { TestPaperCard } from '@modules/test-papers/components/TestPaperCard';
-import { ITestPaper } from '@stores';
+import { type ITestPaper } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 

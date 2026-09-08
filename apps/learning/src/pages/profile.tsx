@@ -1,4 +1,4 @@
-import { NextPageWithLayout } from './_app';
+import { type NextPageWithLayout } from './_app';
 
 const ProfilePage: NextPageWithLayout = () => {
   return (

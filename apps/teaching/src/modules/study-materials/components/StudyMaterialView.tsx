@@ -1,7 +1,7 @@
-import { Attachments, IAttachmentProps } from '@components/app/attachments';
+import { Attachments, type IAttachmentProps } from '@components/app/attachments';
 import { Label } from '@repo/ui/app';
 import { Html } from '@components/others';
-import { IMaterial, useStores } from '@stores';
+import { type IMaterial, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { ChapterName } from '@components/common/ChapterName';
 

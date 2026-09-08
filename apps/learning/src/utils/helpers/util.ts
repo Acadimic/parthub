@@ -1,6 +1,6 @@
 import { capitalize, clearLocalStorage, splitCamelCase } from '@repo/ui/lib';
-import { ISelectItem } from '@interfaces';
-import { IStandard } from '@stores';
+import { type ISelectItem } from '@interfaces';
+import { type IStandard } from '@stores';
 import { WEEK_DAYS_INTEGER_MAPPINGS } from '../constants';
 import { logOut as signOut } from '../firebase';
 import { errorToast } from './toasts';

@@ -1,6 +1,6 @@
 import { useCourse } from '@hooks/course.hook';
 import { useRouter } from 'next/router';
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { CourseSidebarContent } from './CourseSidebarContent';
 
 const drawerWidth = 300;

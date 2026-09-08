@@ -1,11 +1,11 @@
-import { ISelectItem } from '@interfaces';
-import { flow, getRoot, Instance, types as t } from 'mobx-state-tree';
+import { type ISelectItem } from '@interfaces';
+import { flow, getRoot, type Instance, types as t } from 'mobx-state-tree';
 import { PaperCategoryType, PaperType } from '../../enums';
 import { ReactionService } from '../../services';
 import { getSlug } from '../../utils/helpers';
-import { IStore } from '../root.store';
+import { type IStore } from '../root.store';
 import { BaseOrgOwnerModel, BaseTimestampModel } from './base-models';
-import { ITestPaperSection } from './test-paper-section.model';
+import { type ITestPaperSection } from './test-paper-section.model';
 
 export const TestPaper = t
   .compose(

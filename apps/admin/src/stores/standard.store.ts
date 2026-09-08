@@ -1,9 +1,16 @@
-import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { StandardService, SubjectService } from '../services';
 import { STANDARD_GROUP_ORDER } from '../utils/constants';
 import { getObjectId } from '../utils/helpers';
-import { IStandard, IStandardSubjectMapping, ISubject, Standard, StandardSubjectMapping, Subject } from './models';
-import { IStore } from './root.store';
+import {
+  type IStandard,
+  type IStandardSubjectMapping,
+  type ISubject,
+  Standard,
+  StandardSubjectMapping,
+  Subject,
+} from './models';
+import { type IStore } from './root.store';
 
 export const StandardStore = t
   .model({

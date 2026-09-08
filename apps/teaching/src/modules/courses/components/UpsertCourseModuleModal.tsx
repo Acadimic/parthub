@@ -2,7 +2,7 @@ import { Select } from '@components/app/selects';
 import { Label, Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { HorizontalLineWithText } from '@components/others';
 import { PositionType } from '@enums';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import { CourseService } from '@services';
 import { useStores } from '@stores';
 import { getFrequencyText, successToast } from '@utils/helpers';

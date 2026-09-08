@@ -1,7 +1,7 @@
 import { Card } from '@repo/ui/app';
 import { PresignedImage } from '@components/app/attachments';
 import { StandardWithLogo } from '@components/common';
-import { ICourse, useStores } from '@stores';
+import { type ICourse, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import Link from 'next/link';
 import { CourseInfo } from './';

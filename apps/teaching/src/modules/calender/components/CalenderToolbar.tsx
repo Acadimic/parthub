@@ -120,15 +120,17 @@ export const CustomToolbar = ({
                 <p>{getFormattedDate(date, 'D MMMM YYYY')}</p>
               </div>
             ) : calendarType === CalendarType.WEEK ? (
-              getFormattedDate(getStartOfWeek(date), 'MMM D') +
-              ' - ' +
-              getFormattedDate(getEndOfWeek(date), 'MMM D, YYYY')
+              `${getFormattedDate(getStartOfWeek(date), 'MMM D')} - ${getFormattedDate(
+                getEndOfWeek(date),
+                'MMM D, YYYY',
+              )}`
             ) : calendarType === CalendarType.MONTH ? (
               getFormattedDate(date, 'MMMM YYYY')
             ) : calendarType === CalendarType.LIST ? (
-              getFormattedDate(getStartOfWeek(date), 'MMM D') +
-              ' - ' +
-              getFormattedDate(getEndOfWeek(date), 'MMM D, YYYY')
+              `${getFormattedDate(getStartOfWeek(date), 'MMM D')} - ${getFormattedDate(
+                getEndOfWeek(date),
+                'MMM D, YYYY',
+              )}`
             ) : (
               ''
             )}

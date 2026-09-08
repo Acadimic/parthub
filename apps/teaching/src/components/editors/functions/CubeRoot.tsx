@@ -1,4 +1,4 @@
-import { IFunctionProps } from '@interfaces';
+import { type IFunctionProps } from '@interfaces';
 import SingleInput from './function-models/SingleInput';
 
 const CubeRoot = (props: IFunctionProps) => {

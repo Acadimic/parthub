@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import { PermissionItem } from '@repo/shared';
+import { type PermissionItem } from '@repo/shared';
 
 export const PERMISSIONS_KEY = 'permissions';
 

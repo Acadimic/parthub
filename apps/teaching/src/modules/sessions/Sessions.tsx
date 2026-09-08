@@ -2,7 +2,7 @@ import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, TextInput, Tooltip } from '@repo/ui/app';
 import { CopyUrl } from '@components/common';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { IColumnData } from '@interfaces';
+import { type IColumnData } from '@interfaces';
 import {
   JoiningLink,
   MeetingOverviewModal,
@@ -11,7 +11,7 @@ import {
   ViewMeetAttendees,
 } from '@modules/calender/components';
 import { useMeetHooks } from '@modules/calender/hooks';
-import { IMeet, useStores } from '@stores';
+import { type IMeet, useStores } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import {
   addDaysToDate,

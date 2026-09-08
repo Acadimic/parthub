@@ -1,4 +1,4 @@
-import { IMenuItem } from '../../types';
+import { type IMenuItem } from '../../types';
 
 export const MenuList = <T,>({ menuItems, data }: { menuItems: IMenuItem<T>[]; data?: T }) => {
   return (

@@ -1,4 +1,4 @@
-import { IUser } from '@stores';
+import { type IUser } from '@stores';
 import { API, DefaultRole } from '../enums';
 import { getProfilePayload } from '@repo/ui/lib';
 import { callAuthApi } from './http.service';

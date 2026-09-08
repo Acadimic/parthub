@@ -3,7 +3,7 @@ import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-ico
 import { BlankState } from '@components/others';
 import { PositionType, SectionCategoryType, SectionType } from '@enums';
 import { TestPaperService } from '@services';
-import { IQuestion, ITestPaperSection, useStores } from '@stores';
+import { type IQuestion, type ITestPaperSection, useStores } from '@stores';
 import { splitCamelCase } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
@@ -107,7 +107,7 @@ export const TestPaper = observer(({ testPaperId }: IProps) => {
   };
 
   const editSection = (section: ITestPaperSection) => {
-    setState({ section: section, isOpenAddSection: true });
+    setState({ section, isOpenAddSection: true });
   };
 
   const editQuestion = (questionId: string, sectionId: string) => {

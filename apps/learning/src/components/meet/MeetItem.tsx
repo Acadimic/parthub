@@ -1,6 +1,6 @@
 import { Card } from '@repo/ui/app';
 import { CopyUrl } from '@components/common';
-import { IMeet } from '@stores';
+import { type IMeet } from '@stores';
 import { getFormattedTime, getFrequencyText, getStringFormattedDate } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { JoiningLink, MeetingTitle } from './';

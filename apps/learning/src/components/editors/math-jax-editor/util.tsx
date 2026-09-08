@@ -16,7 +16,7 @@ import {
   TextItalicIcon,
   TextUnderlineIcon,
 } from '@phosphor-icons/react';
-import { Block, EditorContentType, EquationBlock, EquationType } from './types';
+import { type Block, EditorContentType, type EquationBlock, EquationType } from './types';
 
 export const serializeEquationBlocks = (blocks: EquationBlock[], delimiter = ' '): string => {
   return blocks.map((block) => serializeEquation(block)).join(delimiter);

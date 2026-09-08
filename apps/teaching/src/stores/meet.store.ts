@@ -1,4 +1,4 @@
-import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { ColorType, MeetFrequency, MeetStatus } from '../enums';
 import { MeetService } from '../services';
 import {
@@ -10,8 +10,8 @@ import {
   getTimezone,
   getTimezoneOffset,
 } from '../utils/helpers';
-import { IMeet, Meet } from './models';
-import { IStore } from './root.store';
+import { type IMeet, Meet } from './models';
+import { type IStore } from './root.store';
 
 export const MeetStore = t
   .model({

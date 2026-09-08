@@ -10,7 +10,7 @@ export const SessionsInfo = observer(() => {
   const { getMeetsByIds } = meetStore;
   const { selectedCourse } = selectorStore;
 
-  if (!selectedCourse || !selectedCourse.meets.length) return <></>;
+  if (!selectedCourse?.meets.length) return <></>;
 
   const meets = getMeetsByIds(selectedCourse?.meets);
 

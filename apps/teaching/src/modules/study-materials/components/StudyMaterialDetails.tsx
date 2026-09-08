@@ -1,4 +1,4 @@
-import { IStandard, ISubject } from '@stores';
+import { type IStandard, type ISubject } from '@stores';
 import { getStringFormattedDateWithTime } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 

@@ -1,4 +1,4 @@
-import { Instance, SnapshotIn, SnapshotOut, types as t } from 'mobx-state-tree';
+import { type Instance, type SnapshotIn, type SnapshotOut, types as t } from 'mobx-state-tree';
 import { getSlug } from '../../utils/helpers';
 import { BaseTimestampModel } from './base-models/base-timestamp.model';
 

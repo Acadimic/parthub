@@ -1,4 +1,4 @@
-import { Instance, types as t } from 'mobx-state-tree';
+import { type Instance, types as t } from 'mobx-state-tree';
 import { BaseDeleteModel } from './base-delete.model';
 
 export const BaseTimestampModel = t.compose(

@@ -3,7 +3,7 @@ import { Theme as Mode, StorageKey } from '@enums';
 import { CaretDoubleRightIcon } from '@phosphor-icons/react';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
-import { ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { ProfileDropdown } from './components';
 import { Routes } from './nav-list';
 

@@ -1,6 +1,6 @@
 import { DocumentType, LinkType, StorageKey } from '@enums';
 import { CommonService } from '@services';
-import { IAttachment } from '@stores';
+import { type IAttachment } from '@stores';
 import { errorToast, getObjectId, isPresignedUrlExpired, successToast } from '@utils/helpers';
 
 export const useAttachment = () => {

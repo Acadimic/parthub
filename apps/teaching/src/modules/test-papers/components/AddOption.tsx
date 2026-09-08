@@ -1,7 +1,7 @@
 import { XIcon } from '@phosphor-icons/react';
-import { IOption } from '@stores';
+import { type IOption } from '@stores';
 import { observer } from 'mobx-react-lite';
-import { Block, MathEditor } from '@components/editors';
+import { type Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
 
 interface IProps {

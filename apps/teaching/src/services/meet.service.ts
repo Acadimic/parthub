@@ -1,5 +1,5 @@
 import { toPayload } from '@repo/ui/lib';
-import { IMeet } from '@stores';
+import { type IMeet } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

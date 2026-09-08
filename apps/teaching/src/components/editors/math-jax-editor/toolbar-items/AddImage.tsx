@@ -2,7 +2,7 @@ import { Label } from '@repo/ui/app';
 import { errorToast } from '@utils/helpers';
 import { useState } from 'react';
 import { Actions } from '../Actions';
-import { ImageNode } from '../types';
+import { type ImageNode } from '../types';
 
 interface IProps {
   block: ImageNode;

@@ -1,26 +1,26 @@
-import { IFullCalendarEvent } from '@interfaces';
-import { Instance, getRoot, types as t } from 'mobx-state-tree';
+import { type IFullCalendarEvent } from '@interfaces';
+import { type Instance, getRoot, types as t } from 'mobx-state-tree';
 import { CalendarType, DefaultRole, QuestionType, StorageKey } from '../enums';
 import {
-  IBaseOrgOwnerModel,
-  IBaseTimestampModel,
-  IBatch,
-  IChapter,
-  ICourse,
-  ICourseModule,
-  IMaterial,
-  IMeet,
-  IOrg,
-  IPlan,
-  IQuestion,
-  ISolution,
-  IStandard,
-  ISubject,
-  ITestPaper,
-  ITestPaperSection,
-  IUser,
+  type IBaseOrgOwnerModel,
+  type IBaseTimestampModel,
+  type IBatch,
+  type IChapter,
+  type ICourse,
+  type ICourseModule,
+  type IMaterial,
+  type IMeet,
+  type IOrg,
+  type IPlan,
+  type IQuestion,
+  type ISolution,
+  type IStandard,
+  type ISubject,
+  type ITestPaper,
+  type ITestPaperSection,
+  type IUser,
 } from './models';
-import { IStore } from './root.store';
+import { type IStore } from './root.store';
 
 export const SelectorStore = t
   .model({

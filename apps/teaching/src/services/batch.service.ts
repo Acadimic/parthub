@@ -1,5 +1,5 @@
 import { toPayload } from '@repo/ui/lib';
-import { IBatchUpsert, IBatchUser } from '@interfaces';
+import { type IBatchUpsert, type IBatchUser } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

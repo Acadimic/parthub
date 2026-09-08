@@ -15,8 +15,9 @@ export const PDFViewer = ({ pdfUrl }: { pdfUrl: string }) => {
     <div>
       <div ref={scrollContainerRef} style={{ height: '500px', overflow: 'auto' }}>
         <div ref={viewerRef}>
-          {pages &&
-            pages.map((page: { number: number }) => <div key={page.number}>{renderCurrentPage(page.number)}</div>)}
+          {pages?.map((page: { number: number }) => (
+            <div key={page.number}>{renderCurrentPage(page.number)}</div>
+          ))}
         </div>
       </div>
 

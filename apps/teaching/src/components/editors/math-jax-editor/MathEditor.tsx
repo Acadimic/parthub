@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { EditorToolbar } from './EditorToolbar';
 import { EquationActions } from './EquationActions';
 import { TextEditor } from './TextEditor';
-import { Block, EditorContentType, TextNode } from './types';
+import { type Block, EditorContentType, type TextNode } from './types';
 import { getEditorInitialContent, serializeBlock } from './util';
 
 interface IProps {
@@ -29,7 +29,7 @@ export const MathEditor = ({ blocks, handleChange, label, autoFocus }: IProps) =
     console.log('####clicked block: ', block);
     const newBlocks = [...editorBlocks];
     const selectedBlock = editorBlocks[selectedBlockIndex];
-    if (selectedBlock && selectedBlock.type === block.type) {
+    if (selectedBlock?.type === block.type) {
       newBlocks[selectedBlockIndex] = block;
     } else {
       newBlocks.push(block);

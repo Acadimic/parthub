@@ -1,4 +1,4 @@
-import { Instance, types as t } from 'mobx-state-tree';
+import { type Instance, types as t } from 'mobx-state-tree';
 
 export const Subject = t.model('Subject', {
   _id: t.identifier,

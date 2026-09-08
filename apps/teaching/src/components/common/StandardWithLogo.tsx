@@ -1,12 +1,12 @@
 import { PresignedImage } from '@components/app/attachments';
-import { IStandard } from '@stores';
+import { type IStandard } from '@stores';
 
 interface IProps {
   standard: IStandard | undefined;
 }
 
 export const StandardWithLogo = ({ standard }: IProps) => {
-  if (!standard || !standard.logo) return null;
+  if (!standard?.logo) return null;
 
   return (
     <div className="flex justify-start items-center space-x-2">

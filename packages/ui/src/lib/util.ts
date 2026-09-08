@@ -1,7 +1,7 @@
-import { IPosition, IScoreRating, StorageKey } from '@repo/shared';
+import { type IPosition, type IScoreRating, StorageKey } from '@repo/shared';
 import ObjectID from 'bson-objectid';
 import randomColor from 'randomcolor';
-import { IColor } from '../types';
+import { type IColor } from '../types';
 import { addSecondsToDate } from './date-time';
 
 export const DEFAULT_TIME_STRING = '00:00:00';
@@ -85,8 +85,8 @@ export const capitalizeFirstWord = (str = '') => {
   return str && str[0].toUpperCase() + str.slice(1);
 };
 
-export const groupBy = <T>(objects: Array<T>, getKey: (o: T) => string) => {
-  const response: { [key: string]: Array<T> } = {};
+export const groupBy = <T>(objects: T[], getKey: (o: T) => string) => {
+  const response: { [key: string]: T[] } = {};
   objects.forEach((obj) => {
     if (response[getKey(obj)]) response[getKey(obj)].push(obj);
     else response[getKey(obj)] = [obj];
@@ -204,7 +204,7 @@ export const replaceColor = (content: string) => {
 };
 
 export const isPresignedUrlExpired = (signedUrl: string) => {
-  if (!signedUrl || !signedUrl.includes('?')) return true;
+  if (!signedUrl?.includes('?')) return true;
   const params = new URLSearchParams(signedUrl.split('?')[1]);
   const creationDate = parseCompactUTCDate(params.get('X-Amz-Date') || '');
   const expiresInSecs = Number(params.get('X-Amz-Expires')) - 60 * 5;

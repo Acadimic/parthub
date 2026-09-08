@@ -3,7 +3,7 @@ import { useSvgDrawing } from 'react-hooks-svgdrawing';
 
 import { Button } from '@repo/ui/app';
 import { Checkbox } from '@repo/ui/core';
-import { IFunctionProps } from '@interfaces';
+import { type IFunctionProps } from '@interfaces';
 
 import { MAX_HEIGHTS, OPTIONS } from '@utils/constants';
 

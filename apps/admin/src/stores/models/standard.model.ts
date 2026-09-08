@@ -1,7 +1,7 @@
-import { StandardGroup } from '@enums';
-import { Instance, getRoot, types as t } from 'mobx-state-tree';
+import { type StandardGroup } from '@enums';
+import { type Instance, getRoot, types as t } from 'mobx-state-tree';
 import { getSlug } from '../../utils/helpers';
-import { IStore } from '../root.store';
+import { type IStore } from '../root.store';
 
 export const Standard = t
   .model('Standard', {

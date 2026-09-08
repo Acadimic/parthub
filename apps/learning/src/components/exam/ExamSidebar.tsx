@@ -63,15 +63,17 @@ export const ExamSidebar = observer(
       const isAnswered = isResponded(questionId);
       if (isMarkForReview && isAnswered) {
         return <AnsweredReviewed count={value} isLarge />;
-      } else if (isMarkForReview) {
-        return <Reviewed count={value} isLarge />;
-      } else if (isAnswered) {
-        return <Answered count={value} isLarge />;
-      } else if (isVisited(questionId)) {
-        return <NotAnswered count={value} isLarge />;
-      } else {
-        return <NotVisited count={value} isLarge />;
       }
+      if (isMarkForReview) {
+        return <Reviewed count={value} isLarge />;
+      }
+      if (isAnswered) {
+        return <Answered count={value} isLarge />;
+      }
+      if (isVisited(questionId)) {
+        return <NotAnswered count={value} isLarge />;
+      }
+      return <NotVisited count={value} isLarge />;
     };
 
     const getAnsweredItem = (questionId: string, index: number) => {
@@ -79,13 +81,14 @@ export const ExamSidebar = observer(
       const value = getQuestionIndexByQuestionId(questionId) + 1;
       if (result === Marking.UNATTEMPTED) {
         return <NotVisited count={value} isLarge />;
-      } else if (result === Marking.CORRECT) {
-        return <Answered count={value} isLarge />;
-      } else if (result === Marking.PARTIALLY_CORRECT) {
-        return <Reviewed count={value} isLarge />;
-      } else {
-        return <NotAnswered count={value} isLarge />;
       }
+      if (result === Marking.CORRECT) {
+        return <Answered count={value} isLarge />;
+      }
+      if (result === Marking.PARTIALLY_CORRECT) {
+        return <Reviewed count={value} isLarge />;
+      }
+      return <NotAnswered count={value} isLarge />;
     };
 
     return (

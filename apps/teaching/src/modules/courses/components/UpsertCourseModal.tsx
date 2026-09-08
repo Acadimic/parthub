@@ -3,7 +3,7 @@ import { Select } from '@components/app/selects';
 import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
 import { PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import { CourseService } from '@services';
 import { useStores } from '@stores';
 import { ALL } from '@utils/constants';

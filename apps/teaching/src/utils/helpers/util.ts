@@ -7,8 +7,8 @@ import {
   setTime,
   splitCamelCase,
 } from '@repo/ui/lib';
-import { IFullCalendarEvent, ISelectItem } from '@interfaces';
-import { IBatch, IMeet, IStandard } from '@stores';
+import { type IFullCalendarEvent, type ISelectItem } from '@interfaces';
+import { type IBatch, type IMeet, type IStandard } from '@stores';
 import { MeetFrequency } from '../../enums';
 import { WEEK_DAYS_INTEGER_MAPPINGS } from '../constants';
 import { logOut as signOut } from '../firebase';

@@ -1,5 +1,5 @@
 import { XIcon } from '@phosphor-icons/react';
-import { IToast, toastStore } from '@stores';
+import { type IToast, toastStore } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
 

@@ -1,8 +1,8 @@
 import { UploadAvatar } from '@components/app/attachments';
-import { Breadcrumb, Card, IBreadcrumbItem, MenuList } from '@repo/ui/app';
+import { Breadcrumb, Card, type IBreadcrumbItem, MenuList } from '@repo/ui/app';
 import { AccountSettingsType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
-import { IMenuItem } from '@interfaces';
+import { type IMenuItem } from '@interfaces';
 import { GearSixIcon, LockKeyIcon, UserIcon } from '@phosphor-icons/react';
 import { UserService } from '@services';
 import { useStores } from '@stores';

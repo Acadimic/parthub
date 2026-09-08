@@ -1,6 +1,6 @@
-import { ILoginUser } from '@interfaces';
+import { type ILoginUser } from '@interfaces';
 import {
-  FirebaseError,
+  type FirebaseError,
   createFirebaseUser,
   fetchSignInMethods,
   getFirebaseErrorMessage,

@@ -3,7 +3,7 @@ import { RenderEquation } from '@components/others';
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';
 import { EquationEditor } from '../EquationEditor';
-import { EquationBlock, RootNode } from '../types';
+import { type EquationBlock, type RootNode } from '../types';
 
 interface IProps {
   initialIndex?: string;

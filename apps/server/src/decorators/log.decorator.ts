@@ -1,6 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
 
-export const METHOD_LOG_METADATA: string = 'METHOD_LOG_METADATA';
+export const METHOD_LOG_METADATA = 'METHOD_LOG_METADATA';
 
 export interface LogOptions {
   mask?: {

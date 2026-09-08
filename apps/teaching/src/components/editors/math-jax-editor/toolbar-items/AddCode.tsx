@@ -1,7 +1,7 @@
 import { TextArea } from '@repo/ui/app';
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';
-import { CodeNode } from '../types';
+import { type CodeNode } from '../types';
 
 interface IProps {
   block: CodeNode;

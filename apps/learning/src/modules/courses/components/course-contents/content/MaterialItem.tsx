@@ -1,6 +1,6 @@
 import { VideoPlayer, ViewTextContent, ViewUrlContent } from '@components/tools';
 import { DocumentType, LinkType } from '@enums';
-import { IMaterial, useStores } from '@stores';
+import { type IMaterial, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
 
@@ -25,14 +25,16 @@ export const MaterialItem = observer(({ material }: IProps) => {
     if (!selectedAttachment) return null;
     if (selectedAttachment?.documentType === DocumentType.FILE && selectedAttachment.isUploaded) {
       return <ViewUrlContent url={selectedAttachment.url} isStatic={!selectedAttachment.isUploaded} />;
-    } else if (
+    }
+    if (
       selectedAttachment?.documentType === DocumentType.LINK &&
       !selectedAttachment.isUploaded &&
       selectedAttachment.linkType &&
       [LinkType.YOUTUBE, LinkType.VIDEO].includes(selectedAttachment.linkType)
     ) {
       return <VideoPlayer url={selectedAttachment.url} isStatic={true} />;
-    } else return <ViewUrlContent url={selectedAttachment.url} isStatic={!selectedAttachment.isUploaded} />;
+    }
+    return <ViewUrlContent url={selectedAttachment.url} isStatic={!selectedAttachment.isUploaded} />;
   };
 
   return (

@@ -1,4 +1,4 @@
-import { IAttachment } from '@stores';
+import { type IAttachment } from '@stores';
 import Link from 'next/link';
 
 interface IProps {

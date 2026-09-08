@@ -1,9 +1,18 @@
-import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { CollectionType } from '../enums';
 import { BookmarkService, FollowerService, ReactionService } from '../services';
 import { getObjectId } from '../utils/helpers';
-import { Bookmark, Follower, IBookmark, IFollower, IMaterial, IReaction, ITestPaper, Reaction } from './models';
-import { IStore } from './root.store';
+import {
+  Bookmark,
+  Follower,
+  type IBookmark,
+  type IFollower,
+  type IMaterial,
+  type IReaction,
+  type ITestPaper,
+  Reaction,
+} from './models';
+import { type IStore } from './root.store';
 
 export const ResourceStore = t
   .model({

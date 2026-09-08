@@ -1,6 +1,6 @@
 import { useCourse } from '@hooks/course.hook';
 import { CheckIcon, CircleIcon } from '@phosphor-icons/react';
-import { ICourseModule, useStores } from '@stores';
+import { type ICourseModule, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {

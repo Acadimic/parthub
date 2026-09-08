@@ -6,7 +6,7 @@ import { CollectionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { useCourse } from '@hooks/course.hook';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
-import { IMaterial, ITestPaper, useStores } from '@stores';
+import { type IMaterial, type ITestPaper, useStores } from '@stores';
 import { getPlural } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';

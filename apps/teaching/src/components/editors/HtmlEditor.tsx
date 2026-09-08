@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import ContentEditable, { ContentEditableEvent } from 'react-contenteditable';
+import ContentEditable, { type ContentEditableEvent } from 'react-contenteditable';
 
 import { Label } from '@repo/ui/app';
-import { IPosition, ITarget } from '@interfaces';
+import { type IPosition, type ITarget } from '@interfaces';
 import { replaceColor } from '@utils/helpers';
 import { Toolbar } from './Toolbar';
 
@@ -179,7 +179,7 @@ export function HtmlEditor(props: IProps) {
             onKeyUp={handleKeyUp}
             onClick={handleClick}
             tagName="div"
-            style={{ minHeight: minHeight }}
+            style={{ minHeight }}
             disabled={isDisabled || false}
           />
           {!html.current && !isFocused && (

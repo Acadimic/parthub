@@ -1,5 +1,5 @@
 import { cn } from '../../lib/cn';
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 
 interface ICardProps {
   children: ReactNode;

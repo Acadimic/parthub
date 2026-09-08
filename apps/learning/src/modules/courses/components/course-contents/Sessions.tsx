@@ -1,6 +1,6 @@
 import { MeetItem } from '@components/meet';
 import { BlankState } from '@components/others';
-import { IMeet } from '@stores';
+import { type IMeet } from '@stores';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {

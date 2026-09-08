@@ -1,4 +1,4 @@
-import { CheckCircleIcon, Icon, MinusCircleIcon, RadioButtonIcon, TimerIcon } from '@phosphor-icons/react';
+import { CheckCircleIcon, type Icon, MinusCircleIcon, RadioButtonIcon, TimerIcon } from '@phosphor-icons/react';
 import { useStores } from '@stores';
 import { getTimeString, getTwoDigit } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';

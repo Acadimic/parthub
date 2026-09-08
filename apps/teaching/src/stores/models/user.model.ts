@@ -1,6 +1,6 @@
-import { getRoot, Instance, SnapshotIn, SnapshotOut, types as t } from 'mobx-state-tree';
+import { getRoot, type Instance, type SnapshotIn, type SnapshotOut, types as t } from 'mobx-state-tree';
 import { AccountType, Gender, DefaultRole } from '../../enums';
-import { IStore } from '../root.store';
+import { type IStore } from '../root.store';
 import { BaseOrgModel, BaseTimestampModel } from './base-models';
 
 export const User = t

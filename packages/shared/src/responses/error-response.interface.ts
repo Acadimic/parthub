@@ -1,4 +1,4 @@
-import { ApiResponse } from './api-response.interface';
+import { type ApiResponse } from './api-response.interface';
 
 export interface ErrorResponse<E = unknown> extends ApiResponse<never, E> {
   error: {

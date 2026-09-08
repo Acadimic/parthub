@@ -1,4 +1,4 @@
-import { IOption, IQuestion, ISolution } from '@stores';
+import { type IOption, type IQuestion, type ISolution } from '@stores';
 
 interface IQuestionObject {
   question: IQuestion;

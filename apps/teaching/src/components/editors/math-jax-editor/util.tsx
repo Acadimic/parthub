@@ -18,7 +18,7 @@ import {
   TextUnderlineIcon,
 } from '@phosphor-icons/react';
 import { splitTextAndMath } from '@utils/helpers';
-import { Block, EditorContentType, EquationBlock, EquationType } from './types';
+import { type Block, EditorContentType, type EquationBlock, EquationType } from './types';
 
 export const serializeEquationBlocks = (blocks: EquationBlock[], delimiter = ' '): string => {
   return blocks.map((block) => serializeEquation(block)).join(delimiter);

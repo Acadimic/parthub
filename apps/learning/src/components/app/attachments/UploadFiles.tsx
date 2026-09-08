@@ -1,7 +1,7 @@
 import { CloudArrowUpIcon } from '@phosphor-icons/react';
 import { getPlural } from '@utils/helpers';
 import { Button } from '@repo/ui/app';
-import { FileDropZone, IFileUploadProps } from '../selects';
+import { FileDropZone, type IFileUploadProps } from '../selects';
 
 export const UploadFiles = ({ ...props }: IFileUploadProps) => {
   const maxFileCount = props.maxFiles || 1;

@@ -24,7 +24,7 @@ import {
   UploadSimpleIcon,
 } from '@phosphor-icons/react';
 import { FunctionType } from '@enums';
-import { ISelectItem, ITarget } from '@interfaces';
+import { type ISelectItem, type ITarget } from '@interfaces';
 import { useMemo, useState } from 'react';
 import Brackets from '../Brackets';
 import ChemicalEquation from '../ChemicalEquation';

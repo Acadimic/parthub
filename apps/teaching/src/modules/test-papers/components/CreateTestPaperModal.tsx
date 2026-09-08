@@ -1,9 +1,9 @@
 import { Select } from '@components/app/selects';
 import { Button, Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { PaperType, PositionType, SectionCategoryType, SectionType } from '@enums';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import { TestPaperService } from '@services';
-import { DefaultMarkingType, ITestPaperSection, useStores } from '@stores';
+import { type DefaultMarkingType, type ITestPaperSection, useStores } from '@stores';
 import { ALL, defaultMarkings } from '@utils/constants';
 import { getYears, successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';

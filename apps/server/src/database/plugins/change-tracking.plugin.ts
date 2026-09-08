@@ -1,6 +1,6 @@
-import { Document, Query, Schema } from 'mongoose';
-import { RequestContextService } from '../../context/request-context.service';
-import { BaseSchema } from '../base.schema';
+import { type Document, type Query, type Schema } from 'mongoose';
+import { type RequestContextService } from '../../context/request-context.service';
+import { type BaseSchema } from '../base.schema';
 
 type UpdateObject = Record<string, unknown>;
 

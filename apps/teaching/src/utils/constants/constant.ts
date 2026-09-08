@@ -7,7 +7,7 @@ import {
   QuestionType,
   StandardGroup,
 } from '../../enums';
-import { IDynamicObject } from '../../interfaces';
+import { type IDynamicObject } from '../../interfaces';
 
 export const RANDOM = '';
 

@@ -1,6 +1,6 @@
 import { toPayload } from '@repo/ui/lib';
-import { ICourse, ICourseModule, IPlan } from '@stores';
-import { CourseDto } from '@repo/shared';
+import { type ICourse, type ICourseModule, type IPlan } from '@stores';
+import { type CourseDto } from '@repo/shared';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

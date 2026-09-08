@@ -1,9 +1,17 @@
-import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { AccountType, Gender, DefaultRole, StorageKey } from '../enums';
 import { MappingService, UserService } from '../services';
 import { getObjectId } from '../utils/helpers';
-import { IOrg, IStandard, IStudentStandardMapping, IUser, Org, StudentStandardMapping, User } from './models';
-import { IStore } from './root.store';
+import {
+  type IOrg,
+  type IStandard,
+  type IStudentStandardMapping,
+  type IUser,
+  Org,
+  StudentStandardMapping,
+  User,
+} from './models';
+import { type IStore } from './root.store';
 
 export const UserStore = t
   .model({

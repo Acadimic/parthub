@@ -1,10 +1,10 @@
 // import makeInspectable from 'mobx-devtools-mst';
-import { Instance, SnapshotIn, applySnapshot, destroy, flow, types as t } from 'mobx-state-tree';
+import { type Instance, type SnapshotIn, applySnapshot, destroy, flow, types as t } from 'mobx-state-tree';
 import { useMemo } from 'react';
 import { CommonService } from '../services';
-import { CourseStore, ICourseStore } from './course.store';
-import { ISelectorStore, SelectorStore } from './selector.store';
-import { IStandardStore, StandardStore } from './standard.store';
+import { CourseStore, type ICourseStore } from './course.store';
+import { type ISelectorStore, SelectorStore } from './selector.store';
+import { type IStandardStore, StandardStore } from './standard.store';
 
 export const RootStore = t
   .model('RootStore', {

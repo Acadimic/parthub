@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { DirectionType } from '@enums';
-import { IFunctionProps, IPosition, ITarget, IEditorCellMap } from '@interfaces';
+import { type IFunctionProps, type IPosition, type ITarget, type IEditorCellMap } from '@interfaces';
 import { HtmlEditor } from '..';
 import { Toolbar } from '../Toolbar';
 import { FunctionFooter } from './components';

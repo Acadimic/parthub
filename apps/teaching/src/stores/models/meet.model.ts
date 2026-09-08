@@ -1,4 +1,4 @@
-import { Instance, types as t } from 'mobx-state-tree';
+import { type Instance, types as t } from 'mobx-state-tree';
 import { ColorType, MeetFrequency, MeetStatus } from '../../enums';
 import { addMinutesToDate, datesMinutesDiff, setTime, subtractMinutesFromDate } from '../../utils/helpers';
 import { BaseOrgOwnerModel, BaseTimestampModel } from './base-models';

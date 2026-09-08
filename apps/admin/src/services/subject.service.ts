@@ -1,5 +1,5 @@
 import { toPayload } from '@repo/ui/lib';
-import { ISubject } from '@stores';
+import { type ISubject } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

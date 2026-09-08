@@ -1,6 +1,6 @@
 import { toPayload } from '@repo/ui/lib';
-import { IMergeTestPapers, IUpsertBulkSectionQuestions, IUpsertSectionQuestion } from '@interfaces';
-import { ITestPaper, ITestPaperSection, ITestPaperSnapshotIn } from '@stores';
+import { type IMergeTestPapers, type IUpsertBulkSectionQuestions, type IUpsertSectionQuestion } from '@interfaces';
+import { type ITestPaper, type ITestPaperSection, type ITestPaperSnapshotIn } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

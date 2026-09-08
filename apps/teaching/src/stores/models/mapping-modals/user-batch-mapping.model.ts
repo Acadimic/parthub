@@ -1,4 +1,4 @@
-import { Instance, types as t } from 'mobx-state-tree';
+import { type Instance, types as t } from 'mobx-state-tree';
 import { BaseOrgOwnerModel, BaseTimestampModel } from '../base-models';
 
 export const UserBatchMapping = t.compose(

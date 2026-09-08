@@ -1,9 +1,9 @@
-import { ISelectItem } from '@interfaces';
-import { getRoot, Instance, types as t } from 'mobx-state-tree';
+import { type ISelectItem } from '@interfaces';
+import { getRoot, type Instance, types as t } from 'mobx-state-tree';
 import { LevelType, QuestionType } from '../../enums';
-import { IStore } from '../root.store';
+import { type IStore } from '../root.store';
 import { BaseOrgOwnerModel, BaseTimestampModel } from './base-models';
-import { MarkingType } from './test-paper-section.model';
+import { type MarkingType } from './test-paper-section.model';
 
 export const Question = t
   .compose(

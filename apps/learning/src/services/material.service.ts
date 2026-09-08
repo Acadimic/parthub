@@ -1,4 +1,4 @@
-import { IStandardSubjectQuery } from '@interfaces';
+import { type IStandardSubjectQuery } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

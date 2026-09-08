@@ -1,9 +1,9 @@
 import { Dropdown, Label } from '@repo/ui/app';
-import { IMenuItem } from '@interfaces';
+import { type IMenuItem } from '@interfaces';
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';
 import { MathEditor } from '../MathEditor';
-import { Block, HeadingNode } from '../types';
+import { type Block, type HeadingNode } from '../types';
 
 interface IProps {
   block: HeadingNode;

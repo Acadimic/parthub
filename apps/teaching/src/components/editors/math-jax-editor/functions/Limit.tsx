@@ -2,7 +2,7 @@ import { RenderEquation } from '@components/others';
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';
 import { EquationEditor } from '../EquationEditor';
-import { EquationBlock, LimitNode } from '../types';
+import { type EquationBlock, type LimitNode } from '../types';
 
 interface IProps {
   block: LimitNode;

@@ -1,6 +1,6 @@
-import { getRoot, Instance, types as t } from 'mobx-state-tree';
-import { Marking, QuestionType, SectionCategoryType, SectionType } from '../../enums';
-import { IStore } from '../root.store';
+import { getRoot, type Instance, types as t } from 'mobx-state-tree';
+import { type Marking, type QuestionType, SectionCategoryType, SectionType } from '../../enums';
+import { type IStore } from '../root.store';
 import { BaseOrgOwnerModel, BaseTimestampModel } from './base-models';
 
 export type MarkingType = {

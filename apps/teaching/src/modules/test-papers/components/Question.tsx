@@ -1,5 +1,5 @@
 import { Html } from '@components/others';
-import { IQuestion, MarkingType } from '@stores';
+import { type IQuestion, type MarkingType } from '@stores';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {

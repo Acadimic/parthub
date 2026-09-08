@@ -1,7 +1,7 @@
 import { ModuleContentType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { BookOpenTextIcon, CheckIcon, ClipboardTextIcon, VideoIcon } from '@phosphor-icons/react';
-import { IMaterial, ITestPaper, useStores } from '@stores';
+import { type IMaterial, type ITestPaper, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useMemo } from 'react';
 
@@ -51,7 +51,7 @@ export const CourseContentItem = observer(
         className={`flex items-start space-x-3 px-4 hover:bg-color-light py-3 cursor-pointer ${
           !isPreview &&
           selectedCourseModuleId === courseModuleId &&
-          ((material && selectedMaterialId === material._id) || (testPaper && selectedTestPaperId === testPaper._id))
+          (selectedMaterialId === material?._id || selectedTestPaperId === testPaper?._id)
             ? 'bg-color-light'
             : ''
         }`}

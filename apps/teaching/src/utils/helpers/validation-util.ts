@@ -1,4 +1,4 @@
-import { IAttachment } from '@stores';
+import { type IAttachment } from '@stores';
 import { DocumentType } from '../../enums';
 import { errorToast } from './toasts';
 import { isValidUrl } from '@repo/ui/lib';

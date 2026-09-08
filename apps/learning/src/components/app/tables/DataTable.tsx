@@ -1,9 +1,9 @@
 /* eslint-disable react/display-name */
 import { BlankState } from '@components/others';
-import { IColumnData } from '@interfaces';
+import { type IColumnData } from '@interfaces';
 import { ACTIONS } from '@utils/constants';
 import * as React from 'react';
-import { TableComponents, TableVirtuoso } from 'react-virtuoso';
+import { type TableComponents, TableVirtuoso } from 'react-virtuoso';
 import { Menu, Checkbox, Tooltip } from '@repo/ui/app';
 
 const DEFAULT_CELL_WIDTH = 180;
@@ -63,7 +63,7 @@ export const DataTable = <T extends object>({ rows, columns }: IProps<T>) => {
             <td
               key={dataKey}
               align="left"
-              style={{ width: width || DEFAULT_CELL_WIDTH, background: bg, color: color }}
+              style={{ width: width || DEFAULT_CELL_WIDTH, background: bg, color }}
               className={`py-0 h-full ${column.getColor ? '' : 'bg-background-primary'} truncate font-medium border-b ${isFirstColumn ? '' : 'border-l'} ${isAction ? 'sticky right-0' : ''} border-color-border px-2`}
             >
               <div>

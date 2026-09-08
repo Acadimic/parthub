@@ -206,6 +206,6 @@ export type Block =
   | ImageNode
   | SymbolNode;
 
-export type EditorContent = {
+export interface EditorContent {
   blocks: Block[];
-};
+}

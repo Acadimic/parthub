@@ -1,4 +1,4 @@
-import { IUser } from '@stores';
+import { type IUser } from '@stores';
 import { Tooltip } from '@repo/ui/app';
 import { Avatar } from './Avatar';
 

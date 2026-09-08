@@ -2,10 +2,10 @@ import { Select } from '@components/app/selects';
 import { Button, SplitButton, TextInput, Modal } from '@repo/ui/app';
 import { PencilIcon, PlusIcon, SquaresFourIcon, TrashIcon } from '@phosphor-icons/react';
 import { Layout } from '@enums';
-import { IPosition, ITarget } from '@interfaces';
+import { type IPosition, type ITarget } from '@interfaces';
 import { getCombineValue } from '@utils/helpers';
 import { useState } from 'react';
-import { Block, HtmlEditor, MathEditor } from '@components/editors';
+import { type Block, HtmlEditor, MathEditor } from '@components/editors';
 import { RightSquareBracket } from '@components/editors/functions/DymaicBrackets';
 import { serializeBlocks } from '@components/editors/math-jax-editor/util';
 

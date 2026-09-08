@@ -1,5 +1,5 @@
 import { BookOpenTextIcon, ClockIcon, YoutubeLogoIcon } from '@phosphor-icons/react';
-import { ITestPaper } from '@stores';
+import { type ITestPaper } from '@stores';
 
 interface IProps {
   testPaper: ITestPaper;

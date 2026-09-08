@@ -1,7 +1,7 @@
 import { Accordions, Button, Card, Loader, Menu } from '@repo/ui/app';
 import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
-import { IMaterial, useStores } from '@stores';
+import { type IMaterial, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';

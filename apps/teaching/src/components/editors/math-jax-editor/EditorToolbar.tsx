@@ -3,7 +3,7 @@ import { PositionType } from '@enums';
 import { capitalize } from '@utils/helpers';
 import { useEffect, useState } from 'react';
 import { AddCode, AddContent, AddEquation, AddHeading, AddImage, AddLink, AddList } from './toolbar-items';
-import { Block, EditorContentType } from './types';
+import { type Block, EditorContentType } from './types';
 import { EditorContentIconMap, getEditorInitialContent } from './util';
 
 interface IToolbarItemComponentProps {

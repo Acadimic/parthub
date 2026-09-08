@@ -1,4 +1,4 @@
-import { CollectionType } from '@enums';
+import { type CollectionType } from '@enums';
 import { useStores } from '@stores';
 import { useState } from 'react';
 

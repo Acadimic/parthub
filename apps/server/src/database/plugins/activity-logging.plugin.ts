@@ -1,5 +1,8 @@
-import { Connection, Document, Query, Schema, Types } from 'mongoose';
-import { ActivityLogCoreService, ActivityLogData } from '../../modules/activity-log/activity-log-core.service';
+import { type Connection, type Document, type Query, type Schema, type Types } from 'mongoose';
+import {
+  type ActivityLogCoreService,
+  type ActivityLogData,
+} from '../../modules/activity-log/activity-log-core.service';
 
 const EXCLUDED_MODELS = new Set(['ActivityLog']);
 
@@ -21,9 +24,9 @@ interface DocWithId {
   [key: string]: unknown;
 }
 
-type UpdateQuery = {
+interface UpdateQuery {
   $set?: Record<string, unknown>;
-};
+}
 
 interface DocumentLike {
   toObject(): Record<string, unknown>;

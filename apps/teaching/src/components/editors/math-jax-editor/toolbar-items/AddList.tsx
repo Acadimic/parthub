@@ -3,7 +3,7 @@ import { PlusIcon, XIcon } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';
 import { MathEditor } from '../MathEditor';
-import { Block, EditorContentType, ListNode, OrderedListNode } from '../types';
+import { type Block, EditorContentType, type ListNode, type OrderedListNode } from '../types';
 import { getEditorInitialContent } from '../util';
 
 interface IProps {

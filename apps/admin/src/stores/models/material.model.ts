@@ -1,4 +1,4 @@
-import { Instance, types as t } from 'mobx-state-tree';
+import { type Instance, types as t } from 'mobx-state-tree';
 import { ContentType, DocumentType, FileExtension, LevelType, LinkType } from '../../enums';
 import { BaseOrgOwnerModel, BaseTimestampModel } from './base-models';
 

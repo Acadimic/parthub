@@ -1,5 +1,5 @@
-import { IFullCalendarEvent } from '@interfaces';
-import { IMeet, useStores } from '@stores';
+import { type IFullCalendarEvent } from '@interfaces';
+import { type IMeet, useStores } from '@stores';
 import { useSetState } from 'react-use';
 
 interface IState {

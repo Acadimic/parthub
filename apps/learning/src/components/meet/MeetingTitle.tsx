@@ -1,5 +1,5 @@
 import { CircleIcon } from '@phosphor-icons/react';
-import { IMeet } from '@stores';
+import { type IMeet } from '@stores';
 import { dark, light } from '@themes';
 import { observer } from 'mobx-react-lite';
 

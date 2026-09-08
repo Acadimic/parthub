@@ -1,5 +1,5 @@
-import { Instance, types as t } from 'mobx-state-tree';
-import { Course, ICourse } from './models';
+import { type Instance, types as t } from 'mobx-state-tree';
+import { Course, type ICourse } from './models';
 
 export const CourseStore = t
   .model({

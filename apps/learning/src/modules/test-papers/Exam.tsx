@@ -27,7 +27,7 @@ export const Exam = observer(({ isResultPage, openExamSummary, toggleTimer, open
 
   useEffect(() => {
     if (!exam) return;
-    else if (exam.isPractice) toggleTimer();
+    if (exam.isPractice) toggleTimer();
     else openInstruction();
   }, []);
 

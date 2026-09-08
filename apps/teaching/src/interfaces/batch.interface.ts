@@ -1,4 +1,4 @@
-import { IBatch } from '@stores';
+import { type IBatch } from '@stores';
 
 export interface IBatchUser {
   user: string;

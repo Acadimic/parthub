@@ -1,5 +1,5 @@
 import { Tooltip } from '@repo/ui/app';
-import { IFunctionProps } from '@interfaces';
+import { type IFunctionProps } from '@interfaces';
 import { SYMBOLS } from '@utils/constants';
 
 const Symbols = (props: IFunctionProps) => {

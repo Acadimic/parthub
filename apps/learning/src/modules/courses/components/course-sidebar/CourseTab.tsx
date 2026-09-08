@@ -1,4 +1,4 @@
-import { CourseItemType } from '@enums';
+import { type CourseItemType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { observer } from 'mobx-react-lite';
 

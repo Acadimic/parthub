@@ -1,6 +1,6 @@
 import { Button, TextInput } from '@repo/ui/app';
 import { SectionCategoryType } from '@enums';
-import { ITestPaperSection } from '@stores';
+import { type ITestPaperSection } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 import { DefaultMarkingsModal } from './DefaultMarkingsModal';

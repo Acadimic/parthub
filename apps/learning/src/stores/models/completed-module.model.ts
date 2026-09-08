@@ -1,6 +1,6 @@
-import { getRoot, Instance, types as t } from 'mobx-state-tree';
+import { getRoot, type Instance, types as t } from 'mobx-state-tree';
 import { CollectionType } from '../../enums';
-import { IStore } from '../root.store';
+import { type IStore } from '../root.store';
 import { BaseOrgModel } from './base-models';
 import { BaseTimestampModel } from './base-models/base-timestamp.model';
 

@@ -1,5 +1,5 @@
 import { toPayload } from '@repo/ui/lib';
-import { IStandard, IStandardSubjectMapping } from '@stores';
+import { type IStandard, type IStandardSubjectMapping } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

@@ -1,4 +1,4 @@
-import { IToast, toastStore } from '../../stores';
+import { type IToast, toastStore } from '../../stores';
 
 interface IToastParams {
   message: string;

@@ -1,4 +1,4 @@
-import { LevelType, QuestionType } from '@enums';
+import { type LevelType, type QuestionType } from '@enums';
 
 export interface IGeneratedQuestionsPrompt {
   numberOfQuestions: number;

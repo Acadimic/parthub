@@ -1,25 +1,25 @@
-import { Instance, getRoot, types as t } from 'mobx-state-tree';
+import { type Instance, getRoot, types as t } from 'mobx-state-tree';
 import { CourseItemType, DefaultRole, QuestionType, StorageKey } from '../enums';
 import {
   Attachment,
-  IAttachment,
-  IBaseOrgOwnerModel,
-  IBaseTimestampModel,
-  IBatch,
-  IChapter,
-  ICourse,
-  ICourseModule,
-  IMaterial,
-  IOrg,
-  IPlan,
-  IQuestion,
-  IStandard,
-  ISubject,
-  ITestPaper,
-  ITestPaperSection,
-  IUser,
+  type IAttachment,
+  type IBaseOrgOwnerModel,
+  type IBaseTimestampModel,
+  type IBatch,
+  type IChapter,
+  type ICourse,
+  type ICourseModule,
+  type IMaterial,
+  type IOrg,
+  type IPlan,
+  type IQuestion,
+  type IStandard,
+  type ISubject,
+  type ITestPaper,
+  type ITestPaperSection,
+  type IUser,
 } from './models';
-import { IStore } from './root.store';
+import { type IStore } from './root.store';
 
 export const SelectorStore = t
   .model({

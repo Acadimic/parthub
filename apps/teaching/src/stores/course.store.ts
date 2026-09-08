@@ -1,9 +1,9 @@
-import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { CurrencyType, MaterialType, PeriodType } from '../enums';
 import { CourseService, PlanService } from '../services';
 import { capitalize, getObjectId } from '../utils/helpers';
-import { Course, CourseModule, ICourse, ICourseModule, ICourseStats, IPlan, Plan } from './models';
-import { IStore } from './root.store';
+import { Course, CourseModule, type ICourse, type ICourseModule, type ICourseStats, type IPlan, Plan } from './models';
+import { type IStore } from './root.store';
 
 export const CourseStore = t
   .model({

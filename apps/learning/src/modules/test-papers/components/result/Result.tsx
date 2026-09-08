@@ -102,7 +102,7 @@ export const Result = observer(() => {
           </div>
           <div className={`grid grid-cols-2 ${keys.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-4 mt-2`}>
             {keys.map((key: Marking) => {
-              const item = items[key as Marking];
+              const item = items[key];
               return (
                 <div
                   key={key}

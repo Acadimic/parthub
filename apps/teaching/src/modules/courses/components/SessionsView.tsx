@@ -1,7 +1,7 @@
 import { Card } from '@repo/ui/app';
 import { MeetItem } from '@components/common';
 import { BlankState } from '@components/others';
-import { ICourse, useStores } from '@stores';
+import { type ICourse, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {

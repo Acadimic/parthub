@@ -1,16 +1,16 @@
-import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
-import { PaperType, SectionCategoryType, SectionType } from '../enums';
+import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { PaperType, type SectionCategoryType, type SectionType } from '../enums';
 import { TestPaperService } from '../services';
 import { getObjectId } from '../utils/helpers';
 import {
-  DefaultMarkingType,
-  ITestPaper,
-  ITestPaperSection,
-  ITestPaperSnapshotIn,
+  type DefaultMarkingType,
+  type ITestPaper,
+  type ITestPaperSection,
+  type ITestPaperSnapshotIn,
   TestPaper,
   TestPaperSection,
 } from './models';
-import { IStore } from './root.store';
+import { type IStore } from './root.store';
 
 export const TestPaperStore = t
   .model({

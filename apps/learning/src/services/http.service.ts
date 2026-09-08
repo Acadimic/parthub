@@ -1,5 +1,5 @@
-import { SuccessResponse } from '@repo/shared';
-import axios, { AxiosError } from 'axios';
+import { type SuccessResponse } from '@repo/shared';
+import axios, { type AxiosError } from 'axios';
 import { API, DefaultRole, StorageKey } from '../enums';
 import { generateAndSetNewToken } from '../utils/firebase';
 import { getToken, handleError } from '../utils/helpers';

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';
 import { EquationEditor } from '../EquationEditor';
-import { EquationBlock, EquationNode } from '../types';
+import { type EquationBlock, type EquationNode } from '../types';
 
 interface IProps {
   block: EquationNode;

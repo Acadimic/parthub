@@ -1,6 +1,6 @@
-import { Instance, getRoot, types as t } from 'mobx-state-tree';
-import { IMeet, Meet } from './models';
-import { IStore } from './root.store';
+import { type Instance, getRoot, types as t } from 'mobx-state-tree';
+import { type IMeet, Meet } from './models';
+import { type IStore } from './root.store';
 
 export const MeetStore = t
   .model({

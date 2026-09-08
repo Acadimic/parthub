@@ -1,4 +1,4 @@
-import { AxiosError } from 'axios';
+import { type AxiosError } from 'axios';
 
 /** The body the server's exception filter returns. */
 interface IApiErrorBody {

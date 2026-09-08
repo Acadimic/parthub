@@ -1,5 +1,5 @@
 import { types } from 'mobx-state-tree';
-import { IToast, ToastModel } from './models';
+import { type IToast, ToastModel } from './models';
 
 const ToastStore = types
   .model('ToastStore', {

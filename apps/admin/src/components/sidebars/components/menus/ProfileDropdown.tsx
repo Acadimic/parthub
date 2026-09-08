@@ -1,5 +1,5 @@
 import { Menu } from '@repo/ui/app';
-import { IMenuItem } from '@interfaces';
+import { type IMenuItem } from '@interfaces';
 import { SignOutIcon, UserIcon } from '@phosphor-icons/react';
 import { getFirebaseUser } from '@utils/firebase';
 import { logOut } from '@utils/helpers';
@@ -34,7 +34,7 @@ export const ProfileDropdown = observer(() => {
         component={
           <button className="p-0 text-color-text rounded-full">
             <div className="w-8 h-8 rounded-full bg-color-light flex items-center justify-center text-sm font-semibold text-color-text">
-              {user?.displayName && user?.displayName[0]}
+              {user?.displayName?.[0]}
             </div>
           </button>
         }

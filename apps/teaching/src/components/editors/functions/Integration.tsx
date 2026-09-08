@@ -1,5 +1,5 @@
 import { Button } from '@repo/ui/app';
-import { IFunctionProps, IPosition, ITarget } from '@interfaces';
+import { type IFunctionProps, type IPosition, type ITarget } from '@interfaces';
 import { useState } from 'react';
 import { HtmlEditor } from '..';
 import { Toolbar } from '../Toolbar';

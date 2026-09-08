@@ -1,6 +1,6 @@
 import { DocumentType, StorageKey } from '@enums';
 import { CommonService } from '@services';
-import { IAttachment, useStores } from '@stores';
+import { type IAttachment, useStores } from '@stores';
 import { errorToast, getObjectId, isPresignedUrlExpired, successToast } from '@utils/helpers';
 import { useState } from 'react';
 

@@ -12,7 +12,7 @@ import {
   SPECIAL,
   TRIGONOMETRIC,
 } from '../math.enum';
-import { EquationType, SymbolEquationNode } from '../types';
+import { EquationType, type SymbolEquationNode } from '../types';
 
 interface IGroupedItem {
   group: string;

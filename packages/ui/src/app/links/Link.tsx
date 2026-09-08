@@ -1,6 +1,6 @@
 import NextLink from 'next/link';
-import { HTMLAttributeAnchorTarget } from 'react';
-import { Button, IButtonProps } from '../buttons';
+import { type HTMLAttributeAnchorTarget } from 'react';
+import { Button, type IButtonProps } from '../buttons';
 
 interface IProps extends IButtonProps {
   href: string;

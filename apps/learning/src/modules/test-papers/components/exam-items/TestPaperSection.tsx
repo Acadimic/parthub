@@ -1,5 +1,5 @@
 import { Tooltip } from '@repo/ui/app';
-import { ITestPaperSection } from '@stores';
+import { type ITestPaperSection } from '@stores';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {

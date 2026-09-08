@@ -12,7 +12,7 @@ import type { NextPage } from 'next';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { ErrorInfo, useEffect, useMemo, useState } from 'react';
+import { type ErrorInfo, useEffect, useMemo, useState } from 'react';
 import { withErrorBoundary } from 'react-error-boundary';
 
 export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<P, IP> & {

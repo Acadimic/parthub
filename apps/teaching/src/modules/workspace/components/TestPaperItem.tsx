@@ -1,7 +1,7 @@
 import { Card } from '@repo/ui/app';
 import { StandardWithLogo, TestPaperInfo } from '@components/common';
 import { TestPaperIconSvg } from '@components/images';
-import { ITestPaper, useStores } from '@stores';
+import { type ITestPaper, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import Link from 'next/link';
 

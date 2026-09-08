@@ -1,6 +1,6 @@
 import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { Marking, QuestionType } from '@enums';
-import { DefaultMarkingType } from '@stores';
+import { type DefaultMarkingType } from '@stores';
 import { splitCamelCase } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';

@@ -1,7 +1,7 @@
 import { Select } from '@components/app/selects';
 import { DateInput, Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { Gender, PositionType } from '@enums';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import { UserService } from '@services';
 import { useStores } from '@stores';
 import { getFormattedDate, successToast, validateFieldValues } from '@utils/helpers';

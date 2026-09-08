@@ -1,6 +1,6 @@
 import { Button } from '@repo/ui/app';
 import { DotsNineIcon } from '@phosphor-icons/react';
-import { ITestPaper } from '@stores';
+import { type ITestPaper } from '@stores';
 import { useRouter } from 'next/router';
 
 interface IProps {

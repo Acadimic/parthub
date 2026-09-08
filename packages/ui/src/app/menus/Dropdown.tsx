@@ -1,5 +1,5 @@
 import { CaretDownIcon } from '@phosphor-icons/react';
-import { IMenuItem } from '../../types';
+import { type IMenuItem } from '../../types';
 import { Button } from '../buttons';
 import { Menu } from './Menu';
 

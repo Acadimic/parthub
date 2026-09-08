@@ -2,7 +2,7 @@ import { Accordions, Button, Loader, Menu, SplitButton } from '@repo/ui/app';
 import { DownloadSimpleIcon, PencilIcon, PlusIcon } from '@phosphor-icons/react';
 import { BlankState, TitleWithIcon } from '@components/others';
 import { MaterialInfo } from '@modules/study-materials/components';
-import { ICourseModule, useStores } from '@stores';
+import { type ICourseModule, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';

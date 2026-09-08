@@ -1,10 +1,10 @@
-import { ICreateQuestion } from '@interfaces';
-import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { type ICreateQuestion } from '@interfaces';
+import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { QuestionType } from '../enums';
 import { QuestionService } from '../services';
 import { getObjectId } from '../utils/helpers';
-import { IOption, IQuestion, ISolution, Option, Question, Solution } from './models';
-import { IStore } from './root.store';
+import { type IOption, type IQuestion, type ISolution, Option, Question, Solution } from './models';
+import { type IStore } from './root.store';
 
 export const QuestionStore = t
   .model({

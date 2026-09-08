@@ -1,9 +1,9 @@
 import { DataTable } from '@components/app/tables';
-import { IColumnData } from '@interfaces';
+import { type IColumnData } from '@interfaces';
 import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { PresignedImage } from '@components/app/attachments';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { ICourse, useStores } from '@stores';
+import { type ICourse, useStores } from '@stores';
 import { ACTIONS, ALL } from '@utils/constants';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';

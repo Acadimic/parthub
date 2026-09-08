@@ -1,4 +1,4 @@
-import { Instance, types as t } from 'mobx-state-tree';
+import { type Instance, types as t } from 'mobx-state-tree';
 import { BaseOrgModel } from './base-org.model';
 import { BaseOwnerModel } from './base-owner.model';
 

@@ -1,5 +1,5 @@
-import { getRoot, Instance, types as t } from 'mobx-state-tree';
-import { IStore } from '../root.store';
+import { getRoot, type Instance, types as t } from 'mobx-state-tree';
+import { type IStore } from '../root.store';
 import { BaseOrgOwnerModel, BaseTimestampModel } from './base-models';
 
 export const Follower = t

@@ -1,6 +1,6 @@
-import { Instance, getRoot, types as t } from 'mobx-state-tree';
-import { IStandard, ISubject } from './models';
-import { IStore } from './root.store';
+import { type Instance, getRoot, types as t } from 'mobx-state-tree';
+import { type IStandard, type ISubject } from './models';
+import { type IStore } from './root.store';
 
 export const SelectorStore = t
   .model({

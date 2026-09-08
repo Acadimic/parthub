@@ -1,6 +1,6 @@
 import { CourseItemType, ModuleContentType } from '@enums';
-import { ICourseContentItem } from '@interfaces';
-import { IMaterial, ITestPaper, useStores } from '@stores';
+import { type ICourseContentItem } from '@interfaces';
+import { type IMaterial, type ITestPaper, useStores } from '@stores';
 import { useRouter } from 'next/router';
 import { useApp } from './app.hook';
 import { useWindowDimensions } from './dimensions.hook';
@@ -72,7 +72,7 @@ export const useCourse = () => {
       const videos = getMaterialVideos(material);
       // console.log('@@@@videos: ', videos.length, material.name);
       if (videos.length) return ModuleContentType.VIDEO;
-      else return ModuleContentType.READING;
+      return ModuleContentType.READING;
     }
     if (testPaper) return ModuleContentType.TEST_PAPER;
     return ModuleContentType.COMPLETED;

@@ -1,6 +1,6 @@
-import { Connection } from 'mongoose';
-import { RequestContextService } from '../../context/request-context.service';
-import { ActivityLogCoreService } from '../../modules/activity-log/activity-log-core.service';
+import { type Connection } from 'mongoose';
+import { type RequestContextService } from '../../context/request-context.service';
+import { type ActivityLogCoreService } from '../../modules/activity-log/activity-log-core.service';
 import { createActivityLoggingPlugin } from './activity-logging.plugin';
 import { createChangeTrackingPlugin } from './change-tracking.plugin';
 

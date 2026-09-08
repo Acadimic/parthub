@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { EquationActions } from './EquationActions';
 import { EquationToolbar } from './EquationToolbar';
 import { TextEditor } from './TextEditor';
-import { EquationBlock, EquationType, TextEquationNode } from './types';
+import { type EquationBlock, EquationType, type TextEquationNode } from './types';
 import { getEquationInitialContent, serializeEquation } from './util';
 
 interface IProps {
@@ -26,7 +26,7 @@ export const EquationEditor = ({ blocks, handleChange, label, autoFocus }: IProp
   const handleBlockChange = (block: EquationBlock) => {
     const newBlocks = [...equationBlocks];
     const selectedBlock = equationBlocks[selectedBlockIndex];
-    if (selectedBlock && selectedBlock.type === block.type) {
+    if (selectedBlock?.type === block.type) {
       newBlocks[selectedBlockIndex] = block;
     } else {
       // const lastBlock = newBlocks[newBlocks.length - 1];

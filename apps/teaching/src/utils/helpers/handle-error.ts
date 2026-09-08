@@ -1,4 +1,4 @@
-import { AxiosError } from 'axios';
+import { type AxiosError } from 'axios';
 import { StorageKey } from '../../enums';
 import { errorToast } from './toasts';
 import { clearLocalStorage } from '@repo/ui/lib';

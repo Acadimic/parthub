@@ -1,5 +1,5 @@
-import { IFullCalendarEvent } from '@interfaces';
-import { IMeet } from '@stores';
+import { type IFullCalendarEvent } from '@interfaces';
+import { type IMeet } from '@stores';
 import {
   getEndOfDay,
   getEndOfMonth,

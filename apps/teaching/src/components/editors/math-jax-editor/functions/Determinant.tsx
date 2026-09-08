@@ -1,4 +1,4 @@
-import { DeterminantNode, EquationBlock } from '../types';
+import { type DeterminantNode, type EquationBlock } from '../types';
 import { RowsInput } from './base/RowsInput';
 
 interface IProps {

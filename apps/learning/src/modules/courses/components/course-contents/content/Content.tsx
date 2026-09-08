@@ -1,4 +1,4 @@
-import { IMaterial, ITestPaper } from '@stores';
+import { type IMaterial, type ITestPaper } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { MaterialItem } from './MaterialItem';
 import { TestPaperItem } from './TestPaperItem';

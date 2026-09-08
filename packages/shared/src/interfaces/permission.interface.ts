@@ -1,16 +1,16 @@
-import { PermissionItem } from '../enums/permission.enum';
+import { type PermissionItem } from '../enums/permission.enum';
 
-export type PermissionConfigOption = {
+export interface PermissionConfigOption {
   label: string;
   value: PermissionItem;
-};
+}
 
 export type PermissionConfigItem = {
   label: string;
   description?: string;
 } & ({ value: PermissionItem; scopes?: never } | { value?: never; scopes: Record<string, PermissionItem> });
 
-export type PermissionConfig = {
+export interface PermissionConfig {
   label: string;
   items: PermissionConfigItem[];
-};
+}

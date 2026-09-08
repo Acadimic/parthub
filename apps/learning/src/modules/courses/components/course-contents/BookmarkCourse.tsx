@@ -1,5 +1,5 @@
 import { Bookmark } from '@components/common';
-import { CollectionType } from '@enums';
+import { type CollectionType } from '@enums';
 import { useBookmark } from '@hooks/bookmark.hook';
 import { observer } from 'mobx-react-lite';
 

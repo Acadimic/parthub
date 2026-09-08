@@ -1,12 +1,12 @@
-import { FirebaseError, initializeApp } from '@firebase/app';
+import { type FirebaseError, initializeApp } from '@firebase/app';
 import {
   EmailAuthProvider,
   GoogleAuthProvider,
-  MultiFactorError,
+  type MultiFactorError,
   OAuthProvider,
   SAMLAuthProvider,
   TotpMultiFactorGenerator,
-  TotpSecret,
+  type TotpSecret,
   applyActionCode,
   confirmPasswordReset,
   createUserWithEmailAndPassword,
@@ -26,7 +26,7 @@ import {
   verifyPasswordResetCode,
 } from '@firebase/auth';
 
-import { ICreateFirebaseUser } from '../../interfaces';
+import { type ICreateFirebaseUser } from '../../interfaces';
 import { setToken } from '../helpers';
 
 const firebaseConfig = {

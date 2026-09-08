@@ -1,19 +1,19 @@
-import { ISelectItem } from '@interfaces';
-import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { type ISelectItem } from '@interfaces';
+import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { ChapterService, StandardService, SubjectService } from '../services';
 import { STANDARD_GROUP_ORDER } from '../utils/constants';
 import { getStandardSelectItem } from '../utils/helpers';
 import {
   Chapter,
-  IChapter,
-  IStandard,
-  IStandardSubjectMapping,
-  ISubject,
+  type IChapter,
+  type IStandard,
+  type IStandardSubjectMapping,
+  type ISubject,
   Standard,
   StandardSubjectMapping,
   Subject,
 } from './models';
-import { IStore } from './root.store';
+import { type IStore } from './root.store';
 
 export const StandardStore = t
   .model({

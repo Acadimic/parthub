@@ -1,7 +1,7 @@
 import { Select } from '@components/app/selects';
 import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { PositionType } from '@enums';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import { BatchService } from '@services';
 import { useStores } from '@stores';
 import { successToast, validateFieldValues } from '@utils/helpers';
@@ -42,7 +42,7 @@ export const UpsertBatchModal = observer(({ isOpen, onClose }: IProps) => {
 
   const closeModal = () => {
     if (state.isLoading) return;
-    if (selectedBatch && selectedBatch.isNew) removeBatchById(selectedBatch._id);
+    if (selectedBatch?.isNew) removeBatchById(selectedBatch._id);
     onClose();
   };
 

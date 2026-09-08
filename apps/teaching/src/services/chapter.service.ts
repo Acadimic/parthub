@@ -1,6 +1,6 @@
 import { toPayload } from '@repo/ui/lib';
-import { IStandardSubjectQuery } from '@interfaces';
-import { IChapter } from '@stores';
+import { type IStandardSubjectQuery } from '@interfaces';
+import { type IChapter } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

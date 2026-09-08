@@ -1,6 +1,6 @@
 import { Card } from '@repo/ui/app';
 import { MaterialInfo, StandardWithLogo } from '@components/common';
-import { IMaterialStat, useStores } from '@stores';
+import { type IMaterialStat, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import Link from 'next/link';
 

@@ -1,5 +1,5 @@
 import { Stepper } from '@components/app/steppers';
-import { IStep } from '@interfaces';
+import { type IStep } from '@interfaces';
 import { useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { AddQuestion } from './AddQuestion';

@@ -1,6 +1,6 @@
 import { CaretRightIcon } from '@phosphor-icons/react';
 import * as React from 'react';
-import { IAccordionItem } from './Accordions';
+import { type IAccordionItem } from './Accordions';
 
 interface IProps {
   items: IAccordionItem[];

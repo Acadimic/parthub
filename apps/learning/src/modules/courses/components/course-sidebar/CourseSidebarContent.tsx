@@ -3,7 +3,7 @@ import { StandardWithLogo } from '@components/common';
 import { CourseItemType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { CaretDoubleRightIcon } from '@phosphor-icons/react';
-import { ICourseModule, useStores } from '@stores';
+import { type ICourseModule, useStores } from '@stores';
 import { getPlural } from '@utils/helpers';
 import { CourseDayTab } from './CourseDayTab';
 import { CourseTab } from './CourseTab';

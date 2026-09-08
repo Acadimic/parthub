@@ -1,4 +1,4 @@
-import { MaterialType } from '../enums';
+import { type MaterialType } from '../enums';
 
 export interface IMaterialInfo {
   durationMins: number;

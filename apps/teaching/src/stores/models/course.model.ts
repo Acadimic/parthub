@@ -1,10 +1,10 @@
 import type { CourseDto } from '@repo/shared';
-import { ISelectItem } from '@interfaces';
-import { getRoot, Instance, SnapshotIn, SnapshotOut, types as t } from 'mobx-state-tree';
+import { type ISelectItem } from '@interfaces';
+import { getRoot, type Instance, type SnapshotIn, type SnapshotOut, types as t } from 'mobx-state-tree';
 import { getSlug } from '../../utils/helpers';
-import { IStore } from '../root.store';
+import { type IStore } from '../root.store';
 import { BaseTimestampModel } from './base-models/base-timestamp.model';
-import { Attachment, IAttachment } from './material.model';
+import { Attachment, type IAttachment } from './material.model';
 
 export const Stats = t.model('Stats', {
   daysCount: t.number,

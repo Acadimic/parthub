@@ -1,7 +1,7 @@
 import { Spinner, Tooltip } from '@repo/ui/app';
-import { CollectionType } from '@enums';
+import { type CollectionType } from '@enums';
 import { ThumbsUpIcon } from '@phosphor-icons/react';
-import { IMaterial, ITestPaper, useStores } from '@stores';
+import { type IMaterial, type ITestPaper, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
 

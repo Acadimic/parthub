@@ -3,15 +3,15 @@ import { Select } from '@components/app/selects';
 import { TextInput } from '@repo/ui/app';
 import { Html } from '@components/others';
 import { Marking, QuestionType } from '@enums';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
-import { MarkingType, useStores } from '@stores';
+import { type MarkingType, useStores } from '@stores';
 import { defaultMarkings } from '@utils/constants';
 import { getStandardSelectItem } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
 import { SelectQuestionType } from './SelectQuestionType';
-import { Block, MathEditor } from '@components/editors';
+import { type Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
 
 export const AddSolution = observer(() => {

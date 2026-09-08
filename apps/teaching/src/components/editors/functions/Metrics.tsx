@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { TextInput } from '@repo/ui/app';
-import { IFunctionProps, IEditorCellMap } from '@interfaces';
+import { type IFunctionProps, type IEditorCellMap } from '@interfaces';
 import RowColEntry from './function-models/RowColEntry';
 
 const Metrics = (props: IFunctionProps) => {

@@ -27,7 +27,7 @@ import {
   Symbol,
   Table,
 } from './functions';
-import { EquationBlock, EquationType } from './types';
+import { type EquationBlock, EquationType } from './types';
 import { getEquationInitialContent } from './util';
 
 const EquationIconMap: Record<EquationType, React.ReactNode> = {

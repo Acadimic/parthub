@@ -1,6 +1,6 @@
 import { Subdomain } from '@repo/shared';
-import { FirebaseUserDto } from '@modules/firebase/firebase.dto';
-import { RegisterUserDto } from '@repo/shared/validations';
+import { type FirebaseUserDto } from '@modules/firebase/firebase.dto';
+import { type RegisterUserDto } from '@repo/shared/validations';
 import ObjectID from 'bson-objectid';
 
 export const getObjectId = () => {

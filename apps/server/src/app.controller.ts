@@ -23,8 +23,7 @@ export class AppController {
   healthCheck() {
     if (this.connection.readyState === ConnectionStates.connected) {
       return OK;
-    } else {
-      throw new HttpException('Database connection is not ready', HttpStatus.SERVICE_UNAVAILABLE);
     }
+    throw new HttpException('Database connection is not ready', HttpStatus.SERVICE_UNAVAILABLE);
   }
 }

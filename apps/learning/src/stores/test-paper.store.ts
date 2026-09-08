@@ -1,19 +1,19 @@
-import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { Marking } from '../enums';
 import { TestPaperService } from '../services';
 import { getObjectId } from '../utils/helpers';
 import {
   Exam,
-  IAnswerMap,
-  IQuestionWiseTimeTakenMap,
-  IResultMap,
-  ISectionWiseQuestionsMap,
-  ITestPaper,
-  ITestPaperSection,
+  type IAnswerMap,
+  type IQuestionWiseTimeTakenMap,
+  type IResultMap,
+  type ISectionWiseQuestionsMap,
+  type ITestPaper,
+  type ITestPaperSection,
   TestPaper,
   TestPaperSection,
 } from './models';
-import { IStore } from './root.store';
+import { type IStore } from './root.store';
 
 export const TestPaperStore = t
   .model({

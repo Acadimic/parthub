@@ -1,6 +1,6 @@
 import { Button } from '@repo/ui/app';
 import { CheckIcon } from '@phosphor-icons/react';
-import { IUser, useStores } from '@stores';
+import { type IUser, useStores } from '@stores';
 import { observer } from 'mobx-react-lite';
 
 interface IProps {

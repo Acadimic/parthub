@@ -1,5 +1,5 @@
 import { Html } from '@components/others';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import { Label } from '@repo/ui/app';
 
 interface IProps {

@@ -2,7 +2,7 @@ import { Select } from '@components/app/selects';
 import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
 import { ArticleIcon, EqualizerIcon } from '@phosphor-icons/react';
 import { LevelType, PositionType, QuestionType } from '@enums';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import { TestPaperService } from '@services';
 import { useStores } from '@stores';
 import { getGeneratedQuestionsPrompt } from '@utils/ai/prompts';

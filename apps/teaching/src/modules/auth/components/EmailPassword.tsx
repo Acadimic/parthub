@@ -1,6 +1,6 @@
 import { Button, TextInput } from '@repo/ui/app';
 import { EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
-import { ILoginUser } from '@interfaces';
+import { type ILoginUser } from '@interfaces';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { useSetState } from 'react-use';

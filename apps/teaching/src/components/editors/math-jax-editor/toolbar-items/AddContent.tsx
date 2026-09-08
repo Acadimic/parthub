@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';
 import { MathEditor } from '../MathEditor';
-import { Block, ContentNode } from '../types';
+import { type Block, type ContentNode } from '../types';
 
 interface IProps {
   block: ContentNode;

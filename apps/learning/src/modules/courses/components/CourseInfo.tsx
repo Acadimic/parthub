@@ -1,6 +1,6 @@
 import { MaterialType } from '@enums';
 import { BookOpenTextIcon, ClockIcon, FileTextIcon, VideoCameraIcon, YoutubeLogoIcon } from '@phosphor-icons/react';
-import { ICourseStats } from '@stores';
+import { type ICourseStats } from '@stores';
 import { getTwoDigit } from '@utils/helpers';
 
 interface IProps {

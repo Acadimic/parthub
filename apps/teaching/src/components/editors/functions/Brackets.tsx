@@ -1,6 +1,6 @@
 import { Tooltip } from '@repo/ui/app';
 import { Html } from '@components/others';
-import { IFunctionProps } from '@interfaces';
+import { type IFunctionProps } from '@interfaces';
 import {
   LeftBracket,
   LeftCurlyBracket,

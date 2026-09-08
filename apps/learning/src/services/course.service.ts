@@ -1,5 +1,5 @@
 import { toPayload } from '@repo/ui/lib';
-import { ICompletedModule } from '@stores';
+import { type ICompletedModule } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

@@ -1,7 +1,7 @@
 import type { CourseDto } from '@repo/shared';
-import { ISelectItem } from '@interfaces';
-import { getRoot, Instance, SnapshotIn, SnapshotOut, types as t } from 'mobx-state-tree';
-import { IStore } from '../root.store';
+import { type ISelectItem } from '@interfaces';
+import { getRoot, type Instance, type SnapshotIn, type SnapshotOut, types as t } from 'mobx-state-tree';
+import { type IStore } from '../root.store';
 import { BaseOrgModel } from './base-models';
 import { BaseTimestampModel } from './base-models/base-timestamp.model';
 import { Attachment } from './material.model';

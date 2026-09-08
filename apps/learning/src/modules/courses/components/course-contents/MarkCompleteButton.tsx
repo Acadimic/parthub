@@ -1,7 +1,7 @@
 import { SwipeButton } from '@repo/ui/app';
 import { CollectionType } from '@enums';
 import { CourseService } from '@services';
-import { IMaterial, ITestPaper, useStores } from '@stores';
+import { type IMaterial, type ITestPaper, useStores } from '@stores';
 import { successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 

@@ -1,6 +1,6 @@
 import { BookOpenTextIcon, ClockIcon, YoutubeLogoIcon } from '@phosphor-icons/react';
 import { MaterialType } from '@enums';
-import { IMaterialStat } from '@stores';
+import { type IMaterialStat } from '@stores';
 
 interface IProps {
   materialStat: IMaterialStat;

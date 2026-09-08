@@ -1,9 +1,9 @@
 import { Avatar } from '@components/app/avatars';
 import { AccountSettingsType } from '@enums';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
-import { IMenuItem } from '@interfaces';
+import { type IMenuItem } from '@interfaces';
 import { CheckIcon, GearSixIcon, SignOutIcon } from '@phosphor-icons/react';
-import { IUser, useStores } from '@stores';
+import { type IUser, useStores } from '@stores';
 import { AccountSettingsRoutes } from '@utils/constants';
 import { capitalize, logOut } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';

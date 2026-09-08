@@ -3,7 +3,7 @@ import { errorToast } from '@utils/helpers';
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';
 import { MathEditor } from '../MathEditor';
-import { Block, LinkNode } from '../types';
+import { type Block, type LinkNode } from '../types';
 
 interface IProps {
   block: LinkNode;

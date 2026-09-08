@@ -1,4 +1,4 @@
-import { Breadcrumb, IBreadcrumbItem, Modal } from '@repo/ui/app';
+import { Breadcrumb, type IBreadcrumbItem, Modal } from '@repo/ui/app';
 import { StandardWithLogo } from '@components/common';
 import { useCourse } from '@hooks/course.hook';
 import { useWindowDimensions } from '@hooks/dimensions.hook';

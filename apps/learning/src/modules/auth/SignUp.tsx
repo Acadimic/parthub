@@ -1,8 +1,8 @@
 import { Button, TextInput, ToggleTheme } from '@repo/ui/app';
 import { HorizontalLineWithText, Policy } from '@components/others';
-import { ILoginUser } from '@interfaces';
+import { type ILoginUser } from '@interfaces';
 import { ArrowCircleLeftIcon, EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
-import { createFirebaseUser, fetchSignInMethods, FirebaseError, getFirebaseErrorMessage } from '@utils/firebase';
+import { createFirebaseUser, fetchSignInMethods, type FirebaseError, getFirebaseErrorMessage } from '@utils/firebase';
 import { errorToast, getRedirectUri, isValidEmail } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import Link from 'next/link';

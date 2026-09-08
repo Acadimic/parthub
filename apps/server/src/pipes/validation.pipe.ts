@@ -19,7 +19,7 @@ export class CustomValidationPipe implements PipeTransform<unknown> {
   }
 
   private toValidate(metatype: Constructor): boolean {
-    const types: Constructor[] = [String, Boolean, Number, Array, Object] as unknown as Constructor[];
+    const types: Constructor[] = [String, Boolean, Number, Array, Object];
     return !types.includes(metatype);
   }
 }

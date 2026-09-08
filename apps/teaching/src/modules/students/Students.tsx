@@ -1,8 +1,8 @@
 import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { IColumnData } from '@interfaces';
-import { IUser, useStores } from '@stores';
+import { type IColumnData } from '@interfaces';
+import { type IUser, useStores } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { getStringFormattedDate, getStringFormattedDateWithTime } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';

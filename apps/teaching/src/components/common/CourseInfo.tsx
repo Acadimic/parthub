@@ -1,6 +1,6 @@
 import { BookOpenTextIcon, ClockIcon, FileTextIcon, YoutubeLogoIcon } from '@phosphor-icons/react';
 import { MaterialType } from '@enums';
-import { ICourseStats } from '@stores';
+import { type ICourseStats } from '@stores';
 
 interface IProps {
   courseStats: ICourseStats;

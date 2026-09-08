@@ -2,18 +2,18 @@ import { Attachments, UploadFiles } from '@components/app/attachments';
 import { Select } from '@components/app/selects';
 import { Button, Label, Modal, ModalFooter, SimpleAccordions, TextInput } from '@repo/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
-import { FileExtension, PositionType } from '@enums';
+import { type FileExtension, PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
 import { MaterialService } from '@services';
-import { IAttachment, useStores } from '@stores';
+import { type IAttachment, useStores } from '@stores';
 import { successToast } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 import { StudyMaterialView } from './StudyMaterialView';
 import { UpsertAttachmentModal } from './UpsertAttachment';
-import { Block, MathEditor } from '@components/editors';
+import { type Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
 
 interface IProps {

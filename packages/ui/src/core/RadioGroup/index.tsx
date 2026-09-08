@@ -1,4 +1,4 @@
-import { ISelectItem } from '../../types';
+import { type ISelectItem } from '../../types';
 import { RadioGroup as ShadcnRadioGroup, RadioGroupItem } from '../../ui/radio-group';
 import { cn } from '../../lib/cn';
 import { Label } from '../Label';

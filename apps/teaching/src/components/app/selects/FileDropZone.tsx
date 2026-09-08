@@ -1,6 +1,6 @@
-import { FileExtension } from '@enums';
+import { type FileExtension } from '@enums';
 import { errorToast } from '@utils/helpers';
-import Dropzone, { DropEvent, FileRejection } from 'react-dropzone';
+import Dropzone, { type DropEvent, type FileRejection } from 'react-dropzone';
 import { Attachment } from '../attachments';
 
 export interface IFileUploadProps {

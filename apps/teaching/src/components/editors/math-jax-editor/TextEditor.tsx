@@ -1,6 +1,6 @@
 import { debounce, getObjectId, replaceColor } from '@utils/helpers';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import ContentEditable, { ContentEditableEvent } from 'react-contenteditable';
+import ContentEditable, { type ContentEditableEvent } from 'react-contenteditable';
 
 interface IProps {
   content: string;

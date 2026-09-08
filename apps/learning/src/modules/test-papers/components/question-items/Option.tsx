@@ -1,5 +1,5 @@
 import { getAlphabet } from '@utils/helpers';
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 
 export const Option = ({ index, children }: { index: number; children: ReactNode }) => {
   return (

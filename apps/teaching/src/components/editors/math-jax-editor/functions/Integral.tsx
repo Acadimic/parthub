@@ -2,7 +2,7 @@ import { RenderEquation } from '@components/others';
 import { useEffect, useState } from 'react';
 import { Actions } from '../Actions';
 import { EquationEditor } from '../EquationEditor';
-import { EquationBlock, IntegralNode } from '../types';
+import { type EquationBlock, type IntegralNode } from '../types';
 
 interface IProps {
   block: IntegralNode;

@@ -1,4 +1,4 @@
-import { ISelectItem } from '../../types';
+import { type ISelectItem } from '../../types';
 import { PopoverContent, Popover as ShadcnPopover, PopoverTrigger } from '../../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../../ui/command';
 import { CaretDownIcon, CheckIcon, XIcon } from '@phosphor-icons/react';

@@ -1,4 +1,4 @@
-import { IMenuItem } from '../../types';
+import { type IMenuItem } from '../../types';
 import { DotsThreeOutlineVertical } from '@phosphor-icons/react/dist/ssr';
 import * as React from 'react';
 import { MenuList } from './MenuList';

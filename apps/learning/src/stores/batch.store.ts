@@ -1,8 +1,8 @@
-import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { BatchService } from '../services';
 import { getObjectId } from '../utils/helpers';
-import { Batch, IBatch, IUser, IUserBatchMapping, UserBatchMapping } from './models';
-import { IStore } from './root.store';
+import { Batch, type IBatch, type IUser, type IUserBatchMapping, UserBatchMapping } from './models';
+import { type IStore } from './root.store';
 
 export interface IBatchStat {
   standard: string;

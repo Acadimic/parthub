@@ -2,7 +2,7 @@ import { Select } from '@components/app/selects';
 import { DateInput, Dropdown, Label, Link, Modal, ModalFooter, TextArea, TextInput, TimeInput } from '@repo/ui/app';
 import { CircleIcon, LinkSimpleIcon } from '@phosphor-icons/react';
 import { ColorType, MeetFrequency, PositionType } from '@enums';
-import { ISelectItem } from '@interfaces';
+import { type ISelectItem } from '@interfaces';
 import { MeetService } from '@services';
 import { useStores } from '@stores';
 import { dark, light } from '@themes';

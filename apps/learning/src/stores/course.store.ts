@@ -1,24 +1,24 @@
-import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 
 const capitalize = (str: string) => (str ? str.charAt(0).toUpperCase() + str.slice(1) : '');
-import { IGetCompletedModule } from '@interfaces';
-import { CollectionType, CurrencyType, PeriodType } from '../enums';
+import { type IGetCompletedModule } from '@interfaces';
+import { type CollectionType, CurrencyType, PeriodType } from '../enums';
 import { CourseService, MeetService, PlanService } from '../services';
 import { getObjectId } from '../utils/helpers';
 import {
   CompletedModule,
   Course,
   CourseModule,
-  ICompletedModule,
-  ICourse,
-  ICourseModule,
-  IMaterial,
-  IMeet,
-  IPlan,
-  ITestPaper,
+  type ICompletedModule,
+  type ICourse,
+  type ICourseModule,
+  type IMaterial,
+  type IMeet,
+  type IPlan,
+  type ITestPaper,
   Plan,
 } from './models';
-import { IStore } from './root.store';
+import { type IStore } from './root.store';
 
 export const CourseStore = t
   .model({

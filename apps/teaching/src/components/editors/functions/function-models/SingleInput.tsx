@@ -1,5 +1,5 @@
 import { HtmlEditor } from '@components/editors';
-import { IPosition, ITarget } from '@interfaces';
+import { type IPosition, type ITarget } from '@interfaces';
 import { useState } from 'react';
 import { Toolbar } from '../../Toolbar';
 import { FunctionFooter } from '../components';
