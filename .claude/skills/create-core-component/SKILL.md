@@ -42,9 +42,8 @@ apps (`apps/learning`, `apps/teaching`, `apps/admin`) consume it as TypeScript s
 ## Steps
 
 1. **Check if a core wrapper already exists** — look in `packages/ui/src/core/` and the table below.
-2. **Make sure the primitive exists** in `packages/ui/src/ui/`. If not, add the shadcn primitive there
-   first (copy the generated file, then change its `@/lib/utils` import to `../lib/cn` and any
-   `@/components/ui/x` import to `./x`).
+2. **Make sure the primitive exists** in `packages/ui/src/ui/`. If not, add it first — see
+   "Adding a shadcn primitive" below.
 3. **Read an existing wrapper** such as `core/TextInput/index.tsx` or `core/Select/index.tsx` as the pattern.
 4. **Create `packages/ui/src/core/<Name>/index.tsx`** following the pattern below.
 5. **Export it** from `packages/ui/src/core/index.ts` (component and its props type).
@@ -109,6 +108,48 @@ Tabs, TextInput, Tooltip.
 
 Primitives available in `packages/ui/src/ui/` without a wrapper yet: command, dropdown-menu, input,
 sheet, switch, textarea, dialog (used by Modal).
+
+## Adding a shadcn primitive
+
+The 26 primitives live in `packages/ui/src/ui/`, one kebab-case file each, and they are the only
+files in the repo that may be shadcn output verbatim.
+
+**The generated file always needs two edits**, because the CLI writes shadcn's own aliases:
+
+| Generated              | Change to      |
+| ---------------------- | -------------- |
+| `@/lib/utils`          | `../lib/cn`    |
+| `@/components/ui/<x>`  | `./<x>`        |
+
+Then check the file against the ones already there:
+
+- **Leave `"use client"` out of a wrapper.** These apps are on the Pages Router, where the
+  directive does nothing. No file in `core/` or `app/` has one. Six generated primitives
+  (`tabs`, `popover`, `progress`, `scroll-area`, `avatar`, `command`) still carry theirs from
+  shadcn; it is inert, so leave it rather than churn the file.
+- Keep the `React.forwardRef` shape and the `cn(...)` class merge as generated — a wrapper depends
+  on being able to pass `className` through.
+- Icons come from `@phosphor-icons/react`, not `lucide-react`. If the generated file imports
+  lucide, swap the icon for its Phosphor equivalent.
+- Theme colours come from `packages/ui/src/themes` through the `tw-colors` plugin, so prefer
+  `text-color-primary` / `bg-background-secondary` / `text-red-primary` over raw palette classes
+  when you touch the classes at all.
+- A new Radix dependency goes in `packages/ui/package.json`, not an app's.
+
+**Copy the file in by hand; there is no CLI path.** The apps used to carry a `components.json`
+pointing the shadcn CLI at `@components/ui` and `@utils/cn`, which is where the primitives lived
+before they moved into this package. Those configs were deleted once they became wrong, so the CLI
+now fails with "no components.json" instead of quietly writing a primitive into an app, installing
+dependencies into that app, and possibly rewriting its `globals.scss` and Tailwind config.
+
+Take the source from https://ui.shadcn.com/docs/components/<name> — check it there rather than
+from memory, since the components change — and paste it into `packages/ui/src/ui/<name>.tsx` with
+the two import rewrites above. Re-adding a `components.json` for the package is not worth it: the
+CLI needs a Tailwind config and a stylesheet in the same package, and `packages/ui` has neither
+(each app owns its `tailwind.config.js` and pulls the palettes from `packages/ui/src/themes`).
+
+After adding the primitive, continue at step 3: a primitive with no wrapper is not usable by
+feature code, because an app importing `@repo/ui/ui/*` is an ESLint error.
 
 ## The `app/` layer
 
