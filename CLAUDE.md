@@ -13,7 +13,8 @@ having to be remembered. Each one is split into **must** (a violation is a defec
 | `use-ui-component`      | writing any UI in a feature — decides what already exists             |
 | `create-core-component` | adding a wrapper in `packages/ui/src/core/`, or a shadcn primitive    |
 | `add-app-screen`        | touching an app's `pages/`, `modules/`, `layouts/` or `stores/`       |
-| `add-api-endpoint`      | touching `apps/server/src/modules`, a client service, or a shared DTO |
+| `add-api-endpoint`      | adding or changing a route in an existing server module               |
+| `add-server-module`     | creating a server module, a Mongoose schema, or editing `app.module`  |
 | `define-data-shape`     | declaring any interface, enum, DTO, MST model or Mongoose schema      |
 | `write-comments`        | writing comments, docblocks, or any suppression that needs a reason   |
 | `verify-changes`        | reporting a change complete, and before every commit                  |

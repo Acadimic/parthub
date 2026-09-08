@@ -114,6 +114,13 @@ upsertBatch = async (payload: IBatchUpsert) => callAuthApi(url, API.POST, payloa
 7. Verify with the `verify-changes` skill. The server and shared each have their own typecheck, and
    `pnpm build:shared` must run before the apps can see a new shared type.
 
+## Related skills
+
+- `add-server-module` — the module, schema and wiring around the route, and what the request
+  pipeline already does for you.
+- `define-data-shape` — where the DTO and any new enum value belong.
+- `verify-changes` — `pnpm build:shared` first, then the workspaces that consume it.
+
 ## Public and private routes
 
 - `@Public()` exempts a route from authentication entirely. Use it only for sign-up, sign-in and
