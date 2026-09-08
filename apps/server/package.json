@@ -12,8 +12,8 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1090.0",
-    "@aws-sdk/s3-request-presigner": "^3.1090.0",
+    "@aws-sdk/client-s3": "^3.1127.0",
+    "@aws-sdk/s3-request-presigner": "^3.1127.0",
     "@fastify/compress": "^7.0.3",
     "@fastify/helmet": "^11.1.1",
     "@nestjs/common": "^10.4.4",
@@ -42,7 +42,7 @@
     "@nestjs/cli": "^10.4.5",
     "@nestjs/schematics": "^10.1.4",
     "@repo/eslint-config": "workspace:*",
-    "@types/lodash": "^4.17.16",
+    "@types/lodash": "^4.17.25",
     "@types/node": "22.5.5",
     "@typescript-eslint/eslint-plugin": "^8.6.0",
     "@typescript-eslint/parser": "^8.6.0",
@@ -52,7 +52,7 @@
     "eslint-plugin-prettier": "^5.2.1",
     "pino-pretty": "^11.0.0",
     "prettier": "^3.3.3",
-    "ts-loader": "^9.5.1",
+    "ts-loader": "^9.6.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "4.2.0",
     "typescript": "^5.6.2"
