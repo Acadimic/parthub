@@ -1,3 +1,4 @@
+import { type InitialDataResponse } from '@repo/shared';
 import { type IPresignedPutUrlsRequest } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi, callDefaultApi } from './http.service';
@@ -5,7 +6,7 @@ import { callAuthApi, callDefaultApi } from './http.service';
 class CommonService {
   getIntitalData = async () => {
     const url = 'common/initial-data';
-    const resData = await callAuthApi(url, API.GET);
+    const resData = await callAuthApi<InitialDataResponse>(url, API.GET);
     return resData;
   };
 

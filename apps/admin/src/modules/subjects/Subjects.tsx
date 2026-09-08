@@ -1,28 +1,33 @@
 import { PresignedImage } from '@components/app/attachments';
 import { DataTable } from '@components/app/tables';
-import { Button, TextInput } from '@repo/ui/app';
+import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
+import { useLoadOnce } from '@repo/ui/hooks';
 import { type IColumnData } from '@interfaces';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { type ISubject, useStores } from '@stores';
+import { type ISubject, useSelectorStore, useStandardStore } from '@stores';
 import { ACTIONS } from '@utils/constants';
-import { observer } from 'mobx-react-lite';
 import { useSetState } from 'react-use';
+import { useShallow } from 'zustand/react/shallow';
 import { UpsertSubjectModal } from './components';
 
 interface IState {
   isOpenCreateModal: boolean;
 }
 
-export const Subjects = observer(() => {
-  const { standardStore, selectorStore } = useStores();
-  const { setSelectedSubjectId } = selectorStore;
-  const { createSubject, subjects } = standardStore;
+export const Subjects = () => {
+  const setSelectedSubjectId = useSelectorStore((state) => state.setSelectedSubjectId);
+  // `getSubjects` builds a new array on every call, so the result needs a shallow compare.
+  const subjects = useStandardStore(useShallow((state) => state.getSubjects()));
+  const createSubject = useStandardStore((state) => state.createSubject);
+  // Loads once on mount and reports the status. Nothing used to trigger this load at all: the table
+  // rendered its blank state whatever the data was.
+  const { isLoading } = useLoadOnce(useStandardStore, 'subjects', (state) => state.loadSubjects);
   const [state, setState] = useSetState<IState>({
     isOpenCreateModal: false,
   });
 
   const onOpenCreateModal = () => {
-    createSubject();
+    setSelectedSubjectId(createSubject());
     setState({ isOpenCreateModal: true });
   };
 
@@ -97,10 +102,10 @@ export const Subjects = observer(() => {
           </div>
         </div>
         <div className="mt-4">
-          <DataTable rows={subjects} columns={columns} />
+          {isLoading ? <FullScreenLoader withHeader loading /> : <DataTable rows={subjects} columns={columns} />}
         </div>
       </div>
       <UpsertSubjectModal isOpen={state.isOpenCreateModal} onClose={onCloseCreateModal} />
     </>
   );
-});
+};

@@ -1,5 +1,4 @@
 import { CheckIcon } from '@phosphor-icons/react';
-import { observer } from 'mobx-react-lite';
 
 const steps = ['Select campaign settings', 'Create an ad group'];
 
@@ -20,7 +19,7 @@ function StepIcon({ active, completed }: StepIconProps) {
   );
 }
 
-export const TestPaperStepper = observer(() => {
+export const TestPaperStepper = () => {
   const activeStep = 1;
 
   return (
@@ -50,4 +49,4 @@ export const TestPaperStepper = observer(() => {
       </div>
     </div>
   );
-});
+};

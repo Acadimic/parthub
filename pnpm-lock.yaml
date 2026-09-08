@@ -101,15 +101,6 @@ importers:
       lucide-react:
         specifier: ^1.25.0
         version: 1.25.0(react@19.2.8)
-      mobx:
-        specifier: ^6.13.2
-        version: 6.16.1
-      mobx-react-lite:
-        specifier: ^4.0.7
-        version: 4.1.1(mobx@6.16.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      mobx-state-tree:
-        specifier: ^6.0.1
-        version: 6.0.1(mobx@6.16.1)
       next:
         specifier: 16.3.4
         version: 16.3.4(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.101.0)

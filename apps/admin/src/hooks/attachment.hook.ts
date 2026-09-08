@@ -1,6 +1,6 @@
 import { DocumentType } from '@enums';
 import { CommonService } from '@services';
-import { type IAttachment } from '@stores';
+import { type AttachmentDto, getFileExtension } from '@repo/shared';
 import { errorToast, getObjectId, successToast } from '@utils/helpers';
 
 export const useAttachment = () => {
@@ -19,18 +19,15 @@ export const useAttachment = () => {
         CommonService.uploadWithPreSignedUrl(presignedUrls[index], file),
       );
       await Promise.all(promises);
-      const attachments: IAttachment[] = selectedFiles.map(
-        (file: File, index: number) =>
-          ({
-            _id: keys[index].key.split('/')[1],
-            fileName: file.name,
-            url: presignedUrls[index].split('?')[0],
-            documentType: DocumentType.FILE,
-            fileType: file.type,
-            fileExtension: file.name.split('.').pop(),
-            isUploaded: true,
-          }) as IAttachment,
-      );
+      const attachments: AttachmentDto[] = selectedFiles.map((file: File, index: number) => ({
+        _id: keys[index].key.split('/')[1],
+        fileName: file.name,
+        url: presignedUrls[index].split('?')[0],
+        documentType: DocumentType.FILE,
+        fileType: file.type,
+        fileExtension: getFileExtension(file.name),
+        isUploaded: true,
+      }));
       successToast({ message: `${selectedFiles.length} file(s) uploaded successfully!` });
       return attachments;
     } catch (error) {

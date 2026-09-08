@@ -5,58 +5,71 @@ import { PositionType, StandardGroup } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { type ISelectItem } from '@interfaces';
 import { StandardService } from '@services';
-import { useStores } from '@stores';
+import { useSelectedStandard, useSelectorStore, useStandardStore } from '@stores';
 import { successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 
 interface IProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const UpsertStandardModal = observer(({ isOpen, onClose }: IProps) => {
-  const { selectorStore, standardStore } = useStores();
-  const {
-    removeStandard,
-    removeStandardSubjectMappings,
-    getStandardSubjectMappings,
-    getNextStandardGroupOrder,
-    createStandardSubjectMapping,
-    subjects,
-    standards,
-    loadStandards,
-    loadStandardSubjectMappings,
-  } = standardStore;
-  const { selectedStandard, setSelectedStandardId } = selectorStore;
+export const UpsertStandardModal = ({ isOpen, onClose }: IProps) => {
+  const selectedStandard = useSelectedStandard();
+  const selectedStandardId = useSelectorStore((state) => state.selectedStandardId);
+  const patchStandard = useStandardStore((state) => state.patchStandard);
+  const renameStandard = useStandardStore((state) => state.renameStandard);
+  const setReferenceStandards = useStandardStore((state) => state.setReferenceStandards);
+  const createStandardSubjectMapping = useStandardStore((state) => state.createStandardSubjectMapping);
+  const removeStandardSubjectMappings = useStandardStore((state) => state.removeStandardSubjectMappings);
+  // Each of these derives a new array per call, so every one needs a shallow compare.
+  const subjectItems = useStandardStore(useShallow((state) => state.getSubjectItems()));
+  const referenceStandardItems = useStandardStore(
+    useShallow((state) => state.getStandardItemsExcluding(selectedStandardId)),
+  );
+  const subjectIds = useStandardStore(useShallow((state) => state.getStandardSubjectIds(selectedStandardId)));
+  const referenceStandardIds = useStandardStore(
+    useShallow((state) => state.getReferenceStandardIds(selectedStandardId)),
+  );
   const [isLoading, setIsLoading] = useState(false);
   const { uploadFilesToS3 } = useAttachment();
   const [selectedFile, setSelectedFile] = useState<File>();
 
   const closeModal = async () => {
-    if (!selectedStandard) return;
-    const newMappings = getStandardSubjectMappings(selectedStandard._id).filter((mapping) => mapping.isNew);
-    removeStandardSubjectMappings(newMappings);
-    if (selectedStandard.isNew) removeStandard(selectedStandard._id);
-    if (!selectedStandard.isNew) await Promise.all([loadStandards(), loadStandardSubjectMappings()]);
-    setSelectedStandardId('');
+    const standardId = useSelectorStore.getState().selectedStandardId;
+    const store = useStandardStore.getState();
+    const standard = store.getStandardById(standardId);
+    if (!standard) return;
+    const newMappings = store.getStandardSubjectMappings(standardId).filter((mapping) => mapping.isNew);
+    store.removeStandardSubjectMappings(newMappings);
+    if (standard.isNew) store.removeStandard(standardId);
+    else await Promise.all([store.loadStandards(), store.loadStandardSubjectMappings()]);
+    useSelectorStore.getState().setSelectedStandardId('');
     setSelectedFile(undefined);
     onClose();
   };
 
   const saveStandard = async () => {
-    if (!selectedStandard) return;
+    const standardId = selectedStandard?._id;
+    if (!standardId) return;
     try {
       setIsLoading(true);
       if (selectedFile) {
-        const attachments = await uploadFilesToS3(selectedStandard._id, [selectedFile]);
-        attachments && selectedStandard.setLogo(attachments[0].url);
+        const attachments = await uploadFilesToS3(standardId, [selectedFile]);
+        if (attachments) patchStandard(standardId, { logo: attachments[0].url });
       }
-      await StandardService.upsertStandard(selectedStandard);
-      const mappings = getStandardSubjectMappings(selectedStandard._id);
+      // Read the rows back rather than posting `selectedStandard`: the store holds immutable rows,
+      // so the copy captured during render does not carry the logo patch above.
+      const store = useStandardStore.getState();
+      const standard = store.getStandardById(standardId);
+      if (!standard) return;
+      await StandardService.upsertStandard(standard);
+      const mappings = store.getStandardSubjectMappings(standardId);
       await StandardService.upsertStandardSubjectMappings(mappings);
-      mappings.forEach((mapping) => mapping.resetIsNew());
-      selectedStandard.resetIsNew();
+      // Both are saved now, so clear the draft flag on the standard and on every mapping.
+      store.addStandardSubjectMappings(mappings.map((mapping) => ({ ...mapping, isNew: false })));
+      store.patchStandard(standardId, { isNew: false });
       successToast({ message: 'Standard added successfully.' });
       closeModal();
     } catch {
@@ -67,33 +80,36 @@ export const UpsertStandardModal = observer(({ isOpen, onClose }: IProps) => {
 
   const removeLogo = () => {
     if (!selectedStandard) return;
-    selectedStandard.removeLogo();
+    patchStandard(selectedStandard._id, { logo: null });
     setSelectedFile(undefined);
   };
 
   const setGroup = (group: StandardGroup) => {
     if (!selectedStandard) return;
-    selectedStandard.setGroup(group);
-    const order = getNextStandardGroupOrder(selectedStandard._id, group);
-    selectedStandard.setOrder(`${order}`);
+    const order = useStandardStore.getState().getNextStandardGroupOrder(selectedStandard._id, group);
+    patchStandard(selectedStandard._id, { group, order });
+  };
+
+  const setOrder = (order: string) => {
+    if (!selectedStandard) return;
+    patchStandard(selectedStandard._id, { order: Number(order) || 0 });
   };
 
   const handleSubjectChange = (values: ISelectItem[]) => {
     if (!selectedStandard) return;
-    values.forEach((value) => {
-      createStandardSubjectMapping(selectedStandard._id, value.value);
-    });
-    const mappings = getStandardSubjectMappings(selectedStandard._id);
+    const standardId = selectedStandard._id;
+    values.forEach((value) => createStandardSubjectMapping(standardId, value.value));
+    const mappings = useStandardStore.getState().getStandardSubjectMappings(standardId);
     const removedMappings = mappings.filter((mapping) => !values.find((value) => value.value === mapping.subject));
     removeStandardSubjectMappings(removedMappings);
   };
 
   const handleReferenceStandardChange = (values: ISelectItem[]) => {
     if (!selectedStandard) return;
-    const mappings = getStandardSubjectMappings(selectedStandard._id);
-    mappings.forEach((mapping) => {
-      mapping.addReferenceStandards(values.map((value) => value.value));
-    });
+    setReferenceStandards(
+      selectedStandard._id,
+      values.map((value) => value.value),
+    );
   };
 
   return (
@@ -123,7 +139,9 @@ export const UpsertStandardModal = observer(({ isOpen, onClose }: IProps) => {
               <TextInput
                 label="Standard Name"
                 value={selectedStandard.name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => selectedStandard.setName(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  renameStandard(selectedStandard._id, e.target.value)
+                }
                 required
               />
               <Select
@@ -138,27 +156,27 @@ export const UpsertStandardModal = observer(({ isOpen, onClose }: IProps) => {
                 label="Order"
                 type="number"
                 value={!selectedStandard.order ? '' : selectedStandard.order.toString()}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => selectedStandard.setOrder(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOrder(e.target.value)}
                 required
               />
               <Select
                 label="Subjects"
-                items={subjects.map((subject) => ({ label: subject.name, value: subject._id }))}
+                items={subjectItems}
                 required
-                values={selectedStandard.subjects}
+                values={subjectIds}
                 onChange={handleSubjectChange}
               />
               <TextInput
                 label="Alias"
                 value={selectedStandard.alias || ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => selectedStandard.setAlias(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  patchStandard(selectedStandard._id, { alias: e.target.value })
+                }
               />
               <Select
                 label="Reference Standards"
-                items={standards
-                  .filter((standard) => standard._id !== selectedStandard._id)
-                  .map((standard) => ({ label: standard.name, value: standard._id, group: standard.group }))}
-                values={selectedStandard.referenceStandards}
+                items={referenceStandardItems}
+                values={referenceStandardIds}
                 onChange={handleReferenceStandardChange}
                 isGrouped
               />
@@ -177,4 +195,4 @@ export const UpsertStandardModal = observer(({ isOpen, onClose }: IProps) => {
       }
     />
   );
-});
+};

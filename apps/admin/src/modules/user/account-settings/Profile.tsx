@@ -1,10 +1,9 @@
 import { Button, Spinner } from '@repo/ui/app';
 import { getFirebaseUser } from '@utils/firebase';
 import { errorToast, splitCamelCase, successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
-export const Profile = observer(() => {
+export const Profile = () => {
   const user = getFirebaseUser();
   const [file, setFile] = useState<File | undefined>();
   const [open, setOpen] = useState(false);
@@ -99,4 +98,4 @@ export const Profile = observer(() => {
       </div>
     </div>
   );
-});
+};

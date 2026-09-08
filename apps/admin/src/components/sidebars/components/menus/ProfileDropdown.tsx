@@ -3,11 +3,10 @@ import { type IMenuItem } from '@interfaces';
 import { SignOutIcon, UserIcon } from '@phosphor-icons/react';
 import { getFirebaseUser } from '@utils/firebase';
 import { logOut } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import * as React from 'react';
 
-export const ProfileDropdown = observer(() => {
+export const ProfileDropdown = () => {
   const { push } = useRouter();
   const user = getFirebaseUser();
 
@@ -42,4 +41,4 @@ export const ProfileDropdown = observer(() => {
       />
     </React.Fragment>
   );
-});
+};

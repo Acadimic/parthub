@@ -3,9 +3,8 @@ import { Label, Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { SubjectService } from '@services';
-import { useStores } from '@stores';
+import { useSelectedSubject, useSelectorStore, useStandardStore } from '@stores';
 import { successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
 interface IProps {
@@ -13,33 +12,42 @@ interface IProps {
   onClose: () => void;
 }
 
-export const UpsertSubjectModal = observer(({ isOpen, onClose }: IProps) => {
-  const { selectorStore, standardStore } = useStores();
-  const { removeSubject, loadSubjects } = standardStore;
-  const { selectedSubject, setSelectedSubjectId } = selectorStore;
+export const UpsertSubjectModal = ({ isOpen, onClose }: IProps) => {
+  const selectedSubject = useSelectedSubject();
+  const renameSubject = useStandardStore((state) => state.renameSubject);
+  const patchSubject = useStandardStore((state) => state.patchSubject);
   const [isLoading, setIsLoading] = useState(false);
   const { uploadFilesToS3 } = useAttachment();
   const [selectedFile, setSelectedFile] = useState<File>();
 
   const closeModal = async () => {
-    if (!selectedSubject) return;
-    if (selectedSubject.isNew) removeSubject(selectedSubject._id);
-    if (!selectedSubject.isNew) await loadSubjects();
-    setSelectedSubjectId('');
+    const subjectId = useSelectorStore.getState().selectedSubjectId;
+    const store = useStandardStore.getState();
+    const subject = store.getSubjectById(subjectId);
+    if (!subject) return;
+    if (subject.isNew) store.removeSubject(subjectId);
+    else await store.loadSubjects();
+    useSelectorStore.getState().setSelectedSubjectId('');
     setSelectedFile(undefined);
     onClose();
   };
 
   const saveSubject = async () => {
-    if (!selectedSubject) return;
+    const subjectId = selectedSubject?._id;
+    if (!subjectId) return;
     try {
       setIsLoading(true);
       if (selectedFile) {
-        const attachments = await uploadFilesToS3(selectedSubject._id, [selectedFile]);
-        attachments && selectedSubject.setLogo(attachments[0].url);
+        const attachments = await uploadFilesToS3(subjectId, [selectedFile]);
+        if (attachments) patchSubject(subjectId, { logo: attachments[0].url });
       }
-      await SubjectService.upsertSubject(selectedSubject);
-      selectedSubject.resetIsNew();
+      // Read the row back rather than posting `selectedSubject`: the store holds immutable rows, so
+      // the copy captured during render does not carry the logo patch above.
+      const store = useStandardStore.getState();
+      const subject = store.getSubjectById(subjectId);
+      if (!subject) return;
+      await SubjectService.upsertSubject(subject);
+      store.patchSubject(subjectId, { isNew: false });
       successToast({ message: 'Subject added successfully.' });
       closeModal();
     } catch {
@@ -50,7 +58,7 @@ export const UpsertSubjectModal = observer(({ isOpen, onClose }: IProps) => {
 
   const removeLogo = () => {
     if (!selectedSubject) return;
-    selectedSubject.removeLogo();
+    patchSubject(selectedSubject._id, { logo: null });
     setSelectedFile(undefined);
   };
 
@@ -81,7 +89,9 @@ export const UpsertSubjectModal = observer(({ isOpen, onClose }: IProps) => {
               <TextInput
                 label="Subject Name"
                 value={selectedSubject.name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => selectedSubject.setName(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  renameSubject(selectedSubject._id, e.target.value)
+                }
                 required
               />
             </div>
@@ -99,4 +109,4 @@ export const UpsertSubjectModal = observer(({ isOpen, onClose }: IProps) => {
       }
     />
   );
-});
+};

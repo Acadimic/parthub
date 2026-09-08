@@ -1,13 +1,13 @@
 import { ErrorBoundaryFallback, FullScreenLoader, InternetStatus } from '@repo/ui/app';
+import { useRequest } from '@repo/ui/hooks';
 import { ColorModeContext } from '@repo/ui/contexts';
 import { Layout, StorageKey, Theme } from '@enums';
 import { AuthLayout, SidebarLayout } from '@layouts';
 import { ToastContainer } from '@modules/toasts';
-import { useStores } from '@stores';
+import { useStandardStore } from '@stores';
 import '@styles/globals.scss';
 import { loadFirebaseUser } from '@utils/firebase';
 import { getToken, IS_WINDOW_UNDEFINED } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import type { NextPage } from 'next';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
@@ -26,7 +26,10 @@ type AppPropsWithLayout = AppProps & {
 type ThemeMode = 'light' | 'dark';
 
 function App({ Component, pageProps }: AppPropsWithLayout) {
-  const { isLoadingInitialData, isLoadedInitialData, loadInitialData } = useStores();
+  // `useRequest` rather than `useLoadOnce`: the load is gated on a token and the layout below, not
+  // simply on mount.
+  const { isLoading: isLoadingInitialData } = useRequest(useStandardStore, 'initialData');
+  const loadInitialData = useStandardStore((state) => state.loadInitialData);
   const { route, push } = useRouter();
   const { layout } = Component;
   const [isReady, setIsReady] = useState(false);
@@ -108,7 +111,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     if (token) {
       if (layout === Layout.AUTH) {
         pushRoute('/home');
-      } else if (!isLoadingInitialData && !isLoadedInitialData) {
+      } else if (useStandardStore.getState().shouldLoad('initialData')) {
         loadInitialData();
       }
     } else {
@@ -116,7 +119,6 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
         pushRoute('/signin', { redirectUri });
       }
     }
-    console.log('###route: ', route, isReady);
   }, [route, isReady]);
 
   if (!mode || !isReady) return null;
@@ -144,7 +146,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   );
 }
 
-const AppWithErrorBoundary = withErrorBoundary(observer(App), {
+const AppWithErrorBoundary = withErrorBoundary(App, {
   FallbackComponent: ErrorBoundaryFallback,
   onError(error: Error, info: ErrorInfo) {
     console.log(error, info);

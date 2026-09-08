@@ -1,208 +1,277 @@
-import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
-import { StandardService, SubjectService } from '../services';
-import { STANDARD_GROUP_ORDER } from '../utils/constants';
-import { getObjectId } from '../utils/helpers';
 import {
-  type IStandard,
-  type IStandardSubjectMapping,
-  type ISubject,
-  Standard,
-  StandardSubjectMapping,
-  Subject,
-} from './models';
-import { type IStore } from './root.store';
+  type ClientEntity,
+  type IRequestSlice,
+  type StandardDto,
+  type StandardSubjectMappingDto,
+  type SubjectDto,
+  createRequestSlice,
+} from '@repo/shared';
+import { type ISelectItem } from '@interfaces';
+import { create } from 'zustand';
+import { CommonService, StandardService, SubjectService } from '../services';
+import { STANDARD_GROUP_ORDER } from '../utils/constants';
+import { getObjectId, getSlug } from '../utils/helpers';
 
-export const StandardStore = t
-  .model({
-    standardMaps: t.map(Standard),
-    subjectMaps: t.map(Subject),
-    standardSubjectMappingMaps: t.map(StandardSubjectMapping),
-    isLoadingSubject: t.optional(t.boolean, false),
-    isLoadedSubject: t.optional(t.boolean, false),
-    isLoadingStandard: t.optional(t.boolean, false),
-    isLoadedStandard: t.optional(t.boolean, false),
-    isLoadingMapping: t.optional(t.boolean, false),
-    isLoadedMapping: t.optional(t.boolean, false),
-  })
-  .views((self) => ({
-    get rootStore() {
-      return getRoot<IStore>(self);
-    },
+/**
+ * The three entities this store holds, typed from the shared DTOs rather than declared a second
+ * time. `ClientEntity` leaves the server-assigned ownership fields optional, because a row the user
+ * is still creating has none of them yet.
+ */
+export type IStandard = ClientEntity<StandardDto>;
+export type ISubject = ClientEntity<SubjectDto>;
+export type IStandardSubjectMapping = ClientEntity<StandardSubjectMappingDto>;
 
-    getStandardById(standardId: string): IStandard | undefined {
-      return standardId ? self.standardMaps.get(standardId) : undefined;
-    },
+/** The fetches this store tracks. `run`, `isLoading` and friends accept only these names. */
+type StandardFetch = 'standards' | 'subjects' | 'mappings' | 'initialData';
 
-    getSubjectById(subjectId: string): ISubject | undefined {
-      return subjectId ? self.subjectMaps.get(subjectId) : undefined;
-    },
+export interface IStandardState extends IRequestSlice<StandardFetch> {
+  standardMap: Record<string, IStandard>;
+  subjectMap: Record<string, ISubject>;
+  mappingMap: Record<string, IStandardSubjectMapping>;
 
-    get standards(): IStandard[] {
-      return Array.from(self.standardMaps.values()).sort((a, b) => a.order - b.order);
-    },
+  getStandardById: (standardId: string) => IStandard | undefined;
+  getSubjectById: (subjectId: string) => ISubject | undefined;
+  getStandards: () => IStandard[];
+  getSubjects: () => ISubject[];
+  getSubjectsByIds: (subjectIds: string[]) => ISubject[];
+  getStandardSubjectMappings: (standardId: string) => IStandardSubjectMapping[];
+  /** The subject ids mapped to a standard, in mapping order. Was the `subjects` view on the model. */
+  getStandardSubjectIds: (standardId: string) => string[];
+  /** The distinct reference standards across a standard's mappings. Was a view on the model. */
+  getReferenceStandardIds: (standardId: string) => string[];
+  getNextStandardGroupOrder: (standardId: string, group: string) => number;
+  /** Every standard's subject names as one comma-separated label, keyed by standard id. */
+  getSubjectNamesByStandard: () => Record<string, string>;
+  /** All subjects as select items. */
+  getSubjectItems: () => ISelectItem[];
+  /** Standards as grouped select items, without the one given — the reference-standards picker. */
+  getStandardItemsExcluding: (standardId: string) => ISelectItem[];
 
-    get subjects(): ISubject[] {
-      return Array.from(self.subjectMaps.values());
-    },
+  addStandards: (standards: IStandard[]) => void;
+  addSubjects: (subjects: ISubject[]) => void;
+  addStandardSubjectMappings: (mappings: IStandardSubjectMapping[]) => void;
 
-    get standardSubjectMappings(): IStandardSubjectMapping[] {
-      return Array.from(self.standardSubjectMappingMaps.values());
-    },
-  }))
-  .views((self) => ({
-    getStandardsByIds(standardIds: string[]): IStandard[] {
-      const standards: IStandard[] = [];
-      standardIds.forEach((standardId) => {
-        const standard = self.getStandardById(standardId);
-        if (standard) standards.push(standard);
-      });
-      return standards;
-    },
+  patchStandard: (standardId: string, fields: Partial<IStandard>) => void;
+  patchSubject: (subjectId: string, fields: Partial<ISubject>) => void;
+  /** Renames a standard and keeps its slug in step — the model's `setName` did both. */
+  renameStandard: (standardId: string, name: string) => void;
+  renameSubject: (subjectId: string, name: string) => void;
+  setReferenceStandards: (standardId: string, referenceStandardIds: string[]) => void;
 
-    getSubjectsByIds(subjectIds: string[]): ISubject[] {
-      const subjects: ISubject[] = [];
-      subjectIds.forEach((subjectId) => {
-        const subject = self.getSubjectById(subjectId);
-        if (subject) subjects.push(subject);
-      });
-      return subjects;
-    },
+  removeStandard: (standardId: string) => void;
+  removeSubject: (subjectId: string) => void;
+  removeStandardSubjectMappings: (mappings: IStandardSubjectMapping[]) => void;
 
-    getStandardSubjectMappings(standardId: string): IStandardSubjectMapping[] {
-      return self.standardSubjectMappings.filter((mapping) => mapping.standard === standardId);
-    },
-  }))
-  .views((self) => ({
-    getStandardSubjects(standardId: string): ISubject[] {
-      const standardSubjectMappings = self.getStandardSubjectMappings(standardId).sort((a, b) => a.order - b.order);
-      const subjectIds = standardSubjectMappings.map((mapping) => mapping.subject);
-      return self.getSubjectsByIds(subjectIds);
-    },
+  /** Adds an unsaved standard and returns its id, for the caller to select. */
+  createStandard: () => string;
+  /** Adds an unsaved subject and returns its id, for the caller to select. */
+  createSubject: () => string;
+  createStandardSubjectMapping: (standardId: string, subjectId: string) => void;
 
-    getNextStandardGroupOrder(standardId: string, group: string): number {
-      const standards = self.standards.filter((standard) => standard.group === group && standard._id !== standardId);
-      const initialOrder = STANDARD_GROUP_ORDER[group];
-      if (!initialOrder) return 0;
-      return standards.length + initialOrder;
-    },
-  }))
-  .actions((self) => ({
-    addStandard: (obj: IStandard) => {
-      if (!obj) return;
-      const objId = obj._id;
-      const isObj = self.standardMaps.has(objId);
-      if (isObj) self.standardMaps.set(objId, obj);
-      else self.standardMaps.put(obj);
-    },
+  loadStandards: () => Promise<void>;
+  loadSubjects: () => Promise<void>;
+  loadStandardSubjectMappings: () => Promise<void>;
+  /** All three collections in one request — what `_app` loads once after sign-in. */
+  loadInitialData: () => Promise<void>;
 
-    addSubject: (obj: ISubject) => {
-      if (!obj) return;
-      const objId = obj._id;
-      const isObj = self.subjectMaps.has(objId);
-      if (isObj) self.subjectMaps.set(objId, obj);
-      else self.subjectMaps.put(obj);
-    },
+  reset: () => void;
+}
 
-    addStandardSubjectMapping: (obj: IStandardSubjectMapping) => {
-      if (!obj) return;
-      const objId = obj._id;
-      const isObj = self.standardSubjectMappingMaps.has(objId);
-      if (isObj) self.standardSubjectMappingMaps.set(objId, obj);
-      else self.standardSubjectMappingMaps.put(obj);
-    },
+const byOrder = (a: { order?: number }, b: { order?: number }): number => (a.order ?? 0) - (b.order ?? 0);
 
-    removeSubject: (subjectId: string) => {
-      self.subjectMaps.delete(subjectId);
-    },
+const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
+  rows.reduce<Record<string, T>>((map, row) => {
+    map[row._id] = row;
+    return map;
+  }, {});
 
-    removeStandard: (standardId: string) => {
-      self.standardMaps.delete(standardId);
-    },
+export const useStandardStore = create<IStandardState>()((set, get) => ({
+  standardMap: {},
+  subjectMap: {},
+  mappingMap: {},
+  ...createRequestSlice(['standards', 'subjects', 'mappings', 'initialData'], set, get),
 
-    removeStandardSubjectMapping: (_id: string) => {
-      self.standardSubjectMappingMaps.delete(_id);
-    },
-  }))
-  .actions((self) => ({
-    addStandards: (objects: IStandard[]) => {
-      objects.forEach((obj) => self.addStandard(obj));
-    },
+  getStandardById: (standardId) => (standardId ? get().standardMap[standardId] : undefined),
 
-    addSubjects: (objects: ISubject[]) => {
-      objects.forEach((obj) => self.addSubject(obj));
-    },
+  getSubjectById: (subjectId) => (subjectId ? get().subjectMap[subjectId] : undefined),
 
-    addStandardSubjectMappings: (objects: IStandardSubjectMapping[]) => {
-      objects.forEach((obj) => self.addStandardSubjectMapping(obj));
-    },
+  getStandards: () => Object.values(get().standardMap).sort(byOrder),
 
-    removeStandardSubjectMappings: (mappings: IStandardSubjectMapping[]) => {
-      mappings.forEach((mapping) => self.removeStandardSubjectMapping(mapping._id));
-    },
-  }))
-  .actions((self) => ({
-    loadSubjects: flow(function* () {
-      self.isLoadingSubject = true;
-      const result = yield SubjectService.getSubjects();
-      if (result?.data) self.addSubjects(result.data);
-      self.isLoadingSubject = false;
-      self.isLoadedSubject = true;
+  getSubjects: () => Object.values(get().subjectMap),
+
+  getSubjectsByIds: (subjectIds) => {
+    const { subjectMap } = get();
+    return subjectIds.map((subjectId) => subjectMap[subjectId]).filter((subject): subject is ISubject => !!subject);
+  },
+
+  getStandardSubjectMappings: (standardId) =>
+    Object.values(get().mappingMap).filter((mapping) => mapping.standard === standardId),
+
+  getStandardSubjectIds: (standardId) =>
+    get()
+      .getStandardSubjectMappings(standardId)
+      .sort(byOrder)
+      .map((mapping) => mapping.subject),
+
+  getReferenceStandardIds: (standardId) => {
+    const referenceStandards = get()
+      .getStandardSubjectMappings(standardId)
+      .sort(byOrder)
+      .flatMap((mapping) => mapping.referenceStandards ?? []);
+    return [...new Set(referenceStandards)];
+  },
+
+  getNextStandardGroupOrder: (standardId, group) => {
+    const initialOrder = STANDARD_GROUP_ORDER[group];
+    if (!initialOrder) return 0;
+    const standards = get()
+      .getStandards()
+      .filter((standard) => standard.group === group && standard._id !== standardId);
+    return standards.length + initialOrder;
+  },
+
+  getSubjectNamesByStandard: () =>
+    get()
+      .getStandards()
+      .reduce<Record<string, string>>((names, standard) => {
+        names[standard._id] = get()
+          .getSubjectsByIds(get().getStandardSubjectIds(standard._id))
+          .map((subject) => subject.name)
+          .join(', ');
+        return names;
+      }, {}),
+
+  getSubjectItems: () =>
+    get()
+      .getSubjects()
+      .map((subject) => ({ label: subject.name, value: subject._id })),
+
+  getStandardItemsExcluding: (standardId) =>
+    get()
+      .getStandards()
+      .filter((standard) => standard._id !== standardId)
+      .map((standard) => ({ label: standard.name, value: standard._id, group: standard.group })),
+
+  addStandards: (standards) => {
+    set((state) => ({ standardMap: { ...state.standardMap, ...keyById(standards) } }));
+  },
+
+  addSubjects: (subjects) => {
+    set((state) => ({ subjectMap: { ...state.subjectMap, ...keyById(subjects) } }));
+  },
+
+  addStandardSubjectMappings: (mappings) => {
+    set((state) => ({ mappingMap: { ...state.mappingMap, ...keyById(mappings) } }));
+  },
+
+  patchStandard: (standardId, fields) => {
+    set((state) => {
+      const standard = state.standardMap[standardId];
+      if (!standard) return state;
+      return { standardMap: { ...state.standardMap, [standardId]: { ...standard, ...fields } } };
+    });
+  },
+
+  patchSubject: (subjectId, fields) => {
+    set((state) => {
+      const subject = state.subjectMap[subjectId];
+      if (!subject) return state;
+      return { subjectMap: { ...state.subjectMap, [subjectId]: { ...subject, ...fields } } };
+    });
+  },
+
+  renameStandard: (standardId, name) => {
+    get().patchStandard(standardId, { name, slug: getSlug(name) });
+  },
+
+  renameSubject: (subjectId, name) => {
+    get().patchSubject(subjectId, { name, slug: getSlug(name) });
+  },
+
+  setReferenceStandards: (standardId, referenceStandardIds) => {
+    const mappings = get().getStandardSubjectMappings(standardId);
+    set((state) => ({
+      mappingMap: {
+        ...state.mappingMap,
+        ...keyById(mappings.map((mapping) => ({ ...mapping, referenceStandards: referenceStandardIds }))),
+      },
+    }));
+  },
+
+  removeStandard: (standardId) => {
+    set((state) => {
+      const { [standardId]: removed, ...standardMap } = state.standardMap;
+      return removed ? { standardMap } : state;
+    });
+  },
+
+  removeSubject: (subjectId) => {
+    set((state) => {
+      const { [subjectId]: removed, ...subjectMap } = state.subjectMap;
+      return removed ? { subjectMap } : state;
+    });
+  },
+
+  removeStandardSubjectMappings: (mappings) => {
+    if (!mappings.length) return;
+    const removedIds = new Set(mappings.map((mapping) => mapping._id));
+    set((state) => ({
+      mappingMap: Object.fromEntries(
+        Object.entries(state.mappingMap).filter(([mappingId]) => !removedIds.has(mappingId)),
+      ),
+    }));
+  },
+
+  createStandard: () => {
+    const standard: IStandard = { _id: getObjectId(), name: '', slug: '', group: undefined, order: 0, isNew: true };
+    get().addStandards([standard]);
+    return standard._id;
+  },
+
+  createSubject: () => {
+    const subject: ISubject = { _id: getObjectId(), name: '', slug: '', isNew: true };
+    get().addSubjects([subject]);
+    return subject._id;
+  },
+
+  createStandardSubjectMapping: (standardId, subjectId) => {
+    const mappings = get().getStandardSubjectMappings(standardId);
+    if (mappings.some((mapping) => mapping.subject === subjectId)) return;
+    get().addStandardSubjectMappings([
+      { _id: getObjectId(), standard: standardId, subject: subjectId, order: mappings.length, isNew: true },
+    ]);
+  },
+
+  loadStandards: () =>
+    get().run('standards', async () => {
+      const result = await StandardService.getStandards();
+      if (result?.data) get().addStandards(result.data);
     }),
 
-    loadStandards: flow(function* () {
-      self.isLoadingStandard = true;
-      const result = yield StandardService.getStandards();
-      if (result?.data) self.addStandards(result.data);
-      self.isLoadingStandard = false;
-      self.isLoadingStandard = true;
+  loadSubjects: () =>
+    get().run('subjects', async () => {
+      const result = await SubjectService.getSubjects();
+      if (result?.data) get().addSubjects(result.data);
     }),
 
-    loadStandardSubjectMappings: flow(function* () {
-      self.isLoadingMapping = true;
-      const result = yield StandardService.getStandardSubjectMappings();
-      if (result?.data) self.addStandardSubjectMappings(result.data);
-      self.isLoadingMapping = false;
-      self.isLoadingMapping = true;
+  loadStandardSubjectMappings: () =>
+    get().run('mappings', async () => {
+      const result = await StandardService.getStandardSubjectMappings();
+      if (result?.data) get().addStandardSubjectMappings(result.data);
     }),
-  }))
-  .actions((self) => ({
-    createSubject: () => {
-      const subject = Subject.create({
-        _id: getObjectId(),
-        name: '',
-        slug: '',
-        isNew: true,
-      });
-      self.addSubject(subject);
-      self.rootStore.selectorStore.setSelectedSubjectId(subject._id);
-    },
 
-    createStandard: () => {
-      const standard = Standard.create({
-        _id: getObjectId(),
-        name: '',
-        slug: '',
-        isNew: true,
-        group: '',
-        order: 0,
-      });
-      self.addStandard(standard);
-      self.rootStore.selectorStore.setSelectedStandardId(standard._id);
-    },
+  loadInitialData: () =>
+    get().run('initialData', async () => {
+      const result = await CommonService.getIntitalData();
+      if (!result?.data) return;
+      const { standards, subjects, mappings } = result.data;
+      get().addStandards(standards);
+      get().addSubjects(subjects);
+      get().addStandardSubjectMappings(mappings);
+    }),
 
-    createStandardSubjectMapping: (standardId: string, subjectId: string) => {
-      const mappings = self.getStandardSubjectMappings(standardId);
-      const isMap = mappings.find((mapping) => mapping.subject === subjectId);
-      if (isMap) return;
-      const mapping = StandardSubjectMapping.create({
-        _id: getObjectId(),
-        standard: standardId,
-        subject: subjectId,
-        order: mappings.length,
-        isNew: true,
-      });
-      self.addStandardSubjectMapping(mapping);
-    },
-  }));
-
-export type IStandardStore = Instance<typeof StandardStore>;
+  reset: () => {
+    set({ standardMap: {}, subjectMap: {}, mappingMap: {} });
+    get().resetRequests();
+  },
+}));
