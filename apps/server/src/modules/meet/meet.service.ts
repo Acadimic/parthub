@@ -25,7 +25,8 @@ export class MeetService {
   }
 
   async getByAttendee(userId: Types.ObjectId): Promise<MeetDocument[]> {
-    return this.meetModel.find({ attendees: userId, _deleted: { $ne: true } }).lean<MeetDocument[]>();
+    // `attendees` is an ObjectId array in Mongo but declared `string[]`; see FollowerService.
+    return this.meetModel.find({ attendees: userId.toString(), _deleted: { $ne: true } }).lean<MeetDocument[]>();
   }
 
   async addAttendees(org: Types.ObjectId, meetId: string, attendeeIds: string[]): Promise<MeetDocument | null> {

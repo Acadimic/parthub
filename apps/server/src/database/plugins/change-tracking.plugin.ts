@@ -12,6 +12,22 @@ interface BulkWriteOperation {
   updateMany?: { update?: UpdateObject | unknown[]; upsert?: boolean };
 }
 
+/**
+ * Registers a model-level pre hook.
+ *
+ * Mongoose 9 still fires `insertMany` and `bulkWrite` pre hooks — `lib/model.js` calls
+ * `execPre('insertMany', this, [docs])` and `execPre('bulkWrite', this, [ops, options])` — but 9.x
+ * dropped both names from its exported middleware unions, so `schema.pre()` no longer types them.
+ * The cast is on the registration only; the hook functions below keep their real signatures.
+ */
+const preModelHook = <A extends unknown[]>(
+  schema: Schema,
+  name: 'insertMany' | 'bulkWrite',
+  fn: (...args: A) => void,
+): void => {
+  (schema.pre as unknown as (n: string, f: (...args: A) => void) => void)(name, fn);
+};
+
 /** Ownership fields that are stamped once, on insert, and must never be reassigned by an update. */
 const IMMUTABLE_FIELDS = ['org', 'createdBy'] as const;
 
@@ -57,73 +73,61 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
   };
 
   return function changeTrackingPlugin(schema: Schema): void {
-    schema.pre('save', function (this: Document & BaseSchema, next) {
-      try {
-        const user = userId();
+    schema.pre('save', function (this: Document & BaseSchema) {
+      const user = userId();
 
-        if (this.isNew) {
-          const org = orgId();
-          if (!org) return next(missingOrg('new documents'));
-          this.org = org;
-          if (user) {
-            this.createdBy = user;
-            this.updatedBy = user;
-          }
-        } else {
-          // Restore either field if application code reassigned it on an existing document.
-          for (const field of IMMUTABLE_FIELDS) {
-            if (this.isModified(field)) {
-              this.set(field, this.get(field, null, { getters: false }), { strict: false });
-              this.unmarkModified(field);
-            }
-          }
-          if (user) this.updatedBy = user;
+      if (this.isNew) {
+        const org = orgId();
+        if (!org) throw missingOrg('new documents');
+        this.org = org;
+        if (user) {
+          this.createdBy = user;
+          this.updatedBy = user;
         }
-
-        next();
-      } catch (error) {
-        next(error as Error);
+      } else {
+        // Restore either field if application code reassigned it on an existing document.
+        for (const field of IMMUTABLE_FIELDS) {
+          if (this.isModified(field)) {
+            this.set(field, this.get(field, null, { getters: false }), { strict: false });
+            this.unmarkModified(field);
+          }
+        }
+        if (user) this.updatedBy = user;
       }
     });
 
-    const updateHook = function (this: Query<unknown, unknown>, next: (error?: Error) => void) {
-      try {
-        const updateObj = this.getUpdate();
-        if (!updateObj) return next();
+    const updateHook = function (this: Query<unknown, unknown>) {
+      const updateObj = this.getUpdate();
+      if (!updateObj) return;
 
-        // Aggregation-pipeline updates are an array of stages; there is no $set to extend, so
-        // append one stage rather than corrupting the pipeline with object properties.
-        if (Array.isArray(updateObj)) {
-          const user = userId();
-          if (user) updateObj.push({ $set: { updatedBy: user } });
-          return next();
-        }
+      // Aggregation-pipeline updates are an array of stages; there is no $set to extend, so
+      // append one stage rather than corrupting the pipeline with object properties.
+      if (Array.isArray(updateObj)) {
+        const pipelineUser = userId();
+        if (pipelineUser) updateObj.push({ $set: { updatedBy: pipelineUser } });
+        return;
+      }
 
-        const update = updateObj as UpdateObject;
+      const update = updateObj as UpdateObject;
 
-        for (const field of IMMUTABLE_FIELDS) {
-          delete update[field];
-          if (update.$set) delete (update.$set as UpdateObject)[field];
-          if (update.$setOnInsert) delete (update.$setOnInsert as UpdateObject)[field];
-        }
+      for (const field of IMMUTABLE_FIELDS) {
+        delete update[field];
+        if (update.$set) delete (update.$set as UpdateObject)[field];
+        if (update.$setOnInsert) delete (update.$setOnInsert as UpdateObject)[field];
+      }
 
-        const user = userId();
-        if (user) {
-          update.$set = update.$set || {};
-          (update.$set as UpdateObject).updatedBy = user;
-        }
+      const user = userId();
+      if (user) {
+        update.$set = update.$set || {};
+        (update.$set as UpdateObject).updatedBy = user;
+      }
 
-        if (this.getOptions()?.upsert) {
-          const org = orgId();
-          if (!org) return next(missingOrg('upsert operations'));
-          update.$setOnInsert = update.$setOnInsert || {};
-          (update.$setOnInsert as UpdateObject).org = org;
-          if (user) (update.$setOnInsert as UpdateObject).createdBy = user;
-        }
-
-        next();
-      } catch (error) {
-        next(error as Error);
+      if (this.getOptions()?.upsert) {
+        const org = orgId();
+        if (!org) throw missingOrg('upsert operations');
+        update.$setOnInsert = update.$setOnInsert || {};
+        (update.$setOnInsert as UpdateObject).org = org;
+        if (user) (update.$setOnInsert as UpdateObject).createdBy = user;
       }
     };
 
@@ -133,71 +137,57 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
 
     // A replace swaps the whole document, so the ownership fields have to be re-supplied or they
     // are silently dropped — `immutable` does not protect against replacement.
-    const replaceHook = function (this: Query<unknown, unknown>, next: (error?: Error) => void) {
-      try {
-        const replacement = this.getUpdate() as UpdateObject | null;
-        if (!replacement || Array.isArray(replacement)) return next();
-        const error = stampInsert(replacement, 'replace operations');
-        return error ? next(error) : next();
-      } catch (error) {
-        next(error as Error);
-      }
+    const replaceHook = function (this: Query<unknown, unknown>) {
+      const replacement = this.getUpdate() as UpdateObject | null;
+      if (!replacement || Array.isArray(replacement)) return;
+      const error = stampInsert(replacement, 'replace operations');
+      if (error) throw error;
     };
 
     schema.pre('replaceOne', replaceHook);
     schema.pre('findOneAndReplace', replaceHook);
 
-    schema.pre('insertMany', function (this: unknown, next: (error?: Error) => void, docs: UpdateObject[]) {
-      try {
-        if (!Array.isArray(docs)) return next(new Error('Expected an array of documents for insertMany'));
-        for (const doc of docs) {
-          const error = stampInsert(doc, 'bulk insert operations');
-          if (error) return next(error);
-        }
-        next();
-      } catch (error) {
-        next(error as Error);
+    preModelHook(schema, 'insertMany', (docs: UpdateObject[]) => {
+      if (!Array.isArray(docs)) throw new Error('Expected an array of documents for insertMany');
+      for (const doc of docs) {
+        const error = stampInsert(doc, 'bulk insert operations');
+        if (error) throw error;
       }
     });
 
-    schema.pre('bulkWrite', function (this: unknown, next: (error?: Error) => void, ops: unknown) {
-      try {
-        if (!Array.isArray(ops)) return next();
-        const user = userId();
-        for (const op of ops as BulkWriteOperation[]) {
-          if (op.insertOne?.document) {
-            const error = stampInsert(op.insertOne.document, 'bulkWrite insertOne');
-            if (error) return next(error);
-            continue;
-          }
-          if (op.replaceOne?.replacement) {
-            const error = stampInsert(op.replaceOne.replacement, 'bulkWrite replaceOne');
-            if (error) return next(error);
-            continue;
-          }
-          const write = op.updateOne || op.updateMany;
-          if (!write) continue;
-          const update = write.update as UpdateObject | undefined;
-          if (!update || Array.isArray(update)) continue;
-          for (const field of IMMUTABLE_FIELDS) {
-            delete update[field];
-            if (update.$set) delete (update.$set as UpdateObject)[field];
-          }
-          if (user) {
-            update.$set = update.$set || {};
-            (update.$set as UpdateObject).updatedBy = user;
-          }
-          if (write.upsert) {
-            const org = orgId();
-            if (!org) return next(missingOrg('bulkWrite upsert'));
-            update.$setOnInsert = update.$setOnInsert || {};
-            (update.$setOnInsert as UpdateObject).org = org;
-            if (user) (update.$setOnInsert as UpdateObject).createdBy = user;
-          }
+    preModelHook(schema, 'bulkWrite', (ops: unknown) => {
+      if (!Array.isArray(ops)) return;
+      const user = userId();
+      for (const op of ops as BulkWriteOperation[]) {
+        if (op.insertOne?.document) {
+          const error = stampInsert(op.insertOne.document, 'bulkWrite insertOne');
+          if (error) throw error;
+          continue;
         }
-        next();
-      } catch (error) {
-        next(error as Error);
+        if (op.replaceOne?.replacement) {
+          const error = stampInsert(op.replaceOne.replacement, 'bulkWrite replaceOne');
+          if (error) throw error;
+          continue;
+        }
+        const write = op.updateOne || op.updateMany;
+        if (!write) continue;
+        const update = write.update as UpdateObject | undefined;
+        if (!update || Array.isArray(update)) continue;
+        for (const field of IMMUTABLE_FIELDS) {
+          delete update[field];
+          if (update.$set) delete (update.$set as UpdateObject)[field];
+        }
+        if (user) {
+          update.$set = update.$set || {};
+          (update.$set as UpdateObject).updatedBy = user;
+        }
+        if (write.upsert) {
+          const org = orgId();
+          if (!org) throw missingOrg('bulkWrite upsert');
+          update.$setOnInsert = update.$setOnInsert || {};
+          (update.$setOnInsert as UpdateObject).org = org;
+          if (user) (update.$setOnInsert as UpdateObject).createdBy = user;
+        }
       }
     });
   };
