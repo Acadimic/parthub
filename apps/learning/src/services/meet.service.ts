@@ -1,9 +1,9 @@
-import { API, Subdomain } from '../enums';
+import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
 class MeetService {
   getMeetsByIds = async (courseId: string, meetIds: string[]) => {
-    const url = `meet/${Subdomain.LEARN}/get-meets-by-ids`;
+    const url = 'meet/by-ids';
     const resData = await callAuthApi(url, API.POST, { courseId, meetIds });
     return resData;
   };

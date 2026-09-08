@@ -2,7 +2,14 @@ import { Instance, flow, getRoot, types as t } from 'mobx-state-tree';
 import { PaperType, SectionCategoryType, SectionType } from '../enums';
 import { TestPaperService } from '../services';
 import { getObjectId } from '../utils/helpers';
-import { DefaultMarkingType, ITestPaper, ITestPaperSection, TestPaper, TestPaperSection } from './models';
+import {
+  DefaultMarkingType,
+  ITestPaper,
+  ITestPaperSection,
+  ITestPaperSnapshotIn,
+  TestPaper,
+  TestPaperSection,
+} from './models';
 import { IStore } from './root.store';
 
 export const TestPaperStore = t
@@ -63,7 +70,8 @@ export const TestPaperStore = t
     },
   }))
   .actions((self) => ({
-    addTestPaper: (obj: ITestPaper) => {
+    // Accepts a snapshot: callers pass raw API data, which MST turns into an instance on put().
+    addTestPaper: (obj: ITestPaperSnapshotIn) => {
       if (!obj) return;
       const objId = obj._id;
       const isObj = self.testPaperMaps.has(objId);

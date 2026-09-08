@@ -4,7 +4,7 @@ import { callAuthApi } from './http.service';
 
 class CourseService {
   getCourses = async () => {
-    return await callAuthApi('course', API.GET);
+    return await callAuthApi('course/all', API.GET);
   };
 
   getCourseById = async (id: string) => {

@@ -4,7 +4,7 @@ import { callAuthApi } from './http.service';
 
 class MaterialService {
   getMaterials = async () => {
-    return await callAuthApi('material', API.GET);
+    return await callAuthApi('material/all', API.GET);
   };
 
   getStandardSubjectMaterials = async (payload: IStandardSubjectQuery) => {

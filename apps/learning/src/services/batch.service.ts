@@ -1,9 +1,9 @@
-import { API, Subdomain } from '../enums';
+import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
 class BatchService {
   getBatchesData = async () => {
-    const url = `batch/${Subdomain.LEARN}/all`;
+    const url = 'batch/all';
     const resData = await callAuthApi(url, API.GET);
     return resData;
   };

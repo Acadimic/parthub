@@ -1,5 +1,5 @@
 import { ISelectItem } from '@interfaces';
-import { getRoot, Instance, types as t } from 'mobx-state-tree';
+import { Instance, SnapshotIn, getRoot, types as t } from 'mobx-state-tree';
 import { PaperCategoryType, PaperType } from '../../enums';
 import { getSlug } from '../../utils/helpers';
 import { IStore } from '../root.store';
@@ -98,3 +98,6 @@ export const TestPaper = t
   }));
 
 export type ITestPaper = Instance<typeof TestPaper>;
+
+/** The plain object shape the API must supply for TestPaper.create(). */
+export type ITestPaperSnapshotIn = SnapshotIn<typeof TestPaper>;

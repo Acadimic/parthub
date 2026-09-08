@@ -1,23 +1,23 @@
 import { IStandardSubjectQuery } from '@interfaces';
 import { IChapter } from '@stores';
-import { API, Subdomain } from '../enums';
+import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
 class ChapterService {
   upsertChapter = async (payload: IChapter) => {
-    const url = `chapter/${Subdomain.TEACH}/upsert`;
+    const url = 'chapter/upsert';
     const resData = await callAuthApi(url, API.POST, payload);
     return resData;
   };
 
   getStandardSubjectChapters = async (payload: IStandardSubjectQuery) => {
-    const url = `chapter/${Subdomain.TEACH}/standard/subject/all`;
+    const url = 'chapter/standard/subject/all';
     const resData = await callAuthApi(url, API.POST, payload);
     return resData;
   };
 
   getOrgChapters = async () => {
-    const url = `chapter/${Subdomain.TEACH}/all`;
+    const url = 'chapter/all';
     const resData = await callAuthApi(url, API.GET);
     return resData;
   };

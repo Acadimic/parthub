@@ -1,23 +1,23 @@
 import { IPresignedPutUrlsRequest } from '@interfaces';
-import { API, Subdomain } from '../enums';
+import { API } from '../enums';
 import { callAuthApi, callDefaultApi } from './http.service';
 
 class CommonService {
   getInitialData = async () => {
-    const url = `common/${Subdomain.TEACH}/initial-data`;
+    const url = 'common/initial-data';
     const resData = await callAuthApi(url, API.GET);
     return resData;
   };
 
   getPreSignedPUTUrls = async (payload: IPresignedPutUrlsRequest) => {
-    const url = `common/presigned-PUT-urls`;
-    const resData = await callAuthApi(url, API.POST, payload);
+    const url = 'common/presigned-PUT-urls';
+    const resData = await callAuthApi<string[]>(url, API.POST, payload);
     return resData;
   };
 
   getPreSignedGETUrls = async (fileUrls: string[]) => {
-    const url = `common/presigned-GET-urls`;
-    const resData = await callAuthApi(url, API.POST, fileUrls);
+    const url = 'common/presigned-GET-urls';
+    const resData = await callAuthApi<string[]>(url, API.POST, fileUrls);
     return resData;
   };
 

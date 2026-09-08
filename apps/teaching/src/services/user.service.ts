@@ -1,22 +1,22 @@
 import { IUser } from '@stores';
-import { API, DefaultRole, Subdomain } from '../enums';
+import { API, DefaultRole } from '../enums';
 import { getProfilePayload } from '@parthhub/ui/lib';
 import { callAuthApi } from './http.service';
 
 class UserService {
   getInitialLoginData = async () => {
-    const url = `user/${Subdomain.TEACH}/initial-login-data`;
+    const url = 'user/initial-login-data';
     return await callAuthApi(url, API.GET);
   };
 
   /** The signed-in user's own profile (account settings / onboarding). */
   updateProfile = async (user: IUser) => {
-    const url = `user/${Subdomain.TEACH}/profile`;
+    const url = 'user/profile';
     return await callAuthApi(url, API.POST, getProfilePayload(user));
   };
 
   getOrgUsers = async () => {
-    const url = `user/${Subdomain.TEACH}/all`;
+    const url = 'user/all';
     return await callAuthApi(url, API.GET);
   };
 
@@ -43,7 +43,7 @@ class UserService {
   };
 
   private updateOrgUser = async (user: IUser) => {
-    const url = `user/${Subdomain.TEACH}/update`;
+    const url = 'user/update';
     return await callAuthApi(url, API.POST, { _id: user._id, ...getProfilePayload(user) });
   };
 }

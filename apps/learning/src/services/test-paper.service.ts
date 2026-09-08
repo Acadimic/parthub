@@ -3,7 +3,7 @@ import { callAuthApi } from './http.service';
 
 class TestPaperService {
   getTestPapers = async () => {
-    return await callAuthApi('test-paper', API.GET);
+    return await callAuthApi('test-paper/all', API.GET);
   };
 
   getTestPaperSectionsWithQuestions = async (testPaperId: string) => {

@@ -18,7 +18,7 @@ export const useAttachment = () => {
         fileType: file.type,
       }));
       // Get presigned Urls
-      const presignedUrls = await CommonService.getPreSignedPUTUrls({ keys });
+      const { data: presignedUrls } = await CommonService.getPreSignedPUTUrls({ keys });
       // Upload files
       const promises = selectedFiles.map(async (file: File, index: number) =>
         CommonService.uploadWithPreSignedUrl(presignedUrls[index], file),
@@ -55,7 +55,7 @@ export const useAttachment = () => {
       .filter(Boolean);
     if (existingPresignedUrls.length === urls.length) return existingPresignedUrls;
     try {
-      const presignedUrls = await CommonService.getPreSignedGETUrls(urls);
+      const { data: presignedUrls } = await CommonService.getPreSignedGETUrls(urls);
       presignedUrlMaps = JSON.parse(localStorage.getItem(StorageKey.PRESIGNED_URLS) || '{}');
       urls.forEach((url: string, index: number) => {
         presignedUrlMaps[url] = presignedUrls[index];

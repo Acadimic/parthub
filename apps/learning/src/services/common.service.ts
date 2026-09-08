@@ -22,13 +22,13 @@ class CommonService {
 
   getPreSignedPUTUrls = async (payload: IPresignedPutUrlsRequest) => {
     const url = 'common/presigned-PUT-urls';
-    const resData = await callAuthApi(url, API.POST, payload);
+    const resData = await callAuthApi<string[]>(url, API.POST, payload);
     return resData;
   };
 
   getPreSignedGETUrls = async (fileUrls: string[]) => {
     const url = 'common/presigned-GET-urls';
-    const resData = await callAuthApi(url, API.POST, fileUrls);
+    const resData = await callAuthApi<string[]>(url, API.POST, fileUrls);
     return resData;
   };
 

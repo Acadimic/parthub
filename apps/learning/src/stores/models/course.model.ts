@@ -1,3 +1,4 @@
+import type { CourseDto } from '@parthhub/shared';
 import { ISelectItem } from '@interfaces';
 import { getRoot, Instance, SnapshotIn, SnapshotOut, types as t } from 'mobx-state-tree';
 import { IStore } from '../root.store';
@@ -23,13 +24,13 @@ export const Course = t
     t.model('Course', {
       _id: t.identifier,
       name: t.string,
-      slug: t.string,
+      slug: t.optional(t.string, ''),
       description: t.maybeNull(t.string),
       standards: t.array(t.string),
       subjects: t.array(t.string),
       isPublished: t.optional(t.boolean, false),
       publishedDate: t.maybeNull(t.string),
-      order: t.number,
+      order: t.optional(t.number, 0),
       tag: t.maybeNull(t.string),
       isNew: t.optional(t.boolean, false),
       courses: t.array(t.string),
@@ -74,3 +75,10 @@ export interface ICourse extends Instance<typeof Course> {}
 export interface ICourseStats extends Instance<typeof Stats> {}
 export interface ICourseSnapshotIn extends SnapshotIn<typeof Course> {}
 export interface ICourseSnapshotOut extends SnapshotOut<typeof Course> {}
+
+/**
+ * Compile-time guard: everything the API sends must fit this model's snapshot. If the contract
+ * gains a required field, renames one, or changes a type, this line stops compiling.
+ */
+const _assertCourseWireShape: (dto: CourseDto) => ICourseSnapshotIn = (dto) => dto;
+void _assertCourseWireShape;

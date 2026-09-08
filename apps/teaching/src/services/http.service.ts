@@ -1,3 +1,4 @@
+import { SuccessResponse } from '@parthhub/shared';
 import axios, { AxiosError } from 'axios';
 import { API, DefaultRole, StorageKey } from '../enums';
 import { generateAndSetNewToken } from '../utils/firebase';
@@ -43,7 +44,16 @@ const createAxiosInstance = (isUnAuth: boolean, url: string) => {
   return axiosInstance;
 };
 
-export const callAuthApi = async (url: string, method: API, data?: object | null, shouldNotThrowError?: boolean) => {
+/**
+ * Calls an authenticated endpoint. `T` is the response contract from
+ * `@parthhub/shared`, so the caller gets `{ data: T }` rather than `any`.
+ */
+export const callAuthApi = async <T = unknown>(
+  url: string,
+  method: API,
+  data?: object | null,
+  shouldNotThrowError?: boolean,
+): Promise<SuccessResponse<T>> => {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
     const axiosInstance = createAxiosInstance(false, baseUrl);
@@ -51,18 +61,27 @@ export const callAuthApi = async (url: string, method: API, data?: object | null
       method === API.POST ? await axiosInstance.post(url, data) : await axiosInstance.get(url, { params: data });
     return response.data;
   } catch (error) {
-    return handleError(error as AxiosError, shouldNotThrowError);
+    // handleError throws unless the caller opted out, in which case there is nothing to return.
+    handleError(error as AxiosError, shouldNotThrowError);
+    return { data: undefined as T };
   }
 };
 
-export const callUnAuthApi = async (url: string, method: API, data?: object | null, shouldNotThrowError?: boolean) => {
+export const callUnAuthApi = async <T = unknown>(
+  url: string,
+  method: API,
+  data?: object | null,
+  shouldNotThrowError?: boolean,
+): Promise<SuccessResponse<T>> => {
   try {
     const axiosInstance = createAxiosInstance(true, url);
     const response =
       method === API.POST ? await axiosInstance.post(url, data) : await axiosInstance.get(url, { params: data });
     return response.data;
   } catch (error) {
-    return handleError(error as AxiosError, shouldNotThrowError);
+    // handleError throws unless the caller opted out, in which case there is nothing to return.
+    handleError(error as AxiosError, shouldNotThrowError);
+    return { data: undefined as T };
   }
 };
 

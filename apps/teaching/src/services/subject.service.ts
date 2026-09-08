@@ -1,9 +1,9 @@
-import { API, Subdomain } from '../enums';
+import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
 class SubjectService {
   getSubjects = async () => {
-    const url = `subject/${Subdomain.TEACH}/all`;
+    const url = 'subject/all';
     const resData = await callAuthApi(url, API.GET);
     return resData;
   };
