@@ -19,5 +19,8 @@
   },
   "devDependencies": {
     "prettier": "^3.3.3"
+  },
+  "volta": {
+    "node": "24.20.0"
   }
 }

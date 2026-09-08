@@ -43,7 +43,7 @@
     "@nestjs/schematics": "^11.1.0",
     "@repo/eslint-config": "workspace:*",
     "@types/lodash": "^4.17.25",
-    "@types/node": "26.5.0",
+    "@types/node": "24.13.3",
     "@typescript-eslint/eslint-plugin": "^8.6.0",
     "@typescript-eslint/parser": "^8.6.0",
     "env-cmd": "^11.0.0",
