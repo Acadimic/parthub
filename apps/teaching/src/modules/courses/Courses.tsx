@@ -1,4 +1,5 @@
 import { DataTable } from '@components/app/tables';
+import { IColumnData } from '@interfaces';
 import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { PresignedImage } from '@components/app/attachments';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
@@ -45,7 +46,7 @@ export const Courses = observer(() => {
     setState({ isOpenAddModal: true });
   };
 
-  const columns = [
+  const columns: IColumnData<ICourse>[] = [
     {
       label: 'Name',
       dataKey: 'name',
@@ -129,12 +130,12 @@ export const Courses = observer(() => {
       menuItems: [
         {
           label: 'Add Modules',
-          onClick: onClickCourse,
+          onClick: (row) => row && onClickCourse(row),
           icon: <PlusIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Edit Course',
-          onClick: onOpenEditCourseModal,
+          onClick: (row) => row && onOpenEditCourseModal(row),
           icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {

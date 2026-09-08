@@ -66,7 +66,7 @@ export const Collaborators = observer(() => {
 
   const onClickCollaborator = (collaborator: IUser) => {};
 
-  const columns: IColumnData[] = [
+  const columns: IColumnData<IUser>[] = [
     // {
     //   label: 'Id',
     //   dataKey: '_id',
@@ -140,7 +140,7 @@ export const Collaborators = observer(() => {
       menuItems: [
         {
           label: 'Edit',
-          onClick: editCollaborator,
+          onClick: (row) => row && editCollaborator(row),
           icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {

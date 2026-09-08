@@ -47,13 +47,13 @@ export const getStandardSelectItem = (standard: IStandard): ISelectItem => {
   return { label: standard.name, value: standard._id, group: standard.group };
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const validateFieldValues = (obj: Record<string, any>, fields: string[]): string[] => {
+export const validateFieldValues = <T extends object>(obj: T, fields: string[]): string[] => {
+  const values = obj as Record<string, unknown>;
   const errorFields: string[] = [];
   for (const field of fields) {
-    if (obj[field] === undefined || obj[field] === null || obj[field] === '') {
+    if (values[field] === undefined || values[field] === null || values[field] === '') {
       errorFields.push(field);
-    } else if (Array.isArray(obj[field]) && obj[field].length === 0) {
+    } else if (Array.isArray(values[field]) && values[field].length === 0) {
       errorFields.push(field);
     }
   }

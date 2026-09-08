@@ -49,7 +49,7 @@ export const Batches = observer(() => {
 
   const onClickBatch = (batch: IBatch) => {};
 
-  const columns: IColumnData[] = [
+  const columns: IColumnData<IBatch>[] = [
     // {
     //   label: 'Id',
     //   dataKey: '_id',
@@ -101,7 +101,7 @@ export const Batches = observer(() => {
       menuItems: [
         {
           label: 'Edit',
-          onClick: editBatch,
+          onClick: (row) => row && editBatch(row),
           icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {

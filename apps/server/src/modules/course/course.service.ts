@@ -30,11 +30,11 @@ export class CourseService {
       .lean<CourseDocument[]>();
   }
 
-  async getOrgCourseById(org: Types.ObjectId, id: string): Promise<CourseDocument> {
+  async getOrgCourseById(org: Types.ObjectId, id: string): Promise<CourseDocument | null> {
     return this.courseModel.findOne({ _id: id, org, _deleted: { $ne: true } }).lean<CourseDocument>();
   }
 
-  async getCourseByName(org: Types.ObjectId, name: string): Promise<CourseDocument> {
+  async getCourseByName(org: Types.ObjectId, name: string): Promise<CourseDocument | null> {
     return this.courseModel.findOne({ org, name, _deleted: { $ne: true } }).lean<CourseDocument>();
   }
 

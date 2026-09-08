@@ -11,7 +11,7 @@ export class SendGridDynamicEmailDto {
   templateId: string;
 
   @IsNotEmpty()
-  dynamicTemplateData: Record<string, any>;
+  dynamicTemplateData: Record<string, unknown>;
 }
 
 export class SendGridTextEmailDto {

@@ -1,3 +1,4 @@
+import { IColumnData } from '@interfaces';
 import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, Link, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
@@ -48,7 +49,7 @@ export const TestPapers = observer(() => {
     }, 200);
   };
 
-  const columns = [
+  const columns: IColumnData<ITestPaper>[] = [
     // {
     //   label: 'Id',
     //   dataKey: '_id',
@@ -67,7 +68,7 @@ export const TestPapers = observer(() => {
     {
       label: 'Standards',
       dataKey: 'standards',
-      valueFormatter: (row: any) =>
+      valueFormatter: (row) =>
         getStandardsByIds(row.standards)
           .map((standard) => standard.name)
           .join(', '),
@@ -75,7 +76,7 @@ export const TestPapers = observer(() => {
     {
       label: 'Subjects',
       dataKey: 'subjects',
-      valueFormatter: (row: any) =>
+      valueFormatter: (row) =>
         getSubjectsByIds(row.subjects)
           .map((subject) => subject.name)
           .join(', '),
@@ -83,7 +84,7 @@ export const TestPapers = observer(() => {
     {
       label: 'Total Sections',
       dataKey: 'sections',
-      valueFormatter: (row: any) => row.sections.length,
+      valueFormatter: (row) => row.sections.length,
     },
     {
       label: 'Total Questions',
@@ -116,7 +117,7 @@ export const TestPapers = observer(() => {
     {
       label: 'Is Published',
       dataKey: 'isPublished',
-      valueFormatter: (row: any) => (row.isPublished ? 'Yes' : 'No'),
+      valueFormatter: (row) => (row.isPublished ? 'Yes' : 'No'),
     },
     {
       label: 'Actions',
@@ -124,12 +125,12 @@ export const TestPapers = observer(() => {
       menuItems: [
         {
           label: 'Add Questions',
-          onClick: onClickTestPaper,
+          onClick: (row) => row && onClickTestPaper(row),
           icon: <PlusIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Edit Details',
-          onClick: onOpenEditModal,
+          onClick: (row) => row && onOpenEditModal(row),
           icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {

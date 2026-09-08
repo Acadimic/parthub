@@ -10,6 +10,7 @@ export type {
   ITarget,
   IFunctionProps,
   IPosition,
+  IEditorCellMap,
   ICourseBase,
   IMaterialInfo,
   IQuestionBase,

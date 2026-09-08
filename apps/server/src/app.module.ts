@@ -75,7 +75,7 @@ import { SecretsService } from './secrets/secrets.service';
           sync: true,
         }),
         serializers: {
-          req(req: any) {
+          req(req: { headers: Record<string, unknown> }) {
             const headers = { ...req.headers };
             if (headers.authorization) {
               headers.authorization = '***';

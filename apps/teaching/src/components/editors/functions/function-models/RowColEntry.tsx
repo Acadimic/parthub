@@ -1,12 +1,8 @@
-import { IPosition, ITarget } from '@interfaces';
+import { IEditorCellMap, IPosition, ITarget } from '@interfaces';
 import { useEffect, useState } from 'react';
 import { FunctionFooter } from '../components';
 import { HtmlEditor } from '@components/editors';
 import { Toolbar } from '@components/editors/Toolbar';
-
-interface IState {
-  [key: string]: string;
-}
 
 interface IProps {
   handleChange: (target: ITarget) => void;
@@ -14,12 +10,12 @@ interface IProps {
   closeModal: () => void;
   row: number;
   column: number;
-  getHTML: (data: object) => string;
+  getHTML: (data: IEditorCellMap) => string;
 }
 
 const RowColEntry = (props: IProps) => {
   const { handleChange, name, closeModal, row, column, getHTML } = props;
-  const [data, setData] = useState<IState>({});
+  const [data, setData] = useState<IEditorCellMap>({});
   const [focusedElement, setFocusedElement] = useState('');
   const [position] = useState({ start: 0, end: 0 });
 
@@ -29,7 +25,7 @@ const RowColEntry = (props: IProps) => {
   };
 
   const initialize = () => {
-    const newData: any = {};
+    const newData: IEditorCellMap = {};
     for (let i = 1; i <= row; i += 1) {
       for (let j = 1; j <= column; j += 1) {
         const key = `${name}-${i}-${j}`;

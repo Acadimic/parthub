@@ -1,0 +1,29 @@
+// ESLint 9 flat config. `packages/shared` had no lint config at all, so nothing in it was checked.
+const tsParser = require('@typescript-eslint/parser');
+const tsPlugin = require('@typescript-eslint/eslint-plugin');
+const prettierPlugin = require('eslint-plugin-prettier');
+const prettierConfig = require('eslint-config-prettier');
+
+module.exports = [
+  { ignores: ['dist/**', 'node_modules/**', 'eslint.config.js'] },
+  {
+    files: ['src/**/*.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: { project: 'tsconfig.json', tsconfigRootDir: __dirname, sourceType: 'module' },
+    },
+    plugins: { '@typescript-eslint': tsPlugin, prettier: prettierPlugin },
+    rules: {
+      ...tsPlugin.configs.recommended.rules,
+      ...prettierConfig.rules,
+      'prettier/prettier': 'error',
+
+      // Data must have a declared type. `unknown` plus narrowing is the escape hatch, not `any`.
+      '@typescript-eslint/no-explicit-any': 'error',
+
+      // Annotation style is left to the author; `noImplicitAny` in tsconfig covers the real gap.
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+    },
+  },
+];

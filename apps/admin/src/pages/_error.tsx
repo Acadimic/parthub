@@ -1,7 +1,6 @@
-import Error from 'next/error';
+import Error, { ErrorProps } from 'next/error';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomErrorComponent = (props: any) => {
+const CustomErrorComponent = (props: ErrorProps) => {
   return <Error statusCode={props.statusCode} />;
 };
 

@@ -84,14 +84,13 @@ export const Profile = observer(() => {
             {Object.keys(user)
               .sort()
               .map((key) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const value = (user as any)[key] || getDefault(key);
+                const value = (user as unknown as Record<string, unknown>)[key] || getDefault(key);
                 if (typeof value === 'object') return null;
                 if (['_id', 'createdAt', 'updatedAt', 'createdBy', 'photoUrl'].includes(key)) return null;
                 return (
                   <div key={key} className="flex gap-4">
                     <span className="capitalize font-bold text-sm">{splitCamelCase(key)}:</span>{' '}
-                    <span className="font-medium text-sm truncate">{value}</span>
+                    <span className="font-medium text-sm truncate">{String(value)}</span>
                   </div>
                 );
               })}

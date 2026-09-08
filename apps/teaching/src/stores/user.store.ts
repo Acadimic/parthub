@@ -142,7 +142,7 @@ export const UserStore = t
         user = user || self.loggedInUsers[0];
         self.rootStore.selectorStore.selectUserAndOrgLeader(user);
         self.isLoadedLoggedInUsers = true;
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error:', error);
       } finally {
         self.isLoadingLoggedInUsers = false;
@@ -158,7 +158,7 @@ export const UserStore = t
           self.addUsers(result.data);
           self.isLoadedUsers = true;
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error:', error);
       } finally {
         self.isLoadingUsers = false;
@@ -169,7 +169,7 @@ export const UserStore = t
       try {
         const result = yield MappingService.getOrgStudentStandardMappings();
         if (result?.data) self.addStudentStandardMaps(result.data);
-      } catch (error: any) {}
+      } catch (error) {}
     }),
   }))
   .actions((self) => ({

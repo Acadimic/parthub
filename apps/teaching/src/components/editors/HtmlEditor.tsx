@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import ContentEditable from 'react-contenteditable';
+import ContentEditable, { ContentEditableEvent } from 'react-contenteditable';
 
 import { Label } from '@repo/ui/app';
-import { ITarget } from '@interfaces';
+import { IPosition, ITarget } from '@interfaces';
 import { replaceColor } from '@utils/helpers';
 import { Toolbar } from './Toolbar';
 
@@ -43,7 +43,7 @@ export function HtmlEditor(props: IProps) {
   const [isFocused, setIsFocused] = React.useState(false);
   const [refresh, setRefresh] = React.useState(false);
 
-  const restoreSelection = (containerEl: any, savedSel: any) => {
+  const restoreSelection = (containerEl: Node, savedSel: IPosition) => {
     let charIndex = 0;
     const range = document.createRange();
     range.setStart(containerEl, 0);
@@ -53,14 +53,15 @@ export function HtmlEditor(props: IProps) {
     let foundStart = false;
     let stop = false;
     while (!stop && (node = nodeStack.pop())) {
-      if (node.nodeType === 3) {
-        const nextCharIndex = charIndex + node.length;
+      if (node.nodeType === Node.TEXT_NODE) {
+        const textNode = node as Text;
+        const nextCharIndex = charIndex + textNode.length;
         if (!foundStart && savedSel.start >= charIndex && savedSel.start <= nextCharIndex) {
-          range.setStart(node, savedSel.start - charIndex);
+          range.setStart(textNode, savedSel.start - charIndex);
           foundStart = true;
         }
         if (foundStart && savedSel.end >= charIndex && savedSel.end <= nextCharIndex) {
-          range.setEnd(node, savedSel.end - charIndex);
+          range.setEnd(textNode, savedSel.end - charIndex);
           stop = true;
         }
         charIndex = nextCharIndex;
@@ -90,7 +91,7 @@ export function HtmlEditor(props: IProps) {
     };
   };
 
-  let savedSelection: any;
+  let savedSelection: IPosition | undefined;
 
   function doSave() {
     savedSelection = saveSelection(document.getElementById(name));
@@ -99,7 +100,8 @@ export function HtmlEditor(props: IProps) {
 
   function doRestore() {
     if (savedSelection) {
-      restoreSelection(document.getElementById(name), savedSelection);
+      const container = document.getElementById(name);
+      if (container) restoreSelection(container, savedSelection);
     }
   }
 
@@ -108,7 +110,7 @@ export function HtmlEditor(props: IProps) {
     setRefresh(!refresh);
   };
 
-  const handleContentChange = (evt: any) => {
+  const handleContentChange = (evt: ContentEditableEvent) => {
     html.current = evt.target.value;
     doSave();
     handleChange({ target: { name, value: html.current } });

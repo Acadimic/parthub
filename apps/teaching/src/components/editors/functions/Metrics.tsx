@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { TextInput } from '@repo/ui/app';
-import { IFunctionProps } from '@interfaces';
+import { IFunctionProps, IEditorCellMap } from '@interfaces';
 import RowColEntry from './function-models/RowColEntry';
 
 const Metrics = (props: IFunctionProps) => {
@@ -19,7 +19,7 @@ const Metrics = (props: IFunctionProps) => {
     setColumn(parseInt(value) || 0);
   };
 
-  const getHTML = (data: any) => {
+  const getHTML = (data: IEditorCellMap) => {
     let htmlForParent = `
        <table style="display: inline-table; border-collapse: collapse; vertical-align: middle;"><tbody>
        <tr style="line-height:0.1"><td style=" border-top:2px solid currentColor; border-left:2px solid currentColor">&nbsp;</td>

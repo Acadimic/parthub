@@ -1,3 +1,4 @@
+import { IColumnData } from '@interfaces';
 import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, Link, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
@@ -44,11 +45,11 @@ export const StudyMaterials = observer(() => {
     redirectToContentPage(standardId, subjectId);
   };
 
-  const columns = [
+  const columns: IColumnData<IMaterialStat>[] = [
     {
       label: 'Standard',
       dataKey: 'standard',
-      valueFormatter: (row: any) => {
+      valueFormatter: (row) => {
         return (
           <Link
             isSubtle
@@ -63,7 +64,7 @@ export const StudyMaterials = observer(() => {
     {
       label: 'Subject',
       dataKey: 'subject',
-      valueFormatter: (row: any) => {
+      valueFormatter: (row) => {
         return (
           <Link
             isSubtle
@@ -90,12 +91,12 @@ export const StudyMaterials = observer(() => {
       menuItems: [
         {
           label: 'Add Contents',
-          onClick: handleClickEditOrAddContents,
+          onClick: (row) => row && handleClickEditOrAddContents(row),
           icon: <PlusIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Edit Contents',
-          onClick: handleClickEditOrAddContents,
+          onClick: (row) => row && handleClickEditOrAddContents(row),
           icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {

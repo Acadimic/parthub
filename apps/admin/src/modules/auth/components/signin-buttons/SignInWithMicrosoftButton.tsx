@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AuthButton } from '@enums';
-import { getFirebaseErrorMessage, signInWithMicrosoft } from '@utils/firebase';
+import { FirebaseError, getFirebaseErrorMessage, signInWithMicrosoft } from '@utils/firebase';
 import { errorToast, getRedirectUri } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -24,7 +23,7 @@ export const SignInWithMicrosoftButton = ({ isDisabled, setLoading }: IProps) =>
       const uid = firebaseUser?.uid;
       if (uid) router.push(getRedirectUri(router.query.redirectUri as string));
     } catch (error) {
-      errorToast({ message: getFirebaseErrorMessage(error as any) });
+      errorToast({ message: getFirebaseErrorMessage(error as FirebaseError) });
     } finally {
       setIsLoading(false);
       if (setLoading) setLoading(false);

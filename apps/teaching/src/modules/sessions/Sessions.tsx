@@ -42,7 +42,7 @@ export const Sessions = observer(() => {
     push(`/calender`);
   };
 
-  const columns: IColumnData[] = [
+  const columns: IColumnData<IMeet>[] = [
     // {
     //   label: 'Id',
     //   dataKey: '_id',
@@ -144,7 +144,7 @@ export const Sessions = observer(() => {
       menuItems: [
         {
           label: 'Edit',
-          onClick: handleEditMeet,
+          onClick: (row) => row && handleEditMeet(row),
           icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {

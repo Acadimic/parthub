@@ -24,7 +24,7 @@ export class PlanService {
     return this.planModel.find({ org, _deleted: { $ne: true } }).lean<PlanDocument[]>();
   }
 
-  async getPlanById(id: string): Promise<PlanDocument> {
+  async getPlanById(id: string): Promise<PlanDocument | null> {
     return this.planModel.findById(id).lean<PlanDocument>();
   }
 }

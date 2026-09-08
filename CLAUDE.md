@@ -114,5 +114,24 @@ Shared React layer for the apps (see "Where shared code lives"). No build step; 
 ## Code Style
 
 - Prettier: 120 char width, single quotes, trailing commas, 2-space indent, LF line endings
-- Learning ESLint: next/core-web-vitals + prettier
-- Server ESLint: @typescript-eslint/recommended + prettier (loose — `noImplicitAny: false`, `strictNullChecks: false`)
+- App ESLint (learning, teaching, admin): `.eslintrc.js`, next/core-web-vitals + prettier
+- Server, shared and ui ESLint: `eslint.config.js` (ESLint 9 flat config), @typescript-eslint/recommended + prettier
+- `pnpm lint` covers all six workspaces. Every one of them is clean; keep it that way.
+
+### Typing rules
+
+- **`any` is banned.** `@typescript-eslint/no-explicit-any` is `error` in all six workspaces. Use
+  `unknown` and narrow, or declare the shape. The one allowed exception is a generic constraint
+  such as `debounce<T extends (...args: any[]) => void>`, where `unknown[]` would reject every
+  concrete callback; it carries an inline disable and a comment saying why.
+- **No inline suppressions of that rule** without a comment giving the reason.
+- **Every tsconfig is strict.** The apps and both packages run `strict: true`; the server runs
+  `noImplicitAny` and `strictNullChecks`. A single-document Mongoose lookup therefore returns
+  `Promise<XDocument | null>`, and the caller handles the miss (a controller throws
+  `NotFoundException`).
+- Annotation style is left to the author: `explicit-function-return-type` is off, because
+  `noImplicitAny` already closes the real gap and inferred returns are 900+ sites.
+- Shared row types come from `@repo/ui/types`. `IColumnData<T>` and `IMenuItem<T>` default to
+  `unknown`, so a table declares its row type (`IColumnData<IBatch>[]`) and `DataTable` is generic
+  over it. `IMenuItem.onClick` receives the row optionally, so a handler that needs it guards:
+  `onClick: (row) => row && edit(row)`.

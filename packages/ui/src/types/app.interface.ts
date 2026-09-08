@@ -8,8 +8,7 @@ export interface ISelectItem extends Omit<ISharedSelectItem, 'label' | 'icon'> {
   icon?: ReactNode;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface IMenuItem<T = any> {
+export interface IMenuItem<T = unknown> {
   label: string | ReactNode;
   icon?: ReactNode;
   value?: string;
@@ -17,8 +16,7 @@ export interface IMenuItem<T = any> {
   isCurrent?: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface IColumnData<T = any> {
+export interface IColumnData<T = unknown> {
   dataKey: string;
   label: string;
   width?: number;

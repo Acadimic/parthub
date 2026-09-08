@@ -73,7 +73,7 @@ export const Students = observer(() => {
 
   const onClickStudent = (student: IUser) => {};
 
-  const columns: IColumnData[] = [
+  const columns: IColumnData<IUser>[] = [
     // {
     //   label: 'Id',
     //   dataKey: '_id',
@@ -160,7 +160,7 @@ export const Students = observer(() => {
       menuItems: [
         {
           label: 'Edit',
-          onClick: editStudent,
+          onClick: (row) => row && editStudent(row),
           icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {

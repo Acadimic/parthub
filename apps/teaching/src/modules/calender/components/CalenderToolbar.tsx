@@ -22,9 +22,10 @@ import {
   subtractMonthsFromDate,
   subtractWeeksFromDate,
 } from '@utils/helpers';
+import type FullCalendar from '@fullcalendar/react';
 
 interface IProps {
-  calendarRef: React.RefObject<any>;
+  calendarRef: React.RefObject<FullCalendar | null>;
   setCalenderType: (calenderType: CalendarType) => void;
   calendarType: CalendarType;
   setDate: (date: number) => void;
@@ -49,24 +50,27 @@ export const CustomToolbar = ({
 }: IProps) => {
   if (!calendarRef.current) return;
 
+  // The handlers below run after render, where the early return no longer narrows the ref.
+  const getApi = () => calendarRef.current?.getApi();
+
   const date = new Date(selectedDate);
 
   const handleToday = () => {
-    calendarRef.current.getApi().today();
+    getApi()?.today();
     setDate(Date.now());
   };
 
   const handlePrev = () => {
     let prevDate = date;
     if (calendarType === CalendarType.DAY) {
-      calendarRef.current.getApi().prev();
+      getApi()?.prev();
       prevDate = subtractDaysFromDate(prevDate, 1);
     } else if (calendarType === CalendarType.WEEK || calendarType === CalendarType.LIST) {
       prevDate = subtractWeeksFromDate(prevDate, 1);
-      calendarRef.current.getApi().gotoDate(prevDate);
+      getApi()?.gotoDate(prevDate);
     } else if (calendarType === CalendarType.MONTH) {
       prevDate = subtractMonthsFromDate(prevDate, 1);
-      calendarRef.current.getApi().gotoDate(prevDate);
+      getApi()?.gotoDate(prevDate);
     }
     setDate(Date.parse(prevDate.toISOString()));
   };
@@ -74,20 +78,20 @@ export const CustomToolbar = ({
   const handleNext = () => {
     let nextDate = date;
     if (calendarType === CalendarType.DAY) {
-      calendarRef.current.getApi().next();
+      getApi()?.next();
       nextDate = addDaysToDate(nextDate, 1);
     } else if (calendarType === CalendarType.WEEK || calendarType === CalendarType.LIST) {
       nextDate = addWeeksToDate(nextDate, 1);
-      calendarRef.current.getApi().gotoDate(nextDate);
+      getApi()?.gotoDate(nextDate);
     } else if (calendarType === CalendarType.MONTH) {
       nextDate = addMonthsToDate(nextDate, 1);
-      calendarRef.current.getApi().gotoDate(nextDate);
+      getApi()?.gotoDate(nextDate);
     }
     setDate(Date.parse(nextDate.toISOString()));
   };
 
   const handleViewChange = (view: FCCalendarType) => {
-    calendarRef.current.getApi().changeView(view);
+    getApi()?.changeView(view);
     setCalenderType(CalendarTypeMap[view]);
   };
 

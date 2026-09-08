@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button, TextInput } from '@repo/ui/app';
 import { ILoginUser } from '@interfaces';
 import { ArrowCircleLeftIcon, EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
-import { getFirebaseErrorMessage, signIn } from '@utils/firebase';
+import { FirebaseError, getFirebaseErrorMessage, signIn } from '@utils/firebase';
 import { errorToast, getRedirectUri, isValidEmail } from '@utils/helpers';
 import { observer } from 'mobx-react-lite';
 import Link from 'next/link';
@@ -27,8 +26,8 @@ export const SignIn = observer(() => {
       const firebaseUser = result.user;
       const uid = firebaseUser?.uid;
       if (uid) router.push(getRedirectUri(router.query.redirectUri as string));
-    } catch (error: any) {
-      errorToast({ message: getFirebaseErrorMessage(error) });
+    } catch (error) {
+      errorToast({ message: getFirebaseErrorMessage(error as FirebaseError) });
     }
   };
 
@@ -50,7 +49,7 @@ export const SignIn = observer(() => {
       setIsLoading(true);
       await loginHandler({ email, password });
     } catch (err) {
-      errorToast({ message: getFirebaseErrorMessage(err as any) });
+      errorToast({ message: getFirebaseErrorMessage(err as FirebaseError) });
     } finally {
       setIsLoading(false);
     }

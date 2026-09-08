@@ -19,14 +19,13 @@ const VirtuosoTableComponents: TableComponents<Record<string, unknown>> = {
   TableBody: React.forwardRef<HTMLTableSectionElement>((props, ref) => <tbody {...props} ref={ref} />),
 };
 
-interface IProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  rows: Record<string, any>[];
-  columns: IColumnData[];
+interface IProps<T extends object> {
+  rows: T[];
+  columns: IColumnData<T>[];
 }
 
-export const DataTable = ({ rows, columns }: IProps) => {
-  const allColumns = [{ label: '', dataKey: INDEX_FIELD, width: 68 }, ...columns];
+export const DataTable = <T extends object>({ rows, columns }: IProps<T>) => {
+  const allColumns: IColumnData<T>[] = [{ label: '', dataKey: INDEX_FIELD, width: 68 }, ...columns];
 
   const fixedHeaderContent = () => {
     return (
@@ -49,7 +48,7 @@ export const DataTable = ({ rows, columns }: IProps) => {
     );
   };
 
-  const rowContent = (_index: number, row: Record<string, unknown>) => {
+  const rowContent = (_index: number, row: T) => {
     return (
       <React.Fragment>
         {allColumns.map((column, i) => {
@@ -57,7 +56,8 @@ export const DataTable = ({ rows, columns }: IProps) => {
           const isAction = dataKey === ACTIONS;
           const isFirstColumn = i === 0;
           const title = column.tooltipTitle ? column.tooltipTitle(row) : '';
-          const formattedValue = column.valueFormatter ? column.valueFormatter(row) : (row[dataKey] as React.ReactNode);
+          const rawValue = (row as Record<string, unknown>)[dataKey] as React.ReactNode;
+          const formattedValue = column.valueFormatter ? column.valueFormatter(row) : rawValue;
           const { color, bg } = column.getColor ? column.getColor(row) : { color: 'inherit', bg: 'inherit' };
           return (
             <td
@@ -90,10 +90,10 @@ export const DataTable = ({ rows, columns }: IProps) => {
     <div className="shadow-none border h-[calc(100vh-140px)] sm:h-[calc(100vh-148px)] w-full overflow-auto border-color-border rounded-sm">
       {rows.length ? (
         <TableVirtuoso
-          data={rows}
+          data={rows as Record<string, unknown>[]}
           components={VirtuosoTableComponents}
           fixedHeaderContent={fixedHeaderContent}
-          itemContent={rowContent}
+          itemContent={(index, row) => rowContent(index, row as T)}
           className="w-full"
         />
       ) : (

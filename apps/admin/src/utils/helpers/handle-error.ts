@@ -1,4 +1,10 @@
 import { AxiosError } from 'axios';
+
+/** The body the server's exception filter returns. */
+interface IApiErrorBody {
+  message?: string;
+}
+
 import { StorageKey } from '../../enums';
 import { errorToast } from './toasts';
 import { clearLocalStorage } from '@repo/ui/lib';
@@ -12,8 +18,7 @@ export const handleError = (errorData: AxiosError, shouldNotThrowError?: boolean
     return;
   }
   if (errorData.response) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const error = errorData.response.data as any;
+    const error = errorData.response.data as IApiErrorBody | undefined;
     message = error?.message || errorData?.message;
     errorToast({ message });
   } else if (errorData.request) {

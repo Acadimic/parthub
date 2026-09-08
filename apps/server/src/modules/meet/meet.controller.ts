@@ -1,7 +1,7 @@
 import { PermissionItem, Subdomain } from '@repo/shared';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
-import { Controller, Get, Post, Body, Delete, Param, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Param } from '@nestjs/common';
 import { MeetService } from './meet.service';
 import { MeetDto, GetByMeetIdsDto } from '@repo/shared/validations';
 import { RequestContextService } from '../../context/request-context.service';

@@ -1,4 +1,3 @@
-import { Theme as Mode } from '@repo/shared';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 

@@ -2,13 +2,13 @@ import React from 'react';
 
 import { Button } from '@repo/ui/app';
 import { DirectionType } from '@enums';
-import { IFunctionProps, IPosition, ITarget } from '@interfaces';
+import { IFunctionProps, IPosition, ITarget, IEditorCellMap } from '@interfaces';
 import { HtmlEditor } from '..';
 import { Toolbar } from '../Toolbar';
 
 const ChemicalEquationDoubleDirection = (props: IFunctionProps) => {
   const { handleChange, name, closeModal } = props;
-  const [data, setData] = React.useState<any>({
+  const [data, setData] = React.useState<IEditorCellMap>({
     [`${name}-${DirectionType.UP}`]: '',
     [`${name}-${DirectionType.DOWN}`]: '',
     [`${name}-${DirectionType.LEFT}`]: '',
@@ -26,7 +26,7 @@ const ChemicalEquationDoubleDirection = (props: IFunctionProps) => {
   const handleContentChange = (event: ITarget) => {
     const dataName = event.target.name;
     const value = event.target.value;
-    setData((preData: any) => {
+    setData((preData) => {
       const newData = { ...preData };
       newData[dataName] = value;
       return newData;

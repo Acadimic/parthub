@@ -32,7 +32,7 @@ export class SecretsService implements OnModuleInit {
   }
 
   private async validateSecrets(secrets: Record<string, string>): Promise<void> {
-    const secretsValidator = plainToClass(SecretsValidator, secrets as any);
+    const secretsValidator = plainToClass(SecretsValidator, secrets);
     const errors = await validate(secretsValidator);
 
     if (errors.length > 0) {
@@ -45,5 +45,12 @@ export class SecretsService implements OnModuleInit {
 
   get<T>(key: string): T | undefined {
     return this.configService.get<T>(key) || undefined;
+  }
+
+  /** For a secret the caller cannot run without. Boot validation should already have caught it. */
+  getOrThrow<T>(key: string): T {
+    const value = this.get<T>(key);
+    if (value === undefined) throw new Error(`Missing required secret: ${key}`);
+    return value;
   }
 }

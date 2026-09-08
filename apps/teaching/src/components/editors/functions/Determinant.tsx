@@ -1,5 +1,5 @@
 import { TextInput } from '@repo/ui/app';
-import { IFunctionProps } from '@interfaces';
+import { IFunctionProps, IEditorCellMap } from '@interfaces';
 import { useState } from 'react';
 import RowColEntry from './function-models/RowColEntry';
 
@@ -12,7 +12,7 @@ const Determinant = (props: IFunctionProps) => {
     setRow(parseInt(value) || 0);
   };
 
-  const getHTML = (data: any) => {
+  const getHTML = (data: IEditorCellMap) => {
     let htmlForParent = `
       <table style=" display: inline-table; border-left:2px solid currentColor; border-right:2px solid currentColor;
       vertical-align: middle "><tbody>`;

@@ -28,19 +28,19 @@ export class MeetService {
     return this.meetModel.find({ attendees: userId, _deleted: { $ne: true } }).lean<MeetDocument[]>();
   }
 
-  async addAttendees(org: Types.ObjectId, meetId: string, attendeeIds: string[]): Promise<MeetDocument> {
+  async addAttendees(org: Types.ObjectId, meetId: string, attendeeIds: string[]): Promise<MeetDocument | null> {
     return this.meetModel
       .findOneAndUpdate({ _id: meetId, org }, { $addToSet: { attendees: { $each: attendeeIds } } }, { new: true })
       .lean<MeetDocument>();
   }
 
-  async removeAttendees(org: Types.ObjectId, meetId: string, attendeeIds: string[]): Promise<MeetDocument> {
+  async removeAttendees(org: Types.ObjectId, meetId: string, attendeeIds: string[]): Promise<MeetDocument | null> {
     return this.meetModel
       .findOneAndUpdate({ _id: meetId, org }, { $pull: { attendees: { $in: attendeeIds } } }, { new: true })
       .lean<MeetDocument>();
   }
 
-  async delete(org: Types.ObjectId, meetId: string): Promise<MeetDocument> {
+  async delete(org: Types.ObjectId, meetId: string): Promise<MeetDocument | null> {
     return this.meetModel
       .findOneAndUpdate({ _id: meetId, org }, { _deleted: true }, { new: true })
       .lean<MeetDocument>();

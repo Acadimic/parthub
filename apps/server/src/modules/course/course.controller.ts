@@ -1,7 +1,7 @@
 import { PermissionItem, Subdomain } from '@repo/shared';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
-import { Controller, Get, Post, Body, Param, Query, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common';
 import { toCourseDto } from './course.mapper';
 import { CourseService } from './course.service';
 import { RequestContextService } from '../../context/request-context.service';
@@ -34,6 +34,8 @@ export class CourseController {
   @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
   @Permissions(PermissionItem.VIEW_COURSE)
   async getCourseById(@Param('id') id: string): Promise<CourseDto> {
-    return toCourseDto(await this.courseService.getOrgCourseById(this.requestContextService.getOrgId(), id));
+    const course = await this.courseService.getOrgCourseById(this.requestContextService.getOrgId(), id);
+    if (!course) throw new NotFoundException('Course not found.');
+    return toCourseDto(course);
   }
 }

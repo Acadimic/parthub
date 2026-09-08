@@ -1,4 +1,3 @@
-import { PositionType } from '@repo/shared';
 import { useRouter } from 'next/router';
 import * as React from 'react';
 
@@ -7,19 +6,14 @@ interface IProps {
   onClose: () => void;
   component: React.ReactNode;
   id?: string;
-  isLoading?: boolean;
   footer?: React.ReactNode;
 }
 
-export const FullScreenModal = ({ isOpen, onClose, component, id, isLoading, footer }: IProps) => {
-  const closeModal = () => {
-    if (!isLoading) onClose();
-  };
-
+export const FullScreenModal = ({ isOpen, onClose, component, id, footer }: IProps) => {
   const router = useRouter();
 
   React.useEffect(() => {
-    const handleBack = ({ url }: { url: string }) => {
+    const handleBack = () => {
       onClose();
       router.push(router.asPath, undefined, { shallow: true });
       return false;

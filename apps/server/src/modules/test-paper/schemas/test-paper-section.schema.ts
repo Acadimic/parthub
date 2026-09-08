@@ -20,7 +20,7 @@ export class TestPaperSection extends BaseSchema {
   sectionCategory: SectionCategoryType;
 
   @Prop({ type: MongooseSchema.Types.Mixed })
-  defaultMarkings: any;
+  defaultMarkings: Record<string, Record<string, number>>;
 
   @Prop([{ type: MongooseSchema.Types.ObjectId, ref: 'TestPaperSection' }])
   subsections: string[];

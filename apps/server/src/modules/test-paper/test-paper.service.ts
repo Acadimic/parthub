@@ -24,7 +24,7 @@ export class TestPaperService {
     return this.testPaperModel.find({ org, _deleted: { $ne: true } }).lean<TestPaperDocument[]>();
   }
 
-  async getTestPaperById(id: string): Promise<TestPaperDocument> {
+  async getTestPaperById(id: string): Promise<TestPaperDocument | null> {
     return this.testPaperModel.findOne({ _id: id, _deleted: { $ne: true } }).lean<TestPaperDocument>();
   }
 
@@ -33,7 +33,7 @@ export class TestPaperService {
     testPaperId: string,
     totalQuestions: number,
     maxMarks: number,
-  ): Promise<TestPaperDocument> {
+  ): Promise<TestPaperDocument | null> {
     return this.testPaperModel
       .findOneAndUpdate({ _id: testPaperId, org }, { totalQuestions, maxMarks }, { new: true })
       .lean<TestPaperDocument>();
@@ -43,7 +43,7 @@ export class TestPaperService {
     org: Types.ObjectId,
     primaryTestPaperId: string,
     secondaryTestPaperId: string,
-  ): Promise<TestPaperDocument> {
+  ): Promise<TestPaperDocument | null> {
     const secondaryTestPaper = await this.getOrgTestPaperById(org, secondaryTestPaperId);
     if (!secondaryTestPaper) throw new Error('Secondary test paper not found');
     return this.testPaperModel

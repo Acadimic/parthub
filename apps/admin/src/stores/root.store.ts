@@ -1,5 +1,5 @@
 // import makeInspectable from 'mobx-devtools-mst';
-import { Instance, applySnapshot, destroy, flow, types as t } from 'mobx-state-tree';
+import { Instance, SnapshotIn, applySnapshot, destroy, flow, types as t } from 'mobx-state-tree';
 import { useMemo } from 'react';
 import { CommonService } from '../services';
 import { CourseStore, ICourseStore } from './course.store';
@@ -77,10 +77,11 @@ export interface IStore {
 }
 
 export type IRootStore = Instance<typeof RootStore>;
+export type IRootStoreSnapshot = SnapshotIn<typeof RootStore>;
 
 let store: IRootStore | undefined;
 
-export function initializeStore(snapshot = null) {
+export function initializeStore(snapshot?: IRootStoreSnapshot | null) {
   const _store = store ?? RootStore.create({});
 
   // If your page has Next.js data fetching methods that use a Mobx store, it will
@@ -96,8 +97,7 @@ export function initializeStore(snapshot = null) {
   return store;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useStores(initialState?: any) {
+export function useStores(initialState?: IRootStoreSnapshot | null) {
   const store = useMemo(() => initializeStore(initialState), [initialState]);
   // makeInspectable(store);
   return store;

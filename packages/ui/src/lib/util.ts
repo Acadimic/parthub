@@ -95,10 +95,11 @@ export const groupBy = <T>(objects: Array<T>, getKey: (o: T) => string) => {
 };
 
 export const isValidEmail = (email: string) =>
-  email.toLowerCase().match(
-    // eslint-disable-next-line no-useless-escape
-    /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i,
-  );
+  email
+    .toLowerCase()
+    .match(
+      /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i,
+    );
 
 export const getRedirectUri = (redirectUri?: string) => {
   return (redirectUri && decodeURIComponent(redirectUri)) || '/';
@@ -267,6 +268,7 @@ export const getCombineValue = (preValue: string, value: string, position: IPosi
   return `${data}${close ? '</div>' : ''}`;
 };
 
+// The constraint must be `any[]`: `unknown[]` makes no concrete callback assignable to T.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
   let timer: ReturnType<typeof setTimeout>;

@@ -1,5 +1,11 @@
 import { ILoginUser } from '@interfaces';
-import { createFirebaseUser, fetchSignInMethods, getFirebaseErrorMessage, signIn } from '@utils/firebase';
+import {
+  FirebaseError,
+  createFirebaseUser,
+  fetchSignInMethods,
+  getFirebaseErrorMessage,
+  signIn,
+} from '@utils/firebase';
 import { errorToast, getRedirectUri, isValidEmail } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -15,8 +21,8 @@ export const useSignInHook = () => {
       const firebaseUser = result.user;
       const uid = firebaseUser?.uid;
       if (uid) push(getRedirectUri(query.redirectUri as string));
-    } catch (error: any) {
-      errorToast({ message: getFirebaseErrorMessage(error) });
+    } catch (error) {
+      errorToast({ message: getFirebaseErrorMessage(error as FirebaseError) });
     }
   };
 
@@ -39,7 +45,7 @@ export const useSignInHook = () => {
       }
       await loginHandler({ email, password });
     } catch (err) {
-      errorToast({ message: getFirebaseErrorMessage(err as any) });
+      errorToast({ message: getFirebaseErrorMessage(err as FirebaseError) });
     } finally {
       setIsLoading(false);
     }
@@ -59,8 +65,8 @@ export const useSignUpHook = () => {
       const firebaseUser = result.user;
       const uid = firebaseUser?.uid;
       if (uid) push(getRedirectUri(query.redirectUri as string));
-    } catch (error: any) {
-      errorToast({ message: getFirebaseErrorMessage(error) });
+    } catch (error) {
+      errorToast({ message: getFirebaseErrorMessage(error as FirebaseError) });
     }
   };
 
@@ -83,7 +89,7 @@ export const useSignUpHook = () => {
       }
       await signUpHandler({ email, password });
     } catch (err) {
-      errorToast({ message: getFirebaseErrorMessage(err as any) });
+      errorToast({ message: getFirebaseErrorMessage(err as FirebaseError) });
     } finally {
       setIsLoading(false);
     }

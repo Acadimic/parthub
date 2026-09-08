@@ -46,7 +46,7 @@ export class RazorpayService {
   }
 
   validateWebhookSignature(body: string, signature: string): boolean {
-    const webhookSecret = this.secretsService.get<string>(Secrets.RAZORPAY_WEBHOOK_SECRET);
+    const webhookSecret = this.secretsService.getOrThrow<string>(Secrets.RAZORPAY_WEBHOOK_SECRET);
     try {
       return validateWebhookSignature(body, signature, webhookSecret);
     } catch (error) {

@@ -17,6 +17,14 @@ import { timingSafeEqual } from 'node:crypto';
 import { ClsService } from 'nestjs-cls';
 import { IRequestContext } from '../context/request-context.interface';
 
+/** The parts of the incoming request this guard reads. */
+interface AuthRequest {
+  url: string;
+  method: string;
+  headers: Record<string, string | string[] | undefined>;
+  user?: UserDto;
+}
+
 type ContextPayload = {
   apiRoute: string;
   accessType: AccessType;
@@ -35,8 +43,8 @@ export class AuthGuard implements CanActivate {
     private secretsService: SecretsService,
   ) {}
 
-  getRequest(context: ExecutionContext) {
-    return context.switchToHttp().getRequest<Request & { user: UserDto; headers: Record<string, string> }>();
+  getRequest(context: ExecutionContext): AuthRequest {
+    return context.switchToHttp().getRequest<AuthRequest>();
   }
 
   getValue(context: ExecutionContext, key: string) {
@@ -45,7 +53,7 @@ export class AuthGuard implements CanActivate {
 
   getHeaderValue(context: ExecutionContext, key: string) {
     const request = this.getRequest(context);
-    const headers = request.headers as unknown as Record<string, string | string[] | undefined>;
+    const { headers } = request;
     const value = headers[key] || headers[key.toLowerCase()];
     return value;
   }
@@ -87,7 +95,7 @@ export class AuthGuard implements CanActivate {
     const request = this.getRequest(context);
     const timezone = this.getHeaderValue(context, 'timezone') as string;
     const timezoneOffset = this.getHeaderValue(context, 'timezone-offset') as string;
-    const url = (request as any).url as string;
+    const { url } = request;
     const subdomain = getSubdomainFromUrl(url);
     const org = this.getHeaderValue(context, 'organization') as string;
     if (!org && !url.includes(INITIAL_LOGIN_DATA_URL)) {
@@ -119,8 +127,8 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = this.getRequest(context);
-    const url = (request as any).url as string;
-    const method = (request as any).method as string;
+    const { url } = request;
+    const { method } = request;
     const apiRoute = `${method} ${url}`;
     const subdomain = getSubdomainFromUrl(url);
     const timezone = this.getHeaderValue(context, 'timezone') as string;
@@ -156,7 +164,7 @@ export class AuthGuard implements CanActivate {
 
     this.setRequestContext(user, { apiRoute, accessType, subdomain, timezone, timezoneOffset });
 
-    (request as any).user = user;
+    request.user = user;
 
     return Promise.resolve(true);
   }

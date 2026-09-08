@@ -2,7 +2,15 @@ import { Document, Query, Schema } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
 import { BaseSchema } from '../base.schema';
 
-type UpdateObject = Record<string, any>;
+type UpdateObject = Record<string, unknown>;
+
+/** The bulkWrite operations this plugin stamps. Mongoose accepts more; these are the writes. */
+interface BulkWriteOperation {
+  insertOne?: { document: UpdateObject };
+  replaceOne?: { replacement: UpdateObject; upsert?: boolean };
+  updateOne?: { update?: UpdateObject | unknown[]; upsert?: boolean };
+  updateMany?: { update?: UpdateObject | unknown[]; upsert?: boolean };
+}
 
 /** Ownership fields that are stamped once, on insert, and must never be reassigned by an update. */
 const IMMUTABLE_FIELDS = ['org', 'createdBy'] as const;
@@ -78,7 +86,7 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
       }
     });
 
-    const updateHook = function (this: Query<any, any>, next: (error?: Error) => void) {
+    const updateHook = function (this: Query<unknown, unknown>, next: (error?: Error) => void) {
       try {
         const updateObj = this.getUpdate();
         if (!updateObj) return next();
@@ -125,7 +133,7 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
 
     // A replace swaps the whole document, so the ownership fields have to be re-supplied or they
     // are silently dropped — `immutable` does not protect against replacement.
-    const replaceHook = function (this: Query<any, any>, next: (error?: Error) => void) {
+    const replaceHook = function (this: Query<unknown, unknown>, next: (error?: Error) => void) {
       try {
         const replacement = this.getUpdate() as UpdateObject | null;
         if (!replacement || Array.isArray(replacement)) return next();
@@ -152,11 +160,11 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
       }
     });
 
-    schema.pre('bulkWrite', function (this: unknown, next: (error?: Error) => void, ops: UpdateObject[]) {
+    schema.pre('bulkWrite', function (this: unknown, next: (error?: Error) => void, ops: unknown) {
       try {
         if (!Array.isArray(ops)) return next();
         const user = userId();
-        for (const op of ops) {
+        for (const op of ops as BulkWriteOperation[]) {
           if (op.insertOne?.document) {
             const error = stampInsert(op.insertOne.document, 'bulkWrite insertOne');
             if (error) return next(error);

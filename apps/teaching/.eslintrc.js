@@ -19,7 +19,8 @@ module.exports = {
   plugins: ['react', '@typescript-eslint', 'prettier'],
   ignorePatterns: ['.eslintrc.js'],
   rules: {
-    '@typescript-eslint/no-explicit-any': 'warn',
+    // Data must have a declared type. Use `unknown` plus narrowing, never `any`.
+    '@typescript-eslint/no-explicit-any': 'error',
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': ['off'],
     'react-hooks/exhaustive-deps': 'off',

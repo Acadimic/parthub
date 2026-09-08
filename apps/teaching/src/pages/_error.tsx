@@ -1,6 +1,6 @@
-import Error from 'next/error';
+import Error, { ErrorProps } from 'next/error';
 
-const CustomErrorComponent = (props: any) => {
+const CustomErrorComponent = (props: ErrorProps) => {
   return <Error statusCode={props.statusCode} />;
 };
 
