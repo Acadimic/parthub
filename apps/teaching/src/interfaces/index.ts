@@ -22,7 +22,7 @@ export type {
   PermissionConfig,
   PermissionConfigItem,
   PermissionConfigOption,
-} from '@repo/shared';
+} from '@repo/shared/interfaces';
 
 export * from '@repo/ui/types';
 export * from './batch.interface';

@@ -1,9 +1,9 @@
+import { type MeetDto } from '@repo/shared/contracts';
 import { MeetItem } from '@components/meet';
 import { BlankState } from '@components/others';
-import { type IMeet } from '@stores';
 
 interface IProps {
-  meets: IMeet[];
+  meets: MeetDto[];
   isSmallJoinable?: boolean;
   isCopyIconOnly?: boolean;
 }

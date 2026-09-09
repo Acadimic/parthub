@@ -26,18 +26,10 @@ export const useExam = () => {
 
   const handleSubmitTest = () => {
     if (!exam) return;
-    const { getAccuracy, getMarksObtained, getPercentage } = testPaperStore;
     openResultPage();
     closeSubmitSummary();
     testPaperStore.submitExam();
     setExamState({ isActiveTimer: false });
-    // The result payload is the sitting plus the three figures the store derives from it.
-    const data = {
-      ...exam,
-      accuracy: getAccuracy(),
-      percentage: getPercentage(),
-      marksObtained: getMarksObtained(),
-    };
   };
 
   const closeInstruction = () => {

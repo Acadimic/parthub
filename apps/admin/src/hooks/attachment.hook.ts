@@ -1,6 +1,7 @@
 import { DocumentType } from '@enums';
 import { CommonService } from '@services';
-import { type AttachmentDto, getFileExtension } from '@repo/shared';
+import { type AttachmentDto } from '@repo/shared/contracts';
+import { getFileExtension } from '@repo/shared/utils';
 import { errorToast, getObjectId, successToast } from '@utils/helpers';
 
 export const useAttachment = () => {
@@ -8,7 +9,7 @@ export const useAttachment = () => {
     if (!selectedFiles.length) return [];
     try {
       // Generate new keys
-      const keys = selectedFiles.map((file: File, index: number) => ({
+      const keys = selectedFiles.map((file: File) => ({
         key: `${_id}/${getObjectId()}`,
         fileType: file.type,
       }));

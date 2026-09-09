@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import type { IColor as ISharedColor, ISelectItem as ISharedSelectItem } from '@repo/shared';
+import type { IColor, ISelectItem as ISharedSelectItem } from '@repo/shared/interfaces';
 
-export type IColor = ISharedColor;
+export type { IColor };
 
 export interface ISelectItem extends Omit<ISharedSelectItem, 'label' | 'icon'> {
   label: string | ReactNode;

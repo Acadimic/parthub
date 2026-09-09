@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { AccessType, Subdomain } from '@repo/shared';
+import { AccessType, Subdomain } from '@repo/shared/enums';
 import { Types } from 'mongoose';
 import { ClsServiceManager } from 'nestjs-cls';
 import { IRequestContext } from './request-context.interface';

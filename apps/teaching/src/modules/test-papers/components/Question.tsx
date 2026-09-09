@@ -1,10 +1,10 @@
-import { type MarkingType } from '@repo/shared';
+import { type QuestionDto } from '@repo/shared/contracts';
+import { type MarkingType } from '@repo/shared/interfaces';
 import { Html } from '@components/others';
-import { type IQuestion } from '@stores';
 
 interface IProps {
   prefix?: string;
-  question: IQuestion;
+  question: QuestionDto;
   marks?: MarkingType;
 }
 
@@ -25,7 +25,8 @@ export const Question = ({ question, prefix, marks }: IProps) => {
             {marks.incorrect}
           </div>
           <div className="text-yellow-primary">
-            {marks.unattempted === 0 ? '' : marks.unattempted > 0 ? '+' : '-'}
+            {marks.unattempted > 0 ? '+' : ''}
+            {marks.unattempted < 0 ? '-' : ''}
             {marks.unattempted}
           </div>
         </div>

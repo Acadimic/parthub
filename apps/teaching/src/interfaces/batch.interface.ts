@@ -1,4 +1,4 @@
-import { type IBatch } from '@stores';
+import { type BatchDto } from '@repo/shared/contracts';
 
 export interface IBatchUser {
   user: string;
@@ -6,6 +6,6 @@ export interface IBatchUser {
 }
 
 export interface IBatchUpsert {
-  batch: IBatch;
+  batch: BatchDto;
   users: string[];
 }

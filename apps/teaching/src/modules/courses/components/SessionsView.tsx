@@ -1,10 +1,11 @@
+import { type CourseDto } from '@repo/shared/contracts';
 import { Card } from '@repo/ui/app';
 import { MeetItem } from '@components/common';
 import { BlankState } from '@components/others';
-import { type ICourse, useMeetLookups } from '@stores';
+import { useMeetLookups } from '@stores';
 
 interface IProps {
-  course: ICourse;
+  course: CourseDto;
 }
 
 export const SessionsView = ({ course }: IProps) => {

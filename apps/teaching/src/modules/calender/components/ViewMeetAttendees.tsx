@@ -22,7 +22,9 @@ export const ViewMeetAttendees = ({ attendeeIds, isStudents, isTeachers, noLabel
     return true;
   });
 
-  const label = isStudents ? 'Students' : isTeachers ? 'Teachers' : 'Attendees';
+  let label = 'Attendees';
+  if (isStudents) label = 'Students';
+  else if (isTeachers) label = 'Teachers';
 
   return (
     <div>

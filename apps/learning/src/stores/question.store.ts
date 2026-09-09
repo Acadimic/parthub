@@ -1,12 +1,6 @@
-import {
-  type ClientEntityWith,
-  type IOptionFields,
-  type IRequestSlice,
-  type ISolutionFields,
-  type MarkingType,
-  type QuestionDto,
-  createRequestSlice,
-} from '@repo/shared';
+import { type QuestionDto } from '@repo/shared/contracts';
+import { type IOptionFields, type ISolutionFields, type MarkingType } from '@repo/shared/interfaces';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -21,10 +15,7 @@ import { useSelectorStore } from './selector.store';
  * `partiallyCorrect` the exam marking reads. `isBonus` and `topic` are client-only and stripped
  * from every request by `CLIENT_ONLY_KEYS`.
  */
-export type IQuestion = ClientEntityWith<
-  QuestionDto,
-  'question' | 'standard' | 'options' | 'questionType' | 'section' | 'year'
-> & { markings: MarkingType; isBonus?: boolean; topic?: string | null };
+export type IQuestion = QuestionDto & { markings: MarkingType; isBonus?: boolean; topic?: string | null };
 export type IOption = IOptionFields & { isNew?: boolean };
 export type ISolution = ISolutionFields & { isNew?: boolean };
 
@@ -120,7 +111,7 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
     sectionIds.length
       ? get()
           .getQuestions()
-          .filter((question) => sectionIds.includes(question.section))
+          .filter((question) => !!question.section && sectionIds.includes(question.section))
       : [],
 
   getSolutionByQuestionId: (questionId) =>
@@ -132,7 +123,7 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
 
   getQuestionOptions: (questionId) => {
     const question = get().getQuestionById(questionId);
-    return question ? get().getOptionsByIds(question.options) : [];
+    return question ? get().getOptionsByIds(question.options ?? []) : [];
   },
 
   getCorrectOptions: (questionId) =>

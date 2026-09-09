@@ -1,16 +1,17 @@
-import { type ICourse, type ICourseModule, type IPlan } from '@stores';
-import { type CourseDto, type ICourseModuleFields } from '@repo/shared';
+import { type ICourseModule } from '@stores';
+import { type CourseDto, type PlanDto } from '@repo/shared/contracts';
+import { type ICourseModuleFields } from '@repo/shared/interfaces';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
 class CourseService {
-  upsertCourse = async (payload: ICourse) => {
+  upsertCourse = async (payload: CourseDto) => {
     const url = 'course/upsert';
     const resData = await callAuthApi<CourseDto>(url, API.POST, payload);
     return resData;
   };
 
-  upsertCourseAndPlans = async (payload: { course: ICourse; plans: IPlan[] }) => {
+  upsertCourseAndPlans = async (payload: { course: CourseDto; plans: PlanDto[] }) => {
     const url = 'course/upsert/course/plans';
     const resData = await callAuthApi(url, API.POST, payload);
     return resData;
@@ -24,7 +25,7 @@ class CourseService {
 
   getCourses = async () => {
     const url = '/course/all';
-    const resData = await callAuthApi<ICourse[]>(url, API.GET);
+    const resData = await callAuthApi<CourseDto[]>(url, API.GET);
     return resData;
   };
 

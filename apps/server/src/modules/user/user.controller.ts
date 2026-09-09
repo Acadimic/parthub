@@ -3,7 +3,7 @@ import { Permissions } from '@decorators/permissions.decorator';
 import { User } from '@decorators/user.decorator';
 import { PermissionService } from '@modules/permissions/permission.service';
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { PermissionItem, Subdomain } from '@repo/shared';
+import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import {
   AcceptInviteDto,
   InitialDataDto,

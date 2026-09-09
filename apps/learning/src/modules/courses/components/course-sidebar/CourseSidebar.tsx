@@ -1,5 +1,4 @@
 import { useCourse } from '@hooks/course.hook';
-import { useRouter } from 'next/router';
 import { type ReactNode } from 'react';
 import { CourseSidebarContent } from './CourseSidebarContent';
 
@@ -11,7 +10,6 @@ interface IProps {
 
 export const CourseSidebar = ({ children }: IProps) => {
   const { isCourseMenuOpen, handleCourseMenuClick } = useCourse();
-  const { route, push, query, back } = useRouter();
 
   return (
     <div className="bg-background-primary">

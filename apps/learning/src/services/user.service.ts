@@ -1,4 +1,4 @@
-import { type InitialDataDto } from '@repo/shared';
+import { type InitialDataDto } from '@repo/shared/contracts';
 import { type IUser } from '@stores';
 import { API } from '../enums';
 import { getProfilePayload } from '@repo/ui/lib';
@@ -15,9 +15,6 @@ class UserService {
     const url = 'user/profile';
     return await callAuthApi(url, API.POST, getProfilePayload(user));
   };
-
-  /** @deprecated use updateProfile; kept so existing call sites keep working. */
-  updateStudent = async (student: IUser) => this.updateProfile(student);
 }
 
 export default new UserService();

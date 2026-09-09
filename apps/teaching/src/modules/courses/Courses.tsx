@@ -1,9 +1,10 @@
+import { type CourseDto } from '@repo/shared/contracts';
 import { DataTable } from '@components/app/tables';
 import { type IColumnData } from '@interfaces';
 import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { PresignedImage } from '@components/app/attachments';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { type ICourse, useStandardLookups, useCourseLookups, useSelectorLookups } from '@stores';
+import { useStandardLookups, useCourseLookups, useSelectorLookups } from '@stores';
 import { ACTIONS, ALL } from '@utils/constants';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
@@ -37,23 +38,23 @@ export const Courses = () => {
     setState({ isOpenAddModal: false });
   };
 
-  const onClickCourse = (course: ICourse) => {
+  const onClickCourse = (course: CourseDto) => {
     setSelectedCourseId(course._id);
     setTimeout(() => {
       push({ pathname: `/courses/${course._id}`, query: { name: course.name } }, `/courses/${course._id}`);
     }, 200);
   };
 
-  const onOpenEditCourseModal = (course: ICourse) => {
+  const onOpenEditCourseModal = (course: CourseDto) => {
     setSelectedCourseId(course._id);
     setState({ isOpenAddModal: true });
   };
 
-  const columns: IColumnData<ICourse>[] = [
+  const columns: IColumnData<CourseDto>[] = [
     {
       label: 'Name',
       dataKey: 'name',
-      valueFormatter: (row: ICourse) => {
+      valueFormatter: (row: CourseDto) => {
         return (
           <div className="flex items-center space-x-2">
             <div>
@@ -77,49 +78,51 @@ export const Courses = () => {
     {
       label: 'Standards',
       dataKey: 'standards',
-      valueFormatter: (row: ICourse) => getStandardNamesText(row.standards ?? []),
+      valueFormatter: (row: CourseDto) => getStandardNamesText(row.standards ?? []),
     },
     {
       label: 'Subjects',
       dataKey: 'subjects',
-      valueFormatter: (row: ICourse) => getSubjectNamesText(row.subjects ?? []) || ALL,
+      valueFormatter: (row: CourseDto) => getSubjectNamesText(row.subjects ?? []) || ALL,
     },
     {
       label: 'Total Modules',
       dataKey: 'daysCount',
-      valueFormatter: (row: ICourse) => row.stats.daysCount,
+      valueFormatter: (row: CourseDto) => row.stats?.daysCount ?? 0,
     },
     {
       label: 'Total Test Papers',
       dataKey: 'testsCount',
-      valueFormatter: (row: ICourse) => row.stats.testsCount,
+      valueFormatter: (row: CourseDto) => row.stats?.testsCount ?? 0,
     },
     {
       label: 'Total Readings',
       dataKey: 'readingsCount',
-      valueFormatter: (row: ICourse) => row.stats.readingsCount,
+      valueFormatter: (row: CourseDto) => row.stats?.readingsCount ?? 0,
     },
     {
       label: 'Total Videos',
       dataKey: 'videosCount',
-      valueFormatter: (row: ICourse) => row.stats.videosCount,
+      valueFormatter: (row: CourseDto) => row.stats?.videosCount ?? 0,
     },
     {
       label: 'Total Meets',
       dataKey: 'meetsCount',
-      valueFormatter: (row: ICourse) => row.stats.meetsCount,
+      valueFormatter: (row: CourseDto) => row.stats?.meetsCount ?? 0,
     },
     {
       label: 'Total Duration Mins',
       dataKey: 'durationsMins',
-      valueFormatter: (row: ICourse) => {
-        return `${row.stats.materialsDurationMins + row.stats.meetsDurationMins + row.stats.testsDurationMins} mins`;
+      valueFormatter: (row: CourseDto) => {
+        const stats = row.stats;
+        if (!stats) return '0 mins';
+        return `${stats.materialsDurationMins + stats.meetsDurationMins + stats.testsDurationMins} mins`;
       },
     },
     {
       label: 'Is Published',
       dataKey: 'isPublished',
-      valueFormatter: (row: ICourse) => (row.isPublished ? 'Yes' : 'No'),
+      valueFormatter: (row: CourseDto) => (row.isPublished ? 'Yes' : 'No'),
     },
     {
       label: 'Actions',

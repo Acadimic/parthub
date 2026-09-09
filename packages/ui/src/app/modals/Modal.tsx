@@ -1,4 +1,4 @@
-import { PositionType } from '@repo/shared';
+import { PositionType } from '@repo/shared/enums';
 import { XIcon } from '@phosphor-icons/react';
 import * as React from 'react';
 
@@ -30,8 +30,10 @@ export function Modal({
   childrenClassName,
 }: IProps) {
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-  const anchorPosition = isMobile ? PositionType.BOTTOM : position ? position : PositionType.TOP;
+  let anchorPosition = position ?? PositionType.TOP;
+  if (isMobile) anchorPosition = PositionType.BOTTOM;
   const isTop = anchorPosition === PositionType.TOP;
+  const defaultWidthClass = 'w-full md:max-w-[60%] lg:max-w-[40%]';
   const isRight = anchorPosition === PositionType.RIGHT;
   const isLeft = anchorPosition === PositionType.LEFT;
 
@@ -45,7 +47,7 @@ export function Modal({
     <div className="fixed inset-0 z-[1300]" id={id}>
       <div className="absolute inset-0 bg-black/50" onClick={() => !withoutClose && closeModal()} />
       <div
-        className={`absolute ${isTop ? 'top-[8%] left-1/2 -translate-x-1/2' : ''} ${isRight ? 'top-0 right-0 h-full' : ''} ${isLeft ? 'top-0 left-0 h-full' : ''} ${anchorPosition === PositionType.BOTTOM ? 'bottom-0 left-0 right-0' : ''} ${className ? className : isTop ? 'w-full md:w-[60%] lg:w-[40%]' : 'w-full md:max-w-[60%] lg:max-w-[40%]'}`}
+        className={`absolute ${isTop ? 'top-[8%] left-1/2 -translate-x-1/2' : ''} ${isRight ? 'top-0 right-0 h-full' : ''} ${isLeft ? 'top-0 left-0 h-full' : ''} ${anchorPosition === PositionType.BOTTOM ? 'bottom-0 left-0 right-0' : ''} ${className ?? (isTop ? 'w-full md:w-[60%] lg:w-[40%]' : defaultWidthClass)}`}
       >
         <div className="flex flex-col h-full rounded-sm border border-color-border bg-background-primary">
           <div className="py-3 px-4 flex justify-between items-center space-x-3 md:space-x-4">

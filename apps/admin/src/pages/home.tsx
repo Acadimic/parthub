@@ -15,7 +15,6 @@ const HomePage = () => {
   const [values, setValues] = useState<string[]>([]);
 
   const onSelect = (newValues: ISelectItem[]) => {
-    console.log('####selected: ', newValues);
     setValues(newValues.map((item) => item.value));
   };
 

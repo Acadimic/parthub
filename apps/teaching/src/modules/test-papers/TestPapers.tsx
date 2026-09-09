@@ -1,14 +1,9 @@
+import { type TestPaperDto } from '@repo/shared/contracts';
 import { type IColumnData } from '@interfaces';
 import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, Link, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import {
-  type ITestPaper,
-  useStandardLookups,
-  useSelectedTestPaper,
-  useSelectorLookups,
-  useTestPaperLookups,
-} from '@stores';
+import { useStandardLookups, useSelectedTestPaper, useSelectorLookups, useTestPaperLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
@@ -39,7 +34,7 @@ export const TestPapers = () => {
     setState({ isOpenCreateModal: true });
   };
 
-  const onOpenEditModal = (testPaper: ITestPaper) => {
+  const onOpenEditModal = (testPaper: TestPaperDto) => {
     setSelectedTestPaperId(testPaper._id);
     setState({ isOpenCreateModal: true });
   };
@@ -48,7 +43,7 @@ export const TestPapers = () => {
     setState({ isOpenCreateModal: false });
   };
 
-  const onClickTestPaper = (testPaper: ITestPaper) => {
+  const onClickTestPaper = (testPaper: TestPaperDto) => {
     setSelectedTestPaperId(testPaper._id);
     setSelectedTestPaperSectionId((testPaper.sections ?? [])[0]);
     setTimeout(() => {
@@ -59,7 +54,7 @@ export const TestPapers = () => {
     }, 200);
   };
 
-  const columns: IColumnData<ITestPaper>[] = [
+  const columns: IColumnData<TestPaperDto>[] = [
     // {
     //   label: 'Id',
     //   dataKey: '_id',
@@ -67,7 +62,7 @@ export const TestPapers = () => {
     {
       label: 'Name',
       dataKey: 'name',
-      valueFormatter: (row: ITestPaper) => {
+      valueFormatter: (row: TestPaperDto) => {
         return (
           <Link href={`/test-papers/${row._id}`} isSubtle className="px-0">
             <span className="text-blue-primary">{row.name}</span>

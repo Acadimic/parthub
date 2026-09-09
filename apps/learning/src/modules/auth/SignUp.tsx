@@ -22,9 +22,9 @@ export const SignUp = () => {
     password: '',
   });
 
-  const signUpHandler = async ({ email, password }: ILoginUser) => {
+  const signUpHandler = async ({ email: rawEmail, password }: ILoginUser) => {
     try {
-      email = email?.trim()?.toLowerCase();
+      const email = rawEmail?.trim()?.toLowerCase();
       const result = await createFirebaseUser({ email, password });
       const firebaseUser = result.user;
       const uid = firebaseUser?.uid;

@@ -22,6 +22,17 @@ const ICON_MAPS = {
   ),
 };
 
+/**
+ * A module item is either a material or a test paper, never both, and the row shows the same three
+ * fields either way. Resolving them once here keeps the `material?.x ?? testPaper?.x` fallback out
+ * of the markup, where it was repeated for every field.
+ */
+const getItemDetails = (material?: IMaterial, testPaper?: ITestPaper) => ({
+  id: material?._id ?? testPaper?._id ?? '',
+  name: material?.name ?? testPaper?.name ?? '',
+  durationMins: material?.durationMins ?? testPaper?.durationMins ?? 0,
+});
+
 export const CourseContentItem = ({
   isPreview,
   material,
@@ -46,10 +57,11 @@ export const CourseContentItem = ({
     closeCourseOverview();
   };
 
+  const item = getItemDetails(material, testPaper);
   const isCompleted = isCourseModuleItemCompleted({
     course: courseId,
     courseModule: courseModuleId,
-    collectionItem: material?._id || testPaper?._id || '',
+    collectionItem: item.id,
   });
 
   return (
@@ -67,11 +79,11 @@ export const CourseContentItem = ({
         {ICON_MAPS[isCompleted ? ModuleContentType.COMPLETED : moduleContentType]}
       </div>
       <div className="flex-1">
-        <p className="text-sm font-medium">{material?.name || testPaper?.name}</p>
+        <p className="text-sm font-medium">{item.name}</p>
         <div className="text-xs text-color-secondary flex items-center space-x-1">
           <span className="capitalize">{moduleContentType}</span>
           <span className="mx-1 text-xs">•</span>
-          <span>{material?.durationMins || testPaper?.durationMins} mins</span>
+          <span>{item.durationMins} mins</span>
         </div>
       </div>
     </div>

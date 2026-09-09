@@ -1,6 +1,7 @@
+import { type MaterialDto, type TestPaperDto } from '@repo/shared/contracts';
 import { Accordions } from '@repo/ui/app';
 import { StudyMaterialView } from '@modules/study-materials/components';
-import { type ICourseModule, type IMaterial, type ITestPaper, useMaterialLookups, useTestPaperLookups } from '@stores';
+import { type ICourseModule, useMaterialLookups, useTestPaperLookups } from '@stores';
 
 interface IProps {
   courseModule: ICourseModule;
@@ -16,7 +17,7 @@ export const CourseModuleView = ({ courseModule }: IProps) => {
     <div>
       {/* <Label label="Study Materials" /> */}
       <Accordions
-        items={getMaterialsByIds(courseModule.materials ?? []).map((material: IMaterial) => ({
+        items={getMaterialsByIds(courseModule.materials ?? []).map((material: MaterialDto) => ({
           title: (
             <div className="flex justify-between w-full items-center relative">
               <div className="text-sm font-semibold text-blue-primary">{material.name}</div>
@@ -27,7 +28,7 @@ export const CourseModuleView = ({ courseModule }: IProps) => {
       />
       {/* <Label label="Test Papers" /> */}
       <Accordions
-        items={getTestPapersByIds(courseModule.testPapers ?? []).map((testPaper: ITestPaper) => ({
+        items={getTestPapersByIds(courseModule.testPapers ?? []).map((testPaper: TestPaperDto) => ({
           title: (
             <div className="flex justify-between w-full items-center relative">
               <div className="text-sm font-semibold text-blue-primary">{testPaper.name}</div>

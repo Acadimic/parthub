@@ -213,12 +213,15 @@ const SelectElement = ({
             </div>
           </div>
           <div className="max-h-[300px] overflow-y-auto">
-            {memoizedItems.length === 0 ? (
+            {memoizedItems.length === 0 && (
               <div className="h-full flex flex-col items-center justify-center gap-2 py-4 bg-background-primary border-x border-b border-color-border">
                 <BlankState label="Not Found" iconSize="h-8" />
                 {notFoundComponent}
               </div>
-            ) : isGrouped && groupedItems ? (
+            )}
+            {memoizedItems.length > 0 &&
+              isGrouped &&
+              groupedItems &&
               Object.entries(groupedItems).map(([group, groupItems]) => (
                 <div key={group}>
                   <div className="flex items-center text-xs font-medium text-color-secondary px-3 py-2 border-b border-x border-color-border bg-background-primary capitalize space-x-2">
@@ -227,10 +230,8 @@ const SelectElement = ({
                   </div>
                   {groupItems.map(renderOption)}
                 </div>
-              ))
-            ) : (
-              memoizedItems.map(renderOption)
-            )}
+              ))}
+            {memoizedItems.length > 0 && !(isGrouped && groupedItems) && memoizedItems.map(renderOption)}
           </div>
         </div>
       )}

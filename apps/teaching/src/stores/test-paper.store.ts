@@ -1,42 +1,19 @@
-import {
-  type ClientEntityWith,
-  type DefaultMarkingType,
-  type IRequestSlice,
-  type ITestPaperSectionFields,
-  type TestPaperDto,
-  createRequestSlice,
-} from '@repo/shared';
+import { type TestPaperDto, type QuestionDto } from '@repo/shared/contracts';
+import { type DefaultMarkingType, type ITestPaperSectionFields } from '@repo/shared/interfaces';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { PaperCategoryType, PaperType, type SectionCategoryType, type SectionType } from '../enums';
 import { TestPaperService } from '../services';
 import { getObjectId } from '../utils/helpers';
-import { type IQuestion, useQuestionStore } from './question.store';
+import { useQuestionStore } from './question.store';
 import { useStandardStore } from './standard.store';
 import { useSelectorStore } from './selector.store';
 
-export type ITestPaper = ClientEntityWith<
-  TestPaperDto,
-  | 'name'
-  | 'slug'
-  | 'standards'
-  | 'subjects'
-  | 'sections'
-  | 'totalQuestions'
-  | 'durationMins'
-  | 'year'
-  | 'maxMarks'
-  | 'paperType'
-  | 'instruction'
-  | 'paperCategory'
-  | 'isPublished'
-  | 'webLink'
-  | 'appLink'
->;
 /**
  * A section in the store. `defaultMarkings` and `sectionCategory` are required here because the
- * model declared them so and every screen reads them; see `ClientEntityWith` for the same idea.
+ * model declared them so and every screen reads them, so each read narrows before use.
  */
 export type ITestPaperSection = ITestPaperSectionFields &
   Required<Pick<ITestPaperSectionFields, 'defaultMarkings' | 'sectionCategory'>> & { isNew?: boolean };
@@ -45,18 +22,18 @@ export type ITestPaperSection = ITestPaperSectionFields &
 type TestPaperFetch = 'testPapers' | 'testPaperSections';
 
 export interface ITestPaperState extends IRequestSlice<TestPaperFetch> {
-  testPaperMap: Record<string, ITestPaper>;
+  testPaperMap: Record<string, TestPaperDto>;
   testPaperSectionMap: Record<string, ITestPaperSection>;
 
-  getTestPaperById: (testPaperId: string) => ITestPaper | undefined;
+  getTestPaperById: (testPaperId: string) => TestPaperDto | undefined;
   getTestPaperSectionById: (sectionId: string) => ITestPaperSection | undefined;
-  getTestPapers: () => ITestPaper[];
+  getTestPapers: () => TestPaperDto[];
   getTestPaperSections: () => ITestPaperSection[];
-  getTestPapersByIds: (testPaperIds: string[]) => ITestPaper[];
+  getTestPapersByIds: (testPaperIds: string[]) => TestPaperDto[];
   getTestPaperSectionsByIds: (sectionIds: string[]) => ITestPaperSection[];
-  getTestPapersByStandardIds: (standardIds: string[]) => ITestPaper[];
+  getTestPapersByStandardIds: (standardIds: string[]) => TestPaperDto[];
   /** A section's questions. Was the `questions` view on the section model. */
-  getSectionQuestions: (sectionId: string) => IQuestion[];
+  getSectionQuestions: (sectionId: string) => QuestionDto[];
   /** A paper's subjects as select items. Was a view on the model. */
   getTestPaperSubjectItems: (testPaperId: string) => ISelectItem[];
   /** A paper's standards as select items. Was a view on the model. */
@@ -64,15 +41,15 @@ export interface ITestPaperState extends IRequestSlice<TestPaperFetch> {
   /** Recomputes a paper's question count and max marks from its sections' questions. */
   updateTotalQuestionsAndMarks: (testPaperId: string) => void;
 
-  addTestPapers: (testPapers: ITestPaper[]) => void;
+  addTestPapers: (testPapers: TestPaperDto[]) => void;
   addTestPaperSections: (sections: ITestPaperSection[]) => void;
-  patchTestPaper: (testPaperId: string, fields: Partial<ITestPaper>) => void;
+  patchTestPaper: (testPaperId: string, fields: Partial<TestPaperDto>) => void;
   patchTestPaperSection: (sectionId: string, fields: Partial<ITestPaperSection>) => void;
   removeTestPaper: (testPaperId: string) => void;
   removeTestPaperSection: (sectionId: string) => void;
 
   /** Adds an unsaved test paper and returns it, for the caller to select. */
-  createTestPaper: () => ITestPaper;
+  createTestPaper: () => TestPaperDto;
   /** Adds an unsaved section and returns it, for the caller to select. */
   createTestPaperSection: (
     sectionType: SectionType,
@@ -107,7 +84,7 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
 
   getTestPapersByIds: (testPaperIds) => {
     const { testPaperMap } = get();
-    return testPaperIds.map((id) => testPaperMap[id]).filter((row): row is ITestPaper => !!row);
+    return testPaperIds.map((id) => testPaperMap[id]).filter((row): row is TestPaperDto => !!row);
   },
 
   getTestPaperSectionsByIds: (sectionIds) => {
@@ -184,7 +161,7 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
   },
 
   createTestPaper: () => {
-    const testPaper: ITestPaper = {
+    const testPaper: TestPaperDto = {
       _id: getObjectId(),
       name: '',
       slug: '',
@@ -255,7 +232,7 @@ export const useTestPaperLookups = (): ITestPaperState => {
 };
 
 /** The selected test paper, or `undefined`. Replaces `selectorStore.selectedTestPaper`. */
-export const useSelectedTestPaper = (): ITestPaper | undefined => {
+export const useSelectedTestPaper = (): TestPaperDto | undefined => {
   const selectedTestPaperId = useSelectorStore((state) => state.selectedTestPaperId);
   return useTestPaperStore((state) => (selectedTestPaperId ? state.testPaperMap[selectedTestPaperId] : undefined));
 };

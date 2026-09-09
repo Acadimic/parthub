@@ -58,10 +58,10 @@ export const ExamSidebar = ({
   const handleQuestionChange = (questionId: string) => {
     setSelectedQuestionId(questionId);
     setVisited(questionId);
-    closeExamSummary && closeExamSummary();
+    closeExamSummary?.();
   };
 
-  const getQuestionItem = (questionId: string, index: number) => {
+  const getQuestionItem = (questionId: string) => {
     const value = getQuestionIndexByQuestionId(questionId) + 1;
     const isMarkForReview = isMarkedForReview(questionId);
     const isAnswered = isResponded(questionId);
@@ -80,7 +80,7 @@ export const ExamSidebar = ({
     return <NotVisited count={value} isLarge />;
   };
 
-  const getAnsweredItem = (questionId: string, index: number) => {
+  const getAnsweredItem = (questionId: string) => {
     const result = getResultByQuestionId(questionId);
     const value = getQuestionIndexByQuestionId(questionId) + 1;
     if (result === Marking.UNATTEMPTED) {
@@ -167,9 +167,7 @@ export const ExamSidebar = ({
                             onClick={() => handleQuestionChange(questionId)}
                           >
                             <div>
-                              {isSubmitted || isPractice
-                                ? getAnsweredItem(questionId, index)
-                                : getQuestionItem(questionId, index)}
+                              {isSubmitted || isPractice ? getAnsweredItem(questionId) : getQuestionItem(questionId)}
                             </div>
                           </button>
                         );

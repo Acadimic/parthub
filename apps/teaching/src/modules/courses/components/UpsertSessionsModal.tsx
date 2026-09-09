@@ -62,7 +62,7 @@ export const UpsertSessionsModal = ({ isOpen, onClose }: IProps) => {
                   items={meets.map((meet) => ({
                     label: meet.title,
                     value: meet._id,
-                    group: getFrequencyText([...meet.weekDays], meet.startTime),
+                    group: meet.startTime ? getFrequencyText([...(meet.weekDays ?? [])], meet.startTime) : '',
                     description: meet.description,
                   }))}
                   required

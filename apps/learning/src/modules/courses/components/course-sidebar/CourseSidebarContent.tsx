@@ -23,13 +23,13 @@ export const CourseSidebarContent = () => {
         <div className={`overflow-y-auto grow ${isCourseMenuOpen ? 'opacity-100' : 'opacity-0'}`}>
           <div className="py-4 flex flex-col space-y-1 pr-2">
             <div className="pr-4">
-              <StandardWithLogo standard={selectedCourse && getStandardById(selectedCourse?.standards[0])} />
+              <StandardWithLogo standard={selectedCourse && getStandardById(selectedCourse.standards?.[0] ?? '')} />
               <div className="text-sm py-3 text-wrap">
                 <span className="line-clamp-3">{selectedCourse?.description}</span>
               </div>
             </div>
             <div className="w-full">
-              {selectedCourse?.courses.map((courseId: string) => {
+              {selectedCourse?.courses?.map((courseId: string) => {
                 const course = getCourseById(courseId);
                 const courseModules = getCourseModuleByCourseId(courseId);
                 if (!course) return null;

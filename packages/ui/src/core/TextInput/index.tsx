@@ -47,17 +47,17 @@ export const TextInput = (props: ITextInputProps) => {
     if (autoFocus) ref.current?.focus();
   }, [autoFocus]);
 
+  let borderClass = 'border-color-border';
+  if (isFocused) borderClass = 'border-blue-primary ring-1 ring-blue-primary bg-background-secondary';
+  else if (error) borderClass = 'border-red-primary';
+
   return (
     <div className={className}>
       {label && <Label label={label} required={required} />}
       <div
         className={cn(
           'bg-background-primary hover:bg-background-secondary flex items-center border rounded-none',
-          isFocused
-            ? 'border-blue-primary ring-1 ring-blue-primary bg-background-secondary'
-            : error
-              ? 'border-red-primary'
-              : 'border-color-border',
+          borderClass,
         )}
       >
         {leftSection ? (

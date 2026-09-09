@@ -1,11 +1,6 @@
-import {
-  type ICompletedModule,
-  type ICourse,
-  type ICourseModule,
-  type IMaterial,
-  type IMeet,
-  type ITestPaper,
-} from '@stores';
+import { type MeetDto } from '@repo/shared/contracts';
+import { type ICompletedModuleFields } from '@repo/shared/interfaces';
+import { type ICourse, type ICourseModule, type IMaterial, type ITestPaper } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
@@ -14,10 +9,10 @@ import { callAuthApi } from './http.service';
  * embedded rather than as ids. Declared here, at the boundary, because the store distributes the
  * collections and then keeps only ids.
  */
-interface ICourseModuleContents extends Omit<ICourseModule, 'testPapers' | 'materials' | 'meets'> {
+export interface ICourseModuleContents extends Omit<ICourseModule, 'testPapers' | 'materials' | 'meets'> {
   testPapers: ITestPaper[];
   materials: IMaterial[];
-  meets: IMeet[];
+  meets: MeetDto[];
 }
 
 class CourseService {
@@ -41,7 +36,7 @@ class CourseService {
     return resData;
   };
 
-  upsertCompletedModule = async (payload: ICompletedModule) => {
+  upsertCompletedModule = async (payload: ICompletedModuleFields) => {
     const url = 'course/completed/module/upsert';
     const resData = await callAuthApi(url, API.POST, payload);
     return resData;
@@ -49,7 +44,7 @@ class CourseService {
 
   getCompletedModules = async () => {
     const url = 'course/completed/modules';
-    const resData = await callAuthApi<ICompletedModule[]>(url, API.GET);
+    const resData = await callAuthApi<ICompletedModuleFields[]>(url, API.GET);
     return resData;
   };
 }

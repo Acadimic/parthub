@@ -1,4 +1,4 @@
-import { type IReaction } from '@stores';
+import { type ReactionDto } from '@repo/shared/contracts';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
@@ -11,13 +11,13 @@ class ReactionService {
 
   getReactions = async () => {
     const url = 'reaction/all';
-    const resData = await callAuthApi<IReaction[]>(url, API.GET);
+    const resData = await callAuthApi<ReactionDto[]>(url, API.GET);
     return resData;
   };
 
-  upsertReaction = async (payload: IReaction) => {
+  upsertReaction = async (payload: ReactionDto) => {
     const url = 'reaction/upsert';
-    const resData = await callAuthApi<IReaction>(url, API.POST, payload);
+    const resData = await callAuthApi<ReactionDto>(url, API.POST, payload);
     return resData;
   };
 }

@@ -1,6 +1,6 @@
-import { type TestPaperSectionsResponse } from '@repo/shared';
+import { type TestPaperSectionsResponse, type QuestionDto, type TestPaperDto } from '@repo/shared/contracts';
 import { type IMergeTestPapers, type IUpsertBulkSectionQuestions, type IUpsertSectionQuestion } from '@interfaces';
-import { type IQuestion, type ITestPaper, type ITestPaperSection } from '@stores';
+import { type ITestPaperSection } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
@@ -8,19 +8,19 @@ import { callAuthApi } from './http.service';
  * The wire shape, with `questions` narrowed to what the store holds.
  *
  * This is the boundary where the client's assumption about always-present fields is asserted --
- * see `ClientEntityWith`. Everything above this line is the DTO as declared; everything below it
+ * The DTO leaves them optional. Everything above this line is the DTO as declared; everything below it
  * relies on the narrowing.
  */
 interface ITestPaperSectionsResponse extends Omit<TestPaperSectionsResponse, 'questions' | 'sections'> {
   sections: ITestPaperSection[];
-  questions: IQuestion[];
+  questions: QuestionDto[];
 }
 
 class TestPaperService {
   // Interim: declares the shape the store consumes until a TestPaper response contract exists.
-  upsertTestPaper = async (payload: ITestPaper) => {
+  upsertTestPaper = async (payload: TestPaperDto) => {
     const url = 'test-paper/upsert';
-    const resData = await callAuthApi<ITestPaper>(url, API.POST, payload);
+    const resData = await callAuthApi<TestPaperDto>(url, API.POST, payload);
     return resData;
   };
 
@@ -44,7 +44,7 @@ class TestPaperService {
 
   getTestPapers = async () => {
     const url = 'test-paper/all';
-    const resData = await callAuthApi<ITestPaper[]>(url, API.GET);
+    const resData = await callAuthApi<TestPaperDto[]>(url, API.GET);
     return resData;
   };
 
@@ -57,7 +57,7 @@ class TestPaperService {
   // Interim: declares the shape the store consumes until a TestPaper response contract exists.
   mergeTestPapers = async (payload: IMergeTestPapers) => {
     const url = 'test-paper/merge';
-    const resData = await callAuthApi<ITestPaper>(url, API.POST, payload);
+    const resData = await callAuthApi<TestPaperDto>(url, API.POST, payload);
     return resData;
   };
 }

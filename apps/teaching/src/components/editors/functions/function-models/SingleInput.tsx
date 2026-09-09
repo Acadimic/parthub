@@ -1,5 +1,5 @@
 import { HtmlEditor } from '@components/editors';
-import { type IPosition, type ITarget } from '@interfaces';
+import { type ITarget } from '@interfaces';
 import { useState } from 'react';
 import { Toolbar } from '../../Toolbar';
 import { FunctionFooter } from '../components';
@@ -24,12 +24,6 @@ const SingleInput = (props: IProps) => {
   const [data, setData] = useState<IState>({
     [NAME]: content || '',
   });
-  const [position] = useState({ start: 0, end: 0 });
-
-  const setPosition = (newPosition: IPosition) => {
-    position.start = newPosition.start;
-    position.end = newPosition.end;
-  };
 
   const handleContentChange = (event: ITarget) => {
     const dataName = event.target.name;

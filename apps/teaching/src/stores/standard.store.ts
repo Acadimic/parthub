@@ -1,12 +1,10 @@
 import {
   type ChapterDto,
-  type ClientEntity,
-  type IRequestSlice,
   type StandardDto,
   type StandardSubjectMappingDto,
   type SubjectDto,
-  createRequestSlice,
-} from '@repo/shared';
+} from '@repo/shared/contracts';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type ISelectItem, type IStandardSubjectQuery } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -15,38 +13,28 @@ import { useSelectorStore } from './selector.store';
 import { STANDARD_GROUP_ORDER } from '../utils/constants';
 import { getObjectId } from '../utils/helpers';
 
-/**
- * The reference entities this store holds, typed from the shared DTOs rather than declared again.
- * Only `chapter` is created in this app, so only it needs `ClientEntity`'s draft handling; the rest
- * are read-only here and are the DTO as sent.
- */
-export type IStandard = StandardDto;
-export type ISubject = SubjectDto;
-export type IStandardSubjectMapping = StandardSubjectMappingDto;
-export type IChapter = ClientEntity<ChapterDto>;
-
 /** The fetches this store tracks. `run`, `isLoading` and friends accept only these names. */
 type StandardFetch = 'standards' | 'subjects' | 'mappings' | 'chapters' | 'initialData';
 
 export interface IStandardState extends IRequestSlice<StandardFetch> {
-  standardMap: Record<string, IStandard>;
-  subjectMap: Record<string, ISubject>;
-  chapterMap: Record<string, IChapter>;
-  mappingMap: Record<string, IStandardSubjectMapping>;
+  standardMap: Record<string, StandardDto>;
+  subjectMap: Record<string, SubjectDto>;
+  chapterMap: Record<string, ChapterDto>;
+  mappingMap: Record<string, StandardSubjectMappingDto>;
 
-  getStandardById: (standardId: string) => IStandard | undefined;
-  getSubjectById: (subjectId: string) => ISubject | undefined;
-  getChapterById: (chapterId: string) => IChapter | undefined;
-  getStandards: () => IStandard[];
-  getSubjects: () => ISubject[];
-  getChapters: () => IChapter[];
-  getStandardsByIds: (standardIds: string[]) => IStandard[];
-  getSubjectsByIds: (subjectIds: string[]) => ISubject[];
-  getStandardSubjectMappings: (standardId: string) => IStandardSubjectMapping[];
+  getStandardById: (standardId: string) => StandardDto | undefined;
+  getSubjectById: (subjectId: string) => SubjectDto | undefined;
+  getChapterById: (chapterId: string) => ChapterDto | undefined;
+  getStandards: () => StandardDto[];
+  getSubjects: () => SubjectDto[];
+  getChapters: () => ChapterDto[];
+  getStandardsByIds: (standardIds: string[]) => StandardDto[];
+  getSubjectsByIds: (subjectIds: string[]) => SubjectDto[];
+  getStandardSubjectMappings: (standardId: string) => StandardSubjectMappingDto[];
   /** The subject ids mapped to a standard, in mapping order. Was the `subjects` view on the model. */
   getStandardSubjectIds: (standardId: string) => string[];
-  getStandardSubjects: (standardId: string) => ISubject[];
-  getStandardSubjectChapters: (standardId: string, subjectId: string) => IChapter[];
+  getStandardSubjects: (standardId: string) => SubjectDto[];
+  getStandardSubjectChapters: (standardId: string, subjectId: string) => ChapterDto[];
   getNextStandardGroupOrder: (standardId: string, group: string) => number;
   getStandardItems: () => ISelectItem[];
   /** The given standards as grouped select items — a subset of `getStandardItems`. */
@@ -61,16 +49,16 @@ export interface IStandardState extends IRequestSlice<StandardFetch> {
   getStandardSubjectItems: (standardId: string) => ISelectItem[];
   getStandardsSubjectItems: (standardIds: string[]) => ISelectItem[];
 
-  addStandards: (standards: IStandard[]) => void;
-  addSubjects: (subjects: ISubject[]) => void;
-  addChapters: (chapters: IChapter[]) => void;
-  addStandardSubjectMappings: (mappings: IStandardSubjectMapping[]) => void;
+  addStandards: (standards: StandardDto[]) => void;
+  addSubjects: (subjects: SubjectDto[]) => void;
+  addChapters: (chapters: ChapterDto[]) => void;
+  addStandardSubjectMappings: (mappings: StandardSubjectMappingDto[]) => void;
 
-  patchChapter: (chapterId: string, fields: Partial<IChapter>) => void;
+  patchChapter: (chapterId: string, fields: Partial<ChapterDto>) => void;
   removeChapterById: (chapterId: string) => void;
 
   /** Adds an unsaved chapter and returns it, for the caller to select. */
-  createChapter: (standardId: string, subjectId: string) => IChapter;
+  createChapter: (standardId: string, subjectId: string) => ChapterDto;
 
   loadStandards: () => Promise<void>;
   loadSubjects: () => Promise<void>;
@@ -112,12 +100,12 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
 
   getStandardsByIds: (standardIds) => {
     const { standardMap } = get();
-    return standardIds.map((standardId) => standardMap[standardId]).filter((row): row is IStandard => !!row);
+    return standardIds.map((standardId) => standardMap[standardId]).filter((row): row is StandardDto => !!row);
   },
 
   getSubjectsByIds: (subjectIds) => {
     const { subjectMap } = get();
-    return subjectIds.map((subjectId) => subjectMap[subjectId]).filter((row): row is ISubject => !!row);
+    return subjectIds.map((subjectId) => subjectMap[subjectId]).filter((row): row is SubjectDto => !!row);
   },
 
   getStandardSubjectMappings: (standardId) =>
@@ -229,7 +217,7 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
   createChapter: (standardId, subjectId) => {
     // No `org` / `createdBy` stamped here: they are optional on a draft and the server's
     // change-tracking plugin overwrites whatever a client sends anyway.
-    const chapter: IChapter = {
+    const chapter: ChapterDto = {
       _id: getObjectId(),
       name: '',
       standard: standardId,
@@ -306,19 +294,19 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
 export const useStandardLookups = (): IStandardState => useStandardStore(useShallow((state) => state));
 
 /** The selected standard, or `undefined`. Replaces `selectorStore.selectedStandard`. */
-export const useSelectedStandard = (): IStandard | undefined => {
+export const useSelectedStandard = (): StandardDto | undefined => {
   const selectedStandardId = useSelectorStore((state) => state.selectedStandardId);
   return useStandardStore((state) => (selectedStandardId ? state.standardMap[selectedStandardId] : undefined));
 };
 
 /** The selected subject, or `undefined`. Replaces `selectorStore.selectedSubject`. */
-export const useSelectedSubject = (): ISubject | undefined => {
+export const useSelectedSubject = (): SubjectDto | undefined => {
   const selectedSubjectId = useSelectorStore((state) => state.selectedSubjectId);
   return useStandardStore((state) => (selectedSubjectId ? state.subjectMap[selectedSubjectId] : undefined));
 };
 
 /** The selected chapter, or `undefined`. Replaces `selectorStore.selectedChapter`. */
-export const useSelectedChapter = (): IChapter | undefined => {
+export const useSelectedChapter = (): ChapterDto | undefined => {
   const selectedChapterId = useSelectorStore((state) => state.selectedChapterId);
   return useStandardStore((state) => (selectedChapterId ? state.chapterMap[selectedChapterId] : undefined));
 };

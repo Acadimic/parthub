@@ -18,6 +18,13 @@ export const Options = ({ question, handleResponses, selectedValues, isDisabled,
   const { getOptionItems } = useQuestionLookups();
   const optionsItems = getOptionItems(question._id);
   const questionType = question.questionType;
+  const getOptionColor = (value: string) => {
+    if (!isDisabled) return 'text-blue-primary';
+    if (answers.includes(value)) return 'text-green-primary';
+    if (selectedValues.includes(value)) return 'text-red-primary';
+    return 'text-blue-primary';
+  };
+
   const options: ISelectItem[] = optionsItems.map((option, index) => ({
     label: (
       <Option index={index}>
@@ -25,17 +32,10 @@ export const Options = ({ question, handleResponses, selectedValues, isDisabled,
       </Option>
     ) as unknown as string,
     value: option.value,
-    color: isDisabled
-      ? answers.includes(option.value)
-        ? 'text-green-primary'
-        : selectedValues.includes(option.value)
-          ? 'text-red-primary'
-          : 'text-blue-primary'
-      : 'text-blue-primary',
+    color: getOptionColor(option.value),
   }));
 
   const handleClickRadioOption = (selectedValue: string) => {
-    console.log('Selected Value:', selectedValue);
     handleResponses([selectedValue]);
   };
 
@@ -43,7 +43,6 @@ export const Options = ({ question, handleResponses, selectedValues, isDisabled,
     const newSelectedValues = selectedValues.includes(selectedValue)
       ? selectedValues.filter((value) => value !== selectedValue)
       : [...selectedValues, selectedValue];
-    console.log('newSelectedValues: ', newSelectedValues);
     handleResponses(newSelectedValues);
   };
 

@@ -1,9 +1,9 @@
+import { type MeetDto } from '@repo/shared/contracts';
 import { CircleIcon } from '@phosphor-icons/react';
-import { type IMeet } from '@stores';
 import { dark, light } from '@themes';
 
 interface IProps {
-  meet: IMeet;
+  meet: MeetDto;
   className?: string;
 }
 
@@ -14,7 +14,11 @@ export const MeetingTitle = ({ meet, className }: IProps) => {
   return (
     <div className="flex items-start gap-2.5">
       <div className="mt-1">
-        <CircleIcon weight="fill" style={{ color: colorObject.colors[meet.color]?.primary }} className={`w-5 h-5`} />
+        <CircleIcon
+          weight="fill"
+          style={{ color: meet.color ? colorObject.colors[meet.color]?.primary : undefined }}
+          className={`w-5 h-5`}
+        />
       </div>
       <div className={`font-medium ${className ? className : 'text-sm'}`}>
         <div className="line-clamp-1">{meet.title}</div>

@@ -1,5 +1,6 @@
+import { type StandardDto, type SubjectDto } from '@repo/shared/contracts';
 import { create } from 'zustand';
-import { type IStandard, type ISubject, useStandardStore } from './standard.store';
+import { useStandardStore } from './standard.store';
 
 /**
  * What the user currently has selected. Ids only — the entities themselves live in the store that
@@ -42,13 +43,13 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
  * the store's map, so its reference only changes when that standard is actually patched — no
  * `useShallow` needed, and no re-render when an unrelated standard changes.
  */
-export const useSelectedStandard = (): IStandard | undefined => {
+export const useSelectedStandard = (): StandardDto | undefined => {
   const selectedStandardId = useSelectorStore((state) => state.selectedStandardId);
   return useStandardStore((state) => (selectedStandardId ? state.standardMap[selectedStandardId] : undefined));
 };
 
 /** The selected subject, or `undefined` when nothing is selected. See `useSelectedStandard`. */
-export const useSelectedSubject = (): ISubject | undefined => {
+export const useSelectedSubject = (): SubjectDto | undefined => {
   const selectedSubjectId = useSelectorStore((state) => state.selectedSubjectId);
   return useStandardStore((state) => (selectedSubjectId ? state.subjectMap[selectedSubjectId] : undefined));
 };

@@ -3,7 +3,7 @@ import { UserService } from '@modules/user/user.service';
 import { RoleService } from '@modules/role/role.service';
 import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { InviteStatus } from '@repo/shared';
+import { InviteStatus } from '@repo/shared/enums';
 import { InviteLookupDto, InviteDto, InviteUserDto } from '@repo/shared/validations';
 import { Model, Types } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';

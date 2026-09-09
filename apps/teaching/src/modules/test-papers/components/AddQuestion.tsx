@@ -21,7 +21,7 @@ export const AddQuestion = () => {
   const handleAddOption = () => {
     if (!selectedQuestion) return;
     const newOption = createOption(selectedQuestion._id);
-    patchQuestion(selectedQuestion._id, { options: [...selectedQuestion.options, newOption._id] });
+    patchQuestion(selectedQuestion._id, { options: [...(selectedQuestion.options ?? []), newOption._id] });
   };
 
   const handleRemoveOption = (option: IOption) => {

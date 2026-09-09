@@ -1,19 +1,21 @@
+import { type AttachmentDto } from '@repo/shared/contracts';
 import { DocumentType, StorageKey } from '@enums';
 import { CommonService } from '@services';
-import { type IAttachment, useSelectorLookups } from '@stores';
+import { useSelectorLookups } from '@stores';
 import { errorToast, getObjectId, isPresignedUrlExpired, successToast } from '@utils/helpers';
 import { useState } from 'react';
 
 export const useAttachment = () => {
   const selectorStore = useSelectorLookups();
-  const [isLoadingAttachment, setIsAttachmentLoading] = useState(false);
+  // Never set: the click handler that would drive it is commented out in Attachment.tsx.
+  const [isLoadingAttachment] = useState(false);
   const { setSelectedAttachment, setSelectedContent } = selectorStore;
 
   const uploadFilesToS3 = async (_id: string, selectedFiles: File[]) => {
     if (!selectedFiles.length) return [];
     try {
       // Generate new keys
-      const keys = selectedFiles.map((file: File, index: number) => ({
+      const keys = selectedFiles.map((file: File) => ({
         key: `${_id}/${getObjectId()}`,
         fileType: file.type,
       }));
@@ -24,7 +26,7 @@ export const useAttachment = () => {
         CommonService.uploadWithPreSignedUrl(presignedUrls[index], file),
       );
       await Promise.all(promises);
-      const attachments: IAttachment[] = selectedFiles.map(
+      const attachments: AttachmentDto[] = selectedFiles.map(
         (file: File, index: number) =>
           ({
             _id: keys[index].key.split('/')[1],
@@ -34,7 +36,7 @@ export const useAttachment = () => {
             fileType: file.type,
             fileExtension: file.name.split('.').pop(),
             isUploaded: true,
-          }) as IAttachment,
+          }) as AttachmentDto,
       );
       successToast({ message: `${selectedFiles.length} file(s) uploaded successfully!` });
       return attachments;
@@ -68,7 +70,7 @@ export const useAttachment = () => {
     }
   };
 
-  const handleClickAttachment = async (attachment: IAttachment) => {
+  const handleClickAttachment = async (attachment: AttachmentDto) => {
     if (!attachment) return;
     setSelectedAttachment(attachment);
     setSelectedContent('');

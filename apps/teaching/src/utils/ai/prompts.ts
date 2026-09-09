@@ -60,8 +60,12 @@ export const getGeneratedQuestionsPrompt = ({
   levels,
   prompt,
 }: IGeneratedQuestionsPrompt): string => {
+  let optionCount = '1';
+  if ([QuestionType.MULTIPLE_CHOICE, QuestionType.SINGLE_CHOICE].includes(questionType)) optionCount = '4';
+  else if (questionType === QuestionType.BOOLEAN) optionCount = '2';
+
   return `Generate ${numberOfQuestions} ${splitCamelCase(questionType)} questions along with 
-  ${[QuestionType.MULTIPLE_CHOICE, QuestionType.SINGLE_CHOICE].includes(questionType) ? '4' : questionType === QuestionType.BOOLEAN ? '2' : '1'} 
+  ${optionCount} 
   options & solution (if applicable) per question in the following structured JSON format:
 
   interface Question {

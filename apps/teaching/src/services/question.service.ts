@@ -1,9 +1,9 @@
-import { type IQuestion } from '@stores';
+import { type QuestionDto } from '@repo/shared/contracts';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
 class QuestionService {
-  upsertQuestion = async (payload: IQuestion) => {
+  upsertQuestion = async (payload: QuestionDto) => {
     const url = 'question/upsert';
     const resData = await callAuthApi(url, API.POST, payload);
     return resData;
@@ -11,7 +11,7 @@ class QuestionService {
 
   getQuestions = async () => {
     const url = 'question/all';
-    const resData = await callAuthApi<IQuestion[]>(url, API.GET);
+    const resData = await callAuthApi<QuestionDto[]>(url, API.GET);
     return resData;
   };
 }

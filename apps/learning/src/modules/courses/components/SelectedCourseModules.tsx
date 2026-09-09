@@ -26,7 +26,7 @@ export const SelectedCourseModules = ({ isPreview, closeCourseOverview }: IProps
   return (
     <div>
       {courses.map((courseItem) => {
-        const meets = getMeetsByIds(courseItem.meets);
+        const meets = getMeetsByIds(courseItem.meets ?? []);
         return (
           <div key={courseItem._id} id={courseItem._id}>
             <Accordions

@@ -1,4 +1,4 @@
-import { type PlanDto } from '@repo/shared';
+import { type PlanDto } from '@repo/shared/contracts';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 

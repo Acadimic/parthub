@@ -1,3 +1,10 @@
+/*
+ * A single piece of generated SVG artwork: one <svg> with 74 <path> elements and no logic.
+ * `max-lines` asks for the file to be broken up, but there is no seam here — splitting the paths
+ * across modules would not make the drawing easier to read or to change, and the component itself
+ * is four lines. The ceiling is therefore recorded as not applying rather than worked around.
+ */
+/* eslint-disable max-lines */
 export const FinanceImg = () => {
   return (
     <div>

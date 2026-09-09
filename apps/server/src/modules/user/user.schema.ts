@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { AccountType, Gender, PermissionItem } from '@repo/shared';
+import { AccountType, Gender, PermissionItem } from '@repo/shared/enums';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User> & { avatarPresignedUrl?: string };

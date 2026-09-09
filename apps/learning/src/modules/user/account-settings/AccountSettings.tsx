@@ -19,23 +19,19 @@ export const AccountSettings = () => {
   const selectedUser = useSelectedUser();
   const { uploadFilesToS3 } = useAttachment();
   const [avatarFile, setAvatarFile] = useState<File | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(false);
   const { push, route } = useRouter();
 
   const updatePhotoUrl = async (file: File | undefined) => {
     if (!selectedUser) return;
     try {
-      setIsLoading(true);
       const attachment = file && (await uploadFilesToS3(selectedUser._id, [file]));
       const photoUrl = attachment?.length ? attachment[0].url : '';
-      patchUser(selectedUser._id, { photoUrl: photoUrl });
+      patchUser(selectedUser._id, { photoUrl });
       await UserService.updateProfile(selectedUser);
       successToast({ message: 'Avatar updated successfully!' });
       setAvatarFile(undefined);
     } catch (error) {
       console.error(error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -58,6 +54,25 @@ export const AccountSettings = () => {
     },
   ];
 
+  let currentCrumb: IBreadcrumbItem | null = null;
+  if (isProfile) {
+    currentCrumb = {
+      label: AccountSettingsType.PROFILE,
+      href: AccountSettingsRoutes[AccountSettingsType.PROFILE],
+      icon: <UserIcon weight="bold" className="w-3 h-3" />,
+    };
+  } else if (isSecurity) {
+    currentCrumb = {
+      label: AccountSettingsType.SECURITY,
+      href: AccountSettingsRoutes[AccountSettingsType.SECURITY],
+      icon: <LockKeyIcon weight="bold" className="w-3 h-3" />,
+    };
+  }
+
+  let panel: React.ReactNode = <></>;
+  if (isProfile) panel = <Profile />;
+  else if (isSecurity) panel = <Security />;
+
   if (!selectedUser) return <></>;
 
   return (
@@ -71,19 +86,7 @@ export const AccountSettings = () => {
                 href: AccountSettingsRoutes[AccountSettingsType.ACCOUNT_SETTINGS],
                 icon: <GearSixIcon weight="bold" className="w-3 h-3" />,
               },
-              isProfile
-                ? {
-                    label: AccountSettingsType.PROFILE,
-                    href: AccountSettingsRoutes[AccountSettingsType.PROFILE],
-                    icon: <UserIcon weight="bold" className="w-3 h-3" />,
-                  }
-                : isSecurity
-                  ? {
-                      label: AccountSettingsType.SECURITY,
-                      href: AccountSettingsRoutes[AccountSettingsType.SECURITY],
-                      icon: <LockKeyIcon weight="bold" className="w-3 h-3" />,
-                    }
-                  : null,
+              currentCrumb,
             ].filter(Boolean) as IBreadcrumbItem[]
           }
         />
@@ -112,7 +115,7 @@ export const AccountSettings = () => {
             </Card>
           </div>
         </div>
-        <div className="flex-1">{isProfile ? <Profile /> : isSecurity ? <Security /> : <></>}</div>
+        <div className="flex-1">{panel}</div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
@@ -6,11 +6,13 @@ import { SecretsValidator } from './secrets.validator';
 
 @Injectable()
 export class SecretsService implements OnModuleInit {
+  private readonly logger = new Logger(SecretsService.name);
+
   constructor(private configService: ConfigService) {}
 
   async onModuleInit(): Promise<void> {
     await this.loadSecrets();
-    console.log('Secrets module initialized successfully');
+    this.logger.log('Secrets module initialized successfully');
   }
 
   private async loadSecrets(): Promise<void> {
@@ -26,7 +28,7 @@ export class SecretsService implements OnModuleInit {
   }
 
   private async loadCloudSecrets(): Promise<Record<string, string>> {
-    console.log('Loading secrets from cloud (placeholder)');
+    this.logger.log('Loading secrets from cloud (placeholder)');
     await new Promise((resolve) => setTimeout(resolve, 100));
     return {};
   }
@@ -36,15 +38,15 @@ export class SecretsService implements OnModuleInit {
     const errors = await validate(secretsValidator);
 
     if (errors.length > 0) {
-      console.error('Secrets validation failed:', errors);
+      this.logger.error('Secrets validation failed:', errors);
       throw new Error('Secrets validation failed');
     }
 
-    console.log('Secrets loaded and validated successfully');
+    this.logger.log('Secrets loaded and validated successfully');
   }
 
   get<T>(key: string): T | undefined {
-    return this.configService.get<T>(key) || undefined;
+    return this.configService.get<T>(key) ?? undefined;
   }
 
   /** For a secret the caller cannot run without. Boot validation should already have caught it. */

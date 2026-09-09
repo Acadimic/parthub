@@ -29,6 +29,21 @@ const WEEKDAYS: ISelectItem[] = Object.keys(WEEK_DAYS_INTEGER_MAPPINGS).map((key
   value: key,
 }));
 
+/**
+ * `MeetDto` leaves a meet's span, colour and frequency optional, because one class serves both
+ * directions and a write body need not send them. These narrow once, outside the component, so the
+ * modal reads the same as before rather than carrying a conditional per field.
+ */
+const toDate = (value: string | undefined): Date | null => (value ? new Date(value) : null);
+
+const toValues = (value: string | undefined): string[] => (value ? [value] : []);
+
+const isRepeatingFrequency = (frequency: MeetFrequency | undefined): boolean =>
+  !!frequency && [MeetFrequency.WEEKLY, MeetFrequency.THIS_WEEK].includes(frequency);
+
+const toSwatch = (colors: (typeof light)['colors'], color: ColorType | undefined): string | undefined =>
+  color ? colors[color]?.primary : undefined;
+
 export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
   const meetStore = useMeetLookups();
   const { setMeetDate } = meetStore;
@@ -46,7 +61,6 @@ export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
   const handleClose = () => {
     if (!selectedMeet || isLoading) return;
     if (selectedMeet.isNew) removeMeetById(selectedMeet._id);
-    console.log('handleClose');
     onClose();
   };
 
@@ -93,12 +107,14 @@ export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
                       ),
                       onClick: () => patchMeet(selectedMeet._id, { color: item }),
                     }))}
-                    selected={selectedMeet.color}
+                    selected={selectedMeet.color ?? ''}
                     component={
                       <div className="h-full px-0">
                         <CircleIcon
                           weight="fill"
-                          style={{ color: colorObject.colors[selectedMeet.color]?.primary }}
+                          style={{
+                            color: toSwatch(colorObject.colors, selectedMeet.color),
+                          }}
                           className={`w-5 h-5`}
                         />
                       </div>
@@ -137,21 +153,21 @@ export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
               <DateInput
                 label="Date"
                 required
-                value={new Date(selectedMeet.startTime)}
+                value={toDate(selectedMeet.startTime)}
                 handleChange={(date) => setMeetDate(selectedMeet._id, date)}
               />
 
               <TimeInput
                 label="Start Time"
                 required
-                value={new Date(selectedMeet.startTime)}
+                value={toDate(selectedMeet.startTime)}
                 handleChange={(date) => patchMeet(selectedMeet._id, { startTime: date.toISOString() })}
               />
 
               <TimeInput
                 label="End Time"
                 required
-                value={new Date(selectedMeet.endTime)}
+                value={toDate(selectedMeet.endTime)}
                 handleChange={(date) => patchMeet(selectedMeet._id, { endTime: date.toISOString() })}
               />
             </div>
@@ -168,7 +184,7 @@ export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
               <Select
                 label="Frequency"
                 required
-                values={[selectedMeet.frequency]}
+                values={toValues(selectedMeet.frequency)}
                 items={Object.values(MeetFrequency).map((item) => ({ value: item, label: splitCamelCase(item) }))}
                 onChange={(items) =>
                   items[0] && patchMeet(selectedMeet._id, { frequency: items[0].value as MeetFrequency })
@@ -176,7 +192,7 @@ export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
                 noSort
                 isSingleSelect
               />
-              {[MeetFrequency.WEEKLY, MeetFrequency.THIS_WEEK].includes(selectedMeet.frequency) && (
+              {isRepeatingFrequency(selectedMeet.frequency) && (
                 <Select
                   label="Repeat on Days"
                   required

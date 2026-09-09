@@ -1,5 +1,5 @@
 import { Avatar } from '@components/app/avatars';
-import { AccountSettingsType, DefaultRole } from '@enums';
+import { AccountSettingsType, type DefaultRole } from '@enums';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IMenuItem } from '@interfaces';
 import { CheckIcon, GearSixIcon, SignOutIcon } from '@phosphor-icons/react';

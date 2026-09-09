@@ -4,6 +4,11 @@
     "module": "commonjs",
     "lib": ["es2017"],
     "declaration": true,
+    // Lets an editor's go-to-definition land on `src/*.ts` instead of the emitted `.d.ts`,
+    // and a debugger step into the real source. Consumers still *resolve* through `dist`
+    // (see the exports map) — this only adds the .d.ts.map / .js.map trail back to source.
+    "declarationMap": true,
+    "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,

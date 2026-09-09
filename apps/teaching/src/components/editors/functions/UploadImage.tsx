@@ -26,7 +26,6 @@ const UploadImage = (props: IFunctionProps) => {
     reader.readAsDataURL(selectedFile);
     reader.onload = function (e) {
       const src = e.target?.result as string; // Base64 bitmap data
-      console.log('img src: ', src);
       handleChange({
         target: {
           name,

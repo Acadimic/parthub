@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { Button } from '@repo/ui/app';
-import { type IFunctionProps, type IPosition, type ITarget } from '@interfaces';
+import { type IFunctionProps, type ITarget } from '@interfaces';
 import { HtmlEditor } from '..';
 import { Toolbar } from '../Toolbar';
 
@@ -22,12 +22,6 @@ const Sum = (props: IFunctionProps) => {
     [DirectionType.DOWN]: '',
     [DirectionType.DATA]: '',
   });
-  const [position] = useState({ start: 0, end: 0 });
-
-  const setPosition = (newPosition: IPosition) => {
-    position.start = newPosition.start;
-    position.end = newPosition.end;
-  };
 
   const [focusedElement, setFocusedElement] = useState<string>(DirectionType.DATA);
 

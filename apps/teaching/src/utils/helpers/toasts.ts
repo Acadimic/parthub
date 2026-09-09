@@ -1,4 +1,4 @@
-import { type IToast } from '@repo/shared';
+import { type IToast } from '@repo/shared/interfaces';
 import { useToastStore } from '../../stores';
 
 interface IToastParams {

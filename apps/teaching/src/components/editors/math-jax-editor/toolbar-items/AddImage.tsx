@@ -35,7 +35,6 @@ export const AddImage = ({ block, handleChange, closeModal }: IProps) => {
     reader.readAsDataURL(selectedFile);
     reader.onload = function (e) {
       const src = e.target?.result as string; // Base64 bitmap data
-      console.log('img src: ', src);
       handleChange({ ...block, data: src });
       closeModal();
     };
@@ -54,7 +53,7 @@ export const AddImage = ({ block, handleChange, closeModal }: IProps) => {
           className="w-full block text-sm text-color-primary file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary cursor-pointer border border-color-border rounded-md p-2"
         />
       </div>
-      {(selectedFile || block.data) && (
+      {(selectedFile ?? block.data) && (
         <>
           <Label label="Preview" required />
           <img

@@ -4,12 +4,11 @@ import { usePDF } from 'react-fast-scroll-pdf';
 export const PDFViewer = ({ pdfUrl }: { pdfUrl: string }) => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const viewerRef = useRef<HTMLDivElement | null>(null);
-  const { pages, renderCurrentPage, changeZoomStart, changeZoomEnd } = usePDF({
+  const { pages, renderCurrentPage } = usePDF({
     source: pdfUrl,
     scrollContainer: scrollContainerRef.current,
     viewer: viewerRef.current,
   });
-  const url = 'https://parth-academic-images.s3.ap-south-1.amazonaws.com/609a1c94a33169eef05e5b97_1648840227000.pdf';
 
   return (
     <div>
@@ -20,8 +19,6 @@ export const PDFViewer = ({ pdfUrl }: { pdfUrl: string }) => {
           ))}
         </div>
       </div>
-
-      {/* <ZoomButtons changeZoomStart={changeZoomStart} changeZoomEnd={changeZoomEnd} /> */}
     </div>
   );
 };

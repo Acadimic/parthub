@@ -1,5 +1,5 @@
 import { ToggleTheme } from '@repo/ui/app';
-import { Theme as Mode, StorageKey } from '@enums';
+import { StorageKey } from '@enums';
 import { CaretDoubleRightIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
 import { type ReactNode, useEffect, useState } from 'react';

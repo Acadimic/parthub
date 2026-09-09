@@ -17,7 +17,7 @@ interface IAccordionProps {
 }
 
 export const Accordion = ({ items, openIndexes, isIconLast, className, type = 'multiple' }: IAccordionProps) => {
-  const defaultValues = openIndexes?.map(String) || [];
+  const defaultValues = openIndexes?.map(String) ?? [];
 
   if (type === 'single') {
     return (

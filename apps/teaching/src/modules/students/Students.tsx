@@ -5,7 +5,6 @@ import { type IColumnData } from '@interfaces';
 import { type IUser, useSelectorLookups, useUserLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { getStringFormattedDate, getStringFormattedDateWithTime } from '@utils/helpers';
-import { useRouter } from 'next/router';
 import { useSetState } from 'react-use';
 import { AddStudentsModal, UpsertStudentModal } from './components';
 
@@ -17,14 +16,12 @@ interface IState {
 }
 
 export const Students = () => {
-  const { push } = useRouter();
   const selectorStore = useSelectorLookups();
   const userStore = useUserLookups();
   const { setSelectedStudentId } = selectorStore;
   const { createStudent, getStudentStandardsByStudentId, getStudentEnrolledDateByStudentId, removeNewUsers } =
     userStore;
   const isLoadingUsers = userStore.isLoading('users');
-  const isLoadedUsers = userStore.isLoaded('users');
   const students = userStore.getStudents();
   const [state, setState] = useSetState<IState>({
     isOpenUpsertStudentModal: false,
@@ -52,11 +49,6 @@ export const Students = () => {
     setState({ isOpenAddStudentsModal: false });
   };
 
-  const closeBulkAddStudentsModal = () => {
-    setState({ isOpenBulkAddStudentsModal: false });
-    removeNewUsers();
-  };
-
   const closeUpsertStudentModal = () => {
     setState({ isOpenUpsertStudentModal: false });
     removeNewUsers();
@@ -67,7 +59,7 @@ export const Students = () => {
     setState({ isOpenUpsertStudentModal: true });
   };
 
-  const onClickStudent = (student: IUser) => {};
+  const onClickStudent = (_student: IUser) => {};
 
   const columns: IColumnData<IUser>[] = [
     // {

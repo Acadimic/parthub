@@ -1,8 +1,8 @@
+import { type TestPaperDto } from '@repo/shared/contracts';
 import { BookOpenTextIcon, ClockIcon, YoutubeLogoIcon } from '@phosphor-icons/react';
-import { type ITestPaper } from '@stores';
 
 interface IProps {
-  testPaper: ITestPaper;
+  testPaper: TestPaperDto;
 }
 
 export const TestPaperInfo = ({ testPaper }: IProps) => {

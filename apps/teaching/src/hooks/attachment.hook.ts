@@ -8,7 +8,7 @@ export const useAttachment = () => {
     if (!selectedFiles.length) return null;
     try {
       // Generate new keys
-      const keys = selectedFiles.map((file: File, index: number) => ({
+      const keys = selectedFiles.map((file: File) => ({
         key: `${_id}/${getObjectId()}`,
         fileType: file.type,
       }));

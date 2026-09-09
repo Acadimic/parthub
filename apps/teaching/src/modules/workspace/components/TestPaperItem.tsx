@@ -1,11 +1,12 @@
+import { type TestPaperDto } from '@repo/shared/contracts';
 import { Card } from '@repo/ui/app';
 import { StandardWithLogo, TestPaperInfo } from '@components/common';
 import { TestPaperIconSvg } from '@components/images';
-import { type ITestPaper, useStandardLookups, useSelectorLookups } from '@stores';
+import { useStandardLookups, useSelectorLookups } from '@stores';
 import Link from 'next/link';
 
 interface IProps {
-  testPaper: ITestPaper;
+  testPaper: TestPaperDto;
 }
 
 export const TestPaperItem = ({ testPaper }: IProps) => {

@@ -1,4 +1,4 @@
-import { type IChapter } from '@stores';
+import { type ChapterDto } from '@repo/shared/contracts';
 import { type IStandardSubjectQuery } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
@@ -6,7 +6,7 @@ import { callAuthApi } from './http.service';
 class ChapterService {
   getStandardSubjectChapters = async (payload: IStandardSubjectQuery) => {
     const url = 'chapter/standard/subject/all';
-    const resData = await callAuthApi<IChapter[]>(url, API.POST, payload);
+    const resData = await callAuthApi<ChapterDto[]>(url, API.POST, payload);
     return resData;
   };
 }

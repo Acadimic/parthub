@@ -1,11 +1,11 @@
+import { type BatchDto } from '@repo/shared/contracts';
 import { GroupAvatars } from '@components/app/avatars';
 import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { type IColumnData } from '@interfaces';
-import { type IBatch, useStandardLookups, useBatchLookups, useSelectorLookups } from '@stores';
+import { useStandardLookups, useBatchLookups, useSelectorLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
-import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
 import { UpsertBatchModal } from './components';
@@ -16,7 +16,6 @@ interface IState {
 }
 
 export const Batches = () => {
-  const { push } = useRouter();
   const selectorStore = useSelectorLookups();
   const batchStore = useBatchLookups();
   const { setSelectedBatchId } = selectorStore;
@@ -38,14 +37,14 @@ export const Batches = () => {
     setState({ isOpenUpsertBatchModal: false });
   };
 
-  const editBatch = (batch: IBatch) => {
+  const editBatch = (batch: BatchDto) => {
     setSelectedBatchId(batch._id);
     setState({ isOpenUpsertBatchModal: true });
   };
 
-  const onClickBatch = (batch: IBatch) => {};
+  const onClickBatch = (_batch: BatchDto) => {};
 
-  const columns: IColumnData<IBatch>[] = [
+  const columns: IColumnData<BatchDto>[] = [
     // {
     //   label: 'Id',
     //   dataKey: '_id',
@@ -53,24 +52,24 @@ export const Batches = () => {
     {
       label: 'Name',
       dataKey: 'name',
-      valueFormatter: (row: IBatch) => {
+      valueFormatter: (row: BatchDto) => {
         return (
           <div className="cursor-pointer truncate text-blue-primary" onClick={() => onClickBatch(row)}>
             <span className="text-inherit">{row.name}</span>
           </div>
         );
       },
-      // getColor: (row: IBatch) => getRandomColor(`${row._id}`),
+      // getColor: (row: BatchDto) => getRandomColor(`${row._id}`),
     },
     {
       label: 'Standard',
       dataKey: 'standard',
-      valueFormatter: (row: IBatch) => getStandardById(row.standard)?.name,
+      valueFormatter: (row: BatchDto) => (row.standard ? getStandardById(row.standard)?.name : undefined),
     },
     {
       label: 'Students',
       dataKey: 'students',
-      component: (row: IBatch) => {
+      component: (row: BatchDto) => {
         const students = getBatchStudents(row._id);
         return (
           <div className="flex items-center justify-start">
@@ -82,7 +81,7 @@ export const Batches = () => {
     {
       label: 'Collaborators',
       dataKey: 'collaborators',
-      component: (row: IBatch) => {
+      component: (row: BatchDto) => {
         const collaborators = getBatchCollaborators(row._id);
         return (
           <div className="flex items-center justify-start">

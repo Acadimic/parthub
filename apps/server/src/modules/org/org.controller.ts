@@ -2,7 +2,7 @@ import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { PermissionService } from '@modules/permissions/permission.service';
 import { Body, Controller, Post } from '@nestjs/common';
-import { PermissionItem, Subdomain } from '@repo/shared';
+import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import { OrgDto, UpdateOrgDto } from '@repo/shared/validations';
 import { RequestContextService } from '../../context/request-context.service';
 import { OrgService } from './org.service';

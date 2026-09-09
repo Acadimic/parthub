@@ -1,54 +1,47 @@
 import {
   type ChapterDto,
-  type IRequestSlice,
   type StandardDto,
   type StandardSubjectMappingDto,
   type SubjectDto,
-  createRequestSlice,
-} from '@repo/shared';
+} from '@repo/shared/contracts';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type ISelectItem, type IStandardSubjectQuery } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { ChapterService, CommonService, StandardService, SubjectService } from '../services';
 import { STANDARD_GROUP_ORDER } from '../utils/constants';
 
-/** Reference data this app only reads, so the DTOs serve as-is — no client-only fields. */
-export type IStandard = StandardDto;
-export type ISubject = SubjectDto;
-export type IChapter = ChapterDto;
-export type IStandardSubjectMapping = StandardSubjectMappingDto;
-
 /** The fetches this store tracks. */
 type StandardFetch = 'standards' | 'subjects' | 'mappings' | 'chapters' | 'initialData' | 'publicData';
 
 export interface IStandardState extends IRequestSlice<StandardFetch> {
-  standardMap: Record<string, IStandard>;
-  subjectMap: Record<string, ISubject>;
-  chapterMap: Record<string, IChapter>;
-  mappingMap: Record<string, IStandardSubjectMapping>;
+  standardMap: Record<string, StandardDto>;
+  subjectMap: Record<string, SubjectDto>;
+  chapterMap: Record<string, ChapterDto>;
+  mappingMap: Record<string, StandardSubjectMappingDto>;
 
-  getStandardById: (standardId: string) => IStandard | undefined;
-  getSubjectById: (subjectId: string) => ISubject | undefined;
-  getChapterById: (chapterId: string) => IChapter | undefined;
-  getStandards: () => IStandard[];
-  getSubjects: () => ISubject[];
-  getChapters: () => IChapter[];
-  getStandardsByIds: (standardIds: string[]) => IStandard[];
-  getSubjectsByIds: (subjectIds: string[]) => ISubject[];
-  getStandardSubjectMappings: (standardId: string) => IStandardSubjectMapping[];
-  getStandardSubjects: (standardId: string) => ISubject[];
-  getStandardSubjectChapters: (standardId: string, subjectId: string) => IChapter[];
+  getStandardById: (standardId: string) => StandardDto | undefined;
+  getSubjectById: (subjectId: string) => SubjectDto | undefined;
+  getChapterById: (chapterId: string) => ChapterDto | undefined;
+  getStandards: () => StandardDto[];
+  getSubjects: () => SubjectDto[];
+  getChapters: () => ChapterDto[];
+  getStandardsByIds: (standardIds: string[]) => StandardDto[];
+  getSubjectsByIds: (subjectIds: string[]) => SubjectDto[];
+  getStandardSubjectMappings: (standardId: string) => StandardSubjectMappingDto[];
+  getStandardSubjects: (standardId: string) => SubjectDto[];
+  getStandardSubjectChapters: (standardId: string, subjectId: string) => ChapterDto[];
   getNextStandardGroupOrder: (standardId: string, group: string) => number;
   getStandardItems: () => ISelectItem[];
 
-  addStandards: (standards: IStandard[]) => void;
-  addSubjects: (subjects: ISubject[]) => void;
-  addChapters: (chapters: IChapter[]) => void;
-  addStandardSubjectMappings: (mappings: IStandardSubjectMapping[]) => void;
+  addStandards: (standards: StandardDto[]) => void;
+  addSubjects: (subjects: SubjectDto[]) => void;
+  addChapters: (chapters: ChapterDto[]) => void;
+  addStandardSubjectMappings: (mappings: StandardSubjectMappingDto[]) => void;
   removeStandardById: (standardId: string) => void;
   removeSubjectById: (subjectId: string) => void;
   removeChapterById: (chapterId: string) => void;
-  removeStandardSubjectMappings: (mappings: IStandardSubjectMapping[]) => void;
+  removeStandardSubjectMappings: (mappings: StandardSubjectMappingDto[]) => void;
 
   loadStandards: () => Promise<void>;
   loadSubjects: () => Promise<void>;
@@ -95,12 +88,12 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
 
   getStandardsByIds: (standardIds) => {
     const { standardMap } = get();
-    return standardIds.map((id) => standardMap[id]).filter((row): row is IStandard => !!row);
+    return standardIds.map((id) => standardMap[id]).filter((row): row is StandardDto => !!row);
   },
 
   getSubjectsByIds: (subjectIds) => {
     const { subjectMap } = get();
-    return subjectIds.map((id) => subjectMap[id]).filter((row): row is ISubject => !!row);
+    return subjectIds.map((id) => subjectMap[id]).filter((row): row is SubjectDto => !!row);
   },
 
   getStandardSubjectMappings: (standardId) =>

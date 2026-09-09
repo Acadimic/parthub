@@ -1,4 +1,4 @@
-import { type IFollower } from '@stores';
+import { type FollowerDto } from '@repo/shared/contracts';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
@@ -11,13 +11,13 @@ class FollowerService {
 
   getFollowings = async () => {
     const url = 'follower/followings';
-    const resData = await callAuthApi<IFollower[]>(url, API.GET);
+    const resData = await callAuthApi<FollowerDto[]>(url, API.GET);
     return resData;
   };
 
-  upsertFollower = async (payload: IFollower) => {
+  upsertFollower = async (payload: FollowerDto) => {
     const url = 'follower/upsert';
-    const resData = await callAuthApi<IFollower>(url, API.POST, payload);
+    const resData = await callAuthApi<FollowerDto>(url, API.POST, payload);
     return resData;
   };
 }

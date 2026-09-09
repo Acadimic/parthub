@@ -1,4 +1,4 @@
-import { type AccessType, type Subdomain } from '@repo/shared';
+import { type AccessType, type Subdomain } from '@repo/shared/enums';
 
 export interface IRequestContext {
   userId: string;

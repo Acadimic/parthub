@@ -21,12 +21,9 @@ export const MathEditor = ({ blocks, handleChange, label, autoFocus }: IProps) =
   const [hasFocus, setHasFocus] = useState<boolean>(false);
   const [renderFocus, setRenderFocus] = useState(false);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState<boolean>(false);
-  const [sideMenuX, setSideMenuX] = useState<number>(0);
-  const [sideMenuY, setSideMenuY] = useState<number>(0);
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
   const handleBlockChange = (block: Block) => {
-    console.log('####clicked block: ', block);
     const newBlocks = [...editorBlocks];
     const selectedBlock = editorBlocks[selectedBlockIndex];
     if (selectedBlock?.type === block.type) {
@@ -42,7 +39,6 @@ export const MathEditor = ({ blocks, handleChange, label, autoFocus }: IProps) =
   };
 
   const handleBlockEdit = (index: number) => {
-    console.log('####handleBlockEdit: ', index);
     setSelectedBlockIndex(index);
   };
 
@@ -57,7 +53,6 @@ export const MathEditor = ({ blocks, handleChange, label, autoFocus }: IProps) =
     const block = { ...editorBlocks[index], content: value } as TextNode;
     const newBlocks = [...editorBlocks];
     newBlocks[selectedBlockIndex] = block;
-    console.log('####handleTextBlockChange: ', newBlocks);
     setEditorBlocks(newBlocks);
     handleChange(newBlocks);
     setHasFocus(true);
@@ -65,15 +60,11 @@ export const MathEditor = ({ blocks, handleChange, label, autoFocus }: IProps) =
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault(); // prevent default browser context menu
-    setSideMenuX(e.clientX);
-    setSideMenuY(e.clientY);
     setIsSideMenuOpen(true);
   };
 
   const handleBlockBlur = (event: MouseEvent) => {
-    console.log('####handleBlockBlur: ');
     if (editorContainerRef.current && !editorContainerRef.current.contains(event.target as Node)) {
-      console.log('Clicked outside');
       // setHasFocus(false);
     }
   };
@@ -119,8 +110,6 @@ export const MathEditor = ({ blocks, handleChange, label, autoFocus }: IProps) =
   useEffect(() => {
     setHasFocus(autoFocus || false);
   }, []);
-
-  console.log('####selectedEditorBlockIndex: ', selectedBlockIndex, hasFocus, editorBlocks);
 
   return (
     <div>
@@ -177,7 +166,6 @@ export const MathEditor = ({ blocks, handleChange, label, autoFocus }: IProps) =
         {isSideMenuOpen && (
           <div
             className={`z-10 absolute right-0 bottom-0 h-full max-h-[500px] overflow-auto ${isSideMenuOpen ? 'flex justify-end' : 'hidden'}`}
-            // style={{ top: sideMenuY, left: sideMenuX }}
           >
             <EditorToolbar
               block={editorBlocks[selectedBlockIndex]}

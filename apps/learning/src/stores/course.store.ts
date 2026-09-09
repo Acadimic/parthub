@@ -1,17 +1,12 @@
-import {
-  type ClientEntityWith,
-  type CourseDto,
-  type ICompletedModuleFields,
-  type ICourseModuleFields,
-  type IRequestSlice,
-  type PlanDto,
-  createRequestSlice,
-} from '@repo/shared';
+import { type CourseDto, type PlanDto } from '@repo/shared/contracts';
+import { type ICompletedModuleFields, type ICourseModuleFields } from '@repo/shared/interfaces';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type IGetCompletedModule } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { type CollectionType, PeriodType, CurrencyType } from '../enums';
 import { CourseService, MeetService, PlanService } from '../services';
+import { type ICourseModuleContents } from '../services/course.service';
 import { capitalize, getObjectId } from '../utils/helpers';
 import { useMaterialStore } from './material.store';
 import { useMeetStore } from './meet.store';
@@ -23,13 +18,8 @@ import { useUserStore } from './user.store';
  * A course in the store. `isLoadedContents` is client-only — it records whether this course's
  * modules have been fetched — and `CLIENT_ONLY_KEYS` strips it from every request.
  */
-export type ICourse = ClientEntityWith<
-  CourseDto,
-  'name' | 'slug' | 'standards' | 'subjects' | 'courses' | 'meets' | 'order' | 'isPublished' | 'stats'
-> & { isLoadedContents?: boolean };
-export type IPlan = ClientEntityWith<PlanDto, 'name' | 'courses' | 'meets' | 'amount' | 'order'>;
+export type ICourse = CourseDto & { isLoadedContents?: boolean };
 export type ICourseModule = ICourseModuleFields & { isNew?: boolean };
-export type ICompletedModule = ICompletedModuleFields;
 export type ICourseStats = NonNullable<ICourse['stats']>;
 
 /** The fetches this store tracks. */
@@ -37,38 +27,38 @@ type CourseFetch = 'courses' | 'plans' | 'courseModules' | 'completedModules';
 
 export interface ICourseState extends IRequestSlice<CourseFetch> {
   courseMap: Record<string, ICourse>;
-  planMap: Record<string, IPlan>;
+  planMap: Record<string, PlanDto>;
   courseModuleMap: Record<string, ICourseModule>;
-  completedModuleMap: Record<string, ICompletedModule>;
+  completedModuleMap: Record<string, ICompletedModuleFields>;
 
   getCourseById: (courseId: string) => ICourse | undefined;
   getCourseModuleById: (courseModuleId: string) => ICourseModule | undefined;
   getCourses: () => ICourse[];
-  getPlans: () => IPlan[];
+  getPlans: () => PlanDto[];
   getCourseModules: () => ICourseModule[];
-  getCompletedModules: () => ICompletedModule[];
+  getCompletedModules: () => ICompletedModuleFields[];
   getCoursesByIds: (courseIds: string[]) => ICourse[];
   getCourseModuleByCourseId: (courseId: string) => ICourseModule[];
-  getPlansByCourseId: (courseId: string) => IPlan[];
+  getPlansByCourseId: (courseId: string) => PlanDto[];
   /** Courses keyed by each standard they belong to; a course appears under every one of them. */
   getGroupedCoursesByStandardId: () => Record<string, ICourse[]>;
-  getCompletedModule: (data: IGetCompletedModule) => ICompletedModule | undefined;
+  getCompletedModule: (data: IGetCompletedModule) => ICompletedModuleFields | undefined;
   isCourseModuleItemCompleted: (data: IGetCompletedModule) => boolean;
   isCourseModuleItemSkipped: (data: IGetCompletedModule) => boolean;
   /** Whether a module's materials and test papers are all done, or only some. */
   isCourseModuleCompleted: (courseModuleId: string) => { isAllCompleted: boolean; isPartiallyCompleted: boolean };
 
   addCourses: (courses: ICourse[]) => void;
-  addPlans: (plans: IPlan[]) => void;
+  addPlans: (plans: PlanDto[]) => void;
   addCourseModules: (courseModules: ICourseModule[]) => void;
-  addCompletedModules: (completedModules: ICompletedModule[]) => void;
+  addCompletedModules: (completedModules: ICompletedModuleFields[]) => void;
   patchCourse: (courseId: string, fields: Partial<ICourse>) => void;
-  patchCompletedModule: (completedModuleId: string, fields: Partial<ICompletedModule>) => void;
+  patchCompletedModule: (completedModuleId: string, fields: Partial<ICompletedModuleFields>) => void;
   removeCourseById: (courseId: string) => void;
   removeCourseModuleById: (courseModuleId: string) => void;
 
-  createPlan: (courseId: string, order: number, period: PeriodType) => IPlan;
-  createCompletedModule: (data: IGetCompletedModule, collectionRef: CollectionType) => ICompletedModule;
+  createPlan: (courseId: string, order: number, period: PeriodType) => PlanDto;
+  createCompletedModule: (data: IGetCompletedModule, collectionRef: CollectionType) => ICompletedModuleFields;
 
   loadCourses: () => Promise<void>;
   loadCoursePlans: (courseId: string) => Promise<void>;
@@ -82,6 +72,22 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
     map[row._id] = row;
     return map;
   }, {});
+
+/**
+ * A module arrives with its test papers, materials and meets embedded. Each collection goes to the
+ * store that owns it, and the module keeps only ids — which is what the rest of the app reads.
+ */
+const distributeCourseModule = (courseModule: ICourseModuleContents) => {
+  useTestPaperStore.getState().addTestPapers(courseModule.testPapers);
+  useMaterialStore.getState().addMaterials(courseModule.materials);
+  useMeetStore.getState().addMeets(courseModule.meets);
+  return {
+    ...courseModule,
+    testPapers: courseModule.testPapers.map((testPaper) => testPaper._id),
+    materials: courseModule.materials.map((material) => material._id),
+    meets: courseModule.meets.map((meet) => meet._id),
+  };
+};
 
 export const useCourseStore = create<ICourseState>()((set, get) => ({
   courseMap: {},
@@ -115,13 +121,13 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   getPlansByCourseId: (courseId) =>
     get()
       .getPlans()
-      .filter((plan) => plan.courses.includes(courseId)),
+      .filter((plan) => (plan.courses ?? []).includes(courseId)),
 
   getGroupedCoursesByStandardId: () =>
     get()
       .getCourses()
       .reduce<Record<string, ICourse[]>>((grouped, course) => {
-        course.standards.forEach((standardId) => {
+        (course.standards ?? []).forEach((standardId) => {
           grouped[standardId] = [...(grouped[standardId] ?? []), course];
         });
         return grouped;
@@ -209,7 +215,7 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   },
 
   createPlan: (courseId, order, period) => {
-    const plan: IPlan = {
+    const plan: PlanDto = {
       _id: getObjectId(),
       name: capitalize(period),
       courses: [courseId],
@@ -228,7 +234,7 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   },
 
   createCompletedModule: (data, collectionRef) => {
-    const completedModule: ICompletedModule = {
+    const completedModule: ICompletedModuleFields = {
       ...data,
       _id: getObjectId(),
       collectionRef,
@@ -263,23 +269,13 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
       if (!course) return;
       const [modulesResult, meetsResult] = await Promise.all([
         CourseService.getCourseModulesContentsByCourseId(courseId),
-        MeetService.getMeetsByIds(courseId, course.meets),
+        MeetService.getMeetsByIds(courseId, course.meets ?? []),
       ]);
       if (!modulesResult?.data || !meetsResult?.data) return;
       // The modules arrive with their test papers, materials and meets embedded. Each collection
       // goes to the store that owns it and the module keeps only ids, which is what the rest of the
       // app reads.
-      const courseModules = modulesResult.data.map((courseModule) => {
-        useTestPaperStore.getState().addTestPapers(courseModule.testPapers);
-        useMaterialStore.getState().addMaterials(courseModule.materials);
-        useMeetStore.getState().addMeets(courseModule.meets);
-        return {
-          ...courseModule,
-          testPapers: courseModule.testPapers.map((testPaper) => testPaper._id),
-          materials: courseModule.materials.map((material) => material._id),
-          meets: courseModule.meets.map((meet) => meet._id),
-        };
-      });
+      const courseModules = modulesResult.data.map(distributeCourseModule);
       useMeetStore.getState().addMeets(meetsResult.data);
       get().addCourseModules(courseModules);
       const firstModuleId = courseModules[0]?._id;
@@ -318,7 +314,7 @@ export const useSelectedCourseModule = (): ICourseModule | undefined => {
 };
 
 /** The selected course's plans. Replaces `selectorStore.selectedCoursePlans`. */
-export const useSelectedCoursePlans = (): IPlan[] => {
+export const useSelectedCoursePlans = (): PlanDto[] => {
   const selectedCourseId = useSelectorStore((state) => state.selectedCourseId);
   return useCourseStore(useShallow((state) => state.getPlansByCourseId(selectedCourseId)));
 };

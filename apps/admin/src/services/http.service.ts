@@ -1,4 +1,4 @@
-import { type SuccessResponse } from '@repo/shared';
+import { type SuccessResponse } from '@repo/shared/responses';
 import axios, { type AxiosError } from 'axios';
 import { API } from '../enums';
 import { generateAndSetNewToken } from '../utils/firebase';
@@ -25,7 +25,7 @@ const createAxiosInstance = (isUnAuth: boolean, url: string) => {
       }
       return config;
     } catch (error) {
-      console.log('Axios req error: ', error);
+      console.error('Axios req error: ', error);
       return config;
     }
   });

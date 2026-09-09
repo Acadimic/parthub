@@ -1,22 +1,3 @@
-const getBracket = (row: number, topCode: string, middleCode: string, bottomCode: string) => {
-  let html = `<table cellspacing="0" cellpadding="0" border="0"
-  style="display: inline-table; border-collapse: collapse; vertical-align:middle;"
-  >
-        <tr>
-          <td style="font-size: 22px;">${topCode}</td>
-        </tr>`;
-  for (let i = 3; i <= row; i += 1) {
-    html = `${html} <tr>
-        <td style="font-size: 22px;">${middleCode}</td>
-      </tr>`;
-  }
-  html = `${html} <tr>
-          <td style="font-size: 22px;">${bottomCode}</td>
-        </tr>
-    </table>&nbsp;`;
-  return html;
-};
-
 // const getImgBracket = (bracketName: string) => {
 //   const imgUrl = `${fileUrl}/${bracketName}`;
 //   const html = `<table cellspacing="0" cellpadding="0" border="0"
@@ -94,7 +75,6 @@ export const RightSquareBracket = (row: number) => {
 };
 
 export const LeftSquareBracket = (row: number) => {
-  // return getBracket(row, '&#9121;', '&#9122;', '&#9123;');
   return `<table cellspacing="0" cellpadding="0" border="0"
   style="display: inline-table; border-collapse: collapse; vertical-align:middle;"
   >
@@ -138,7 +118,6 @@ export const LeftSquareBracket = (row: number) => {
 export const LeftBracket = (row: number) => {
   // if (row === 2) return getImgBracket('left_bracket_2.png');
   // if (row === 3) return getImgBracket('left_bracket_3.png');
-  // return getBracket(row, '&#9127;', '&#9125;', '&#9129;');
   return `<table cellspacing="0" cellpadding="0" border="0"
   style="display: inline-table; border-collapse: collapse; vertical-align:middle;"
   >
@@ -182,7 +161,6 @@ export const LeftBracket = (row: number) => {
 export const RightBracket = (row: number) => {
   // if (row === 2) return getImgBracket('right_bracket_2.png');
   // if (row === 3) return getImgBracket('right_bracket_3.png');
-  // return getBracket(row, '&#9131;', '&#9125;', '&#9133;');
   return `<table cellspacing="0" cellpadding="0" border="0"
   style="display: inline-table; border-collapse: collapse; vertical-align:middle;"
   >
@@ -226,7 +204,6 @@ export const RightBracket = (row: number) => {
 
 export const LeftCurlyBracket = (row: number) => {
   // if (row === 3) return getImgBracket('left_curly_bracket_3.png');
-  // return getBracket(row, '&#9127;', '&#9128;', '&#9129;');
   return `<table cellspacing="0" cellpadding="0" border="0"
   style="display: inline-table; border-collapse: collapse; vertical-align:middle;"
   >
@@ -276,7 +253,6 @@ export const LeftCurlyBracket = (row: number) => {
 
 export const RightCurlyBracket = (row: number) => {
   // if (row === 3) return getImgBracket('right_curly_bracket_3.png');
-  // return getBracket(row, '&#9131;', '&#9132;', '&#9133;');
   return `<table cellspacing="0" cellpadding="0" border="0"
   style="display: inline-table; border-collapse: collapse; vertical-align:middle;"
   >

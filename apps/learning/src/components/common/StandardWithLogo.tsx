@@ -1,8 +1,8 @@
+import { type StandardDto } from '@repo/shared/contracts';
 import { PresignedImage } from '@components/app/attachments';
-import { type IStandard } from '@stores';
 
 interface IProps {
-  standard: IStandard | undefined;
+  standard: StandardDto | undefined;
 }
 
 export const StandardWithLogo = ({ standard }: IProps) => {

@@ -8,7 +8,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { Secrets } from '@secrets/secrets';
 import { SecretsService } from '@secrets/secrets.service';
-import { AccessType, Subdomain } from '@repo/shared';
+import { AccessType, Subdomain } from '@repo/shared/enums';
 import { RegisterUserDto, UserDto } from '@repo/shared/validations';
 import { INITIAL_LOGIN_DATA_URL } from '@utils/constants';
 import { getRegisterPayload, getSubdomainFromUrl } from '@utils/util';
@@ -35,6 +35,9 @@ interface ContextPayload {
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  // NestJS injects collaborators through the constructor, so the count reflects this class's
+  // dependencies rather than a parameter list that could be shortened by extraction.
+  // eslint-disable-next-line max-params
   constructor(
     private readonly clsService: ClsService,
     private reflector: Reflector,

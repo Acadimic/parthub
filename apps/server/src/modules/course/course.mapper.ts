@@ -1,5 +1,5 @@
 import { type CourseDto } from '@repo/shared/validations';
-import { type AttachmentDto } from '@repo/shared';
+import { type AttachmentDto } from '@repo/shared/contracts';
 import { type Attachment } from '@modules/material/material.schema';
 import { type CourseDocument } from './course.schema';
 

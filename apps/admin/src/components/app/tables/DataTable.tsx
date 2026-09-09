@@ -58,6 +58,20 @@ export const DataTable = <T extends object>({ rows, columns }: IProps<T>) => {
           const rawValue = (row as Record<string, unknown>)[dataKey] as React.ReactNode;
           const formattedValue = column.valueFormatter ? column.valueFormatter(row) : rawValue;
           const { color, bg } = column.getColor ? column.getColor(row) : { color: 'inherit', bg: 'inherit' };
+          let cell: React.ReactNode;
+          if (dataKey === INDEX_FIELD) {
+            cell = <Checkbox checked={false} />;
+          } else if (dataKey === 'actions') {
+            cell = <Menu menuItems={menuItems ?? []} data={row} />;
+          } else if (component) {
+            cell = component(row);
+          } else {
+            cell = (
+              <Tooltip title={title}>
+                <div className="truncate">{formattedValue}</div>
+              </Tooltip>
+            );
+          }
           return (
             <td
               key={dataKey}
@@ -65,19 +79,7 @@ export const DataTable = <T extends object>({ rows, columns }: IProps<T>) => {
               style={{ width: width || DEFAULT_CELL_WIDTH, background: bg, color }}
               className={`py-0 h-full ${column.getColor ? '' : 'bg-background-primary'} truncate font-medium border-b ${isFirstColumn ? '' : 'border-l'} ${isAction ? 'sticky right-0' : ''} border-color-border px-2`}
             >
-              <div>
-                {dataKey === INDEX_FIELD ? (
-                  <Checkbox checked={false} />
-                ) : dataKey === 'actions' ? (
-                  <Menu menuItems={menuItems || []} data={row} />
-                ) : component ? (
-                  component(row)
-                ) : (
-                  <Tooltip title={title}>
-                    <div className="truncate">{formattedValue}</div>
-                  </Tooltip>
-                )}
-              </div>
+              <div>{cell}</div>
             </td>
           );
         })}

@@ -1,5 +1,5 @@
 import { API } from '../enums';
-import { type StandardDto, type StandardSubjectMappingDto } from '@repo/shared';
+import { type StandardDto, type StandardSubjectMappingDto } from '@repo/shared/contracts';
 import { callAuthApi } from './http.service';
 
 class StandardService {

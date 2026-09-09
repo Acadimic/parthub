@@ -1,4 +1,4 @@
-import { type DefaultMarkingType } from '@repo/shared';
+import { type DefaultMarkingType } from '@repo/shared/interfaces';
 import { Select } from '@components/app/selects';
 import { Button, Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { PaperType, PositionType, SectionCategoryType, SectionType } from '@enums';
@@ -21,6 +21,13 @@ interface IProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+/**
+ * A `Select`'s current value, or none while the field is unset — `TestPaperDto` leaves `year` and
+ * `paperType` optional because a write body need not send them. Outside the component so the
+ * guards do not count against the render function's complexity.
+ */
+const toValues = (value: string | number | undefined): string[] => (value ? [String(value)] : []);
 
 export const CreateTestPaperModal = ({ isOpen, onClose }: IProps) => {
   const { push } = useRouter();
@@ -68,7 +75,7 @@ export const CreateTestPaperModal = ({ isOpen, onClose }: IProps) => {
       let testPaperSections: ITestPaperSection[] = getTestPaperSectionsByIds(selectedTestPaper.sections ?? []);
       if (selectedTestPaper.isNew) {
         const isSubject = (selectedTestPaper.subjects ?? []).length > 0;
-        const ids = isSubject ? selectedTestPaper.subjects : (selectedTestPaper.standards ?? []);
+        const ids = isSubject ? (selectedTestPaper.subjects ?? []) : (selectedTestPaper.standards ?? []);
         testPaperSections = ids.map((id) => {
           const section = createTestPaperSection(SectionType.SECTION, SectionCategoryType.CUSTOM, markings);
           const obj = isSubject ? getSubjectById(id) : getStandardById(id);
@@ -101,7 +108,7 @@ export const CreateTestPaperModal = ({ isOpen, onClose }: IProps) => {
 
   useEffect(() => {
     if (!selectedTestPaper) return;
-    const { standards, subjects, year } = selectedTestPaper;
+    const { standards = [], subjects = [], year } = selectedTestPaper;
     if (standards.length && year) {
       const subjectNamesText = standardStore.getSubjectNamesText(subjects);
       let newName = standardStore.getStandardNamesText(standards);
@@ -110,7 +117,7 @@ export const CreateTestPaperModal = ({ isOpen, onClose }: IProps) => {
       patchTestPaper(selectedTestPaper._id, { name: newName });
       setIsVisibleMore(true);
     }
-  }, [selectedTestPaper?.standards.length, selectedTestPaper?.subjects.length, selectedTestPaper?.year]);
+  }, [selectedTestPaper?.standards?.length, selectedTestPaper?.subjects?.length, selectedTestPaper?.year]);
 
   return (
     <>
@@ -137,7 +144,7 @@ export const CreateTestPaperModal = ({ isOpen, onClose }: IProps) => {
                   label="Year"
                   items={getYears(15).map((year) => ({ label: year.toString(), value: year.toString() }))}
                   required
-                  values={[selectedTestPaper.year.toString()]}
+                  values={toValues(selectedTestPaper.year)}
                   onChange={(values) =>
                     values[0] && patchTestPaper(selectedTestPaper._id, { year: Number(values[0].value) })
                   }
@@ -152,7 +159,7 @@ export const CreateTestPaperModal = ({ isOpen, onClose }: IProps) => {
                     ]}
                     values={
                       (selectedTestPaper.subjects ?? []).length || selectedTestPaper.isNew
-                        ? selectedTestPaper.subjects
+                        ? (selectedTestPaper.subjects ?? [])
                         : [ALL]
                     }
                     onChange={handleSubjectsChange}
@@ -160,7 +167,7 @@ export const CreateTestPaperModal = ({ isOpen, onClose }: IProps) => {
                   <Select
                     label="Paper Type"
                     items={Object.values(PaperType).map((item) => ({ label: item, value: item }))}
-                    values={[selectedTestPaper.paperType]}
+                    values={toValues(selectedTestPaper.paperType)}
                     onChange={(values) =>
                       values[0] && patchTestPaper(selectedTestPaper._id, { paperType: values[0].value as PaperType })
                     }

@@ -34,15 +34,9 @@ export const Course = ({ courseId, isPreview }: IProps) => {
     fetchCourseData();
   }, [courseId]);
 
-  return (
-    <>
-      {isLoading || !selectedCourse ? (
-        <FullScreenLoader loading={isLoading} withHeader={true} />
-      ) : isPreview ? (
-        <CoursePreview />
-      ) : (
-        <CourseModules />
-      )}
-    </>
-  );
+  let content = <CourseModules />;
+  if (isLoading || !selectedCourse) content = <FullScreenLoader loading={isLoading} withHeader={true} />;
+  else if (isPreview) content = <CoursePreview />;
+
+  return <>{content}</>;
 };

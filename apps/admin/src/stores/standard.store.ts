@@ -1,40 +1,25 @@
-import {
-  type ClientEntity,
-  type IRequestSlice,
-  type StandardDto,
-  type StandardSubjectMappingDto,
-  type SubjectDto,
-  createRequestSlice,
-} from '@repo/shared';
+import { type StandardDto, type StandardSubjectMappingDto, type SubjectDto } from '@repo/shared/contracts';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { CommonService, StandardService, SubjectService } from '../services';
 import { STANDARD_GROUP_ORDER } from '../utils/constants';
 import { getObjectId, getSlug } from '../utils/helpers';
 
-/**
- * The three entities this store holds, typed from the shared DTOs rather than declared a second
- * time. `ClientEntity` leaves the server-assigned ownership fields optional, because a row the user
- * is still creating has none of them yet.
- */
-export type IStandard = ClientEntity<StandardDto>;
-export type ISubject = ClientEntity<SubjectDto>;
-export type IStandardSubjectMapping = ClientEntity<StandardSubjectMappingDto>;
-
 /** The fetches this store tracks. `run`, `isLoading` and friends accept only these names. */
 type StandardFetch = 'standards' | 'subjects' | 'mappings' | 'initialData';
 
 export interface IStandardState extends IRequestSlice<StandardFetch> {
-  standardMap: Record<string, IStandard>;
-  subjectMap: Record<string, ISubject>;
-  mappingMap: Record<string, IStandardSubjectMapping>;
+  standardMap: Record<string, StandardDto>;
+  subjectMap: Record<string, SubjectDto>;
+  mappingMap: Record<string, StandardSubjectMappingDto>;
 
-  getStandardById: (standardId: string) => IStandard | undefined;
-  getSubjectById: (subjectId: string) => ISubject | undefined;
-  getStandards: () => IStandard[];
-  getSubjects: () => ISubject[];
-  getSubjectsByIds: (subjectIds: string[]) => ISubject[];
-  getStandardSubjectMappings: (standardId: string) => IStandardSubjectMapping[];
+  getStandardById: (standardId: string) => StandardDto | undefined;
+  getSubjectById: (subjectId: string) => SubjectDto | undefined;
+  getStandards: () => StandardDto[];
+  getSubjects: () => SubjectDto[];
+  getSubjectsByIds: (subjectIds: string[]) => SubjectDto[];
+  getStandardSubjectMappings: (standardId: string) => StandardSubjectMappingDto[];
   /** The subject ids mapped to a standard, in mapping order. Was the `subjects` view on the model. */
   getStandardSubjectIds: (standardId: string) => string[];
   /** The distinct reference standards across a standard's mappings. Was a view on the model. */
@@ -47,12 +32,12 @@ export interface IStandardState extends IRequestSlice<StandardFetch> {
   /** Standards as grouped select items, without the one given — the reference-standards picker. */
   getStandardItemsExcluding: (standardId: string) => ISelectItem[];
 
-  addStandards: (standards: IStandard[]) => void;
-  addSubjects: (subjects: ISubject[]) => void;
-  addStandardSubjectMappings: (mappings: IStandardSubjectMapping[]) => void;
+  addStandards: (standards: StandardDto[]) => void;
+  addSubjects: (subjects: SubjectDto[]) => void;
+  addStandardSubjectMappings: (mappings: StandardSubjectMappingDto[]) => void;
 
-  patchStandard: (standardId: string, fields: Partial<IStandard>) => void;
-  patchSubject: (subjectId: string, fields: Partial<ISubject>) => void;
+  patchStandard: (standardId: string, fields: Partial<StandardDto>) => void;
+  patchSubject: (subjectId: string, fields: Partial<SubjectDto>) => void;
   /** Renames a standard and keeps its slug in step — the model's `setName` did both. */
   renameStandard: (standardId: string, name: string) => void;
   renameSubject: (subjectId: string, name: string) => void;
@@ -60,7 +45,7 @@ export interface IStandardState extends IRequestSlice<StandardFetch> {
 
   removeStandard: (standardId: string) => void;
   removeSubject: (subjectId: string) => void;
-  removeStandardSubjectMappings: (mappings: IStandardSubjectMapping[]) => void;
+  removeStandardSubjectMappings: (mappings: StandardSubjectMappingDto[]) => void;
 
   /** Adds an unsaved standard and returns its id, for the caller to select. */
   createStandard: () => string;
@@ -101,7 +86,7 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
 
   getSubjectsByIds: (subjectIds) => {
     const { subjectMap } = get();
-    return subjectIds.map((subjectId) => subjectMap[subjectId]).filter((subject): subject is ISubject => !!subject);
+    return subjectIds.map((subjectId) => subjectMap[subjectId]).filter((subject): subject is SubjectDto => !!subject);
   },
 
   getStandardSubjectMappings: (standardId) =>
@@ -223,13 +208,13 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
   },
 
   createStandard: () => {
-    const standard: IStandard = { _id: getObjectId(), name: '', slug: '', group: undefined, order: 0, isNew: true };
+    const standard: StandardDto = { _id: getObjectId(), name: '', slug: '', group: undefined, order: 0, isNew: true };
     get().addStandards([standard]);
     return standard._id;
   },
 
   createSubject: () => {
-    const subject: ISubject = { _id: getObjectId(), name: '', slug: '', isNew: true };
+    const subject: SubjectDto = { _id: getObjectId(), name: '', slug: '', isNew: true };
     get().addSubjects([subject]);
     return subject._id;
   },

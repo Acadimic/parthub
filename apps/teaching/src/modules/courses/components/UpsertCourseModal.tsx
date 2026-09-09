@@ -1,3 +1,4 @@
+import { type CourseDto, type PlanDto } from '@repo/shared/contracts';
 import { UploadFiles } from '@components/app/attachments';
 import { Select } from '@components/app/selects';
 import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
@@ -21,6 +22,23 @@ interface IProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+/**
+ * The first thing wrong with the course or its plans, as a message for the user, or undefined when
+ * it is ready to save. Pure, so the save handler holds the sequence and not the rules.
+ */
+const getValidationError = (course: CourseDto, plans: PlanDto[], hasNewFiles: boolean): string | undefined => {
+  if (course.name.trim() === '') return 'Please enter a valid course name.';
+  if ((course.standards ?? []).length === 0) return 'Please select at least one standard.';
+  if ((course.attachments ?? []).length === 0 && !hasNewFiles) return 'Please add at least one course image.';
+  for (const plan of plans) {
+    if (plan.amount === 0 || plan.realAmount === 0) return 'Please enter valid amount for each plan.';
+    if (plan.amount > (plan.realAmount ?? 0)) return 'Real amount should be greater than or equal to amount.';
+    if (plan.name.trim() === '') return 'Please enter a valid plan name.';
+  }
+  if (plans.length === 0) return 'Please add at least one plan.';
+  return undefined;
+};
 
 export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
   const { push } = useRouter();
@@ -58,39 +76,14 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
   const saveCourse = async () => {
     if (!selectedCourse) return;
     try {
-      if (selectedCourse.name.trim() === '') {
-        errorToast({ message: 'Please enter a valid course name.' });
-        return;
-      }
-      if ((selectedCourse.standards ?? []).length === 0) {
-        errorToast({ message: 'Please select at least one standard.' });
-        return;
-      }
-      if ((selectedCourse.attachments ?? []).length === 0 && selectedFiles.length === 0) {
-        errorToast({ message: 'Please add at least one course image.' });
-        return;
-      }
-      for (const plan of selectedCoursePlans) {
-        if (plan.amount === 0 || plan.realAmount === 0) {
-          errorToast({ message: 'Please enter valid amount for each plan.' });
-          return;
-        }
-        if (plan.amount > (plan.realAmount ?? 0)) {
-          errorToast({ message: 'Real amount should be greater than or equal to amount.' });
-          return;
-        }
-        if (plan.name.trim() === '') {
-          errorToast({ message: 'Please enter a valid plan name.' });
-          return;
-        }
-      }
-      if (selectedCoursePlans.length === 0) {
-        errorToast({ message: 'Please add at least one plan.' });
+      const validationError = getValidationError(selectedCourse, selectedCoursePlans, selectedFiles.length > 0);
+      if (validationError) {
+        errorToast({ message: validationError });
         return;
       }
       setIsLoading(true);
       const attachments = await uploadFilesToS3(selectedCourse._id, selectedFiles);
-      attachments && patchCourse(selectedCourse._id, { attachments: attachments });
+      attachments && patchCourse(selectedCourse._id, { attachments });
       calculateAndSetCourseStatsByCourseId(selectedCourse._id);
       await CourseService.upsertCourseAndPlans({ course: selectedCourse, plans: selectedCoursePlans });
       patchCourse(selectedCourse._id, { isNew: false });
@@ -160,7 +153,9 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
                   label="Subjects"
                   items={[...getCourseSubjectItems(selectedCourse._id), { label: 'All', value: ALL }]}
                   values={
-                    (selectedCourse.subjects ?? []).length || selectedCourse.isNew ? selectedCourse.subjects : [ALL]
+                    (selectedCourse.subjects ?? []).length || selectedCourse.isNew
+                      ? (selectedCourse.subjects ?? [])
+                      : [ALL]
                   }
                   onChange={handleSubjectsChange}
                 />

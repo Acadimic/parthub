@@ -42,7 +42,6 @@ export const TextEditor = ({
   renderFocus,
 }: IProps) => {
   const htmlRef = useRef('');
-  const ref = useRef<ContentEditable>(null);
   const id = useMemo(() => getObjectId(), [index]);
   const [refresh, setRefresh] = useState(false);
 
@@ -60,11 +59,9 @@ export const TextEditor = ({
   };
 
   const focusAtEnd = () => {
-    console.log('####focusAtEnd: ');
     const el = document.getElementById(id);
     if (!el) return;
 
-    console.log('####el: ', htmlRef.current, index, isFocused);
     el.focus();
 
     // Move caret to end
@@ -82,11 +79,9 @@ export const TextEditor = ({
   }, [isFocused, renderFocus]);
 
   useEffect(() => {
-    console.log('####useEffect: ', content, index);
     if (htmlRef.current !== content) {
       htmlRef.current = content;
       setRefresh(!refresh);
-      console.log('####setContent: ', content, index);
     }
   }, [content]);
 
@@ -116,7 +111,6 @@ export const TextEditor = ({
         onClick={(event: React.MouseEvent<HTMLElement>) => {
           event.stopPropagation();
           onFocus(index);
-          console.log('####onClick: ', index);
         }}
         className={`pr-1.5 py-1 bg-transparent w-full leading-7 outline-none h-full border border-transparent hover:border-blue-primary focus:border-blue-primary ${className}`}
         suppressContentEditableWarning

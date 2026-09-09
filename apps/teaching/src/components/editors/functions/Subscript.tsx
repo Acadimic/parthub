@@ -6,8 +6,8 @@ const Subscript = (props: IFunctionProps) => {
   const NAME = 'subscript';
 
   const getHTML = (data: string) => {
-    const bottom = data && data.startsWith('<') ? 'bottom: -0.7em;' : '';
-    const align = data && data.startsWith('<') ? 'vertical-align: bottom;' : '';
+    const bottom = data?.startsWith('<') ? 'bottom: -0.7em;' : '';
+    const align = data?.startsWith('<') ? 'vertical-align: bottom;' : '';
     const html = `<sub style="${align} position: relative; ${bottom}">${data}</sub>&nbsp;`;
     return html;
   };

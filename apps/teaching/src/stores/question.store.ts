@@ -1,11 +1,6 @@
-import {
-  type ClientEntityWith,
-  type IOptionFields,
-  type IRequestSlice,
-  type ISolutionFields,
-  type QuestionDto,
-  createRequestSlice,
-} from '@repo/shared';
+import { type QuestionDto } from '@repo/shared/contracts';
+import { type IOptionFields, type ISolutionFields } from '@repo/shared/interfaces';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type ICreateQuestion, type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -14,10 +9,6 @@ import { QuestionService } from '../services';
 import { getObjectId } from '../utils/helpers';
 import { useSelectorStore } from './selector.store';
 
-export type IQuestion = ClientEntityWith<
-  QuestionDto,
-  'question' | 'standard' | 'options' | 'questionType' | 'markings' | 'section' | 'year'
->;
 export type IOption = IOptionFields & { isNew?: boolean };
 export type ISolution = ISolutionFields & { isNew?: boolean };
 
@@ -25,33 +16,32 @@ export type ISolution = ISolutionFields & { isNew?: boolean };
 type QuestionFetch = 'questions';
 
 export interface IQuestionState extends IRequestSlice<QuestionFetch> {
-  questionMap: Record<string, IQuestion>;
+  questionMap: Record<string, QuestionDto>;
   optionMap: Record<string, IOption>;
   solutionMap: Record<string, ISolution>;
 
-  getQuestionById: (questionId: string) => IQuestion | undefined;
+  getQuestionById: (questionId: string) => QuestionDto | undefined;
   getOptionById: (optionId: string) => IOption | undefined;
   getSolutionById: (solutionId: string) => ISolution | undefined;
-  getQuestions: () => IQuestion[];
+  getQuestions: () => QuestionDto[];
   getOptions: () => IOption[];
   getSolutions: () => ISolution[];
-  getQuestionsByIds: (questionIds: string[]) => IQuestion[];
+  getQuestionsByIds: (questionIds: string[]) => QuestionDto[];
   getOptionsByIds: (optionIds: string[]) => IOption[];
-  getQuestionsBySectionId: (sectionId: string) => IQuestion[];
-  getQuestionsBySectionIds: (sectionIds: string[]) => IQuestion[];
+  getQuestionsBySectionId: (sectionId: string) => QuestionDto[];
+  getQuestionsBySectionIds: (sectionIds: string[]) => QuestionDto[];
   getSolutionByQuestionId: (questionId: string) => ISolution | undefined;
   /** A question's options as select items. Was the `optionItems` view on the model. */
   getOptionItems: (questionId: string) => ISelectItem[];
   /** Rows the user has created and not yet saved — what an upsert posts. */
-
-  getNewQuestions: () => IQuestion[];
+  getNewQuestions: () => QuestionDto[];
   getNewOptions: () => IOption[];
   getNewSolutions: () => ISolution[];
 
-  addQuestions: (questions: IQuestion[]) => void;
+  addQuestions: (questions: QuestionDto[]) => void;
   addOptions: (options: IOption[]) => void;
   addSolutions: (solutions: ISolution[]) => void;
-  patchQuestion: (questionId: string, fields: Partial<IQuestion>) => void;
+  patchQuestion: (questionId: string, fields: Partial<QuestionDto>) => void;
   patchOption: (optionId: string, fields: Partial<IOption>) => void;
   patchSolution: (solutionId: string, fields: Partial<ISolution>) => void;
   removeQuestionById: (questionId: string) => void;
@@ -62,7 +52,7 @@ export interface IQuestionState extends IRequestSlice<QuestionFetch> {
   /** The starting options for a question type: two for boolean, four for choice, one otherwise. */
   createOptionsForQuestionType: (questionId: string, questionType: QuestionType) => IOption[];
   /** Adds an unsaved question with its options and returns it, for the caller to select. */
-  createQuestion: (payload: ICreateQuestion) => IQuestion;
+  createQuestion: (payload: ICreateQuestion) => QuestionDto;
   /** Returns the question's solution, creating an empty one first if it has none. */
   upsertSolution: (questionId: string, solution?: string) => ISolution;
 
@@ -99,7 +89,7 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
 
   getQuestionsByIds: (questionIds) => {
     const { questionMap } = get();
-    return questionIds.map((id) => questionMap[id]).filter((row): row is IQuestion => !!row);
+    return questionIds.map((id) => questionMap[id]).filter((row): row is QuestionDto => !!row);
   },
 
   getOptionsByIds: (optionIds) => {
@@ -235,7 +225,7 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
   createQuestion: (payload) => {
     const questionId = getObjectId();
     const options = get().createOptionsForQuestionType(questionId, payload.questionType);
-    const question: IQuestion = {
+    const question: QuestionDto = {
       _id: questionId,
       question: '',
       options: options.map((option) => option._id),
@@ -271,7 +261,7 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
 export const useQuestionLookups = (): IQuestionState => useQuestionStore(useShallow((state) => state));
 
 /** The selected question, or `undefined`. Replaces `selectorStore.selectedQuestion`. */
-export const useSelectedQuestion = (): IQuestion | undefined => {
+export const useSelectedQuestion = (): QuestionDto | undefined => {
   const selectedQuestionId = useSelectorStore((state) => state.selectedQuestionId);
   return useQuestionStore((state) => (selectedQuestionId ? state.questionMap[selectedQuestionId] : undefined));
 };

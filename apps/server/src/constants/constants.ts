@@ -1,4 +1,4 @@
-import { Permission } from '@repo/shared';
+import { Permission } from '@repo/shared/enums';
 
 export const ORIGIN = [/\.parthhub\.com$/, 'http://localhost:3000'];
 

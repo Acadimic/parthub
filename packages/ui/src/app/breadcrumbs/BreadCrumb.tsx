@@ -18,13 +18,7 @@ interface IProps {
 const BreadcrumbItem = ({ item }: { item: IBreadcrumbItem }) => {
   return (
     <div key={item.label}>
-      <Link
-        onClick={item.onClick ? item.onClick : undefined}
-        isSubtle
-        className="px-0.5 text-xs"
-        href={item.href}
-        leftsection={item.icon}
-      >
+      <Link onClick={item.onClick} isSubtle className="px-0.5 text-xs" href={item.href} leftsection={item.icon}>
         {item.label}
       </Link>
     </div>

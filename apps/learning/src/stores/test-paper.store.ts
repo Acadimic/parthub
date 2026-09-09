@@ -1,14 +1,9 @@
-import {
-  type ClientEntityWith,
-  type IRequestSlice,
-  type ISubjectGraphData,
-  type ITestPaperSectionFields,
-  type TestPaperDto,
-  createRequestSlice,
-} from '@repo/shared';
+import { type TestPaperDto } from '@repo/shared/contracts';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
+import { type ISubjectGraphData, type ITestPaperSectionFields } from '@repo/shared/interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { Marking, type PaperCategoryType, type PaperType } from '../enums';
+import { Marking } from '../enums';
 import { ReactionService, TestPaperService } from '../services';
 import { getMinutesString, getObjectId, groupBy } from '../utils/helpers';
 import { useQuestionStore } from './question.store';
@@ -19,80 +14,25 @@ import { useStandardStore } from './standard.store';
  * A test paper in the store. `reactionsCount` and `isLoadedReactionsCount` are client-only and are
  * stripped from every request by `CLIENT_ONLY_KEYS`.
  */
-export type ITestPaper = ClientEntityWith<
-  TestPaperDto,
-  | 'name'
-  | 'slug'
-  | 'standards'
-  | 'subjects'
-  | 'sections'
-  | 'totalQuestions'
-  | 'durationMins'
-  | 'year'
-  | 'maxMarks'
-  | 'paperType'
-  | 'instruction'
-  | 'paperCategory'
-> & { reactionsCount?: number; isLoadedReactionsCount?: boolean; isLoadingReactionsCount?: boolean };
+export type ITestPaper = TestPaperDto & {
+  reactionsCount?: number;
+  isLoadedReactionsCount?: boolean;
+  isLoadingReactionsCount?: boolean;
+};
 
 export type ITestPaperSection = ITestPaperSectionFields &
   Required<Pick<ITestPaperSectionFields, 'defaultMarkings' | 'sectionCategory'>> & { isNew?: boolean };
 
-/** Seconds spent, per question id. */
-export interface IQuestionWiseTimeTakenMap {
-  [questionId: string]: number;
-}
-export interface IResultMap {
-  [questionId: string]: Marking;
-}
-export interface IAnswerMap {
-  [questionId: string]: string[];
-}
-export interface ISectionWiseQuestionsMap {
-  [sectionId: string]: string[];
-}
-export type IResultCount = { [key in Marking]: number };
-export interface ISummaryCount {
-  notVisited: number;
-  notAnswered: number;
-  answered: number;
-  markedForReview: number;
-  answeredAndMarkedForReview: number;
-}
-
-/**
- * One exam sitting. Entirely client-side — there is no exam DTO and nothing here is posted; the
- * paper, its questions and the learner's marks are what get saved.
- */
-export interface IExam {
-  _id: string;
-  testPaper: string;
-  title: string;
-  instruction: string;
-  questionWiseSpendTime: IQuestionWiseTimeTakenMap;
-  questionWiseReplyTime: IQuestionWiseTimeTakenMap;
-  totalSpendTime: number;
-  /** The correct option ids, per question. */
-  answerMaps: IAnswerMap;
-  /** The option ids the learner picked, per question. */
-  responseMaps: IAnswerMap;
-  visited: string[];
-  markedForReviews: string[];
-  sectionWiseQuestionIdsMaps: ISectionWiseQuestionsMap;
-  numberOfQuestions: number;
-  durationMins: number;
-  maxMarks: number;
-  year: number;
-  sections: string[];
-  questions: string[];
-  standards: string[];
-  subjects: string[];
-  resultMaps: IResultMap;
-  isPractice: boolean;
-  isSubmitted: boolean;
-  paperCategory: PaperCategoryType;
-  paperType: PaperType;
-}
+export * from './exam.types';
+import {
+  type IAnswerMap,
+  type IExam,
+  type IQuestionWiseTimeTakenMap,
+  type IResultCount,
+  type IResultMap,
+  type ISectionWiseQuestionsMap,
+  type ISummaryCount,
+} from './exam.types';
 
 /** The fetches this store tracks. */
 type TestPaperFetch = 'testPapers' | 'testPaperSections' | 'exam';
@@ -179,6 +119,22 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
 
 const selectedQuestionId = (): string => useSelectorStore.getState().selectedQuestionId;
 
+type QuestionStore = ReturnType<typeof useQuestionStore.getState>;
+
+/** Section id to its question ids, in section order. */
+const toSectionWiseQuestionIds = (sections: string[], questionStore: QuestionStore): ISectionWiseQuestionsMap =>
+  sections.reduce<ISectionWiseQuestionsMap>((maps, sectionId) => {
+    maps[sectionId] = questionStore.getQuestionsBySectionId(sectionId).map((question) => question._id);
+    return maps;
+  }, {});
+
+/** Question id to the ids of its correct options — the key the exam marks responses against. */
+const toAnswerMaps = (questions: { _id: string }[], questionStore: QuestionStore): IAnswerMap =>
+  questions.reduce<IAnswerMap>((answers, question) => {
+    answers[question._id] = questionStore.getCorrectOptions(question._id).map((option) => option._id);
+    return answers;
+  }, {});
+
 export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
   testPaperMap: {},
   testPaperSectionMap: {},
@@ -206,7 +162,7 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
   getTestPapersByStandardIds: (standardIds) =>
     get()
       .getTestPapers()
-      .filter((testPaper) => testPaper.standards.some((standardId) => standardIds.includes(standardId))),
+      .filter((testPaper) => (testPaper.standards ?? []).some((standardId) => standardIds.includes(standardId))),
 
   addTestPapers: (testPapers) => {
     set((state) => ({ testPaperMap: { ...state.testPaperMap, ...keyById(testPapers) } }));
@@ -275,14 +231,17 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
       await get().loadTestPaperSectionsWithQuestions(testPaperId);
       const testPaper = get().getTestPaperById(testPaperId);
       if (!testPaper) return;
+      // `TestPaperDto` leaves these optional because one class serves both directions and a write
+      // body need not send them; a stored paper always has them. Bail rather than open a sitting
+      // with zeroed marks or an unknown paper type — the other fields have a neutral default.
+      const { durationMins, maxMarks, paperCategory, paperType } = testPaper;
+      if (durationMins == null || maxMarks == null || !paperCategory || !paperType) return;
       const questionStore = useQuestionStore.getState();
-      const questions = questionStore.getQuestionsBySectionIds(testPaper.sections);
+      const sections = testPaper.sections ?? [];
+      const questions = questionStore.getQuestionsBySectionIds(sections);
       if (!questions.length) return;
 
-      const sectionWiseQuestionIdsMaps = testPaper.sections.reduce<ISectionWiseQuestionsMap>((maps, sectionId) => {
-        maps[sectionId] = questionStore.getQuestionsBySectionId(sectionId).map((question) => question._id);
-        return maps;
-      }, {});
+      const sectionWiseQuestionIdsMaps = toSectionWiseQuestionIds(sections, questionStore);
       const questionIds = Object.values(sectionWiseQuestionIdsMaps).flat();
       const firstQuestionId = questionIds[0];
       if (firstQuestionId) useSelectorStore.getState().setSelectedQuestionId(firstQuestionId);
@@ -297,14 +256,11 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
           _id: getObjectId(),
           testPaper: testPaperId,
           title: testPaper.name,
-          instruction: testPaper.instruction,
+          instruction: testPaper.instruction ?? '',
           questionWiseSpendTime: zeroTimes,
           questionWiseReplyTime: { ...zeroTimes },
           totalSpendTime: 0,
-          answerMaps: questions.reduce<IAnswerMap>((answers, question) => {
-            answers[question._id] = questionStore.getCorrectOptions(question._id).map((option) => option._id);
-            return answers;
-          }, {}),
+          answerMaps: toAnswerMaps(questions, questionStore),
           responseMaps: questions.reduce<IAnswerMap>((responses, question) => {
             responses[question._id] = [];
             return responses;
@@ -313,21 +269,21 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
           markedForReviews: [],
           sectionWiseQuestionIdsMaps,
           numberOfQuestions: questions.length,
-          durationMins: testPaper.durationMins,
-          maxMarks: testPaper.maxMarks,
-          year: testPaper.year,
-          sections: [...testPaper.sections],
+          durationMins,
+          maxMarks,
+          year: testPaper.year ?? 0,
+          sections: [...sections],
           questions: questionIds,
-          standards: [...testPaper.standards],
-          subjects: [...testPaper.subjects],
+          standards: [...(testPaper.standards ?? [])],
+          subjects: [...(testPaper.subjects ?? [])],
           resultMaps: questions.reduce<IResultMap>((results, question) => {
             results[question._id] = Marking.UNATTEMPTED;
             return results;
           }, {}),
           isPractice,
           isSubmitted: false,
-          paperCategory: testPaper.paperCategory,
-          paperType: testPaper.paperType,
+          paperCategory,
+          paperType,
         },
       });
     }),

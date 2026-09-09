@@ -6,7 +6,6 @@ import { type IColumnData } from '@interfaces';
 import { type IUser, useSelectorLookups, useUserLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { getStringFormattedDate, getStringFormattedDateWithTime } from '@utils/helpers';
-import { useRouter } from 'next/router';
 import { useSetState } from 'react-use';
 import { AddCollaboratorsModal, UpsertCollaboratorModal } from './components';
 
@@ -18,7 +17,6 @@ interface IState {
 }
 
 export const Collaborators = () => {
-  const { push } = useRouter();
   const selectorStore = useSelectorLookups();
   const userStore = useUserLookups();
   const { setSelectedCollaboratorId } = selectorStore;
@@ -51,11 +49,6 @@ export const Collaborators = () => {
     setState({ isOpenAddCollaboratorsModal: false });
   };
 
-  const closeBulkAddCollaboratorsModal = () => {
-    setState({ isOpenBulkAddCollaboratorsModal: false });
-    removeNewUsers();
-  };
-
   const closeUpsertCollaboratorModal = () => {
     setState({ isOpenUpsertCollaboratorModal: false });
     removeNewUsers();
@@ -66,7 +59,7 @@ export const Collaborators = () => {
     setState({ isOpenUpsertCollaboratorModal: true });
   };
 
-  const onClickCollaborator = (collaborator: IUser) => {};
+  const onClickCollaborator = (_collaborator: IUser) => {};
 
   const columns: IColumnData<IUser>[] = [
     // {

@@ -1,38 +1,19 @@
-import { type ClientEntityWith, type IRequestSlice, type MeetDto, createRequestSlice } from '@repo/shared';
+import { type MeetDto } from '@repo/shared/contracts';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-
-export type IMeet = ClientEntityWith<
-  MeetDto,
-  | 'title'
-  | 'color'
-  | 'durationMins'
-  | 'timezone'
-  | 'timezoneOffset'
-  | 'startTime'
-  | 'endTime'
-  | 'status'
-  | 'standards'
-  | 'batches'
-  | 'attendees'
-  | 'meetingLink'
-  | 'meetingId'
-  | 'weekDays'
-  | 'cancelledDates'
-  | 'frequency'
->;
 
 /** The fetches this store tracks. */
 type MeetFetch = 'meets';
 
 export interface IMeetState extends IRequestSlice<MeetFetch> {
-  meetMap: Record<string, IMeet>;
+  meetMap: Record<string, MeetDto>;
 
-  getMeetById: (meetId: string) => IMeet | undefined;
-  getMeets: () => IMeet[];
-  getMeetsByIds: (meetIds: string[]) => IMeet[];
+  getMeetById: (meetId: string) => MeetDto | undefined;
+  getMeets: () => MeetDto[];
+  getMeetsByIds: (meetIds: string[]) => MeetDto[];
 
-  addMeets: (meets: IMeet[]) => void;
+  addMeets: (meets: MeetDto[]) => void;
   removeMeetById: (meetId: string) => void;
   reset: () => void;
 }
@@ -53,7 +34,7 @@ export const useMeetStore = create<IMeetState>()((set, get) => ({
 
   getMeetsByIds: (meetIds) => {
     const { meetMap } = get();
-    return meetIds.map((meetId) => meetMap[meetId]).filter((meet): meet is IMeet => !!meet);
+    return meetIds.map((meetId) => meetMap[meetId]).filter((meet): meet is MeetDto => !!meet);
   },
 
   addMeets: (meets) => {

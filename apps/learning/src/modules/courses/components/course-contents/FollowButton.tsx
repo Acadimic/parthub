@@ -9,7 +9,6 @@ interface IProps {
 export const FollowButton = ({ user }: IProps) => {
   const resourceStore = useResourceLookups();
   const { toggleFollowing, isFollowing } = resourceStore;
-  const isToggleFollowing = resourceStore.isLoading('toggleFollowing');
 
   const isFollowingUser = isFollowing(user._id);
 

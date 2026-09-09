@@ -1,4 +1,4 @@
-import { Subdomain } from '@repo/shared';
+import { Subdomain } from '@repo/shared/enums';
 import { type FirebaseUserDto } from '@modules/firebase/firebase.dto';
 import { type RegisterUserDto } from '@repo/shared/validations';
 import ObjectID from 'bson-objectid';

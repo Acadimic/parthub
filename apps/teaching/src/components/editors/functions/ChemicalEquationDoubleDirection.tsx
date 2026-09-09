@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Button } from '@repo/ui/app';
 import { DirectionType } from '@enums';
-import { type IFunctionProps, type IPosition, type ITarget, type IEditorCellMap } from '@interfaces';
+import { type IFunctionProps, type ITarget, type IEditorCellMap } from '@interfaces';
 import { HtmlEditor } from '..';
 import { Toolbar } from '../Toolbar';
 
@@ -14,12 +14,6 @@ const ChemicalEquationDoubleDirection = (props: IFunctionProps) => {
     [`${name}-${DirectionType.LEFT}`]: '',
     [`${name}-${DirectionType.RIGHT}`]: '',
   });
-  const [position] = React.useState({ start: 0, end: 0 });
-
-  const setPosition = (newPosition: IPosition) => {
-    position.start = newPosition.start;
-    position.end = newPosition.end;
-  };
 
   const [focusedElement, setFocusedElement] = React.useState<string>(DirectionType.LEFT);
 

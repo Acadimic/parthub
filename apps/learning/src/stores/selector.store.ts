@@ -1,4 +1,4 @@
-import { type IAttachment } from './material.store';
+import { type AttachmentDto } from '@repo/shared/contracts';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { CourseItemType, DefaultRole, QuestionType, StorageKey } from '../enums';
@@ -13,7 +13,7 @@ import { CourseItemType, DefaultRole, QuestionType, StorageKey } from '../enums'
  * each subscribing to both stores properly.
  *
  * Because of that this module imports no other store's state, so there is no cycle to be careful
- * about. `IAttachment` is a type-only import.
+ * about. `AttachmentDto` is a type-only import.
  */
 export interface ISelectorState {
   selectedOrgId: string;
@@ -37,7 +37,7 @@ export interface ISelectorState {
   isCourseMenuOpen: boolean;
   selectedContent: string;
   /** The attachment the learner is viewing. Held whole, not by id — it is a subdocument. */
-  selectedAttachment: IAttachment | null;
+  selectedAttachment: AttachmentDto | null;
   setSelectedOrgId: (value: string) => void;
   setSelectedUserId: (value: string) => void;
   setSelectedTestPaperId: (value: string) => void;
@@ -58,7 +58,7 @@ export interface ISelectorState {
   setSelectedUpsertQuestionStep: (value: number) => void;
   setIsCourseMenuOpen: (value: boolean) => void;
   setSelectedContent: (value: string) => void;
-  setSelectedAttachment: (value: IAttachment | null) => void;
+  setSelectedAttachment: (value: AttachmentDto | null) => void;
   removeSelectedTestPaperId: () => void;
   removeSelectedTestPaperSectionId: () => void;
   removeSelectedQuestionId: () => void;

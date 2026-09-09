@@ -5,11 +5,13 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { AccountType, DEFAULT_PERMISSIONS, DefaultRole, OrgType, PermissionItem, Subdomain } from '@repo/shared';
+import { AccountType, DefaultRole, OrgType, PermissionItem, Subdomain } from '@repo/shared/enums';
+import { DEFAULT_PERMISSIONS } from '@repo/shared/utils';
 import {
   CreateUserDto,
   FindByOrgIdAndUidDto,
@@ -28,6 +30,9 @@ import { User, UserDocument } from './user.schema';
 
 @Injectable()
 export class UserService {
+  // NestJS injects collaborators through the constructor, so the count reflects this class's
+  // dependencies rather than a parameter list that could be shortened by extraction.
+  // eslint-disable-next-line max-params
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly orgService: OrgService,
@@ -44,6 +49,9 @@ export class UserService {
       role: user.role?.toString(),
       standards: user.standards?.map((standard) => standard.toString()),
       dob: user.dob ? new Date(user.dob).toISOString() : undefined,
+      // Mongoose gives these as Date; every contract serializes a timestamp as ISO 8601.
+      createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : undefined,
+      updatedAt: user.updatedAt ? new Date(user.updatedAt).toISOString() : undefined,
     };
   }
 
@@ -101,7 +109,9 @@ export class UserService {
       isAdmin: role === DefaultRole.SUPER_ADMIN,
     }));
     const ownerRole = subdomain === Subdomain.LEARN ? DefaultRole.STUDENT : DefaultRole.SUPER_ADMIN;
-    const currentRole = rolePayloads.find((r) => r.role === ownerRole)!._id;
+    const ownerRolePayload = rolePayloads.find((r) => r.role === ownerRole);
+    if (!ownerRolePayload) throw new InternalServerErrorException(`No ${ownerRole} role was prepared for the user.`);
+    const currentRole = ownerRolePayload._id;
 
     // Roles and org first so a failure never leaves a user pointing at a half-created org.
     await this.roleService.upsertBulk(rolePayloads);
@@ -210,7 +220,8 @@ export class UserService {
       .findByIdAndUpdate(_id, { ...fields }, { returnDocument: 'after', runValidators: true })
       .lean<UserDocument>()
       .exec();
-    const [withPermission] = await this.withPermissions([this.transformUser(user!)]);
+    if (!user) throw new NotFoundException('User not found.');
+    const [withPermission] = await this.withPermissions([this.transformUser(user)]);
     return withPermission;
   }
 

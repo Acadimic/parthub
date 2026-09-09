@@ -19,8 +19,6 @@ import { useEffect, useRef } from 'react';
 import { CustomToolbar, getDayEvents, getMonthEvents, getWeekEvents } from '.';
 
 export const DayHeaderContent = ({ date }: DayHeaderContentArg) => {
-  const isToday = new Date().toDateString() === date.toDateString();
-  const dayNumber = date.getDate();
   const dayName = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date);
 
   return (
@@ -30,8 +28,7 @@ export const DayHeaderContent = ({ date }: DayHeaderContentArg) => {
   );
 };
 
-export const DayCellContent = ({ date, dayNumberText, view: { type } }: DayCellContentArg) => {
-  const isToday = new Date().toDateString() === date.toDateString();
+export const DayCellContent = ({ dayNumberText, view: { type } }: DayCellContentArg) => {
   if (type !== 'dayGridMonth') return null;
 
   return <div className="p-3">{dayNumberText}</div>;
@@ -102,14 +99,9 @@ export const FullCalendarView = ({ onEventClick, onDateClick }: IProps) => {
   const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
   const calendarRef = useRef<FullCalendar | null>(null);
   const date = new Date(selectedCalenderDate);
-  const events =
-    selectedCalenderType === CalendarType.DAY
-      ? getDayEvents({ date, meets })
-      : selectedCalenderType === CalendarType.WEEK
-        ? getWeekEvents({ date, meets })
-        : selectedCalenderType === CalendarType.MONTH
-          ? getMonthEvents({ date, meets })
-          : getWeekEvents({ date, meets });
+  let events = getWeekEvents({ date, meets });
+  if (selectedCalenderType === CalendarType.DAY) events = getDayEvents({ date, meets });
+  else if (selectedCalenderType === CalendarType.MONTH) events = getMonthEvents({ date, meets });
 
   useEffect(() => {
     // Initialize calendar with current view and date

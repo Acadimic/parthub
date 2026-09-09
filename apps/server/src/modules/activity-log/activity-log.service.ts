@@ -1,10 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ActivityAction } from '@repo/shared';
+import { ActivityAction } from '@repo/shared/enums';
 import { Model, Types } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
 import { ActivityLogCoreService } from './activity-log-core.service';
 import { ActivityLog } from './activity-log.schema';
+
+/** Paging and filtering for one entity's log, as the controller's query DTO supplies it. */
+interface IEntityLogQuery {
+  limit?: number;
+  skip?: number;
+  action?: ActivityAction;
+}
 
 @Injectable()
 export class ActivityLogService {
@@ -66,10 +73,9 @@ export class ActivityLogService {
   async getLogsForEntity(
     entityType: string,
     entityId: Types.ObjectId,
-    limit = 50,
-    skip = 0,
-    action?: ActivityAction,
+    options: IEntityLogQuery = {},
   ): Promise<ActivityLog[]> {
+    const { limit = 50, skip = 0, action } = options;
     const query: {
       entityType: string;
       entityId: Types.ObjectId;

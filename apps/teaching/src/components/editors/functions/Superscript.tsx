@@ -6,8 +6,8 @@ const Superscript = (props: IFunctionProps) => {
   const NAME = 'superscript';
 
   const getHTML = (data: string) => {
-    const top = data && data.startsWith('<') ? 'top: -0.8em;' : '';
-    const align = data && data.startsWith('<') ? 'vertical-align: top;' : '';
+    const top = data?.startsWith('<') ? 'top: -0.8em;' : '';
+    const align = data?.startsWith('<') ? 'vertical-align: top;' : '';
     const html = `<sup style="${align} position: relative; ${top}">${data}</sup>&nbsp;`;
     return html;
   };

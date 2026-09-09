@@ -1,7 +1,7 @@
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ActivityAction, PermissionItem, Subdomain } from '@repo/shared';
+import { ActivityAction, PermissionItem, Subdomain } from '@repo/shared/enums';
 import { ActivityLogQueryDto } from '@repo/shared/validations';
 import { Types } from 'mongoose';
 import { ActivityLog } from './activity-log.schema';
@@ -19,12 +19,10 @@ export class ActivityLogController {
     @Param('entityId') entityId: string,
     @Query() query: ActivityLogQueryDto,
   ): Promise<ActivityLog[]> {
-    return this.activityLogService.getLogsForEntity(
-      entityType,
-      new Types.ObjectId(entityId),
-      query.limit,
-      query.skip,
-      query.action as ActivityAction,
-    );
+    return this.activityLogService.getLogsForEntity(entityType, new Types.ObjectId(entityId), {
+      limit: query.limit,
+      skip: query.skip,
+      action: query.action as ActivityAction,
+    });
   }
 }

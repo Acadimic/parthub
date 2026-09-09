@@ -1,11 +1,5 @@
-import {
-  type BookmarkDto,
-  type ClientEntity,
-  type FollowerDto,
-  type IRequestSlice,
-  type ReactionDto,
-  createRequestSlice,
-} from '@repo/shared';
+import { type BookmarkDto, type FollowerDto, type ReactionDto } from '@repo/shared/contracts';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { CollectionType } from '../enums';
@@ -16,32 +10,28 @@ import { useSelectorStore } from './selector.store';
 import { useTestPaperStore } from './test-paper.store';
 import { useUserStore } from './user.store';
 
-export type IBookmark = ClientEntity<BookmarkDto>;
-export type IReaction = ClientEntity<ReactionDto>;
-export type IFollower = ClientEntity<FollowerDto>;
-
 /** The fetches this store tracks. `toggleReaction` and `toggleFollowing` get their own. */
 type ResourceFetch = 'bookmarks' | 'reactions' | 'followings' | 'toggleReaction' | 'toggleFollowing';
 
 export interface IResourceState extends IRequestSlice<ResourceFetch> {
-  bookmarkMap: Record<string, IBookmark>;
-  reactionMap: Record<string, IReaction>;
-  followingMap: Record<string, IFollower>;
+  bookmarkMap: Record<string, BookmarkDto>;
+  reactionMap: Record<string, ReactionDto>;
+  followingMap: Record<string, FollowerDto>;
 
-  getBookmarks: () => IBookmark[];
-  getReactions: () => IReaction[];
-  getFollowings: () => IFollower[];
-  getBookmarkByItemId: (courseId: string, collectionItem: string) => IBookmark | undefined;
-  getReactionByItemId: (courseId: string, collectionItem: string) => IReaction | undefined;
-  getFollowerFollowingMap: (followerId: string, followingId: string) => IFollower | undefined;
+  getBookmarks: () => BookmarkDto[];
+  getReactions: () => ReactionDto[];
+  getFollowings: () => FollowerDto[];
+  getBookmarkByItemId: (courseId: string, collectionItem: string) => BookmarkDto | undefined;
+  getReactionByItemId: (courseId: string, collectionItem: string) => ReactionDto | undefined;
+  getFollowerFollowingMap: (followerId: string, followingId: string) => FollowerDto | undefined;
   /** Whether the selected course's item is bookmarked — a soft-deleted row counts as not. */
   isBookmarked: (collectionItem: string) => boolean;
   isReacted: (collectionItem: string) => boolean;
   isFollowing: (userId: string) => boolean;
 
-  addBookmarks: (bookmarks: IBookmark[]) => void;
-  addReactions: (reactions: IReaction[]) => void;
-  addFollowings: (followings: IFollower[]) => void;
+  addBookmarks: (bookmarks: BookmarkDto[]) => void;
+  addReactions: (reactions: ReactionDto[]) => void;
+  addFollowings: (followings: FollowerDto[]) => void;
 
   loadBookmarks: () => Promise<void>;
   loadReactions: () => Promise<void>;
@@ -142,7 +132,7 @@ export const useResourceStore = create<IResourceState>()((set, get) => ({
     if (!selectedCourseId) return;
     const existing = get().getBookmarkByItemId(selectedCourseId, collectionItem);
     // The API removes a row by upserting it with `_deleted`; every read filters those out.
-    const payload: IBookmark = existing
+    const payload: BookmarkDto = existing
       ? { ...existing, _deleted: !existing._deleted }
       : { _id: getObjectId(), collectionItem, collectionRef, course: selectedCourseId };
     const result = await BookmarkService.upsertBookmark(payload);
@@ -154,7 +144,7 @@ export const useResourceStore = create<IResourceState>()((set, get) => ({
       const selectedCourseId = useSelectorStore.getState().selectedCourseId;
       if (!selectedCourseId) return;
       const existing = get().getReactionByItemId(selectedCourseId, collectionItem);
-      const payload: IReaction = existing
+      const payload: ReactionDto = existing
         ? { ...existing, _deleted: !existing._deleted }
         : { _id: getObjectId(), collectionItem, collectionRef, course: selectedCourseId };
       const result = await ReactionService.upsertReaction(payload);
@@ -173,7 +163,7 @@ export const useResourceStore = create<IResourceState>()((set, get) => ({
       const userStore = useUserStore.getState();
       if (!selectedUserId || !userStore.getUserById(followingId)) return;
       const existing = get().getFollowerFollowingMap(selectedUserId, followingId);
-      const payload: IFollower = existing
+      const payload: FollowerDto = existing
         ? { ...existing, _deleted: !existing._deleted }
         : { _id: getObjectId(), follower: selectedUserId, following: followingId };
       const result = await FollowerService.upsertFollower(payload);

@@ -1,8 +1,8 @@
-import { type IAttachment } from '@stores';
+import { type AttachmentDto } from '@repo/shared/contracts';
 import Link from 'next/link';
 
 interface IProps {
-  documentObject: IAttachment;
+  documentObject: AttachmentDto;
 }
 
 export const DocumentLink = ({ documentObject }: IProps) => {

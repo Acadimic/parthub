@@ -1,16 +1,14 @@
 import { Card } from '@repo/ui/app';
 import { PresignedImage } from '@components/app/attachments';
 import { StandardWithLogo } from '@components/common';
-import { type ICourse, useSelectorLookups, useStandardLookups, useUserLookups } from '@stores';
+import { type ICourse, useSelectorLookups, useStandardLookups } from '@stores';
 import Link from 'next/link';
 import { CourseInfo } from './';
 
 export const CourseCard = ({ course }: { course: ICourse }) => {
   // const { push } = useRouter();
-  const userStore = useUserLookups();
   const selectorStore = useSelectorLookups();
   const standardStore = useStandardLookups();
-  const { getOrgById } = userStore;
   const { setSelectedCourseId } = selectorStore;
   const { getStandardsByIds } = standardStore;
 

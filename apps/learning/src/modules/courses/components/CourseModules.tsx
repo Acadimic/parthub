@@ -1,6 +1,5 @@
 import { Breadcrumb, type IBreadcrumbItem, Modal } from '@repo/ui/app';
 import { StandardWithLogo } from '@components/common';
-import { useCourse } from '@hooks/course.hook';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { ListIcon } from '@phosphor-icons/react';
 import { House } from '@phosphor-icons/react/dist/ssr';
@@ -13,7 +12,6 @@ export const CourseModules = () => {
   const standardStore = useStandardLookups();
   const selectedCourse = useSelectedCourse();
   const { getStandardById } = standardStore;
-  const { onClickCourseContentItem, onClickCoursePreviewContentItem } = useCourse();
   const { isSmallScreen } = useWindowDimensions();
   const [isOpenCourseOverView, setIsOpenCourseOverview] = useState(false);
 
@@ -59,7 +57,7 @@ export const CourseModules = () => {
         <div className="hidden md:block md:w-[30%] overflow-auto h-[calc(100vh-4rem)] bg-background-primary py-4 border-l border-color-border">
           <div>
             <div className="px-4">
-              <StandardWithLogo standard={selectedCourse && getStandardById(selectedCourse?.standards[0])} />
+              <StandardWithLogo standard={selectedCourse && getStandardById(selectedCourse.standards?.[0] ?? '')} />
             </div>
             <SelectedCourseModules closeCourseOverview={closeCourseOverview} isPreview={false} />
           </div>

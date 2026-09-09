@@ -1,12 +1,15 @@
+import { type CourseStatsDto } from '@repo/shared/contracts';
 import { BookOpenTextIcon, ClockIcon, FileTextIcon, YoutubeLogoIcon } from '@phosphor-icons/react';
 import { MaterialType } from '@enums';
-import { type ICourseStats } from '@stores';
 
 interface IProps {
-  courseStats: ICourseStats;
+  /** Absent until the server has computed the course's rollups. */
+  courseStats?: CourseStatsDto;
 }
 
 export const CourseInfo = ({ courseStats }: IProps) => {
+  if (!courseStats) return null;
+
   return (
     <div className="flex items-center text-color-secondary w-full">
       <div className="flex items-center gap-4 font-medium w-full">

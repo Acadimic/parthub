@@ -103,6 +103,18 @@ export class UserDto {
   @IsNotEmpty()
   lastActive?: string | Date;
 
+  /** ISO 8601. Server-assigned — the user schema sets `timestamps: true`. */
+  @Expose()
+  @IsOptional()
+  @IsDateString()
+  createdAt?: string;
+
+  /** ISO 8601. Server-assigned — the user schema sets `timestamps: true`. */
+  @Expose()
+  @IsOptional()
+  @IsDateString()
+  updatedAt?: string;
+
   @Expose()
   @IsString()
   @IsNotEmpty()

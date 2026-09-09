@@ -1,7 +1,8 @@
-import { type IOption, type IQuestion, type ISolution } from '@stores';
+import { type QuestionDto } from '@repo/shared/contracts';
+import { type IOption, type ISolution } from '@stores';
 
 interface IQuestionObject {
-  question: IQuestion;
+  question: QuestionDto;
   options: IOption[];
   solution?: ISolution;
 }

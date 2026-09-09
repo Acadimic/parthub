@@ -101,7 +101,7 @@ export const loadFirebaseUser = async () => {
     });
     await generateAndSetNewToken();
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
 };
 
@@ -140,11 +140,11 @@ export const updateUserPassword = async (oldPassword: string, newPassword: strin
 };
 
 export const getFirebaseErrorMessage = (e: FirebaseError) => {
-  console.log('Firebase Error: ', e);
-  if (e?.code == 'auth/user-not-found') return 'User not found!';
-  if (e?.code == 'auth/invalid-password') return 'Invalid Password!';
-  if (e?.code == 'auth/wrong-password') return 'Wrong Password!';
-  if (e?.code == 'auth/email-already-in-use') return 'Email already in use.';
+  console.error('Firebase Error: ', e);
+  if (e?.code === 'auth/user-not-found') return 'User not found!';
+  if (e?.code === 'auth/invalid-password') return 'Invalid Password!';
+  if (e?.code === 'auth/wrong-password') return 'Wrong Password!';
+  if (e?.code === 'auth/email-already-in-use') return 'Email already in use.';
   return e?.message || 'Something went wrong. Please try again.';
 };
 
@@ -180,7 +180,8 @@ export const fetchSignInMethods = async (email: string) => {
 };
 
 export const generateTotpSecret = async (): Promise<TotpSecret> => {
-  const currentUser = getFirebaseUser()!;
+  const currentUser = getFirebaseUser();
+  if (!currentUser) throw new Error('Cannot generate a TOTP secret without a signed-in user.');
   const multiFactorSession = await multiFactor(currentUser).getSession();
   return await TotpMultiFactorGenerator.generateSecret(multiFactorSession);
 };
@@ -196,7 +197,8 @@ export const getDisplayKey = (totpSecret: TotpSecret): string => {
 };
 
 export const verifyMfaCode = async (totpSecret: TotpSecret, otpFromAuthenticator: string) => {
-  const currentUser = getFirebaseUser()!;
+  const currentUser = getFirebaseUser();
+  if (!currentUser) throw new Error('Cannot enrol MFA without a signed-in user.');
   const multiFactorAssertion = TotpMultiFactorGenerator.assertionForEnrollment(totpSecret, otpFromAuthenticator);
   await multiFactor(currentUser).enroll(multiFactorAssertion, 'Acadimic');
 };

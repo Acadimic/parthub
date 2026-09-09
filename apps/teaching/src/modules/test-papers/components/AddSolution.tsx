@@ -1,4 +1,5 @@
-import { type MarkingType } from '@repo/shared';
+import { type QuestionDto } from '@repo/shared/contracts';
+import { type MarkingType } from '@repo/shared/interfaces';
 import { CheckboxSelection, RadioSelection } from '@components/app/selections';
 import { Select } from '@components/app/selects';
 import { TextInput } from '@repo/ui/app';
@@ -19,6 +20,106 @@ import { useEffect, useState } from 'react';
 import { SelectQuestionType } from './SelectQuestionType';
 import { type Block, MathEditor } from '@components/editors';
 import { getBlocks } from '@components/editors/math-jax-editor/util';
+
+const MARKING_FIELDS = [
+  { name: Marking.CORRECT, label: 'Correct Marks', placeholder: 'Correct' },
+  { name: Marking.INCORRECT, label: 'Incorrect Marks', placeholder: 'Incorrect' },
+  { name: Marking.UNATTEMPTED, label: 'Unattempted Marks', placeholder: 'Unattempted' },
+];
+
+/** The three marks-per-outcome inputs, which differ only in name and label. */
+const MarkingInputs = ({
+  marks,
+  onChange,
+}: {
+  marks: Record<string, number>;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}) => (
+  <div className="flex flex-col md:flex-row gap-2.5">
+    {MARKING_FIELDS.map(({ name, label, placeholder }) => (
+      <div key={name} className="w-full md:w-[33.33%]">
+        <TextInput
+          name={name}
+          type="number"
+          label={label}
+          placeholder={placeholder}
+          className="w-32"
+          required
+          value={marks[name] ?? ''}
+          onChange={onChange}
+        />
+      </div>
+    ))}
+  </div>
+);
+
+/** Standard, subject and chapter. Chapter only applies once the first two are chosen. */
+const QuestionTaxonomy = ({
+  question,
+  standardItems,
+  subjectItems,
+  getChapterItems,
+  onStandardChange,
+  onPatchQuestion,
+}: {
+  question: QuestionDto;
+  standardItems: ISelectItem[];
+  subjectItems: ISelectItem[];
+  getChapterItems: (standard: string, subject: string) => ISelectItem[];
+  onStandardChange: (values: ISelectItem[]) => void;
+  onPatchQuestion: (id: string, fields: Partial<QuestionDto>) => void;
+}) => (
+  <div className="flex flex-col md:flex-row gap-2.5">
+    <div className="flex flex-col md:flex-row gap-2.5">
+      <Select
+        label="Standards"
+        items={standardItems}
+        required
+        isGrouped
+        values={question.standard ? [question.standard] : []}
+        onChange={onStandardChange}
+        isSingleSelect
+      />
+      <Select
+        label="Subject"
+        items={subjectItems}
+        values={question.subject ? [question.subject] : []}
+        onChange={(values) => onPatchQuestion(question._id, { subject: values[0]?.value })}
+        isSingleSelect
+        isDisabled={!question.standard}
+      />
+    </div>
+    <div className="flex items-end gap-2.5">
+      {question.standard && question.subject && (
+        <>
+          <div className="w-full flex-1">
+            <Select
+              label="Chapter"
+              items={getChapterItems(question.standard, question.subject)}
+              values={question.chapter ? [question.chapter] : []}
+              onChange={(values) => values[0] && onPatchQuestion(question._id, { chapter: values[0]?.value })}
+              isSingleSelect
+              required
+            />
+          </div>
+          <div className="pb-[1px]">
+            <AddChapterButton standard={question.standard} subject={question.subject} />
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+);
+
+/**
+ * A question's subject choices, or none while it has no standard yet — `QuestionDto` leaves
+ * `standard` optional because a write body need not send it. Outside the component so the guard
+ * does not count against the render function's complexity.
+ */
+const toSubjectItems = (
+  standard: string | undefined,
+  getItems: (standardId: string) => ISelectItem[],
+): ISelectItem[] => (standard ? getItems(standard) : []);
 
 export const AddSolution = () => {
   const questionStore = useQuestionLookups();
@@ -87,6 +188,12 @@ export const AddSolution = () => {
 
   if (!selectedQuestion || !selectedTestPaper) return null;
 
+  const questionOptions = getOptionsByIds(selectedQuestion.options ?? []);
+  const isMultipleChoice = selectedQuestion.questionType === QuestionType.MULTIPLE_CHOICE;
+  const isSingleOrBoolean =
+    selectedQuestion.questionType === QuestionType.SINGLE_CHOICE ||
+    selectedQuestion.questionType === QuestionType.BOOLEAN;
+
   return (
     <div className="flex flex-col justify-center items-center w-full gap-4 pb-8">
       <div className="w-full flex justify-end">
@@ -96,34 +203,33 @@ export const AddSolution = () => {
         <div className="">
           <Html html={selectedQuestion.question} prefix="Question:" />
           <div>
-            {selectedQuestion.questionType === QuestionType.MULTIPLE_CHOICE ? (
+            {isMultipleChoice && (
               <CheckboxSelection
-                selectedValues={getOptionsByIds(selectedQuestion.options ?? [])
-                  .filter((option) => option.isCorrect)
-                  .map((option) => option._id)}
+                selectedValues={questionOptions.filter((option) => option.isCorrect).map((option) => option._id)}
                 label="Select one or more options."
                 options={getOptionItems(selectedQuestion._id)}
                 handleClick={handleCheckboxOptionClick}
                 required
                 isHtml
               />
-            ) : selectedQuestion.questionType === QuestionType.SINGLE_CHOICE ||
-              selectedQuestion.questionType === QuestionType.BOOLEAN ? (
+            )}
+            {isSingleOrBoolean && (
               <RadioSelection
-                selectedValue={getOptionsByIds(selectedQuestion.options ?? []).find((option) => option.isCorrect)?._id}
+                selectedValue={questionOptions.find((option) => option.isCorrect)?._id}
                 label="Select one option."
                 options={getOptionItems(selectedQuestion._id)}
                 handleClick={handleRadioOptionClick}
                 required
                 isHtml
               />
-            ) : (
+            )}
+            {!isMultipleChoice && !isSingleOrBoolean && (
               <TextInput
                 placeholder="Enter Answer"
-                value={getOptionsByIds(selectedQuestion.options ?? [])[0].option}
+                value={questionOptions[0].option}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   const value = e.target.value;
-                  const [firstOption] = getOptionsByIds(selectedQuestion.options ?? []);
+                  const [firstOption] = questionOptions;
                   if (firstOption) patchOption(firstOption._id, { option: value });
                 }}
               />
@@ -131,88 +237,17 @@ export const AddSolution = () => {
           </div>
         </div>
         <div className="">
-          <div className="flex flex-col md:flex-row gap-2.5">
-            <div className="w-full md:w-[33.33%]">
-              <TextInput
-                name={Marking.CORRECT}
-                type="number"
-                label="Correct Marks"
-                placeholder="Correct"
-                className="w-32"
-                required
-                value={marks[Marking.CORRECT] === undefined ? '' : marks[Marking.CORRECT]}
-                onChange={handleChangeMarks}
-              />
-            </div>
-            <div className="w-full md:w-[33.33%]">
-              <TextInput
-                name={Marking.INCORRECT}
-                type="number"
-                label="Incorrect Marks"
-                placeholder="Incorrect"
-                className="w-32"
-                required
-                value={marks[Marking.INCORRECT] === undefined ? '' : marks[Marking.INCORRECT]}
-                onChange={handleChangeMarks}
-              />
-            </div>
-            <div className="w-full md:w-[33.33%]">
-              <TextInput
-                name={Marking.UNATTEMPTED}
-                type="number"
-                label="Unattempted Marks"
-                placeholder="Unattempted"
-                className="w-32"
-                required
-                value={marks[Marking.UNATTEMPTED] === undefined ? '' : marks[Marking.UNATTEMPTED]}
-                onChange={handleChangeMarks}
-              />
-            </div>
-          </div>
+          <MarkingInputs marks={marks} onChange={handleChangeMarks} />
         </div>
         <div>
-          <div className="flex flex-col md:flex-row gap-2.5">
-            <div className="flex flex-col md:flex-row gap-2.5">
-              <Select
-                label="Standards"
-                items={getStandardItemsByIds(selectedTestPaper.standards ?? [])}
-                required
-                isGrouped
-                values={[selectedQuestion.standard]}
-                onChange={handleStandardChange}
-                isSingleSelect
-              />
-              <Select
-                label="Subject"
-                items={getStandardSubjectItems(selectedQuestion.standard) || []}
-                values={selectedQuestion.subject ? [selectedQuestion.subject] : []}
-                onChange={(values) => patchQuestion(selectedQuestion._id, { subject: values[0]?.value })}
-                isSingleSelect
-                isDisabled={!selectedQuestion.standard}
-              />
-            </div>
-            <div className="flex items-end gap-2.5">
-              {selectedQuestion.standard && selectedQuestion.subject && (
-                <>
-                  <div className="w-full flex-1">
-                    <Select
-                      label="Chapter"
-                      items={getChapterItems(selectedQuestion.standard, selectedQuestion.subject)}
-                      values={selectedQuestion.chapter ? [selectedQuestion.chapter] : []}
-                      onChange={(values) =>
-                        values[0] && patchQuestion(selectedQuestion._id, { chapter: values[0]?.value })
-                      }
-                      isSingleSelect
-                      required
-                    />
-                  </div>
-                  <div className="pb-[1px]">
-                    <AddChapterButton standard={selectedQuestion.standard} subject={selectedQuestion.subject} />
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+          <QuestionTaxonomy
+            question={selectedQuestion}
+            standardItems={getStandardItemsByIds(selectedTestPaper.standards ?? [])}
+            subjectItems={toSubjectItems(selectedQuestion.standard, getStandardSubjectItems)}
+            getChapterItems={getChapterItems}
+            onStandardChange={handleStandardChange}
+            onPatchQuestion={patchQuestion}
+          />
         </div>
         <div>
           <div>

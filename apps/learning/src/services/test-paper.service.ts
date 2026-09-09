@@ -1,11 +1,12 @@
-import { type TestPaperSectionsResponse } from '@repo/shared';
+import { type TestPaperSectionsResponse } from '@repo/shared/contracts';
 import { type IQuestion, type ITestPaper, type ITestPaperSection } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
 /**
  * The wire shape of `test-paper/sections-with-questions/:testPaperId`, narrowed to what the stores
- * hold — see `ClientEntityWith` for why the client requires fields the DTO leaves optional.
+ * hold. The DTO leaves these optional because a write body need not send them, so a reader that
+ * needs one narrows first.
  */
 interface ITestPaperSectionsResponse extends Omit<TestPaperSectionsResponse, 'sections' | 'questions'> {
   sections: ITestPaperSection[];

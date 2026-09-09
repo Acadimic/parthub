@@ -2,7 +2,6 @@ import { Button } from '@repo/ui/app';
 import { SubmitButton } from '@components/exam';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import { useTestPaperLookups } from '@stores';
-import { useRouter } from 'next/router';
 
 interface IProps {
   isResultPage: boolean;
@@ -21,7 +20,6 @@ export const ExamFooter = ({
   openSubmitSummary,
   toggleTimer,
 }: IProps) => {
-  const { back } = useRouter();
   const testPaperStore = useTestPaperLookups();
   const { exam } = testPaperStore;
 

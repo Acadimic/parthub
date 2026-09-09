@@ -40,7 +40,7 @@ const isYouTubeVideoValid = async (url: string) => {
   try {
     const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
     return response.ok; // true if video exists and is public
-  } catch (err) {
+  } catch {
     return false;
   }
 };
@@ -85,7 +85,6 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
       const materialContent = getTextWithEquationBlocksString(JSON.parse(text || '[]'));
       const videoLinks: IVideo[] = JSON.parse(state.youtubeVideos || '[]');
       patchMaterial(selectedMaterial._id, { content: materialContent });
-      console.log('####materialContent: ', selectedMaterial.content);
       // if (materialContent) return;
       const attachments = await uploadFilesToS3(selectedMaterial._id, selectedFiles);
       attachments?.forEach((attachment) => addAttachment(selectedMaterial._id, attachment));
@@ -105,7 +104,7 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
         onClose();
       }, 500);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       errorToast({ message: 'Invalid format.' });
     } finally {
       setState({ isLoading: false });
@@ -116,8 +115,8 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
     ? getGeneratedMaterialPrompt({
         topic: state.topic,
         chapterName: selectedMaterial?.chapter ? getChapterById(selectedMaterial.chapter)?.name : null,
-        standardName: getStandardById(selectedMaterial.standard)?.name || '',
-        subjectName: getSubjectById(selectedMaterial.subject)?.name || '',
+        standardName: (selectedMaterial.standard ? getStandardById(selectedMaterial.standard)?.name : '') || '',
+        subjectName: (selectedMaterial.subject ? getSubjectById(selectedMaterial.subject)?.name : '') || '',
         prompt: state.prompt,
       })
     : '';

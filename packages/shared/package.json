@@ -9,9 +9,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./validations": {
-      "types": "./dist/dtos/validations/index.d.ts",
-      "default": "./dist/dtos/validations/index.js"
+    "./contracts": {
+      "types": "./dist/contracts/index.d.ts",
+      "default": "./dist/contracts/index.js"
     },
     "./enums": {
       "types": "./dist/enums/index.d.ts",
@@ -21,15 +21,23 @@
       "types": "./dist/interfaces/index.d.ts",
       "default": "./dist/interfaces/index.js"
     },
-    "./contracts": {
-      "types": "./dist/contracts/index.d.ts",
-      "default": "./dist/contracts/index.js"
+    "./responses": {
+      "types": "./dist/responses/index.d.ts",
+      "default": "./dist/responses/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "default": "./dist/utils/index.js"
+    },
+    "./validations": {
+      "types": "./dist/dtos/validations/index.d.ts",
+      "default": "./dist/dtos/validations/index.js"
     }
   },
   "typesVersions": {
     "*": {
-      "validations": [
-        "dist/dtos/validations/index.d.ts"
+      "contracts": [
+        "dist/contracts/index.d.ts"
       ],
       "enums": [
         "dist/enums/index.d.ts"
@@ -37,8 +45,14 @@
       "interfaces": [
         "dist/interfaces/index.d.ts"
       ],
-      "contracts": [
-        "dist/contracts/index.d.ts"
+      "responses": [
+        "dist/responses/index.d.ts"
+      ],
+      "utils": [
+        "dist/utils/index.d.ts"
+      ],
+      "validations": [
+        "dist/dtos/validations/index.d.ts"
       ]
     }
   },

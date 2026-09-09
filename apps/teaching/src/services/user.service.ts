@@ -1,4 +1,4 @@
-import { type InitialDataDto, type UserDto } from '@repo/shared';
+import { type InitialDataDto, type UserDto } from '@repo/shared/contracts';
 import { type IUser } from '@stores';
 import { API, DefaultRole } from '../enums';
 import { getProfilePayload } from '@repo/ui/lib';

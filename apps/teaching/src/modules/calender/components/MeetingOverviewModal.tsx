@@ -57,7 +57,7 @@ export const MeetingOverviewModal = ({ isOpen, onClose, openEditModal, openDelet
             <div>
               {getFullFormattedDate(selectedCalenderEvent.start)} {getFormattedTime(selectedCalenderEvent.start)} -{' '}
               {getFormattedTime(selectedCalenderEvent.end)}
-              <div>{getFrequencyText([...selectedMeet.weekDays], selectedCalenderEvent.start)}</div>
+              <div>{getFrequencyText([...(selectedMeet.weekDays ?? [])], selectedCalenderEvent.start)}</div>
             </div>
           </div>
           <div className="flex flex-col gap-2 px-0.5">
@@ -65,8 +65,8 @@ export const MeetingOverviewModal = ({ isOpen, onClose, openEditModal, openDelet
             <ViewMeetAttendees attendeeIds={selectedMeet.attendees ?? []} isStudents />
           </div>
           <div className="flex items-end w-full justify-between mt-3">
-            <CopyUrl url={selectedMeet.meetingLink} />
-            <JoiningLink url={selectedMeet.meetingLink} />
+            <CopyUrl url={selectedMeet.meetingLink ?? ''} />
+            <JoiningLink url={selectedMeet.meetingLink ?? ''} />
           </div>
         </div>
       }

@@ -1,16 +1,15 @@
-import { type StandardDto, type StandardSubjectMappingDto } from '@repo/shared';
-import { type IStandard, type IStandardSubjectMapping } from '@stores';
+import { type StandardDto, type StandardSubjectMappingDto } from '@repo/shared/contracts';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
 class StandardService {
-  upsertStandard = async (payload: IStandard) => {
+  upsertStandard = async (payload: StandardDto) => {
     const url = 'standard/upsert';
     const resData = await callAuthApi(url, API.POST, payload);
     return resData;
   };
 
-  upsertStandardSubjectMappings = async (payloads: IStandardSubjectMapping[]) => {
+  upsertStandardSubjectMappings = async (payloads: StandardSubjectMappingDto[]) => {
     const url = 'standard/mapping/bulk-upsert';
     const resData = await callAuthApi(url, API.POST, payloads);
     return resData;

@@ -15,6 +15,46 @@ export interface IButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
   isFull?: boolean;
 }
 
+type ButtonVariant = Pick<IButtonProps, 'isRound' | 'isSecondary' | 'isSubtle' | 'isLoading' | 'isFull' | 'className'>;
+
+const getVariantClass = ({ isSecondary, isSubtle }: ButtonVariant) => {
+  if (isSecondary) return 'bg-color-opposite';
+  if (isSubtle) return 'bg-transparent';
+  return 'bg-color-primary border-color-primary text-color-opposite';
+};
+
+const getButtonClass = (variant: ButtonVariant) =>
+  `${variant.className ?? 'px-3 md:px-4 py-1.5'} select-none text-sm font-semibold border hover:opacity-80
+        ${variant.isRound ? 'rounded-full' : 'rounded-none'}
+        ${getVariantClass(variant)}
+        ${variant.isLoading ? 'opacity-80' : ''}
+        ${variant.isSubtle ? 'border-transparent' : 'border-color-border'}
+        ${variant.isFull ? 'w-full text-center' : ''}
+      `;
+
+const getSectionPadding = (leftsection?: React.ReactNode, rightsection?: React.ReactNode) => {
+  if (leftsection) return 'pr-1.5';
+  if (rightsection) return 'pl-1.5';
+  return '';
+};
+
+const TrailingSlot = ({
+  isLoading,
+  hideLoadingIcon,
+  isFull,
+  rightsection,
+}: Pick<IButtonProps, 'isLoading' | 'hideLoadingIcon' | 'isFull' | 'rightsection'>) => {
+  if (isLoading && !hideLoadingIcon) {
+    return (
+      <div className={`${isFull && isLoading ? 'flex-1 flex justify-center' : ''}`}>
+        <Spinner />
+      </div>
+    );
+  }
+  if (rightsection) return <div className="flex items-center">{rightsection}</div>;
+  return null;
+};
+
 export const Button = ({
   children,
   text,
@@ -32,13 +72,7 @@ export const Button = ({
 }: IButtonProps) => {
   return (
     <button
-      className={`${className ? className : 'px-3 md:px-4 py-1.5'} select-none text-sm font-semibold border hover:opacity-80
-        ${isRound ? 'rounded-full' : 'rounded-none'}
-        ${isSecondary ? 'bg-color-opposite' : isSubtle ? 'bg-transparent' : 'bg-color-primary border-color-primary text-color-opposite'}
-        ${isLoading ? 'opacity-80' : ''}
-        ${isSubtle ? 'border-transparent' : 'border-color-border'}
-        ${isFull ? 'w-full text-center' : ''}
-      `}
+      className={getButtonClass({ isRound, isSecondary, isSubtle, isLoading, isFull, className })}
       type="button"
       onClick={onClick}
       disabled={disabled || isLoading}
@@ -46,17 +80,16 @@ export const Button = ({
       <div className="flex space-x-2.5 items-center">
         {leftsection ? <div className="flex items-center">{leftsection}</div> : null}
         <div
-          className={`text-inherit ${isFull && isLoading ? 'hidden' : 'flex-1'} ${leftsection ? 'pr-1.5' : rightsection ? 'pl-1.5' : ''}`}
+          className={`text-inherit ${isFull && isLoading ? 'hidden' : 'flex-1'} ${getSectionPadding(leftsection, rightsection)}`}
         >
           {text || children}
         </div>
-        {isLoading && !hideLoadingIcon ? (
-          <div className={`${isFull && isLoading ? 'flex-1 flex justify-center' : ''}`}>
-            <Spinner />
-          </div>
-        ) : rightsection ? (
-          <div className="flex items-center">{rightsection}</div>
-        ) : null}
+        <TrailingSlot
+          isLoading={isLoading}
+          hideLoadingIcon={hideLoadingIcon}
+          isFull={isFull}
+          rightsection={rightsection}
+        />
       </div>
     </button>
   );

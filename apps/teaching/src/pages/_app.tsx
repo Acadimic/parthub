@@ -133,7 +133,6 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
         pushRoute('/sign-in', { redirectUri });
       }
     }
-    console.log('###route: ', route, isReady);
   }, [route, isReady]);
 
   if (!mode || !isReady) return null;
@@ -166,7 +165,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
 const AppWithErrorBoundary = withErrorBoundary(App, {
   FallbackComponent: ErrorBoundaryFallback,
   onError(error: Error, info: ErrorInfo) {
-    console.log(error, info);
+    console.error(error, info);
   },
 });
 

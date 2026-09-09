@@ -1,3 +1,4 @@
+import { type MeetDto } from '@repo/shared/contracts';
 import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, TextInput, Tooltip } from '@repo/ui/app';
 import { CopyUrl } from '@components/common';
@@ -11,7 +12,7 @@ import {
   ViewMeetAttendees,
 } from '@modules/calender/components';
 import { useMeetHooks } from '@modules/calender/hooks';
-import { type IMeet, useMeetLookups } from '@stores';
+import { useMeetLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import {
   addDaysToDate,
@@ -40,11 +41,11 @@ export const Sessions = () => {
     handleEditMeet,
   } = useMeetHooks();
 
-  const onClickSession = (session: IMeet) => {
+  const onClickSession = (_session: MeetDto) => {
     push(`/calender`);
   };
 
-  const columns: IColumnData<IMeet>[] = [
+  const columns: IColumnData<MeetDto>[] = [
     // {
     //   label: 'Id',
     //   dataKey: '_id',
@@ -52,7 +53,7 @@ export const Sessions = () => {
     {
       label: 'Name',
       dataKey: 'name',
-      valueFormatter: (row: IMeet) => {
+      valueFormatter: (row: MeetDto) => {
         return (
           <div className="cursor-pointer text-blue-primary" onClick={() => onClickSession(row)}>
             <MeetingTitle meet={row} />
@@ -64,7 +65,7 @@ export const Sessions = () => {
     {
       label: 'Date and Time',
       dataKey: 'date',
-      component: (row: IMeet) => {
+      component: (row: MeetDto) => {
         const events = getFullCalendarEvents(row, new Date(), addDaysToDate(new Date(), 15));
         const nextEvent = events[0];
         return (
@@ -76,8 +77,12 @@ export const Sessions = () => {
               </>
             ) : (
               <>
-                <div className="truncate w-full">{getFullFormattedDate(row.startTime)}</div>
-                <div className="truncate w-full">{`${getFormattedTime(row.startTime)} - ${getFormattedTime(row.endTime)}`}</div>
+                <div className="truncate w-full">{row.startTime ? getFullFormattedDate(row.startTime) : ''}</div>
+                <div className="truncate w-full">
+                  {row.startTime && row.endTime
+                    ? `${getFormattedTime(row.startTime)} - ${getFormattedTime(row.endTime)}`
+                    : ''}
+                </div>
               </>
             )}
           </Tooltip>
@@ -88,8 +93,8 @@ export const Sessions = () => {
     {
       label: 'Repeat On',
       dataKey: 'frequencyText',
-      component: (row: IMeet) => {
-        const frequency = getFrequencyText([...row.weekDays], row.startTime);
+      component: (row: MeetDto) => {
+        const frequency = row.startTime ? getFrequencyText([...(row.weekDays ?? [])], row.startTime) : '';
         return (
           <Tooltip title={frequency}>
             <div className="truncate w-full">{frequency}</div>
@@ -101,7 +106,7 @@ export const Sessions = () => {
     {
       label: 'Teachers',
       dataKey: 'teachers',
-      component: (row: IMeet) => {
+      component: (row: MeetDto) => {
         return <ViewMeetAttendees attendeeIds={row.attendees ?? []} isTeachers noLabel />;
       },
     },
@@ -109,7 +114,7 @@ export const Sessions = () => {
     {
       label: 'Students',
       dataKey: 'students',
-      component: (row: IMeet) => {
+      component: (row: MeetDto) => {
         return <ViewMeetAttendees attendeeIds={row.attendees ?? []} isStudents noLabel />;
       },
     },
@@ -117,11 +122,11 @@ export const Sessions = () => {
     {
       label: 'Join',
       dataKey: 'join',
-      component: (row: IMeet) => {
+      component: (row: MeetDto) => {
         return (
           <div className="flex flex-col gap-2 w-full">
-            <JoiningLink url={row.meetingLink} />
-            <CopyUrl url={row.meetingLink} />
+            <JoiningLink url={row.meetingLink ?? ''} />
+            <CopyUrl url={row.meetingLink ?? ''} />
           </div>
         );
       },
@@ -130,7 +135,7 @@ export const Sessions = () => {
     {
       label: 'Frequency',
       dataKey: 'frequency',
-      component: (row: IMeet) => {
+      component: (row: MeetDto) => {
         return <div className="capitalize">{splitCamelCase(row.frequency)}</div>;
       },
     },

@@ -1,11 +1,10 @@
 import { type IStandardSubjectQuery } from '@interfaces';
-import { type IChapter } from '@stores';
 import { API } from '../enums';
-import { type ChapterDto } from '@repo/shared';
+import { type ChapterDto } from '@repo/shared/contracts';
 import { callAuthApi } from './http.service';
 
 class ChapterService {
-  upsertChapter = async (payload: IChapter) => {
+  upsertChapter = async (payload: ChapterDto) => {
     const url = 'chapter/upsert';
     const resData = await callAuthApi(url, API.POST, payload);
     return resData;

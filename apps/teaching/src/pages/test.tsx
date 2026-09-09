@@ -2,16 +2,14 @@ import { Select } from '@components/app/selects';
 import { Button, SplitButton, TextInput, Modal } from '@repo/ui/app';
 import { PencilIcon, PlusIcon, SquaresFourIcon, TrashIcon } from '@phosphor-icons/react';
 import { Layout } from '@enums';
-import { type IPosition, type ITarget } from '@interfaces';
-import { getCombineValue } from '@utils/helpers';
+import { type ITarget } from '@interfaces';
 import { useState } from 'react';
 import { type Block, HtmlEditor, MathEditor } from '@components/editors';
 import { RightSquareBracket } from '@components/editors/functions/DymaicBrackets';
 import { serializeBlocks } from '@components/editors/math-jax-editor/util';
 
 const TestPage = () => {
-  const [html, setHtml] = useState(``);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [data, setData] = useState<Record<string, string>>({
     y: ``,
@@ -27,33 +25,14 @@ const TestPage = () => {
     setIsOpen(!isOpen);
   };
 
-  console.log('####questionBlocks: ', questionBlocks);
-
-  const [position] = useState({ start: 0, end: 0 });
-
-  const setPosition = (newPosition: IPosition) => {
-    position.start = newPosition.start;
-    position.end = newPosition.end;
-  };
-
-  const handleChange = (event: ITarget) => {
-    const elName = event.target.name;
-    const value = event.target.value;
-    console.log('####value: ', value, elName);
-    setData({ ...data, [elName]: getCombineValue(data[elName], value, position) });
-    setHtml(`<div>${html} ${value}</div>`);
-  };
-
   const handleChange2 = (event: ITarget) => {
     const elName = event.target.name;
     const value = event.target.value;
-    console.log('####value2: ', value, elName);
     setData({ ...data, [elName]: value });
   };
 
   return (
     <div className="sd">
-      {/* <ShowFunction name="y" handleChange={handleChange} /> */}
       {/* <HtmlEditor name="y" handleChange={handleChange2} html={data.y} isAutoFocus /> */}
       <div className="flex space-x-3">
         <Button text="Secondary" isSecondary isLoading={isLoading} onClick={onClick} />

@@ -1,7 +1,7 @@
 import { type IMaterialStat } from '@interfaces';
 import { Card } from '@repo/ui/app';
 import { MaterialInfo, StandardWithLogo } from '@components/common';
-import { useStandardLookups, useMaterialLookups, useSelectorLookups } from '@stores';
+import { useStandardLookups, useSelectorLookups } from '@stores';
 import Link from 'next/link';
 
 interface IProps {
@@ -10,10 +10,8 @@ interface IProps {
 
 export const MaterialItem = ({ materialStat }: IProps) => {
   const selectorStore = useSelectorLookups();
-  const materialStore = useMaterialLookups();
   const { getStandardById, getSubjectById } = useStandardLookups();
   const { setSelectedStandardId, setSelectedSubjectId } = selectorStore;
-  const { getMaterialsStatsByMaterialIds } = materialStore;
 
   const handleClick = () => {
     setSelectedSubjectId(materialStat.subject);

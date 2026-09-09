@@ -1,3 +1,4 @@
+import { type BatchDto, type MeetDto } from '@repo/shared/contracts';
 import {
   addDaysToDate,
   capitalize,
@@ -8,7 +9,6 @@ import {
   splitCamelCase,
 } from '@repo/ui/lib';
 import { type IFullCalendarEvent, type ISelectItem } from '@interfaces';
-import { type IBatch, type IMeet } from '@stores';
 import { MeetFrequency } from '../../enums';
 import { WEEK_DAYS_INTEGER_MAPPINGS } from '../constants';
 import { logOut as signOut } from '../firebase';
@@ -20,11 +20,11 @@ export const logOut = () => {
   window.location.replace('/sign-in');
 };
 
-export const getFrequencyText = (weekDayIntegers: number[], startTime: string | Date) => {
-  if (!weekDayIntegers || weekDayIntegers.length === 0) {
+export const getFrequencyText = (weekDays: number[], startTime: string | Date) => {
+  if (!weekDays || weekDays.length === 0) {
     return new Date(startTime).toLocaleDateString('en-us', { month: 'short', day: 'numeric' });
   }
-  weekDayIntegers = weekDayIntegers.sort();
+  const weekDayIntegers = [...weekDays].sort();
   let continuous = true;
   let currentDay = weekDayIntegers[0];
   const firstDay = WEEK_DAYS_INTEGER_MAPPINGS[currentDay];
@@ -57,18 +57,24 @@ export const validateFieldValues = <T extends object>(obj: T, fields: string[]):
   return errorFields;
 };
 
-export const getBatchSelectItem = (batch: IBatch): ISelectItem => {
+export const getBatchSelectItem = (batch: BatchDto): ISelectItem => {
   return { label: batch.name, value: batch._id, group: batch.standard };
 };
 
-const getFullCalendarEvent = (meet: IMeet, currentDate: Date): IFullCalendarEvent => {
+/** The two ends of one sitting, narrowed once by `getFullCalendarEvents`. */
+interface IMeetTimes {
+  start: string;
+  end: string;
+}
+
+const getFullCalendarEvent = (meet: MeetDto, currentDate: Date, times: IMeetTimes): IFullCalendarEvent => {
   const date = currentDate.toISOString().split('T')[0];
   return {
     id: `${meet._id}_${date}`,
     title: meet.title,
     date,
-    start: setTime(currentDate, new Date(meet.startTime)),
-    end: setTime(currentDate, new Date(meet.endTime)),
+    start: setTime(currentDate, new Date(times.start)),
+    end: setTime(currentDate, new Date(times.end)),
     timezone: meet.timezone,
     attendees: meet.attendees ?? [],
     meetingLink: meet.meetingLink,
@@ -77,37 +83,49 @@ const getFullCalendarEvent = (meet: IMeet, currentDate: Date): IFullCalendarEven
   };
 };
 
-export const getFullCalendarEvents = (meet: IMeet, startDate: Date, endDate: Date): IFullCalendarEvent[] => {
+/**
+ * One event per day in `range` that the meet recurs on, bounded by `window`.
+ *
+ * The recurring and this-week cases differ only in whether there is an upper bound, so they share
+ * this walk. The this-week case also re-checked the range bounds inside the loop, which the loop
+ * condition already guarantees.
+ */
+const collectRecurringSessions = (
+  meet: MeetDto,
+  range: { from: Date; to: Date },
+  window: { notBefore: Date; notAfter?: Date },
+  times: IMeetTimes,
+): IFullCalendarEvent[] => {
   const sessions: IFullCalendarEvent[] = [];
-  startDate = new Date(startDate);
-  endDate = new Date(endDate);
-  let currentDate = startDate;
-  if ([MeetFrequency.DAILY, MeetFrequency.WEEKLY].includes(meet.frequency)) {
-    while (currentDate <= endDate) {
-      if (currentDate >= getStartOfDay(meet.startTime)) {
-        const weekNumber = currentDate.getDay();
-        if ((meet.weekDays ?? []).includes(weekNumber)) sessions.push(getFullCalendarEvent(meet, currentDate));
-      }
-      currentDate = addDaysToDate(currentDate, 1);
+  let currentDate = range.from;
+  while (currentDate <= range.to) {
+    const isWithinMeet = currentDate >= window.notBefore && (!window.notAfter || currentDate <= window.notAfter);
+    if (isWithinMeet && (meet.weekDays ?? []).includes(currentDate.getDay())) {
+      sessions.push(getFullCalendarEvent(meet, currentDate, times));
     }
-  } else if (meet.frequency === MeetFrequency.THIS_WEEK) {
-    const meetStartDate = getStartOfDay(meet.startTime);
-    const meetEndDate = getEndOfWeek(meet.startTime);
-    currentDate = startDate;
-    while (currentDate <= endDate) {
-      if (
-        currentDate >= startDate &&
-        currentDate <= endDate &&
-        currentDate >= meetStartDate &&
-        currentDate <= meetEndDate
-      ) {
-        const weekNumber = currentDate.getDay();
-        if ((meet.weekDays ?? []).includes(weekNumber)) sessions.push(getFullCalendarEvent(meet, currentDate));
-      }
-      currentDate = addDaysToDate(currentDate, 1);
-    }
-  } else if (new Date(meet.startTime) >= startDate && new Date(meet.endTime) <= endDate) {
-    sessions.push(getFullCalendarEvent(meet, new Date(meet.startTime)));
+    currentDate = addDaysToDate(currentDate, 1);
   }
   return sessions;
+};
+
+export const getFullCalendarEvents = (meet: MeetDto, from: Date, to: Date): IFullCalendarEvent[] => {
+  // `MeetDto` leaves these optional because one class serves both directions and a write body need
+  // not send them. A meet with no span or no frequency cannot be placed on a calendar, so it
+  // contributes no events rather than an Invalid Date.
+  const { startTime, endTime, frequency } = meet;
+  if (!startTime || !endTime || !frequency) return [];
+
+  const times = { start: startTime, end: endTime };
+  const range = { from: new Date(from), to: new Date(to) };
+  const notBefore = getStartOfDay(startTime);
+  if ([MeetFrequency.DAILY, MeetFrequency.WEEKLY].includes(frequency)) {
+    return collectRecurringSessions(meet, range, { notBefore }, times);
+  }
+  if (frequency === MeetFrequency.THIS_WEEK) {
+    return collectRecurringSessions(meet, range, { notBefore, notAfter: getEndOfWeek(startTime) }, times);
+  }
+  if (new Date(startTime) >= range.from && new Date(endTime) <= range.to) {
+    return [getFullCalendarEvent(meet, new Date(startTime), times)];
+  }
+  return [];
 };

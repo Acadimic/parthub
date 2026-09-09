@@ -1,4 +1,4 @@
-import { type InitialDataResponse } from '@repo/shared';
+import { type InitialDataResponse } from '@repo/shared/contracts';
 import { type IPresignedPutUrlsRequest } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi, callDefaultApi } from './http.service';

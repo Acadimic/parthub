@@ -56,6 +56,32 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
   const missingOrg = (operation: string) =>
     new Error(`Organization (org) is required from the request context for ${operation}`);
 
+  /**
+   * Applies the ownership stamps to one bulkWrite `updateOne`/`updateMany` operation: the immutable
+   * fields are stripped so a caller cannot reassign them, and an upsert additionally seeds `org` and
+   * `createdBy` through `$setOnInsert` because the insert path never runs a document hook.
+   */
+  const stampBulkUpdate = (write: NonNullable<BulkWriteOperation['updateOne']>) => {
+    const update = write.update as UpdateObject | undefined;
+    if (!update || Array.isArray(update)) return;
+    const user = userId();
+    for (const field of IMMUTABLE_FIELDS) {
+      delete update[field];
+      if (update.$set) delete (update.$set as UpdateObject)[field];
+    }
+    if (user) {
+      update.$set = update.$set || {};
+      (update.$set as UpdateObject).updatedBy = user;
+    }
+    if (write.upsert) {
+      const org = orgId();
+      if (!org) throw missingOrg('bulkWrite upsert');
+      update.$setOnInsert = update.$setOnInsert || {};
+      (update.$setOnInsert as UpdateObject).org = org;
+      if (user) (update.$setOnInsert as UpdateObject).createdBy = user;
+    }
+  };
+
   /** Stamps a plain object that is about to be inserted. */
   const stampInsert = (doc: UpdateObject, operation: string): Error | undefined => {
     const org = orgId();
@@ -157,7 +183,6 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
 
     preModelHook(schema, 'bulkWrite', (ops: unknown) => {
       if (!Array.isArray(ops)) return;
-      const user = userId();
       for (const op of ops as BulkWriteOperation[]) {
         if (op.insertOne?.document) {
           const error = stampInsert(op.insertOne.document, 'bulkWrite insertOne');
@@ -170,24 +195,7 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
           continue;
         }
         const write = op.updateOne ?? op.updateMany;
-        if (!write) continue;
-        const update = write.update as UpdateObject | undefined;
-        if (!update || Array.isArray(update)) continue;
-        for (const field of IMMUTABLE_FIELDS) {
-          delete update[field];
-          if (update.$set) delete (update.$set as UpdateObject)[field];
-        }
-        if (user) {
-          update.$set = update.$set || {};
-          (update.$set as UpdateObject).updatedBy = user;
-        }
-        if (write.upsert) {
-          const org = orgId();
-          if (!org) throw missingOrg('bulkWrite upsert');
-          update.$setOnInsert = update.$setOnInsert || {};
-          (update.$setOnInsert as UpdateObject).org = org;
-          if (user) (update.$setOnInsert as UpdateObject).createdBy = user;
-        }
+        if (write) stampBulkUpdate(write);
       }
     });
   };

@@ -62,7 +62,34 @@ async function saveActivityLog(connection: Connection, logData: ActivityLogData 
   }
 }
 
+/**
+ * Which of the three shapes a `findOneAndUpdate` is: a soft delete, a restore, or an upsert. The
+ * `_deleted` flag distinguishes the first two, so a plain field update is none of them.
+ */
+function readUpdateIntent(update: UpdateQuery | null, options: QueryOptions) {
+  return {
+    isSoftDelete: update?.$set?._deleted === true,
+    isRestore: update?.$set?._deleted === false,
+    isUpsert: options?.upsert === true,
+  };
+}
+
 export function createActivityLoggingPlugin(activityLogCoreService: ActivityLogCoreService) {
+  /**
+   * Writes the delete log for an update that is really a soft delete. A logging failure must never
+   * fail the write it describes, so the error is reported and swallowed here rather than rethrown.
+   */
+  const logSoftDelete = async (query: Query<unknown, unknown>, modelName: string, originalDoc: unknown) => {
+    const doc = Array.isArray(originalDoc) ? originalDoc[0] : originalDoc;
+    if (!hasId(doc)) return;
+    try {
+      const logData = activityLogCoreService.prepareDeleteLog(modelName, doc._id, doc);
+      await saveActivityLog(getConnection(query.model), logData);
+    } catch (error) {
+      console.error('Failed to log delete activity:', error);
+    }
+  };
+
   return function activityLoggingPlugin(schema: Schema): void {
     schema.pre('save', function (this: Document & { $locals: Record<string, unknown> }) {
       this.$locals.wasNew = this.isNew;
@@ -91,23 +118,12 @@ export function createActivityLoggingPlugin(activityLogCoreService: ActivityLogC
       if (!modelName || EXCLUDED_MODELS.has(modelName)) return;
 
       const update = this.getUpdate() as UpdateQuery;
-      const isSoftDelete = update?.$set?._deleted === true;
-      const isRestore = update?.$set?._deleted === false;
-      const isUpsert = options?.upsert === true;
+      const { isSoftDelete, isRestore, isUpsert } = readUpdateIntent(update, options);
 
       const originalDoc = await this.model.findOne(this.getFilter()).lean();
 
       if (isSoftDelete && originalDoc) {
-        const doc = Array.isArray(originalDoc) ? originalDoc[0] : originalDoc;
-        if (hasId(doc)) {
-          try {
-            const logData = activityLogCoreService.prepareDeleteLog(modelName, doc._id, doc);
-            const connection = getConnection(this.model);
-            await saveActivityLog(connection, logData);
-          } catch (error) {
-            console.error('Failed to log delete activity:', error);
-          }
-        }
+        await logSoftDelete(this, modelName, originalDoc);
         this.setOptions({ ...options, _isSoftDelete: true, _originalDoc: null });
         return;
       }

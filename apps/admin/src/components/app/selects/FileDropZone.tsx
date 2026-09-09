@@ -1,6 +1,6 @@
 import { type FileExtension } from '@enums';
 import { errorToast } from '@utils/helpers';
-import Dropzone, { type DropEvent, type FileRejection } from 'react-dropzone';
+import Dropzone, { type FileRejection } from 'react-dropzone';
 import { Attachment } from '../attachments';
 
 export interface IFileUploadProps {
@@ -27,11 +27,10 @@ export const FileDropZone = ({
   children,
 }: IFileUploadProps) => {
   const handleFilesChange = (files: File[]) => {
-    console.log('#####files: ', files.length);
     setSelectedFiles(files);
   };
 
-  const onDropRejected = (fileRejections: FileRejection[], event: DropEvent) => {
+  const onDropRejected = (fileRejections: FileRejection[]) => {
     if (fileRejections.length > 0) {
       const errorMessages = fileRejections
         .map((rejection) => {

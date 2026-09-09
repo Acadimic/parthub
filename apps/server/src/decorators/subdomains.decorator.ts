@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import { type Subdomain } from '@repo/shared';
+import { type Subdomain } from '@repo/shared/enums';
 
 export const SUBDOMAINS_KEY = 'subdomains';
 

@@ -1,10 +1,5 @@
-import {
-  type AttachmentDto,
-  type ClientEntityWith,
-  type IRequestSlice,
-  type MaterialDto,
-  createRequestSlice,
-} from '@repo/shared';
+import { type AttachmentDto, type MaterialDto } from '@repo/shared/contracts';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type IMaterialInfo, type IMaterialStat, type IStandardSubjectQuery } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -12,14 +7,10 @@ import { DocumentType, LinkType, MaterialType } from '../enums';
 import { MaterialService, ReactionService } from '../services';
 import { useSelectorStore } from './selector.store';
 
-export type IMaterial = ClientEntityWith<
-  MaterialDto,
-  'name' | 'slug' | 'standard' | 'subject' | 'order' | 'content' | 'durationMins' | 'level' | 'attachments' | 'tag'
-> &
+export type IMaterial = MaterialDto &
   // Client-only, and stripped from every request by `CLIENT_ONLY_KEYS`: a per-row reaction count
   // and whether it has been fetched.
   { reactionsCount?: number; isLoadedReactionsCount?: boolean; isLoadingReactionsCount?: boolean };
-export type IAttachment = AttachmentDto;
 
 /** The fetches this store tracks. */
 type MaterialFetch = 'materialStats' | 'materials';
@@ -35,8 +26,8 @@ export interface IMaterialState extends IRequestSlice<MaterialFetch> {
   getStandardSubjectMaterials: (standardId: string, subjectId: string) => IMaterial[];
   getMaterialsByStandardIds: (standardIds: string[]) => IMaterial[];
   /** The attachments that play as video, rather than opening as a document. */
-  getMaterialVideos: (material: IMaterial) => IAttachment[];
-  getMaterialDocuments: (material: IMaterial) => IAttachment[];
+  getMaterialVideos: (material: IMaterial) => AttachmentDto[];
+  getMaterialDocuments: (material: IMaterial) => AttachmentDto[];
   /** Duration and per-type counts across a set of materials. */
   getMaterialsInfoMaterialIds: (materialIds: string[]) => IMaterialInfo;
 
@@ -83,10 +74,10 @@ export const useMaterialStore = create<IMaterialState>()((set, get) => ({
   getMaterialsByStandardIds: (standardIds) =>
     get()
       .getMaterials()
-      .filter((material) => standardIds.includes(material.standard)),
+      .filter((material) => !!material.standard && standardIds.includes(material.standard)),
 
   getMaterialVideos: (material) =>
-    material.attachments.filter(
+    (material.attachments ?? []).filter(
       (attachment) =>
         attachment.documentType === DocumentType.VIDEO ||
         (attachment.documentType === DocumentType.LINK &&
@@ -95,7 +86,7 @@ export const useMaterialStore = create<IMaterialState>()((set, get) => ({
     ),
 
   getMaterialDocuments: (material) =>
-    material.attachments.filter(
+    (material.attachments ?? []).filter(
       (attachment) =>
         attachment.fileType === DocumentType.FILE ||
         (attachment.fileType === DocumentType.LINK &&
@@ -109,7 +100,7 @@ export const useMaterialStore = create<IMaterialState>()((set, get) => ({
     get()
       .getMaterialsByIds(materialIds)
       .forEach((material) => {
-        durationMins += material.durationMins;
+        durationMins += material.durationMins ?? 0;
         const videos = get().getMaterialVideos(material).length;
         const documents = get().getMaterialDocuments(material).length;
         counts[MaterialType.VIDEO] += videos;

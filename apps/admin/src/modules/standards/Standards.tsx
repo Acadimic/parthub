@@ -1,10 +1,11 @@
+import { type StandardDto } from '@repo/shared/contracts';
 import { PresignedImage } from '@components/app/attachments';
 import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { useLoadOnce } from '@repo/ui/hooks';
 import { type IColumnData } from '@interfaces';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { type IStandard, useSelectorStore, useStandardStore } from '@stores';
+import { useSelectorStore, useStandardStore } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { useSetState } from 'react-use';
 import { useShallow } from 'zustand/react/shallow';
@@ -35,7 +36,7 @@ export const Standards = () => {
     setState({ isOpenCreateModal: true });
   };
 
-  const onOpenEditModal = (standard?: IStandard) => {
+  const onOpenEditModal = (standard?: StandardDto) => {
     if (!standard) return;
     setSelectedStandardId(standard._id);
     setState({ isOpenCreateModal: true });
@@ -45,7 +46,7 @@ export const Standards = () => {
     setState({ isOpenCreateModal: false });
   };
 
-  const columns: IColumnData<IStandard>[] = [
+  const columns: IColumnData<StandardDto>[] = [
     {
       label: 'Name',
       dataKey: 'name',

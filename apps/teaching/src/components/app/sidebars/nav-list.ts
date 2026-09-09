@@ -1,5 +1,4 @@
 import {
-  BookmarksIcon,
   CalendarBlankIcon,
   ChatsCircleIcon,
   ColumnsIcon,

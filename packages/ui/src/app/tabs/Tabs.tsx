@@ -1,4 +1,4 @@
-import { type IconPosition } from '@repo/shared';
+import { type IconPosition } from '@repo/shared/enums';
 import * as React from 'react';
 
 interface ITab {

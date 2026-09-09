@@ -1,5 +1,6 @@
+import { type MeetDto } from '@repo/shared/contracts';
 import { type IFullCalendarEvent } from '@interfaces';
-import { type IMeet, useMeetLookups, useSelectorLookups } from '@stores';
+import { useMeetLookups, useSelectorLookups } from '@stores';
 import { useSetState } from 'react-use';
 
 interface IState {
@@ -19,7 +20,6 @@ export const useMeetHooks = () => {
   });
 
   const openUpsertMeetingModal = () => {
-    console.log('openUpsertMeetingModal');
     setState({ isOpenUpsertMeetingModal: true });
   };
 
@@ -48,7 +48,7 @@ export const useMeetHooks = () => {
     openMeetingOverviewModal();
   };
 
-  const handleEditMeet = (meet: IMeet) => {
+  const handleEditMeet = (meet: MeetDto) => {
     setSelectedMeetId(meet._id);
     openUpsertMeetingModal();
   };

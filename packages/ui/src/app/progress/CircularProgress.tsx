@@ -8,9 +8,9 @@ interface IProps {
   className?: string;
 }
 
-export const CircularProgress = ({ className, value, size, thickness, label }: IProps) => {
-  thickness = thickness || 6;
-  value = value || 1;
+export const CircularProgress = ({ className, value: valueProp, size, thickness: thicknessProp, label }: IProps) => {
+  const thickness = thicknessProp || 6;
+  const value = valueProp || 1;
   const resolvedSize = size || 140;
   const radius = (resolvedSize - thickness * 2) / 2;
   const circumference = 2 * Math.PI * radius;

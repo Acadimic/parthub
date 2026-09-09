@@ -1,8 +1,7 @@
 import dayjs from 'dayjs';
 
 export const getFormattedDate = (date: string | Date, format?: string) => {
-  format = format || 'MM/DD/YYYY';
-  return dayjs(date).format(format);
+  return dayjs(date).format(format || 'MM/DD/YYYY');
 };
 
 export const getStringFormattedDate = (date: string | Date) => {

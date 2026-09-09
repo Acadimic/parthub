@@ -96,7 +96,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
       successToast({ message: 'Content saved successfully!' });
       onClose();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +124,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                     <MathEditor
                       label="Content"
                       handleChange={handleContentTextChange}
-                      blocks={getBlocks(selectedMaterial.content)}
+                      blocks={getBlocks(selectedMaterial.content ?? '')}
                     />
                   </div>
                 </div>

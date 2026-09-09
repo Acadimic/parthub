@@ -9,9 +9,9 @@ export const SessionsInfo = () => {
   const { getMeetsByIds } = meetStore;
   const selectedCourse = useSelectedCourse();
 
-  if (!selectedCourse?.meets.length) return <></>;
+  if (!selectedCourse?.meets?.length) return <></>;
 
-  const meets = getMeetsByIds(selectedCourse?.meets);
+  const meets = getMeetsByIds(selectedCourse.meets);
 
   return (
     <div>

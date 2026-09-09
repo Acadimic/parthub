@@ -1,11 +1,11 @@
+import { type MeetDto } from '@repo/shared/contracts';
 import { Card } from '@repo/ui/app';
 import { CopyUrl } from '@components/common';
-import { type IMeet } from '@stores';
 import { getFormattedTime, getFrequencyText, getStringFormattedDate } from '@utils/helpers';
 import { JoiningLink, MeetingTitle } from './';
 
 interface IProps {
-  meet: IMeet;
+  meet: MeetDto;
   isSmallJoinable?: boolean;
   isCopyIconOnly?: boolean;
 }
@@ -25,17 +25,18 @@ export const MeetItem = ({ meet, isSmallJoinable = false, isCopyIconOnly = false
         </div>
         <div className="text-xs text-color-secondary font-medium text-center md:max-w-[36%]">
           <div>
-            {getStringFormattedDate(new Date())} {getFormattedTime(meet.startTime)} - {getFormattedTime(meet.endTime)}
+            {getStringFormattedDate(new Date())} {meet.startTime ? getFormattedTime(meet.startTime) : ''} -{' '}
+            {meet.endTime ? getFormattedTime(meet.endTime) : ''}
           </div>
-          <div>{getFrequencyText([...meet.weekDays], meet.startTime)}</div>
+          {meet.startTime ? <div>{getFrequencyText([...(meet.weekDays ?? [])], meet.startTime)}</div> : null}
         </div>
         <div className="flex items-center justify-end gap-2">
           <div className="flex items-center gap-2 w-full">
             <div className="">
-              <CopyUrl url={meet.meetingLink} isCopyIconOnly={isCopyIconOnly} />
+              <CopyUrl url={meet.meetingLink ?? ''} isCopyIconOnly={isCopyIconOnly} />
             </div>
             <div className="flex-1">
-              <JoiningLink url={meet.meetingLink} isSmall={isSmallJoinable} />
+              <JoiningLink url={meet.meetingLink ?? ''} isSmall={isSmallJoinable} />
             </div>
           </div>
         </div>

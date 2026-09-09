@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { StandardGroup } from '@repo/shared';
+import { StandardGroup } from '@repo/shared/enums';
 import { HydratedDocument } from 'mongoose';
 
 export type StandardDocument = HydratedDocument<Standard>;

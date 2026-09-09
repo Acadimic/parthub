@@ -1,11 +1,11 @@
-import { type IStudentStandardMapping } from '@stores';
+import { type StudentStandardMappingDto } from '@repo/shared/contracts';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
 class MappingService {
   getOrgStudentStandardMappings = async () => {
     const url = 'mapping/student-standard/all';
-    const resData = await callAuthApi<IStudentStandardMapping[]>(url, API.GET);
+    const resData = await callAuthApi<StudentStandardMappingDto[]>(url, API.GET);
     return resData;
   };
 }

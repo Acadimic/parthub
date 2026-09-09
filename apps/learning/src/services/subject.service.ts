@@ -1,11 +1,11 @@
-import { type ISubject } from '@stores';
+import { type SubjectDto } from '@repo/shared/contracts';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
 class SubjectService {
   getSubjects = async () => {
     const url = 'subject/all';
-    const resData = await callAuthApi<ISubject[]>(url, API.GET);
+    const resData = await callAuthApi<SubjectDto[]>(url, API.GET);
     return resData;
   };
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { Button } from '@repo/ui/app';
-import { type IFunctionProps, type IPosition, type ITarget } from '@interfaces';
+import { type IFunctionProps, type ITarget } from '@interfaces';
 import { HtmlEditor } from '..';
 import { Toolbar } from '../Toolbar';
 
@@ -23,12 +23,6 @@ const Limit = (props: IFunctionProps) => {
     [`${name}-${DirectionType.DATA}`]: '',
   });
   const [focusedElement, setFocusedElement] = React.useState<string>(DirectionType.DATA);
-  const [position] = React.useState({ start: 0, end: 0 });
-
-  const setPosition = (newPosition: IPosition) => {
-    position.start = newPosition.start;
-    position.end = newPosition.end;
-  };
 
   const handleContentChange = (event: ITarget) => {
     const dataName = event.target.name;

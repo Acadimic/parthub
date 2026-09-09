@@ -1,4 +1,5 @@
-import { type ClientEntityWith, type IRequestSlice, type MeetDto, createRequestSlice } from '@repo/shared';
+import { type MeetDto } from '@repo/shared/contracts';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { ColorType, MeetFrequency, MeetStatus } from '../enums';
@@ -15,47 +16,27 @@ import {
 } from '../utils/helpers';
 import { useSelectorStore } from './selector.store';
 
-export type IMeet = ClientEntityWith<
-  MeetDto,
-  | 'title'
-  | 'color'
-  | 'durationMins'
-  | 'timezone'
-  | 'timezoneOffset'
-  | 'startTime'
-  | 'endTime'
-  | 'status'
-  | 'standards'
-  | 'batches'
-  | 'attendees'
-  | 'meetingLink'
-  | 'meetingId'
-  | 'weekDays'
-  | 'cancelledDates'
-  | 'frequency'
->;
-
 /** The fetches this store tracks. */
 type MeetFetch = 'meets';
 
 export interface IMeetState extends IRequestSlice<MeetFetch> {
-  meetMap: Record<string, IMeet>;
+  meetMap: Record<string, MeetDto>;
 
-  getMeetById: (meetId: string) => IMeet | undefined;
-  getMeets: () => IMeet[];
-  getMeetsByIds: (meetIds: string[]) => IMeet[];
+  getMeetById: (meetId: string) => MeetDto | undefined;
+  getMeets: () => MeetDto[];
+  getMeetsByIds: (meetIds: string[]) => MeetDto[];
   /** The meets that fall on a date, honouring each meet's recurrence. */
-  getScheduledMeetsByDate: (date: Date) => IMeet[];
-  getTodaysScheduledMeets: () => IMeet[];
+  getScheduledMeetsByDate: (date: Date) => MeetDto[];
+  getTodaysScheduledMeets: () => MeetDto[];
 
-  addMeets: (meets: IMeet[]) => void;
-  patchMeet: (meetId: string, fields: Partial<IMeet>) => void;
+  addMeets: (meets: MeetDto[]) => void;
+  patchMeet: (meetId: string, fields: Partial<MeetDto>) => void;
   /** Moves a meet to another day, keeping its start and end times. */
   setMeetDate: (meetId: string, date: Date) => void;
   removeMeetById: (meetId: string) => void;
 
   /** Adds an unsaved meet and returns it, for the caller to select. */
-  createMeet: (date: Date) => IMeet;
+  createMeet: (date: Date) => MeetDto;
 
   loadMeets: () => Promise<void>;
   reset: () => void;
@@ -80,7 +61,7 @@ export const useMeetStore = create<IMeetState>()((set, get) => ({
 
   getMeetsByIds: (meetIds) => {
     const { meetMap } = get();
-    return meetIds.map((meetId) => meetMap[meetId]).filter((meet): meet is IMeet => !!meet);
+    return meetIds.map((meetId) => meetMap[meetId]).filter((meet): meet is MeetDto => !!meet);
   },
 
   getScheduledMeetsByDate: (date) => {
@@ -136,7 +117,7 @@ export const useMeetStore = create<IMeetState>()((set, get) => ({
   },
 
   createMeet: (date) => {
-    const meet: IMeet = {
+    const meet: MeetDto = {
       _id: getObjectId(),
       title: 'New Session',
       description: '',
@@ -178,7 +159,7 @@ export const useMeetStore = create<IMeetState>()((set, get) => ({
 export const useMeetLookups = (): IMeetState => useMeetStore(useShallow((state) => state));
 
 /** The selected meet, or `undefined`. Replaces `selectorStore.selectedMeet`. */
-export const useSelectedMeet = (): IMeet | undefined => {
+export const useSelectedMeet = (): MeetDto | undefined => {
   const selectedMeetId = useSelectorStore((state) => state.selectedMeetId);
   return useMeetStore((state) => (selectedMeetId ? state.meetMap[selectedMeetId] : undefined));
 };

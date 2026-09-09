@@ -14,10 +14,10 @@ interface IProps {
   isStatic?: string;
 }
 
-export const Avatar = ({ id, name, avatar, size = 32, bg, color, className, isStatic }: IProps) => {
+export const Avatar = ({ id, name, avatar, size = 32, bg: bgProp, color: colorProp, className, isStatic }: IProps) => {
   const randomColor = getRandomColor(id);
-  bg = bg || randomColor.bg;
-  color = color || randomColor.color;
+  const bg = bgProp || randomColor.bg;
+  const color = colorProp || randomColor.color;
   const splitNames = name.split(' ');
   const { getPresignedUrls } = useAttachment();
   const [presignedUrl, setPresignedUrl] = useState<string>('');

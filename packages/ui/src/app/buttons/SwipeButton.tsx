@@ -12,6 +12,49 @@ interface SwipeButtonProps {
   isCompleted: boolean;
 }
 
+/** The draggable knob. Split out so the track component holds only its own presentation. */
+const SwipeSlider = ({
+  isDragging,
+  isCompleted,
+  offsetX,
+  sliderRef,
+  handlers,
+}: {
+  isDragging: boolean;
+  isCompleted: boolean;
+  offsetX: number;
+  sliderRef: React.RefObject<HTMLDivElement | null>;
+  handlers: {
+    onTouchStart: (e: React.TouchEvent) => void;
+    onTouchMove: (e: React.TouchEvent) => void;
+    onTouchEnd: () => void;
+    onMouseDown: (e: React.MouseEvent) => void;
+    onMouseMove: (e: React.MouseEvent) => void;
+  };
+}) => (
+  <div
+    ref={sliderRef}
+    className={`absolute top-0 h-full aspect-square rounded-full shadow-lg transition-colors ${
+      isDragging ? 'cursor-grabbing' : 'cursor-grab'
+    } ${isCompleted ? 'bg-green-primary' : 'bg-background-secondary'}`}
+    style={{
+      left: 0,
+      transform: `translateX(${offsetX}px)`,
+      touchAction: 'none',
+      transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+    }}
+    {...handlers}
+  >
+    <div className="h-full flex items-center justify-center">
+      {isCompleted ? (
+        <CheckIcon weight="bold" className="text-white w-5 h-5" />
+      ) : (
+        <CaretDoubleRightIcon weight="bold" className="text-blue-primary w-5 h-5" />
+      )}
+    </div>
+  </div>
+);
+
 export const SwipeButton: React.FC<SwipeButtonProps> = ({
   onComplete,
   text = 'Swipe to complete',
@@ -96,31 +139,19 @@ export const SwipeButton: React.FC<SwipeButtonProps> = ({
       >
         {completeText}
       </div>
-      <div
-        ref={sliderRef}
-        className={`absolute top-0 h-full aspect-square rounded-full shadow-lg transition-colors ${
-          isDragging ? 'cursor-grabbing' : 'cursor-grab'
-        } ${isCompleted ? 'bg-green-primary' : 'bg-background-secondary'}`}
-        style={{
-          left: 0,
-          transform: `translateX(${offsetX}px)`,
-          touchAction: 'none',
-          transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+      <SwipeSlider
+        isDragging={isDragging}
+        isCompleted={isCompleted}
+        offsetX={offsetX}
+        sliderRef={sliderRef}
+        handlers={{
+          onTouchStart: handleTouchStart,
+          onTouchMove: handleTouchMove,
+          onTouchEnd: handleDragEnd,
+          onMouseDown: handleMouseDown,
+          onMouseMove: handleMouseMove,
         }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleDragEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-      >
-        <div className="h-full flex items-center justify-center">
-          {isCompleted ? (
-            <CheckIcon weight="bold" className="text-white w-5 h-5" />
-          ) : (
-            <CaretDoubleRightIcon weight="bold" className="text-blue-primary w-5 h-5" />
-          )}
-        </div>
-      </div>
+      />
     </div>
   );
 };

@@ -195,7 +195,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
 const AppWithErrorBoundary = withErrorBoundary(App, {
   FallbackComponent: ErrorBoundaryFallback,
   onError(error: Error, info: ErrorInfo) {
-    console.log(error, info);
+    console.error(error, info);
   },
 });
 

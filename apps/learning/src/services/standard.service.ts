@@ -1,17 +1,17 @@
-import { type IStandard, type IStandardSubjectMapping } from '@stores';
+import { type StandardDto, type StandardSubjectMappingDto } from '@repo/shared/contracts';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
 class StandardService {
   getStandards = async () => {
     const url = 'standard/all';
-    const resData = await callAuthApi<IStandard[]>(url, API.GET);
+    const resData = await callAuthApi<StandardDto[]>(url, API.GET);
     return resData;
   };
 
   getStandardSubjectMappings = async () => {
     const url = 'standard/mapping/all';
-    const resData = await callAuthApi<IStandardSubjectMapping[]>(url, API.GET);
+    const resData = await callAuthApi<StandardSubjectMappingDto[]>(url, API.GET);
     return resData;
   };
 }

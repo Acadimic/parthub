@@ -18,9 +18,9 @@ export const SignIn = () => {
     password: '',
   });
 
-  const loginHandler = async ({ email, password }: ILoginUser) => {
+  const loginHandler = async ({ email: rawEmail, password }: ILoginUser) => {
     try {
-      email = email?.trim()?.toLowerCase();
+      const email = rawEmail?.trim()?.toLowerCase();
       const result = await signIn(email, password);
       const firebaseUser = result.user;
       const uid = firebaseUser?.uid;

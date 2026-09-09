@@ -214,10 +214,8 @@ export const EditorToolbar = ({ handleChange, block, onClose, isVertical }: IPro
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const handleSelect = (name: EditorContentType) => {
-    console.log('####clicked name: ', name);
     if (name === EditorContentType.TEXT) return;
     if (name === EditorContentType.BOLD) {
-      console.log('####clicked bold: ', block?.type);
       if (block?.type === EditorContentType.TEXT) {
         handleChange({ ...block, bold: !block.bold });
       }
@@ -293,7 +291,7 @@ export const EditorToolbar = ({ handleChange, block, onClose, isVertical }: IPro
               groupedEditorToolbarItems
                 .flatMap((g) => g.items)
                 .find((item) => item.name === selectedBlock.type)
-                ?.component({ block: selectedBlock, handleChange, closeModal })) || <div />
+                ?.component({ block: selectedBlock, handleChange, closeModal })) ?? <div />
           }
         />
       </div>

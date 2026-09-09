@@ -1,4 +1,4 @@
-import { type IEditorCellMap, type IPosition, type ITarget } from '@interfaces';
+import { type IEditorCellMap, type ITarget } from '@interfaces';
 import { useEffect, useState } from 'react';
 import { FunctionFooter } from '../components';
 import { HtmlEditor } from '@components/editors';
@@ -17,12 +17,6 @@ const RowColEntry = (props: IProps) => {
   const { handleChange, name, closeModal, row, column, getHTML } = props;
   const [data, setData] = useState<IEditorCellMap>({});
   const [focusedElement, setFocusedElement] = useState('');
-  const [position] = useState({ start: 0, end: 0 });
-
-  const setPosition = (newPosition: IPosition) => {
-    position.start = newPosition.start;
-    position.end = newPosition.end;
-  };
 
   const initialize = () => {
     const newData: IEditorCellMap = {};

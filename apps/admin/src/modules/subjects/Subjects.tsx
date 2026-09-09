@@ -1,10 +1,11 @@
+import { type SubjectDto } from '@repo/shared/contracts';
 import { PresignedImage } from '@components/app/attachments';
 import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
 import { useLoadOnce } from '@repo/ui/hooks';
 import { type IColumnData } from '@interfaces';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { type ISubject, useSelectorStore, useStandardStore } from '@stores';
+import { useSelectorStore, useStandardStore } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { useSetState } from 'react-use';
 import { useShallow } from 'zustand/react/shallow';
@@ -31,7 +32,7 @@ export const Subjects = () => {
     setState({ isOpenCreateModal: true });
   };
 
-  const onOpenEditModal = (subject?: ISubject) => {
+  const onOpenEditModal = (subject?: SubjectDto) => {
     if (!subject) return;
     setSelectedSubjectId(subject._id);
     setState({ isOpenCreateModal: true });
@@ -41,7 +42,7 @@ export const Subjects = () => {
     setState({ isOpenCreateModal: false });
   };
 
-  const columns: IColumnData<ISubject>[] = [
+  const columns: IColumnData<SubjectDto>[] = [
     {
       label: 'Id',
       dataKey: '_id',

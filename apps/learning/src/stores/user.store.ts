@@ -1,32 +1,26 @@
-import {
-  type ClientEntity,
-  type IRequestSlice,
-  type OrgDto,
-  type StudentStandardMappingDto,
-  type UserDto,
-  createRequestSlice,
-} from '@repo/shared';
+import { type OrgDto, type StudentStandardMappingDto, type UserDto, type StandardDto } from '@repo/shared/contracts';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { AccountType, DefaultRole, Gender, StorageKey } from '../enums';
 import { FollowerService, MappingService, UserService } from '../services';
 import { getObjectId } from '../utils/helpers';
 import { useSelectorStore } from './selector.store';
-import { type IStandard, useStandardStore } from './standard.store';
+import { useStandardStore } from './standard.store';
 
 /**
- * A user in the store. `photoUrl` is client-only — the API sends `avatar` — and is stripped from
- * every request by `CLIENT_ONLY_KEYS`.
+ * A user in the store. Every field here is client-only and stripped from every request by
+ * `CLIENT_ONLY_KEYS`: `isNew` marks a draft the user is still creating, and the API sends
+ * `avatar` rather than `photoUrl`.
  */
-export type IUser = ClientEntity<UserDto> & {
+export type IUser = UserDto & {
+  isNew?: boolean;
   photoUrl?: string | null;
   followersCount?: number;
   isLoadedFollowersCount?: boolean;
   isLoadingFollowersCount?: boolean;
   isLoadedCompletedModules?: boolean;
 };
-export type IOrg = ClientEntity<OrgDto>;
-export type IStudentStandardMapping = ClientEntity<StudentStandardMappingDto>;
 
 /** Whether a user is a student. Was the `isStudent` view on the MST model. */
 export const isStudentUser = (user: IUser): boolean => user.permission === DefaultRole.STUDENT;
@@ -36,25 +30,25 @@ type UserFetch = 'loggedInUsers' | 'studentStandardMappings';
 
 export interface IUserState extends IRequestSlice<UserFetch> {
   userMap: Record<string, IUser>;
-  orgMap: Record<string, IOrg>;
-  studentStandardMap: Record<string, IStudentStandardMapping>;
+  orgMap: Record<string, OrgDto>;
+  studentStandardMap: Record<string, StudentStandardMappingDto>;
   loggedInUserIds: string[];
 
   getUserById: (userId: string) => IUser | undefined;
-  getOrgById: (orgId: string) => IOrg | undefined;
+  getOrgById: (orgId: string) => OrgDto | undefined;
   getUsers: () => IUser[];
   getUsersByIds: (userIds: string[]) => IUser[];
   getLoggedInUsers: () => IUser[];
   getStudents: () => IUser[];
   getCollaborators: () => IUser[];
-  getStudentStandardMappings: () => IStudentStandardMapping[];
-  getStudentStandardMappingsByStudentId: (studentId: string) => IStudentStandardMapping[];
-  getStudentStandardsByStudentId: (studentId: string) => IStandard[];
+  getStudentStandardMappings: () => StudentStandardMappingDto[];
+  getStudentStandardMappingsByStudentId: (studentId: string) => StudentStandardMappingDto[];
+  getStudentStandardsByStudentId: (studentId: string) => StandardDto[];
   getStudentEnrolledDateByStudentId: (studentId: string) => string;
 
   addUsers: (users: IUser[]) => void;
-  addOrgs: (orgs: IOrg[]) => void;
-  addStudentStandardMaps: (mappings: IStudentStandardMapping[]) => void;
+  addOrgs: (orgs: OrgDto[]) => void;
+  addStudentStandardMaps: (mappings: StudentStandardMappingDto[]) => void;
   patchUser: (userId: string, fields: Partial<IUser>) => void;
   /** Sets a name part and keeps the joined `name` in step — the model's setters did both. */
   setUserName: (userId: string, parts: { firstName?: string; lastName?: string }) => void;
@@ -174,6 +168,9 @@ export const useUserStore = create<IUserState>()((set, get) => ({
   getNewUser: (permission) => {
     const user: IUser = {
       _id: getObjectId(),
+      // A draft belongs to the org being viewed. The server assigns `org` itself on the write, but
+      // the field is required on `UserDto`, and the row sits in the same store as fetched users.
+      org: useSelectorStore.getState().selectedOrgId,
       uid: '',
       name: '',
       firstName: '',
@@ -254,7 +251,7 @@ export const useSelectedUser = (): IUser | undefined => {
 };
 
 /** The selected org, or `undefined`. Replaces `selectorStore.selectedOrg`. */
-export const useSelectedOrg = (): IOrg | undefined => {
+export const useSelectedOrg = (): OrgDto | undefined => {
   const selectedOrgId = useSelectorStore((state) => state.selectedOrgId);
   return useUserStore((state) => (selectedOrgId ? state.orgMap[selectedOrgId] : undefined));
 };

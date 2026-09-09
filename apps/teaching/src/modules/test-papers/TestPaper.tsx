@@ -1,10 +1,10 @@
+import { type QuestionDto } from '@repo/shared/contracts';
 import { Accordions, Card, Loader, Menu, Modal, ModalFooter, SplitButton, Tooltip } from '@repo/ui/app';
 import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { PositionType, SectionCategoryType, SectionType } from '@enums';
 import { TestPaperService } from '@services';
 import {
-  type IQuestion,
   type ITestPaperSection,
   useStandardLookups,
   useQuestionLookups,
@@ -38,10 +38,13 @@ interface IState {
   isOpenUpsertQuestion: boolean;
   isOpenGenerateQuestions: boolean;
   isLoading: boolean;
-  question: IQuestion | null;
+  question: QuestionDto | null;
   section: ITestPaperSection | null;
   isOpenAddSection: boolean;
 }
+
+/** The title an upsert modal shows, which depends only on whether the row is still a draft. */
+const getUpsertTitle = (isNew: boolean | undefined, noun: string) => `${isNew ? 'Create New' : 'Update'} ${noun}`;
 
 export const TestPaper = ({ testPaperId }: IProps) => {
   const testPaperStore = useTestPaperLookups();
@@ -84,6 +87,8 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     isOpenAddSection: false,
   });
   const sections = selectedTestPaper ? getTestPaperSectionsByIds(selectedTestPaper.sections ?? []) : [];
+  const hasSections = sections.length !== 0;
+  const isLoadingSections = isLoadingTestPaperSections || isLoadingTestPapers;
 
   const setLoading = (bool: boolean) => {
     setState({ isLoading: bool });
@@ -113,7 +118,7 @@ export const TestPaper = ({ testPaperId }: IProps) => {
   };
 
   const addNewSection = () => {
-    const section = selectedTestPaperSection || sections[0];
+    const section = selectedTestPaperSection ?? sections[0];
     if (!section) return;
     const newSection = createTestPaperSection(SectionType.SECTION, SectionCategoryType.CUSTOM, section.defaultMarkings);
     setState({ section: newSection, isOpenAddSection: true });
@@ -136,7 +141,7 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     if (!state.section || !selectedTestPaper) return;
     try {
       setState({ isLoading: true });
-      const sectionIds = [...new Set([...selectedTestPaper.sections, state.section._id])];
+      const sectionIds = [...new Set([...(selectedTestPaper.sections ?? []), state.section._id])];
       if (state.section.isNew) patchTestPaper(selectedTestPaper._id, { sections: sectionIds });
       await Promise.all([
         state.section.isNew ? TestPaperService.upsertTestPaper(selectedTestPaper) : Promise.resolve(),
@@ -183,7 +188,7 @@ export const TestPaper = ({ testPaperId }: IProps) => {
       <Card>
         <TestPaperDetails testPaper={selectedTestPaper} addNewSection={addNewSection} />
       </Card>
-      {sections.length !== 0 ? (
+      {hasSections && (
         <Accordions
           openIndexes={[0]}
           items={sections.map((section) => ({
@@ -315,15 +320,13 @@ export const TestPaper = ({ testPaperId }: IProps) => {
             ),
           }))}
         />
-      ) : isLoadingTestPaperSections || isLoadingTestPapers ? (
-        <Loader isLoading={isLoadingTestPaperSections || isLoadingTestPapers} />
-      ) : (
-        <BlankState label="No sections found" />
       )}
+      {!hasSections && isLoadingSections && <Loader isLoading={isLoadingSections} />}
+      {!hasSections && !isLoadingSections && <BlankState label="No sections found" />}
       <Modal
         position={PositionType.RIGHT}
         className="min-w-full md:min-w-[60%] lg:min-w-[60%] md:max-w-[60%] lg:max-w-[60%]"
-        title={`${selectedQuestion?.isNew ? 'Create New' : 'Update'} Question`}
+        title={getUpsertTitle(selectedQuestion?.isNew, 'Question')}
         isOpen={state.isOpenUpsertQuestion}
         onClose={onCloseAddQuestionModal}
         component={<UpsertQuestionStepper />}
@@ -332,7 +335,7 @@ export const TestPaper = ({ testPaperId }: IProps) => {
         }
       />
       <Modal
-        title={`${state.section?.isNew ? 'Create New' : 'Update'} Section`}
+        title={getUpsertTitle(state.section?.isNew, 'Section')}
         isOpen={state.isOpenAddSection}
         onClose={onCloseAddSectionModal}
         component={state.section && <UpsertTestPaperSection section={state.section} isLoading={state.isLoading} />}

@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { LevelType, QuestionType } from '@repo/shared';
+import { LevelType, QuestionType } from '@repo/shared/enums';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type MarkingSchemaDocument = HydratedDocument<MarkingSchema>;

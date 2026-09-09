@@ -1,4 +1,4 @@
-import { PermissionItem, Subdomain } from '@repo/shared';
+import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Post, Body, Get } from '@nestjs/common';

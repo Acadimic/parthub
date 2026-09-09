@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { SectionCategoryType, SectionType } from '@repo/shared';
+import { SectionCategoryType, SectionType } from '@repo/shared/enums';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type TestPaperSectionDocument = HydratedDocument<TestPaperSection>;

@@ -20,22 +20,36 @@ interface IState {
   isEditing: boolean;
 }
 
+const REQUIRED_FIELDS: [keyof IState, string][] = [
+  ['firstName', 'First name'],
+  ['lastName', 'Last name'],
+  ['phoneNumber', 'Phone number'],
+  ['designation', 'Role'],
+  ['gender', 'Gender'],
+  ['email', 'Email'],
+];
+
+/** The label of the first required field left blank, or undefined when the form is complete. */
+const getMissingFieldLabel = (state: IState) => REQUIRED_FIELDS.find(([key]) => !String(state[key] ?? '').trim())?.[1];
+
+const getInitialState = (user: ReturnType<typeof useSelectedUser>): IState => ({
+  firstName: user?.firstName || '',
+  lastName: user?.lastName || '',
+  email: user?.email || '',
+  designation: user?.designation || '',
+  countryCode: user?.countryCode || '+91',
+  phoneNumber: user?.phoneNumber || '',
+  gender: user?.gender || Gender.OTHER,
+  isLoading: false,
+  isEditing: false,
+});
+
 export const Profile = () => {
   const userStore = useUserLookups();
   const { setUserName } = userStore;
   const { patchUser } = userStore;
   const selectedUser = useSelectedUser();
-  const [state, setState] = useSetState<IState>({
-    firstName: selectedUser?.firstName || '',
-    lastName: selectedUser?.lastName || '',
-    email: selectedUser?.email || '',
-    designation: selectedUser?.designation || '',
-    countryCode: selectedUser?.countryCode || '+91',
-    phoneNumber: selectedUser?.phoneNumber || '',
-    gender: selectedUser?.gender || Gender.OTHER,
-    isLoading: false,
-    isEditing: false,
-  });
+  const [state, setState] = useSetState<IState>(getInitialState(selectedUser));
 
   const handleTextInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setState({ [e.target.name]: e.target.value });
@@ -49,28 +63,9 @@ export const Profile = () => {
     if (!selectedUser) return;
     try {
       const phoneNumber = formatPhoneNumber(state.phoneNumber);
-      if (!state.firstName?.trim()) {
-        errorToast({ message: 'First name is required!' });
-        return;
-      }
-      if (!state.lastName?.trim()) {
-        errorToast({ message: 'Last name is required!' });
-        return;
-      }
-      if (!state.phoneNumber?.trim()) {
-        errorToast({ message: 'Phone number is required!' });
-        return;
-      }
-      if (!state.designation?.trim()) {
-        errorToast({ message: 'Role is required!' });
-        return;
-      }
-      if (!state.gender) {
-        errorToast({ message: 'Gender is required!' });
-        return;
-      }
-      if (!state.email?.trim()) {
-        errorToast({ message: 'Email is required!' });
+      const missingLabel = getMissingFieldLabel(state);
+      if (missingLabel) {
+        errorToast({ message: `${missingLabel} is required!` });
         return;
       }
       if (!validateEmail(state.email)) {
@@ -85,7 +80,7 @@ export const Profile = () => {
       setUserName(selectedUser._id, { firstName: state.firstName });
       setUserName(selectedUser._id, { lastName: state.lastName });
       patchUser(selectedUser._id, { countryCode: state.countryCode });
-      patchUser(selectedUser._id, { phoneNumber: phoneNumber });
+      patchUser(selectedUser._id, { phoneNumber });
       patchUser(selectedUser._id, { designation: state.designation });
       patchUser(selectedUser._id, { gender: state.gender });
       await UserService.updateProfile(selectedUser);

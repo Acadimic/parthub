@@ -115,18 +115,14 @@ export const GenerateQuestionsModal = ({ isOpen, onClose }: IProps) => {
           section: selectedTestPaperSection._id,
           markings: selectedTestPaperSection.defaultMarkings[questionType],
         });
-        console.log('####questionObject.standard: ', JSON.stringify(question));
-        console.log('####questionObject.questionText: ', getTextAndEquationBlocksString(questionObject.questionText));
         patchQuestion(question._id, { question: getTextAndEquationBlocksString(questionObject.questionText) });
         getOptionsByIds(question.options ?? []).forEach((option, index) => {
-          console.log('####questionObject.options[index].optionText: ', questionObject.options[index].optionText);
           patchOption(option._id, { option: getTextAndEquationBlocksString(questionObject.options[index].optionText) });
           patchOption(option._id, { isCorrect: questionObject.options[index].isCorrect || false });
         });
         upsertSolution(question._id, getTextAndEquationBlocksString(questionObject.solutionText || ''));
         return question;
       });
-      console.log('####questions: ', JSON.stringify(questions));
       await TestPaperService.upsertBulkTestPaperSectionQuestions({
         testPaper: selectedTestPaper._id,
         questions: questions.map((question) => {
@@ -151,7 +147,7 @@ export const GenerateQuestionsModal = ({ isOpen, onClose }: IProps) => {
         onClose();
       }, 500);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       errorToast({ message: 'Invalid questions text.' });
       getNewOptions().forEach((option) => removeOptionById(option._id));
       getNewSolutions().forEach((solution) => removeSolutionById(solution._id));

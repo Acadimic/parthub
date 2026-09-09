@@ -1,4 +1,4 @@
-import { OrgType } from '@repo/shared';
+import { OrgType } from '@repo/shared/enums';
 import { IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateOrgDto {

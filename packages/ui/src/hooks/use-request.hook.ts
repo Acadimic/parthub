@@ -1,4 +1,5 @@
-import { type IRequestView, type IRequests, toRequestView } from '@repo/shared';
+import { type IRequestView, toRequestView } from '@repo/shared/utils';
+import { type IRequests } from '@repo/shared/interfaces';
 import { useEffect } from 'react';
 
 /**

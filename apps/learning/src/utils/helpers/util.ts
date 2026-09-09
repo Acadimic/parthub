@@ -1,6 +1,6 @@
+import { type StandardDto } from '@repo/shared/contracts';
 import { capitalize, clearLocalStorage, splitCamelCase } from '@repo/ui/lib';
 import { type ISelectItem } from '@interfaces';
-import { type IStandard } from '@stores';
 import { WEEK_DAYS_INTEGER_MAPPINGS } from '../constants';
 import { logOut as signOut } from '../firebase';
 import { errorToast } from './toasts';
@@ -11,11 +11,11 @@ export const logOut = () => {
   window.location.replace('/sign-in');
 };
 
-export const getFrequencyText = (weekDayIntegers: number[], startTime: string | Date) => {
-  if (!weekDayIntegers || weekDayIntegers.length === 0) {
+export const getFrequencyText = (weekDays: number[], startTime: string | Date) => {
+  if (!weekDays || weekDays.length === 0) {
     return new Date(startTime).toLocaleDateString('en-us', { month: 'short', day: 'numeric' });
   }
-  weekDayIntegers = weekDayIntegers.sort();
+  const weekDayIntegers = [...weekDays].sort();
   let continuous = true;
   let currentDay = weekDayIntegers[0];
   const firstDay = WEEK_DAYS_INTEGER_MAPPINGS[currentDay];
@@ -34,7 +34,7 @@ export const getFrequencyText = (weekDayIntegers: number[], startTime: string | 
   return dayString;
 };
 
-export const getStandardSelectItem = (standard: IStandard): ISelectItem => {
+export const getStandardSelectItem = (standard: StandardDto): ISelectItem => {
   return { label: standard.name, value: standard._id, group: standard.group };
 };
 

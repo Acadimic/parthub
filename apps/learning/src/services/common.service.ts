@@ -1,4 +1,4 @@
-import { type InitialDataResponse, type PublicDataResponse } from '@repo/shared';
+import { type InitialDataResponse, type PublicDataResponse } from '@repo/shared/contracts';
 import { API } from '../enums';
 import { callAuthApi, callDefaultApi, callUnAuthApi } from './http.service';
 

@@ -101,6 +101,21 @@ export const CustomToolbar = ({
     icon: CalenderViewIconMap[view],
   }));
 
+  // WEEK and LIST render the same range, so they share a branch.
+  const rangeLabel = `${getFormattedDate(getStartOfWeek(date), 'MMM D')} - ${getFormattedDate(getEndOfWeek(date), 'MMM D, YYYY')}`;
+  let dateLabel: React.ReactNode = '';
+  if (calendarType === CalendarType.DAY) {
+    dateLabel = (
+      <div className="flex gap-3 items-center">
+        <p>{getFormattedDate(date, 'D MMMM YYYY')}</p>
+      </div>
+    );
+  } else if (calendarType === CalendarType.WEEK || calendarType === CalendarType.LIST) {
+    dateLabel = rangeLabel;
+  } else if (calendarType === CalendarType.MONTH) {
+    dateLabel = getFormattedDate(date, 'MMMM YYYY');
+  }
+
   return (
     <div className="flex items-center justify-between pb-3 md:pb-3">
       <div className="flex md:justify-start flex-col md:flex-row md:items-center gap-2 w-full">
@@ -114,27 +129,7 @@ export const CustomToolbar = ({
           <button className="p-1 rounded hover:bg-background-secondary" onClick={handleNext}>
             <CaretRightIcon className="w-5 h-5" />
           </button>
-          <div className="font-semibold text-md md:text-lg truncate max-w-[120px] md:max-w-full">
-            {calendarType === CalendarType.DAY ? (
-              <div className="flex gap-3 items-center">
-                <p>{getFormattedDate(date, 'D MMMM YYYY')}</p>
-              </div>
-            ) : calendarType === CalendarType.WEEK ? (
-              `${getFormattedDate(getStartOfWeek(date), 'MMM D')} - ${getFormattedDate(
-                getEndOfWeek(date),
-                'MMM D, YYYY',
-              )}`
-            ) : calendarType === CalendarType.MONTH ? (
-              getFormattedDate(date, 'MMMM YYYY')
-            ) : calendarType === CalendarType.LIST ? (
-              `${getFormattedDate(getStartOfWeek(date), 'MMM D')} - ${getFormattedDate(
-                getEndOfWeek(date),
-                'MMM D, YYYY',
-              )}`
-            ) : (
-              ''
-            )}
-          </div>
+          <div className="font-semibold text-md md:text-lg truncate max-w-[120px] md:max-w-full">{dateLabel}</div>
         </div>
         <div className="w-full flex justify-between md:justify-end items-center gap-3 md:gap-5">
           <Button leftsection={<PlusIcon weight="bold" size={16} />} onClick={() => handleCreateMeet(date)}>

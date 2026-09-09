@@ -1,9 +1,10 @@
+import { type QuestionDto } from '@repo/shared/contracts';
 import { Html } from '@components/others';
-import { type IQuestion, useQuestionLookups } from '@stores';
+import { useQuestionLookups } from '@stores';
 
 interface IProps {
   prefix?: string;
-  question: IQuestion;
+  question: QuestionDto;
 }
 
 export const Solution = ({ question, prefix }: IProps) => {

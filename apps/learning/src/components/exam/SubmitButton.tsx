@@ -13,13 +13,13 @@ export const SubmitButton = ({ openSubmitSummary, openResultPage }: IProps) => {
 
   const { isSubmitted, isPractice } = exam;
 
+  let buttonText = 'Submit Test';
+  if (isSubmitted) buttonText = 'View Result';
+  else if (isPractice) buttonText = 'View Analytics';
+
   return (
     <>
-      <Button
-        text={isSubmitted ? 'View Result' : isPractice ? 'View Analytics' : 'Submit Test'}
-        onClick={isSubmitted || isPractice ? openResultPage : openSubmitSummary}
-        isRound
-      />
+      <Button text={buttonText} onClick={isSubmitted || isPractice ? openResultPage : openSubmitSummary} isRound />
     </>
   );
 };

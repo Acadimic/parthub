@@ -33,7 +33,7 @@ export const learnerRoutes: INavigation[] = [
 ];
 
 export const LearnerNavigation = () => {
-  const { route, push } = useRouter();
+  const { route } = useRouter();
   return (
     <>
       <div className="w-full bg-background-primary flex justify-between items-center">

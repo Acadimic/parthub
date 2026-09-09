@@ -1,3 +1,4 @@
+import { type AttachmentDto } from '@repo/shared/contracts';
 import { Attachment } from '@components/app/attachments';
 import { Avatar } from '@components/app/avatars';
 import { Button, Card, SimpleAccordions } from '@repo/ui/app';
@@ -9,6 +10,7 @@ import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import {
   type IMaterial,
   type ITestPaper,
+  type IUser,
   useMeetLookups,
   useSelectedCourse,
   useSelectedMaterial,
@@ -27,6 +29,99 @@ import { LikeCourse } from './LikeCourse';
 import { MarkCompleteButton } from './MarkCompleteButton';
 import { Sessions } from './Sessions';
 import { ShareCourse } from './ShareCourse';
+
+/** An item is a material or a test paper; both carry a duration, and only one is ever set. */
+const getDurationMins = (material?: IMaterial, testPaper?: ITestPaper) =>
+  material?.durationMins ?? testPaper?.durationMins ?? 0;
+
+/** The content/attachment chips for a material. A test paper has none, so this renders nothing. */
+const AttachmentsRow = ({
+  material,
+  hasSelectedContent,
+  selectedAttachmentId,
+  onClickContent,
+  onClickAttachment,
+}: {
+  material?: IMaterial;
+  hasSelectedContent: boolean;
+  selectedAttachmentId?: string;
+  onClickContent: () => void;
+  onClickAttachment: (attachment: AttachmentDto) => void;
+}) => {
+  if (!material) return null;
+  return (
+    <div>
+      <div className="flex gap-3 items-center flex-wrap py-4">
+        <div className="text-sm font-medium">Attachments :</div>
+        <div className="flex gap-3 items-center">
+          <div className="border border-color-border rounded-full">
+            <Button onClick={onClickContent} isSecondary={!hasSelectedContent} className="px-4 py-1" isRound>
+              Content
+            </Button>
+          </div>
+          {(material.attachments ?? []).map((attachment, index) => (
+            <Button
+              key={attachment._id}
+              onClick={() => onClickAttachment(attachment)}
+              isSecondary={selectedAttachmentId !== attachment._id}
+              className="!px-0 !py-0"
+              isRound
+            >
+              <Attachment
+                fileName={attachment.fileName}
+                extension={attachment.fileExtension}
+                url={attachment.url}
+                index={index}
+              />
+            </Button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/** Who published the item, and the like / bookmark / share actions for it. */
+const ContentActionsRow = ({
+  createdBy,
+  item,
+  isMaterial,
+  courseId,
+}: {
+  createdBy?: IUser | null;
+  item: IMaterial | ITestPaper;
+  isMaterial: boolean;
+  courseId: string;
+}) => {
+  const collectionRef = isMaterial ? CollectionType.MATERIAL : CollectionType.TEST_PAPER;
+  return (
+    <div className="flex justify-start flex-col md:flex-row md:justify-between py-4 gap-3 w-full border-y border-color-border">
+      <div className="flex items-center gap-6">
+        {createdBy && (
+          <>
+            <div className="flex items-center space-x-2 text-sm font-medium">
+              <div>
+                <Avatar id={createdBy._id} name={createdBy.name} />
+              </div>
+              <div>
+                <div className="text-sm font-medium">{createdBy.name}</div>
+                <Followers user={createdBy} />
+              </div>
+            </div>
+            <div>
+              <FollowButton user={createdBy} />
+            </div>
+          </>
+        )}
+      </div>
+      <div className="flex items-center gap-3 flex-wrap">
+        <LikeCourse collectionItem={item} collectionRef={collectionRef} />
+        <BookmarkCourse collectionItem={item._id} collectionRef={collectionRef} />
+        <ShareCourse courseId={courseId} />
+      </div>
+    </div>
+  );
+};
 
 export const CourseContent = () => {
   const selectorStore = useSelectorLookups();
@@ -54,7 +149,7 @@ export const CourseContent = () => {
     removeSelectedAttachment();
   };
 
-  const item: IMaterial | ITestPaper | undefined = selectedMaterial || selectedTestPaper;
+  const item: IMaterial | ITestPaper | undefined = selectedMaterial ?? selectedTestPaper;
   const createdBy = item?.createdBy ? getUserById(item.createdBy) : null;
 
   const moduleContentType = useMemo(() => {
@@ -110,79 +205,26 @@ export const CourseContent = () => {
               <div className="text-xs text-color-secondary flex items-center space-x-1">
                 <span className="capitalize">{moduleContentType}</span>
                 <span className="mx-1 text-xs">•</span>
-                <span>{selectedMaterial?.durationMins || selectedTestPaper?.durationMins} mins</span>
+                <span>{getDurationMins(selectedMaterial, selectedTestPaper)} mins</span>
               </div>
             </div>
           </div>
           <MarkCompleteButton testPaper={selectedTestPaper} material={selectedMaterial} />
         </div>
         <div className="w-full">
-          <div className={`${selectedMaterial ? '' : 'hidden'}`}>
-            <div className="flex gap-3 items-center flex-wrap py-4">
-              <div className="text-sm font-medium">Attachments :</div>
-              <div className="flex gap-3 items-center">
-                {selectedMaterial ? (
-                  <div className="border border-color-border rounded-full">
-                    <Button
-                      onClick={handleClickContent}
-                      isSecondary={selectedContent ? false : true}
-                      className="px-4 py-1"
-                      isRound
-                    >
-                      Content
-                    </Button>
-                  </div>
-                ) : null}
-                {selectedMaterial?.attachments.map((attachment, index) => {
-                  return (
-                    <Button
-                      key={attachment._id}
-                      onClick={() => handleClickAttachment(attachment)}
-                      isSecondary={selectedAttachment?._id !== attachment._id}
-                      className="!px-0 !py-0"
-                      isRound
-                    >
-                      <Attachment
-                        fileName={attachment.fileName}
-                        extension={attachment.fileExtension}
-                        url={attachment.url}
-                        index={index}
-                      />
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-start flex-col md:flex-row md:justify-between py-4 gap-3 w-full border-y border-color-border">
-            <div className="flex items-center gap-6">
-              {createdBy ? (
-                <>
-                  <div className="flex items-center space-x-2 text-sm font-medium">
-                    <div>{<Avatar id={createdBy._id} name={createdBy.name} />}</div>
-                    <div>
-                      <div className="text-sm font-medium">{createdBy.name}</div>
-                      <Followers user={createdBy} />
-                    </div>
-                  </div>
-                  <div>
-                    <FollowButton user={createdBy} />
-                  </div>
-                </>
-              ) : null}
-            </div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <LikeCourse
-                collectionItem={item}
-                collectionRef={selectedMaterial ? CollectionType.MATERIAL : CollectionType.TEST_PAPER}
-              />
-              <BookmarkCourse
-                collectionItem={item._id}
-                collectionRef={selectedMaterial ? CollectionType.MATERIAL : CollectionType.TEST_PAPER}
-              />
-              <ShareCourse courseId={selectedCourseId} />
-            </div>
-          </div>
+          <AttachmentsRow
+            material={selectedMaterial}
+            hasSelectedContent={Boolean(selectedContent)}
+            selectedAttachmentId={selectedAttachment?._id}
+            onClickContent={handleClickContent}
+            onClickAttachment={handleClickAttachment}
+          />
+          <ContentActionsRow
+            createdBy={createdBy}
+            item={item}
+            isMaterial={Boolean(selectedMaterial)}
+            courseId={selectedCourseId}
+          />
           <Card className="py-4 bg-transparent">
             <div className="px-2 bg-background-primary">
               <SimpleAccordions

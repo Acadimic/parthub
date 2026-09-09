@@ -1,4 +1,5 @@
-import { type IPosition, type IScoreRating, StorageKey } from '@repo/shared';
+import { type IPosition, type IScoreRating } from '@repo/shared/interfaces';
+import { StorageKey } from '@repo/shared/enums';
 import ObjectID from 'bson-objectid';
 import randomColor from 'randomcolor';
 import { type IColor } from '../types';
@@ -114,8 +115,8 @@ export const removeSpecialCharacters = (str: string) => {
 };
 
 export const getSlug = (str: string) => {
-  str = str && removeSpecialCharacters(str.trim().toLowerCase());
-  return str?.split(' ').join('-');
+  const slug = str && removeSpecialCharacters(str.trim().toLowerCase());
+  return slug?.split(' ').join('-');
 };
 
 export const getRandomColor = (_id: string): IColor => {
@@ -188,19 +189,16 @@ export const isValidUrl = (url: string): boolean => {
 
 export const replaceColor = (content: string) => {
   if (!content) return content;
-  content = content.replace(/color: #000000;/g, 'color: inherit;');
-  content = content.replace(/color: #000;/g, 'color: inherit;');
-  content = content.replace(/color: #ffffff;/g, 'color: inherit;');
-  content = content.replace(/color: #fff;/g, 'color: inherit;');
-  content = content.replace(/color="#ffffff"/g, '');
-  content = content.replace(/color="#fff"/g, '');
-  content = content.replace(/color="#000000"/g, '');
-  content = content.replace(/color="#000"/g, '');
-  content = content.replace(
-    /color: rgb(?:a)?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*(?:0|1|0?\.\d+))?\s*\);/g,
-    'color: inherit;',
-  );
-  return content;
+  return content
+    .replace(/color: #000000;/g, 'color: inherit;')
+    .replace(/color: #000;/g, 'color: inherit;')
+    .replace(/color: #ffffff;/g, 'color: inherit;')
+    .replace(/color: #fff;/g, 'color: inherit;')
+    .replace(/color="#ffffff"/g, '')
+    .replace(/color="#fff"/g, '')
+    .replace(/color="#000000"/g, '')
+    .replace(/color="#000"/g, '')
+    .replace(/color: rgb(?:a)?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*(?:0|1|0?\.\d+))?\s*\);/g, 'color: inherit;');
 };
 
 export const isPresignedUrlExpired = (signedUrl: string) => {
@@ -214,6 +212,14 @@ export const isPresignedUrlExpired = (signedUrl: string) => {
 
 export const insertAt = (str = '', sub = '', pos: number) => `${str.slice(0, pos)}${sub}${str.slice(pos)}`;
 
+/*
+ * Maps a caret position in rendered text back to an index in the underlying HTML, walking the
+ * string once and tracking whether it is inside a tag or an entity. The branches are the states
+ * of that single scan, not separable steps: pulling any of them into a helper would mean passing
+ * and returning the five mutable counters, which reads worse than the loop. There is no test
+ * suite here to protect a rewrite either, so the ceiling is recorded as not applying.
+ */
+// eslint-disable-next-line complexity
 export const getPosition = (str = '', pos: number) => {
   let realPos = 0;
   let imgPos = 0;
@@ -254,17 +260,16 @@ export const getPosition = (str = '', pos: number) => {
 
 export const getCombineValue = (preValue: string, value: string, position: IPosition) => {
   let close = false;
-  if (preValue && preValue.endsWith('<br></div>')) {
-    const lastIndex = preValue.lastIndexOf('<br></div>');
-    preValue = preValue.slice(0, lastIndex);
+  let head = preValue;
+  if (head?.endsWith('<br></div>')) {
+    head = head.slice(0, head.lastIndexOf('<br></div>'));
     close = true;
-  } else if (preValue && preValue.endsWith('</div>')) {
-    const lastIndex = preValue.lastIndexOf('</div>');
-    preValue = preValue.slice(0, lastIndex);
+  } else if (head?.endsWith('</div>')) {
+    head = head.slice(0, head.lastIndexOf('</div>'));
     close = true;
   }
-  const pos = getPosition(preValue, position && position.start);
-  const data = insertAt(preValue, value, pos);
+  const pos = getPosition(head, position?.start);
+  const data = insertAt(head, value, pos);
   return `${data}${close ? '</div>' : ''}`;
 };
 

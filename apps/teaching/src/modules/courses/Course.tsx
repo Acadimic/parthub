@@ -25,7 +25,7 @@ interface IState {
   isOpenUpsertSessionsModal: boolean;
 }
 
-export const Course = ({ courseId }: IProps) => {
+export const Course = ({ courseId: _courseId }: IProps) => {
   const { push } = useRouter();
   const selectorStore = useSelectorLookups();
   const courseStore = useCourseLookups();
@@ -35,12 +35,11 @@ export const Course = ({ courseId }: IProps) => {
   const { selectedCourseId, setSelectedCourseModuleId } = selectorStore;
   const selectedCourse = useSelectedCourse();
   const { getCourseModulesByCourseId, loadCourseModules, createCourseModule, getCourseById } = courseStore;
-  const isCourseModuleLoading = courseStore.isLoading('courseModules');
   const { loadStandardsMaterials } = materialStore;
   const isLoadingMaterials = materialStore.isLoading('materials');
   const { loadTestPapers } = testPaperStore;
   const isLoadingTestPapers = testPaperStore.isLoading('testPapers');
-  const { loadMeets, getMeetsByIds } = meetStore;
+  const { loadMeets } = meetStore;
   const [state, setState] = useSetState<IState>({
     isOpenUpsertCourseModuleModal: false,
     isOpenUpsertSessionsModal: false,
@@ -73,7 +72,7 @@ export const Course = ({ courseId }: IProps) => {
     else {
       loadCourseModules(selectedCourseId);
       loadTestPapers();
-      loadStandardsMaterials(selectedCourse?.standards);
+      loadStandardsMaterials(selectedCourse?.standards ?? []);
       loadMeets();
     }
   }, []);
@@ -86,7 +85,7 @@ export const Course = ({ courseId }: IProps) => {
         <CourseDetails />
       </Card> */}
       <div className="flex flex-col gap-3">
-        {(selectedCourse.courses ?? []).map((courseId: string, index: number) => {
+        {(selectedCourse.courses ?? []).map((courseId: string) => {
           const course = getCourseById(courseId);
           const courseModules = getCourseModulesByCourseId(courseId);
           if (!course) return null;
@@ -108,7 +107,7 @@ export const Course = ({ courseId }: IProps) => {
                   />
                 </div>
                 <div>
-                  {courseModules.length !== 0 ? (
+                  {courseModules.length !== 0 && (
                     <Accordions
                       openIndexes={[0]}
                       items={courseModules.map((courseModule) => ({
@@ -150,15 +149,21 @@ export const Course = ({ courseId }: IProps) => {
                         component: <CourseModuleView courseModule={courseModule} />,
                       }))}
                     />
-                  ) : courseStore.isLoading('courseModules') || isLoadingTestPapers || isLoadingMaterials ? (
-                    <Loader
-                      isLoading={courseStore.isLoading('courseModules') || isLoadingTestPapers || isLoadingMaterials}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-80">
-                      <BlankState label="No modules found" />
-                    </div>
                   )}
+                  {courseModules.length === 0 &&
+                    (courseStore.isLoading('courseModules') || isLoadingTestPapers || isLoadingMaterials) && (
+                      <Loader
+                        isLoading={courseStore.isLoading('courseModules') || isLoadingTestPapers || isLoadingMaterials}
+                      />
+                    )}
+                  {courseModules.length === 0 &&
+                    !courseStore.isLoading('courseModules') &&
+                    !isLoadingTestPapers &&
+                    !isLoadingMaterials && (
+                      <div className="flex items-center justify-center w-full h-80">
+                        <BlankState label="No modules found" />
+                      </div>
+                    )}
                 </div>
               </div>
               <div>

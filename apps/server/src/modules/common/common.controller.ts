@@ -1,4 +1,4 @@
-import { Subdomain } from '@repo/shared';
+import { Subdomain } from '@repo/shared/enums';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body } from '@nestjs/common';
@@ -12,6 +12,9 @@ import { Public } from '@decorators/public.decorator';
 
 @Controller('common')
 export class CommonController {
+  // NestJS injects collaborators through the constructor, so the count reflects this class's
+  // dependencies rather than a parameter list that could be shortened by extraction.
+  // eslint-disable-next-line max-params
   constructor(
     private readonly commonService: CommonService,
     private readonly requestContextService: RequestContextService,

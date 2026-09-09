@@ -1,13 +1,8 @@
+import { type MaterialDto } from '@repo/shared/contracts';
 import { Accordions, Button, Card, Loader, Menu } from '@repo/ui/app';
 import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
-import {
-  type IMaterial,
-  useStandardLookups,
-  useMaterialLookups,
-  useSelectedMaterial,
-  useSelectorLookups,
-} from '@stores';
+import { useStandardLookups, useMaterialLookups, useSelectedMaterial, useSelectorLookups } from '@stores';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
@@ -53,12 +48,12 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
     removeSelectedMaterialId();
   };
 
-  const editMaterial = (material: IMaterial) => {
+  const editMaterial = (material: MaterialDto) => {
     setSelectedMaterialId(material._id);
     setState({ isOpenUpsertModal: true });
   };
 
-  const generateMaterial = (material: IMaterial) => {
+  const generateMaterial = (material: MaterialDto) => {
     setSelectedMaterialId(material._id);
     setState({ isOpenGenerateModal: true });
   };
@@ -103,7 +98,7 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
           </Button>
         </div>
       </div>
-      {materials.length > 0 ? (
+      {materials.length > 0 && (
         <Accordions
           items={materials.map((material, index) => {
             return {
@@ -145,11 +140,9 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
             };
           })}
         />
-      ) : isLoadingMaterials ? (
-        <Loader isLoading={isLoadingMaterials} />
-      ) : (
-        <BlankState label="No content found" />
       )}
+      {materials.length === 0 && isLoadingMaterials && <Loader isLoading={isLoadingMaterials} />}
+      {materials.length === 0 && !isLoadingMaterials && <BlankState label="No content found" />}
       <UpsertMaterialModal isOpen={state.isOpenUpsertModal} onClose={onCloseAddModal} />
       <GenerateMaterialModal isOpen={state.isOpenGenerateModal} onClose={onCloseGenerateModal} />
     </div>

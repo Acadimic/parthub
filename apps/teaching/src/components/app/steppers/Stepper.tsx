@@ -22,11 +22,7 @@ export const Stepper = ({ steps, activeStep }: IProps) => {
               <div className="flex flex-col items-center">
                 <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                    isCompleted
-                      ? 'bg-blue-primary text-white'
-                      : isActive
-                        ? 'bg-blue-primary text-white'
-                        : 'bg-color-border text-color-secondary'
+                    isCompleted || isActive ? 'bg-blue-primary text-white' : 'bg-color-border text-color-secondary'
                   }`}
                 >
                   {isCompleted ? (

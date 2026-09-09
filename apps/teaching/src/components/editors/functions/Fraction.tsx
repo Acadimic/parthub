@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { type IPosition, type ITarget } from '@interfaces';
+import { type ITarget } from '@interfaces';
 import { HtmlEditor } from '..';
 import { Toolbar } from '../Toolbar';
 import { FunctionFooter } from './components';
@@ -31,12 +31,6 @@ const Fraction = (props: IProps) => {
   });
 
   const [focusedElement, setFocusedElement] = useState<string>(FRACTION.NUMERATOR);
-  const [position] = useState({ start: 0, end: 0 });
-
-  const setPosition = (newPosition: IPosition) => {
-    position.start = newPosition.start;
-    position.end = newPosition.end;
-  };
 
   const handleContentChange = (event: ITarget) => {
     const dataName = event.target.name;

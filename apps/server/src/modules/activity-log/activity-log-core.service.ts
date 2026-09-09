@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AccessType, ActivityAction } from '@repo/shared';
+import { AccessType, ActivityAction } from '@repo/shared/enums';
 import { Types } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
 

@@ -1,10 +1,5 @@
-import {
-  type AttachmentDto,
-  type ClientEntityWith,
-  type IRequestSlice,
-  type MaterialDto,
-  createRequestSlice,
-} from '@repo/shared';
+import { type AttachmentDto, type MaterialDto } from '@repo/shared/contracts';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type IMaterialInfo, type IMaterialStat, type IStandardSubjectQuery } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -13,30 +8,26 @@ import { MaterialService } from '../services';
 import { getObjectId, getSlug } from '../utils/helpers';
 import { useSelectorStore } from './selector.store';
 
-export type IMaterial = ClientEntityWith<
-  MaterialDto,
-  'name' | 'slug' | 'standard' | 'subject' | 'order' | 'content' | 'durationMins' | 'level' | 'attachments' | 'tag'
->;
 export type IAttachment = AttachmentDto & { isNew?: boolean };
 
 /** The fetches this store tracks. */
 type MaterialFetch = 'materialStats' | 'materials';
 
 export interface IMaterialState extends IRequestSlice<MaterialFetch> {
-  materialMap: Record<string, IMaterial>;
+  materialMap: Record<string, MaterialDto>;
   /** Roll-ups the dashboard shows; server-computed, not per-material rows. */
   materialStats: IMaterialStat[];
 
-  getMaterialById: (materialId: string) => IMaterial | undefined;
-  getMaterials: () => IMaterial[];
-  getMaterialsByIds: (materialIds: string[]) => IMaterial[];
-  getStandardSubjectMaterials: (standardId: string, subjectId: string) => IMaterial[];
-  getMaterialsByStandardIds: (standardIds: string[]) => IMaterial[];
+  getMaterialById: (materialId: string) => MaterialDto | undefined;
+  getMaterials: () => MaterialDto[];
+  getMaterialsByIds: (materialIds: string[]) => MaterialDto[];
+  getStandardSubjectMaterials: (standardId: string, subjectId: string) => MaterialDto[];
+  getMaterialsByStandardIds: (standardIds: string[]) => MaterialDto[];
   /** Duration and per-type counts across a set of materials. */
   getMaterialsStatsByMaterialIds: (materialIds: string[]) => IMaterialInfo;
 
-  addMaterials: (materials: IMaterial[]) => void;
-  patchMaterial: (materialId: string, fields: Partial<IMaterial>) => void;
+  addMaterials: (materials: MaterialDto[]) => void;
+  patchMaterial: (materialId: string, fields: Partial<MaterialDto>) => void;
   /** Renames a material and keeps its slug in step. */
   renameMaterial: (materialId: string, name: string) => void;
   removeMaterialById: (materialId: string) => void;
@@ -48,7 +39,7 @@ export interface IMaterialState extends IRequestSlice<MaterialFetch> {
   addLinkAttachment: (materialId: string) => IAttachment;
 
   /** Adds an unsaved material and returns it, for the caller to select. */
-  createMaterial: (standardId: string, subjectId: string) => IMaterial;
+  createMaterial: (standardId: string, subjectId: string) => MaterialDto;
 
   loadMaterialStats: () => Promise<void>;
   loadStandardSubjectMaterials: (query: IStandardSubjectQuery) => Promise<void>;
@@ -91,7 +82,7 @@ export const useMaterialStore = create<IMaterialState>()((set, get) => ({
 
   getMaterialsByIds: (materialIds) => {
     const { materialMap } = get();
-    return materialIds.map((id) => materialMap[id]).filter((material): material is IMaterial => !!material);
+    return materialIds.map((id) => materialMap[id]).filter((material): material is MaterialDto => !!material);
   },
 
   getStandardSubjectMaterials: (standardId, subjectId) =>
@@ -187,7 +178,7 @@ export const useMaterialStore = create<IMaterialState>()((set, get) => ({
   },
 
   createMaterial: (standardId, subjectId) => {
-    const material: IMaterial = {
+    const material: MaterialDto = {
       _id: getObjectId(),
       name: '',
       slug: '',
@@ -233,7 +224,7 @@ export const useMaterialStore = create<IMaterialState>()((set, get) => ({
 export const useMaterialLookups = (): IMaterialState => useMaterialStore(useShallow((state) => state));
 
 /** The selected material, or `undefined`. Replaces `selectorStore.selectedMaterial`. */
-export const useSelectedMaterial = (): IMaterial | undefined => {
+export const useSelectedMaterial = (): MaterialDto | undefined => {
   const selectedMaterialId = useSelectorStore((state) => state.selectedMaterialId);
   return useMaterialStore((state) => (selectedMaterialId ? state.materialMap[selectedMaterialId] : undefined));
 };

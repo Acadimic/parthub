@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { DirectionType } from '@enums';
-import { type IFunctionProps, type IPosition, type ITarget, type IEditorCellMap } from '@interfaces';
+import { type IFunctionProps, type ITarget, type IEditorCellMap } from '@interfaces';
 import { HtmlEditor } from '..';
 import { Toolbar } from '../Toolbar';
 import { FunctionFooter } from './components';
@@ -16,12 +16,6 @@ const ChemicalEquation = (props: IFunctionProps) => {
   });
 
   const [focusedElement, setFocusedElement] = React.useState<string>(DirectionType.LEFT);
-  const [position] = React.useState({ start: 0, end: 0 });
-
-  const setPosition = (newPosition: IPosition) => {
-    position.start = newPosition.start;
-    position.end = newPosition.end;
-  };
 
   const handleContentChange = (event: ITarget) => {
     const dataName = event.target.name;

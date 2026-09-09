@@ -269,7 +269,7 @@ const ShowFunction = (props: { name: string; handleChange: (target: ITarget) => 
             component={
               FUNCTIONS.flatMap((g) => g.items)
                 .find((item) => item.label === selected)
-                ?.component() || <div />
+                ?.component() ?? <div />
             }
           />
         )}

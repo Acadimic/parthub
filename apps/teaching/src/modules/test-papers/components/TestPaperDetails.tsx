@@ -1,11 +1,12 @@
+import { type TestPaperDto } from '@repo/shared/contracts';
 import { Button, Menu } from '@repo/ui/app';
 import { CheckIcon, CopyIcon, GitMergeIcon, PencilIcon, PlusIcon, ShareIcon, WarningIcon } from '@phosphor-icons/react';
-import { type ITestPaper, useStandardLookups } from '@stores';
+import { useStandardLookups } from '@stores';
 import { useSetState } from 'react-use';
 import { MergeTestPapersModal } from './MergeTestPapersModal';
 
 interface IProps {
-  testPaper: ITestPaper;
+  testPaper: TestPaperDto;
   addNewSection: () => void;
 }
 
@@ -14,7 +15,7 @@ interface IState {
 }
 
 export const TestPaperDetails = ({ testPaper, addNewSection }: IProps) => {
-  const { isPublished, standards } = testPaper;
+  const { isPublished, standards = [] } = testPaper;
   const { getStandardNamesText } = useStandardLookups();
   const [state, setState] = useSetState<IState>({
     isOpenMergeTestPapersModal: false,

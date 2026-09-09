@@ -94,7 +94,7 @@ interface IProps {
   closeModal: () => void;
 }
 
-export const Symbol = ({ block, handleChange, closeModal }: IProps) => {
+export const Symbol = ({ handleChange, closeModal }: IProps) => {
   const handleSubmit = (name: string, content: string) => {
     handleChange({ type: EquationType.SYMBOL, name, content });
     closeModal();

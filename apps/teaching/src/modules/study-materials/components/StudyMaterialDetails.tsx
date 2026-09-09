@@ -1,9 +1,9 @@
-import { type IStandard, type ISubject } from '@stores';
+import { type StandardDto, type SubjectDto } from '@repo/shared/contracts';
 import { getStringFormattedDateWithTime } from '@utils/helpers';
 
 interface IProps {
-  standard: IStandard;
-  subject: ISubject;
+  standard: StandardDto;
+  subject: SubjectDto;
   count: number;
   lastUpdatedAt?: string;
 }

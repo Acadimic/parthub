@@ -37,7 +37,7 @@ export const Profile = () => {
       setLoading(true);
       successToast({ message: 'Photo successfuly uploaded' });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,7 @@ export const Profile = () => {
         <div className="w-full md:w-[50%] border border-color-border rounded-sm shadow-lg flex flex-col gap-6 items-center p-8">
           <img src="/images/logo-light.svg" alt="logo" />
           <div className="w-[100px] h-[100px] rounded-full bg-color-light flex items-center justify-center text-[50px] font-medium text-color-text">
-            {user.displayName && user.displayName[0]}
+            {user.displayName?.[0]}
           </div>
           <h1 className="text-4xl uppercase font-bold text-[#d029d6]">{user.displayName}</h1>
           <div className="py-2 px-6 rounded-2xl flex items-center justify-center bg-blue-600 font-bold uppercase tracking-widest text-white">

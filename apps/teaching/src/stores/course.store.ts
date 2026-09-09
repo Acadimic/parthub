@@ -1,13 +1,6 @@
-import {
-  type ClientEntity,
-  type ClientEntityWith,
-  type CourseDto,
-  type CourseStatsDto,
-  type ICourseModuleFields,
-  type IRequestSlice,
-  type PlanDto,
-  createRequestSlice,
-} from '@repo/shared';
+import { type CourseDto, type CourseStatsDto, type PlanDto } from '@repo/shared/contracts';
+import { type ICourseModuleFields } from '@repo/shared/interfaces';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { CurrencyType, MaterialType, PeriodType } from '../enums';
@@ -19,37 +12,31 @@ import { useSelectorStore } from './selector.store';
 import { useStandardStore } from './standard.store';
 import { useTestPaperStore } from './test-paper.store';
 
-export type ICourse = ClientEntityWith<
-  CourseDto,
-  'name' | 'slug' | 'standards' | 'subjects' | 'courses' | 'meets' | 'order' | 'isPublished' | 'attachments' | 'stats'
->;
-export type IPlan = ClientEntity<PlanDto>;
 export type ICourseModule = ICourseModuleFields & { isNew?: boolean };
-export type ICourseStats = CourseStatsDto;
 
 /** The fetches this store tracks. */
 type CourseFetch = 'courses' | 'plans' | 'courseModules';
 
 export interface ICourseState extends IRequestSlice<CourseFetch> {
-  courseMap: Record<string, ICourse>;
-  planMap: Record<string, IPlan>;
+  courseMap: Record<string, CourseDto>;
+  planMap: Record<string, PlanDto>;
   courseModuleMap: Record<string, ICourseModule>;
 
-  getCourseById: (courseId: string) => ICourse | undefined;
+  getCourseById: (courseId: string) => CourseDto | undefined;
   getCourseModuleById: (courseModuleId: string) => ICourseModule | undefined;
-  getCourses: () => ICourse[];
-  getPlans: () => IPlan[];
+  getCourses: () => CourseDto[];
+  getPlans: () => PlanDto[];
   getCourseModules: () => ICourseModule[];
   getCourseModulesByCourseId: (courseId: string) => ICourseModule[];
-  getPlansByCourseId: (courseId: string) => IPlan[];
+  getPlansByCourseId: (courseId: string) => PlanDto[];
   /** A course's subjects as select items, led by a "None" entry. Was a view on the model. */
   getCourseSubjectItems: (courseId: string) => { label: string; value: string }[];
 
-  addCourses: (courses: ICourse[]) => void;
-  addPlans: (plans: IPlan[]) => void;
+  addCourses: (courses: CourseDto[]) => void;
+  addPlans: (plans: PlanDto[]) => void;
   addCourseModules: (courseModules: ICourseModule[]) => void;
-  patchCourse: (courseId: string, fields: Partial<ICourse>) => void;
-  patchPlan: (planId: string, fields: Partial<IPlan>) => void;
+  patchCourse: (courseId: string, fields: Partial<CourseDto>) => void;
+  patchPlan: (planId: string, fields: Partial<PlanDto>) => void;
   patchCourseModule: (courseModuleId: string, fields: Partial<ICourseModule>) => void;
   /** Renames a course module and keeps its slug in step. */
   renameCourseModule: (courseModuleId: string, name: string) => void;
@@ -57,12 +44,12 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   removeCourseModuleById: (courseModuleId: string) => void;
 
   /** Adds an unsaved course with its monthly and yearly plans; returns it for the caller to select. */
-  createCourse: () => ICourse;
-  createPlan: (courseId: string, order: number, period: PeriodType) => IPlan;
+  createCourse: () => CourseDto;
+  createPlan: (courseId: string, order: number, period: PeriodType) => PlanDto;
   /** Adds an unsaved module and returns it, for the caller to select. */
   createCourseModule: (courseId: string) => ICourseModule;
   /** Recomputes a course's roll-ups from its modules and stores them on the course. */
-  calculateAndSetCourseStatsByCourseId: (courseId: string) => ICourseStats | undefined;
+  calculateAndSetCourseStatsByCourseId: (courseId: string) => CourseStatsDto | undefined;
 
   loadCourses: () => Promise<void>;
   loadCoursePlans: (courseId: string) => Promise<void>;
@@ -171,7 +158,7 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   },
 
   createPlan: (courseId, order, period) => {
-    const plan: IPlan = {
+    const plan: PlanDto = {
       _id: getObjectId(),
       name: capitalize(period),
       courses: [courseId],
@@ -191,7 +178,7 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
 
   createCourse: () => {
     const courseId = getObjectId();
-    const course: ICourse = {
+    const course: CourseDto = {
       _id: courseId,
       name: '',
       slug: '',
@@ -252,7 +239,7 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
       .getState()
       .getMeetsByIds(course.meets ?? [])
       .reduce((total, meet) => total + (meet.durationMins ?? 0), 0);
-    const stats: ICourseStats = {
+    const stats: CourseStatsDto = {
       daysCount: courseModules.length,
       videosCount: materialsStats.types[MaterialType.VIDEO],
       readingsCount: materialsStats.types[MaterialType.READING],
@@ -301,7 +288,7 @@ export const useCourseLookups = (): ICourseState => {
 };
 
 /** The selected course, or `undefined`. Replaces `selectorStore.selectedCourse`. */
-export const useSelectedCourse = (): ICourse | undefined => {
+export const useSelectedCourse = (): CourseDto | undefined => {
   const selectedCourseId = useSelectorStore((state) => state.selectedCourseId);
   return useCourseStore((state) => (selectedCourseId ? state.courseMap[selectedCourseId] : undefined));
 };
@@ -313,7 +300,7 @@ export const useSelectedCourseModule = (): ICourseModule | undefined => {
 };
 
 /** The selected course's plans. Replaces `selectorStore.selectedCoursePlans`. */
-export const useSelectedCoursePlans = (): IPlan[] => {
+export const useSelectedCoursePlans = (): PlanDto[] => {
   const selectedCourseId = useSelectorStore((state) => state.selectedCourseId);
   return useCourseStore(useShallow((state) => state.getPlansByCourseId(selectedCourseId)));
 };

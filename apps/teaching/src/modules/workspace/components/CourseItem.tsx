@@ -1,11 +1,12 @@
+import { type CourseDto } from '@repo/shared/contracts';
 import { Card } from '@repo/ui/app';
 import { PresignedImage } from '@components/app/attachments';
 import { CourseInfo, StandardWithLogo } from '@components/common';
-import { type ICourse, useStandardLookups, useSelectorLookups } from '@stores';
+import { useStandardLookups, useSelectorLookups } from '@stores';
 import Link from 'next/link';
 
 interface IProps {
-  course: ICourse;
+  course: CourseDto;
 }
 
 export const CourseItem = ({ course }: IProps) => {

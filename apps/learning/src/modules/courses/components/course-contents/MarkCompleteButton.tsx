@@ -10,7 +10,7 @@ interface IProps {
 }
 
 export const MarkCompleteButton = ({ testPaper, material }: IProps) => {
-  const item: ITestPaper | IMaterial | undefined = testPaper || material;
+  const item: ITestPaper | IMaterial | undefined = testPaper ?? material;
   const courseStore = useCourseLookups();
   const selectorStore = useSelectorLookups();
   const { selectedCourseId, selectedCourseModuleId } = selectorStore;

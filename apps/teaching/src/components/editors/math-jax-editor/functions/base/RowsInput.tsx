@@ -77,8 +77,6 @@ export const RowsInput = ({ rows, handleChange, closeModal, isRowColSame, isBord
     if (row & col) initializeRows(row, col);
   }, [row, col]);
 
-  console.log('####rows: ', rows);
-
   return (
     <div>
       <div className="flex gap-2 mb-8 w-full">

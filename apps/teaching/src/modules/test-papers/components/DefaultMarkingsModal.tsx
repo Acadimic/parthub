@@ -1,4 +1,4 @@
-import { type DefaultMarkingType } from '@repo/shared';
+import { type DefaultMarkingType } from '@repo/shared/interfaces';
 import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
 import { Marking, QuestionType } from '@enums';
 
@@ -75,7 +75,7 @@ export const DefaultMarkingsModal = ({ defaultMarkings, onSave, isOpen, isLoadin
                         <div className="w-28">
                           <TextInput
                             name={`${queType}-${Marking.CORRECT}`}
-                            value={marks.correct === undefined ? '' : marks.correct}
+                            value={marks.correct ?? ''}
                             type="number"
                             onChange={handleChangeMarkings}
                             placeholder={Marking.CORRECT}
@@ -87,7 +87,7 @@ export const DefaultMarkingsModal = ({ defaultMarkings, onSave, isOpen, isLoadin
                         <div className="w-28">
                           <TextInput
                             name={`${queType}-${Marking.INCORRECT}`}
-                            value={marks.incorrect === undefined ? '' : marks.incorrect}
+                            value={marks.incorrect ?? ''}
                             type="number"
                             onChange={handleChangeMarkings}
                             placeholder={Marking.INCORRECT}
@@ -99,7 +99,7 @@ export const DefaultMarkingsModal = ({ defaultMarkings, onSave, isOpen, isLoadin
                         <div className="w-28">
                           <TextInput
                             name={`${queType}-${Marking.UNATTEMPTED}`}
-                            value={marks.unattempted === undefined ? '' : marks.unattempted}
+                            value={marks.unattempted ?? ''}
                             type="number"
                             onChange={handleChangeMarkings}
                             placeholder={Marking.UNATTEMPTED}

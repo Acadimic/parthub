@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { OrgType, PermissionItem, SpecialPermissions } from '@repo/shared';
+import { OrgType, PermissionItem, SpecialPermissions } from '@repo/shared/enums';
 import { HydratedDocument } from 'mongoose';
 
 @Schema({ timestamps: true })

@@ -33,6 +33,15 @@ export const serializeRowBlocks = (rows: EquationBlock[][][], delimiter = '\\\\'
 // vmatrix → single vertical bars | |
 // Vmatrix → double vertical bars ‖ ‖
 
+/** The bordered/plain variants of a LaTeX array differ only in separators, so they are built once here. */
+const serializeTable = (equation: Extract<EquationBlock, { type: EquationType.TABLE }>): string => {
+  const bar = equation.isBordered ? '|' : '';
+  const columns = equation.rows.map(() => 'c').join(bar);
+  const leadingHline = equation.isBordered ? '\\hline ' : '';
+  const rowSeparator = equation.isBordered ? '\\\\ \\hline ' : undefined;
+  return `\\begin{array}{${bar}${columns} ${bar}} ${leadingHline} ${serializeRowBlocks(equation.rows, rowSeparator)} \\end{array}`;
+};
+
 export function serializeEquation(equation: EquationBlock): string {
   switch (equation.type) {
     case EquationType.TEXT:
@@ -44,7 +53,7 @@ export function serializeEquation(equation: EquationBlock): string {
     case EquationType.DETERMINANT:
       return `\\begin{vmatrix} ${serializeRowBlocks(equation.rows)} \\end{vmatrix}`;
     case EquationType.TABLE:
-      return `\\begin{array}{${equation.isBordered ? '|' : ''}${equation.rows.map(() => 'c').join(equation.isBordered ? '|' : '')} ${equation.isBordered ? '|' : ''}} ${equation.isBordered ? '\\hline ' : ''} ${serializeRowBlocks(equation.rows, equation.isBordered ? '\\\\ \\hline ' : undefined)} \\end{array}`;
+      return serializeTable(equation);
     case EquationType.SUPERSCRIPT:
       return `${serializeEquationBlocks(equation.content)}^{${serializeEquationBlocks(equation.exponent)}}`;
     case EquationType.SUBSCRIPT:
@@ -66,17 +75,39 @@ export function serializeBlocks(blocks: Block[], isEditing = false): React.React
   return blocks.map((block) => serializeBlock(block, isEditing));
 }
 
+const renderTextBlock = (block: Extract<Block, { type: EditorContentType.TEXT }>, isEditing: boolean) => {
+  if (!block.content && !isEditing) return <></>;
+  return (
+    <span
+      className={`pr-1.5 my-1 leading-4 ${block.className ? block.className : ''} ${block.bold ? '!font-bold' : ''} ${block.italic ? '!italic' : ''} ${block.underline ? '!underline' : ''}`}
+      dangerouslySetInnerHTML={{ __html: block.content }}
+    />
+  );
+};
+
+/** Ordered and unordered lists differ only in tag and marker style. */
+const renderListBlock = (
+  block: Extract<Block, { type: EditorContentType.LIST }> | Extract<Block, { type: EditorContentType.ORDERED_LIST }>,
+  isEditing: boolean,
+) => {
+  const isOrdered = block.type === EditorContentType.ORDERED_LIST;
+  const ListTag = isOrdered ? 'ol' : 'ul';
+  return (
+    <div className={isEditing ? 'px-1' : ''}>
+      {serializeBlocks(block.content, isEditing)}
+      <ListTag className={isOrdered ? 'list-decimal m-0' : 'list-disc m-0'}>
+        {block.items.map((blocks, index) => (
+          <li key={index}>{serializeBlocks(blocks, isEditing)}</li>
+        ))}
+      </ListTag>
+    </div>
+  );
+};
+
 export function serializeBlock(block: Block, isEditing = false): React.ReactNode {
   switch (block.type) {
     case EditorContentType.TEXT:
-      return !block.content && !isEditing ? (
-        <></>
-      ) : (
-        <span
-          className={`pr-1.5 my-1 leading-4 ${block.className ? block.className : ''} ${block.bold ? '!font-bold' : ''} ${block.italic ? '!italic' : ''} ${block.underline ? '!underline' : ''}`}
-          dangerouslySetInnerHTML={{ __html: block.content }}
-        />
-      );
+      return renderTextBlock(block, isEditing);
     case EditorContentType.CODE:
       return (
         <div className="font-mono mr-1.5">
@@ -99,27 +130,8 @@ export function serializeBlock(block: Block, isEditing = false): React.ReactNode
         </div>
       );
     case EditorContentType.LIST:
-      return (
-        <div className={isEditing ? 'px-1' : ''}>
-          {serializeBlocks(block.content, isEditing)}
-          <ul className="list-disc m-0">
-            {block.items.map((blocks, index) => (
-              <li key={index}>{serializeBlocks(blocks, isEditing)}</li>
-            ))}
-          </ul>
-        </div>
-      );
     case EditorContentType.ORDERED_LIST:
-      return (
-        <div className={isEditing ? 'px-1' : ''}>
-          {serializeBlocks(block.content, isEditing)}
-          <ol className="list-decimal m-0">
-            {block.items.map((blocks, index) => (
-              <li key={index}>{serializeBlocks(blocks, isEditing)}</li>
-            ))}
-          </ol>
-        </div>
-      );
+      return renderListBlock(block, isEditing);
     case EditorContentType.EQUATION:
       return (
         <div className="inline-table mr-1.5">
@@ -406,18 +418,16 @@ export const getTextWithEquationBlocks = (block: Block, isLastBlock = false): Bl
       blocks = getTextAndEquationBlocks(block.content);
       break;
     case EditorContentType.LIST:
-      block.content = block.content.map((content, i) => getTextWithEquationBlocks(content)).flat();
-      block.items = block.items.map((item) =>
-        item.map((itemContent, i) => getTextWithEquationBlocks(itemContent)).flat(),
-      );
+      block.content = block.content.map((content) => getTextWithEquationBlocks(content)).flat();
+      block.items = block.items.map((item) => item.map((itemContent) => getTextWithEquationBlocks(itemContent)).flat());
       blocks = [block, { type: EditorContentType.TEXT, content: '&nbsp;&nbsp;<br/>' }];
       break;
     case EditorContentType.HEADING:
-      block.content = block.content.map((content, i) => getTextWithEquationBlocks(content)).flat();
+      block.content = block.content.map((content) => getTextWithEquationBlocks(content)).flat();
       blocks = [block];
       break;
     case EditorContentType.LINK:
-      block.content = block.content.map((content, i) => getTextWithEquationBlocks(content)).flat();
+      block.content = block.content.map((content) => getTextWithEquationBlocks(content)).flat();
       blocks = [block, { type: EditorContentType.TEXT, content: '&nbsp;&nbsp;<br/>' }];
       break;
     default:

@@ -31,10 +31,6 @@ export const Fraction = ({ block, handleChange, closeModal }: IProps) => {
     setDenominator([...block.denominator]);
   }, [block]);
 
-  console.log('####numerator: ', numerator);
-  console.log('####denominator: ', denominator);
-  console.log('####FractionBlock: ', block);
-
   return (
     <div>
       <div className="flex flex-col gap-2 divide-y-2 divide-color-border py-8">

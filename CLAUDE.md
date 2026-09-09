@@ -68,7 +68,15 @@ pnpm --filter @repo/ui <script>
 
 ### Where shared code lives
 
-- **`packages/shared` (`@repo/shared`)** — pure TypeScript, no React: enums, DTOs, interfaces, constants. Consumed by the server and all three apps. Compiled with `tsc`; run `pnpm build:shared` after changes. Subpath exports: `@repo/shared`, `@repo/shared/enums`, `@repo/shared/interfaces`, `@repo/shared/validations`, `@repo/shared/contracts`. The validation DTOs are deliberately kept out of the root barrel so class-validator never reaches a browser bundle; `contracts/` re-exports their shapes as types only.
+- **`packages/shared` (`@repo/shared`)** — pure TypeScript, no React: enums, DTOs, interfaces, constants. Consumed by the server and all three apps. Compiled with `tsc`; run `pnpm build:shared` after changes. **Every consumer reads its types from
+  `dist/*.d.ts`**, not from source, and that is load-bearing rather than incidental: this tsconfig
+  sets `experimentalDecorators: true` and `strictPropertyInitialization: false` for the
+  class-validator DTOs, so mapping the package to source pulls `src/dtos/` into the importing
+  workspace's program, where it is rechecked under that workspace's stricter options. Doing so was
+  measured at 667 errors, all of them inside `packages/shared/src/dtos/` (559 `TS1240`,
+  108 `TS2564`) and none in app code. The declaration output is what lets shared keep those two
+  exceptions to itself, which is why a stale `dist` shows up as a misleading type error in a
+  consumer and why `build:shared` comes first. `declarationMap` and `sourceMap` are on, so go-to-definition and the debugger follow `dist` back to `src/*.ts` — you read and edit the source, while resolution still goes through the declaration output. Seven entry points: `@repo/shared` plus `/contracts`, `/enums`, `/interfaces`, `/responses`, `/utils` and `/validations`. **Import the subpath, never the root barrel** — the root is the union of the other six with no name in two of them, so the subpath is what says whether a name is a wire shape, an enum, a pure interface or a runtime helper. Source has zero root-barrel imports; `.` stays published only because `main`/`types` point at it. The validation DTOs are deliberately kept out of the root barrel so class-validator never reaches a browser bundle; `contracts/` re-exports their shapes as types only.
 - **`packages/ui` (`@repo/ui`)** — every shared React component, consumed as TS source via `transpilePackages` (no build): `ui/` shadcn primitives, `core/` wrappers over them, `app/` components composed from `core/`, plus `contexts/`, `hooks/`, `lib/` (cn, date-time, pure and browser helpers), `themes/` (light/dark used by every app's `tailwind.config.js`) and `types/` (React-aware item types such as `ISelectItem`, `IMenuItem`, `IColumnData`). Subpaths: `.`, `./core`, `./app`, `./ui/*`, `./contexts`, `./hooks`, `./lib`, `./themes`, `./types`. **`./app` is deliberately not in the root barrel**: fourteen names exist in both `core` and `app` with different APIs. See `packages/ui/README.md` for the layer rules and for which components stay in the apps and why.
 - **Components are imported straight from the package.** Feature code writes `from '@repo/ui/app'` or `from '@repo/ui/core'`; there are no pass-through component barrels. An app keeps an `index.ts` under `src/components` only where that folder still holds its own components, and it exports those alone.
 - **Non-component barrels remain**, because they mix shared and app-only values: `src/enums/index.ts` re-exports `@repo/shared/enums` plus app-only enums; `src/interfaces/index.ts` re-exports shared pure types and `@repo/ui/types` plus app-only interfaces; `src/themes`, `src/hooks/dimensions.hook.ts` and `src/utils/helpers/index.ts` re-export from `@repo/ui`. App `src/utils/helpers/util.ts` holds only helpers that depend on app stores/services.
@@ -194,6 +202,10 @@ touching any version.
     above a module (`from '..'`);
   - `packages/shared` may not import React, Next or `@repo/ui`;
   - the server may not import React or `@repo/ui`.
+  - no workspace may reach into another's build output (`@repo/*/dist/**`, or a relative
+    `packages/<name>/dist`); import a published subpath instead. Deep paths into a _third-party_
+    package are deliberately not covered — `@phosphor-icons/react/dist/ssr` and
+    `razorpay/dist/utils/razorpay-utils` publish no exports entry for what they expose.
 
   The message on each one names the fix, so a failure tells you what to do instead.
 

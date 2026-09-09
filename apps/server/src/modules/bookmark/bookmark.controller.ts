@@ -1,5 +1,5 @@
 import { BookmarkDto } from '@repo/shared/validations';
-import { PermissionItem, Subdomain } from '@repo/shared';
+import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body } from '@nestjs/common';

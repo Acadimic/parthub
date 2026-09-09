@@ -4,10 +4,13 @@ import { type ICourseStats } from '@stores';
 import { getTwoDigit } from '@utils/helpers';
 
 interface IProps {
-  courseStats: ICourseStats;
+  /** Absent until the server has computed the course's rollups. */
+  courseStats?: ICourseStats;
 }
 
 export const CourseInfo = ({ courseStats }: IProps) => {
+  if (!courseStats) return null;
+
   return (
     <div className="flex items-center text-color-secondary w-full">
       <div className="flex items-center md:gap-4 gap-3 font-medium w-full">

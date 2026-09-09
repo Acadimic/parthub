@@ -1,3 +1,4 @@
+import { type MarkingType } from '@repo/shared/interfaces';
 import { Bookmark } from '@components/common';
 import { Html } from '@components/others';
 import { CollectionType, Marking, QuestionType } from '@enums';
@@ -16,6 +17,35 @@ interface IProps {
   toggleTimer: () => void;
   openInstruction: () => void;
 }
+
+/**
+ * The score line beside a question: what the learner actually scored once the question is answered,
+ * and what is on offer before that.
+ */
+const QuestionScore = ({
+  isCompleted,
+  marks,
+  markings,
+}: {
+  isCompleted: boolean;
+  marks: number;
+  markings: MarkingType;
+}) => {
+  if (!isCompleted) {
+    return (
+      <>
+        <div className="text-green-primary">+{markings[Marking.CORRECT]}</div>
+        <div className="text-red-primary">-{-markings[Marking.INCORRECT]}</div>
+      </>
+    );
+  }
+  return (
+    <div className={`${marks > 0 ? 'text-green-primary' : 'text-red-primary'}`}>
+      {marks > 0 ? '+' : ''}
+      {marks}
+    </div>
+  );
+};
 
 export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstruction }: IProps) => {
   const testPaperStore = useTestPaperLookups();
@@ -42,7 +72,6 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
   const sectionObjects = getTestPaperSectionsByIds(exam.sections);
 
   const {
-    canShowAnswer,
     getAnswersByQuestionId,
     getCurrentQuestionIndex,
     getResponsesByQuestionId,
@@ -99,17 +128,11 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
                 </div>
                 <div className="flex justify-start items-center text-xs font-semibold space-x-3">
                   <div className="blue-gradient">{getSelectedQuestionReplyTime()}</div>
-                  {isSelectedQuestionCompleted() ? (
-                    <div className={`${marks > 0 ? 'text-green-primary' : 'text-red-primary'}`}>
-                      {marks > 0 ? '+' : ''}
-                      {marks}
-                    </div>
-                  ) : (
-                    <>
-                      <div className="text-green-primary">+{selectedQuestion.markings[Marking.CORRECT]}</div>
-                      <div className="text-red-primary">-{-selectedQuestion.markings[Marking.INCORRECT]}</div>
-                    </>
-                  )}
+                  <QuestionScore
+                    isCompleted={isSelectedQuestionCompleted()}
+                    marks={marks}
+                    markings={selectedQuestion.markings}
+                  />
                   <Bookmark collectionItem={selectedQuestion._id} collectionRef={CollectionType.QUESTION} />
                 </div>
               </div>
@@ -139,6 +162,7 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
                         (option) => option.option,
                       )}
                       isAnswer={
+                        !selectedQuestion.questionType ||
                         ![QuestionType.BOOLEAN, QuestionType.SINGLE_CHOICE, QuestionType.MULTIPLE_CHOICE].includes(
                           selectedQuestion.questionType,
                         )

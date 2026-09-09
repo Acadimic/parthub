@@ -16,7 +16,7 @@ export const MaterialItem = ({ material }: IProps) => {
       (attachment) => attachment._id === selectedAttachment?._id,
     );
     if (!isMaterialAttachment) {
-      setSelectedContent(material.content);
+      setSelectedContent(material.content ?? '');
       removeSelectedAttachment();
     }
   }, [selectedAttachment?._id, material?._id]);

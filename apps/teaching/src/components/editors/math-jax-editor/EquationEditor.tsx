@@ -49,9 +49,7 @@ export const EquationEditor = ({ blocks, handleChange, label, autoFocus }: IProp
   };
 
   const handleBlockBlur = (event: MouseEvent) => {
-    console.log('####handleBlockBlur: ');
     if (editorContainerRef.current && !editorContainerRef.current.contains(event.target as Node)) {
-      console.log('Clicked outside');
       // setHasFocus(false);
     }
   };
@@ -75,7 +73,6 @@ export const EquationEditor = ({ blocks, handleChange, label, autoFocus }: IProp
   const onCloseModal = () => {
     for (let i = selectedBlockIndex + 1; i < equationBlocks.length; i++) {
       if (equationBlocks[i].type === EquationType.TEXT) {
-        console.log('####onCloseModal: ', i);
         setSelectedBlockIndex(i);
         setHasFocus(true);
         setRenderFocus(!renderFocus);
@@ -114,7 +111,6 @@ export const EquationEditor = ({ blocks, handleChange, label, autoFocus }: IProp
     setHasFocus(autoFocus || false);
   }, []);
 
-  console.log('####equationBlocks: ', equationBlocks, selectedBlockIndex);
   // console.log('####blocks: ', blocks);
   // console.log('####selectedEquationBlockIndex: ', selectedBlockIndex, equationBlocks[selectedBlockIndex]);
 

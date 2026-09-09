@@ -40,7 +40,6 @@ export const UpsertCourseModuleModal = ({ isOpen, onClose }: IProps) => {
   const { getSubjectById } = useStandardLookups();
   const { removeCourseModuleById, calculateAndSetCourseStatsByCourseId } = courseStore;
   const { getMaterialsByStandardIds } = materialStore;
-  const { getMeetsByIds } = meetStore;
   const meets = meetStore.getMeets();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -108,7 +107,7 @@ export const UpsertCourseModuleModal = ({ isOpen, onClose }: IProps) => {
                   items={getMaterialsByStandardIds(selectedCourse.standards ?? []).map((material) => ({
                     label: material.name,
                     value: material._id,
-                    group: getSubjectById(material.subject)?.name,
+                    group: material.subject ? getSubjectById(material.subject)?.name : undefined,
                   }))}
                   required
                   isGrouped
@@ -134,7 +133,7 @@ export const UpsertCourseModuleModal = ({ isOpen, onClose }: IProps) => {
                   items={meets.map((meet) => ({
                     label: meet.title,
                     value: meet._id,
-                    group: getFrequencyText([...meet.weekDays], meet.startTime),
+                    group: meet.startTime ? getFrequencyText([...(meet.weekDays ?? [])], meet.startTime) : '',
                     description: meet.description,
                   }))}
                   required

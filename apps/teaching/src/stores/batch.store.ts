@@ -1,11 +1,5 @@
-import {
-  type BatchDto,
-  type ClientEntity,
-  type ClientEntityWith,
-  type IRequestSlice,
-  type UserBatchMappingDto,
-  createRequestSlice,
-} from '@repo/shared';
+import { type BatchDto, type UserBatchMappingDto } from '@repo/shared/contracts';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -14,22 +8,19 @@ import { getObjectId } from '../utils/helpers';
 import { useSelectorStore } from './selector.store';
 import { type IUser, isStudentUser, useUserStore } from './user.store';
 
-export type IBatch = ClientEntityWith<BatchDto, 'name' | 'standard' | 'year'>;
-export type IUserBatchMapping = ClientEntity<UserBatchMappingDto>;
-
 /** The fetches this store tracks. */
 type BatchFetch = 'batchesData';
 
 export interface IBatchState extends IRequestSlice<BatchFetch> {
-  batchMap: Record<string, IBatch>;
-  userBatchMap: Record<string, IUserBatchMapping>;
+  batchMap: Record<string, BatchDto>;
+  userBatchMap: Record<string, UserBatchMappingDto>;
 
-  getBatchById: (batchId: string) => IBatch | undefined;
-  getBatches: () => IBatch[];
-  getBatchesByIds: (batchIds: string[]) => IBatch[];
-  getBatchesByStandardId: (standardId: string) => IBatch[];
-  getBatchesByStandardIds: (standardIds: string[]) => IBatch[];
-  getUserBatchMappings: () => IUserBatchMapping[];
+  getBatchById: (batchId: string) => BatchDto | undefined;
+  getBatches: () => BatchDto[];
+  getBatchesByIds: (batchIds: string[]) => BatchDto[];
+  getBatchesByStandardId: (standardId: string) => BatchDto[];
+  getBatchesByStandardIds: (standardIds: string[]) => BatchDto[];
+  getUserBatchMappings: () => UserBatchMappingDto[];
   getBatchItems: () => ISelectItem[];
   /** Every user mapped to a batch, students and staff alike. Reads the user store. */
   getBatchMembers: (batchId: string) => IUser[];
@@ -40,14 +31,14 @@ export interface IBatchState extends IRequestSlice<BatchFetch> {
   getBatchStudents: (batchId: string) => IUser[];
   getBatchStudentIds: (batchId: string) => string[];
 
-  addBatches: (batches: IBatch[]) => void;
-  addUserBatchMappings: (mappings: IUserBatchMapping[]) => void;
-  patchBatch: (batchId: string, fields: Partial<IBatch>) => void;
+  addBatches: (batches: BatchDto[]) => void;
+  addUserBatchMappings: (mappings: UserBatchMappingDto[]) => void;
+  patchBatch: (batchId: string, fields: Partial<BatchDto>) => void;
   removeBatchById: (batchId: string) => void;
   removeUserBatchMappingByUserIdAndBatchId: (userId: string, batchId: string) => void;
 
   /** Adds an unsaved batch and returns it, for the caller to select. */
-  createBatch: (name: string, standardId: string) => IBatch;
+  createBatch: (name: string, standardId: string) => BatchDto;
 
   loadBatchesData: () => Promise<void>;
   reset: () => void;
@@ -70,7 +61,7 @@ export const useBatchStore = create<IBatchState>()((set, get) => ({
 
   getBatchesByIds: (batchIds) => {
     const { batchMap } = get();
-    return batchIds.map((batchId) => batchMap[batchId]).filter((batch): batch is IBatch => !!batch);
+    return batchIds.map((batchId) => batchMap[batchId]).filter((batch): batch is BatchDto => !!batch);
   },
 
   getBatchesByStandardId: (standardId) =>
@@ -153,7 +144,7 @@ export const useBatchStore = create<IBatchState>()((set, get) => ({
   },
 
   createBatch: (name, standardId) => {
-    const batch: IBatch = {
+    const batch: BatchDto = {
       _id: getObjectId(),
       name,
       standard: standardId,
@@ -196,7 +187,7 @@ export const useBatchLookups = (): IBatchState => {
 };
 
 /** The selected batch, or `undefined`. Replaces `selectorStore.selectedBatch`. */
-export const useSelectedBatch = (): IBatch | undefined => {
+export const useSelectedBatch = (): BatchDto | undefined => {
   const selectedBatchId = useSelectorStore((state) => state.selectedBatchId);
   return useBatchStore((state) => (selectedBatchId ? state.batchMap[selectedBatchId] : undefined));
 };

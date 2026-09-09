@@ -1,7 +1,6 @@
 import { Button } from '@repo/ui/app';
 import { DotsNineIcon } from '@phosphor-icons/react';
 import { type ITestPaper } from '@stores';
-import { useRouter } from 'next/router';
 
 interface IProps {
   paper: ITestPaper;
@@ -18,8 +17,6 @@ const InfoItem = ({ name, value }: { name: string; value: string | number }) => 
 };
 
 export const TestPaperCard = ({ paper, handleOpen }: IProps) => {
-  const { push } = useRouter();
-
   // const onClickAttempt = () => {
   //   const pathname = '/attempt';
   //   const params = { pathname, query: { id: paper._id } };
@@ -50,9 +47,9 @@ export const TestPaperCard = ({ paper, handleOpen }: IProps) => {
           <div className="text-sm font-semibold truncate">{paper.name}</div>
         </div>
         <div className="flex justify-center space-x-8 items-center">
-          <InfoItem name="Ques" value={paper.totalQuestions} />
-          <InfoItem name="Marks" value={paper.maxMarks} />
-          <InfoItem name="Mins" value={paper.durationMins} />
+          <InfoItem name="Ques" value={paper.totalQuestions ?? 0} />
+          <InfoItem name="Marks" value={paper.maxMarks ?? 0} />
+          <InfoItem name="Mins" value={paper.durationMins ?? 0} />
         </div>
         <div className="flex justify-around">
           <Button text="Practice" onClick={onClickPractice} />

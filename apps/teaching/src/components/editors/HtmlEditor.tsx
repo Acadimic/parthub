@@ -29,7 +29,6 @@ export function HtmlEditor(props: IProps) {
     hideToolbar,
     setParentFocus,
     minHeight,
-    width,
     // setPosition,
     isAutoFocus,
     isDisabled,
@@ -95,7 +94,6 @@ export function HtmlEditor(props: IProps) {
 
   function doSave() {
     savedSelection = saveSelection(document.getElementById(name));
-    console.log('####savedSelection: ', savedSelection);
   }
 
   function doRestore() {

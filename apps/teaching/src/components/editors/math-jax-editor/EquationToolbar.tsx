@@ -301,8 +301,6 @@ export const EquationToolbar = ({ handleChange, block, onClose }: IProps) => {
     }
   }, [block]);
 
-  console.log('####selectedBlock: ', selectedBlock);
-
   return (
     <div className="text-sm opacity-90">
       <div className="flex gap-2 items-center bg-background-paper w-full border border-color-border">
@@ -316,7 +314,7 @@ export const EquationToolbar = ({ handleChange, block, onClose }: IProps) => {
           ].map((item) => (
             <div
               className="text-sm cursor-pointer px-3 py-1 hover:text-blue-primary h-full flex items-center"
-              onClick={(event) => {
+              onClick={() => {
                 // event.stopPropagation();
                 handleSelect(item);
               }}
@@ -378,7 +376,7 @@ export const EquationToolbar = ({ handleChange, block, onClose }: IProps) => {
             groupedEquationToolbarItems
               .flatMap((g) => g.items)
               .find((item) => item.name === selectedBlock.type)
-              ?.component({ block: selectedBlock, handleChange, closeModal })) || <div />
+              ?.component({ block: selectedBlock, handleChange, closeModal })) ?? <div />
         }
       />
     </div>

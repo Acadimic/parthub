@@ -31,7 +31,7 @@ export const UpsertChapterModal = ({ isOpen, onClose }: IProps) => {
       useStandardStore.getState().patchChapter(chapterId, { isNew: false });
       onClose();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }

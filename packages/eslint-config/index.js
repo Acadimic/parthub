@@ -106,6 +106,37 @@ const APP_ALIASES = [
 const CLIMBING_RELATIVE = '../../../*';
 
 /**
+ * A workspace package's build output is private.
+ *
+ * `@repo/shared` is consumed as compiled CommonJS — by apps/server at runtime, and by the three
+ * apps and packages/ui for types — so `dist/` genuinely is where its types come from. That is not
+ * incidental and cannot be swapped for source resolution: shared's own tsconfig sets
+ * `experimentalDecorators: true` and `strictPropertyInitialization: false` for the class-validator
+ * DTOs, and mapping the package to source pulls `src/dtos/` into the importing program, where it is
+ * rechecked under that workspace's stricter options. Doing so produces 667 errors in
+ * `packages/shared/src/dtos/` alone (559 TS1240, 108 TS2564) and none anywhere else. The `.d.ts`
+ * output is the boundary that lets shared keep those two exceptions to itself.
+ *
+ * What this rule forbids is reaching *past the published subpaths* into that output.
+ * `@repo/shared` exports seven entry points — `.`, `./contracts`, `./enums`, `./interfaces`,
+ * `./responses`, `./utils` and `./validations` — and a deep `dist/` import bypasses all of them: it
+ * pins the importer to the compiler's directory layout, and it defeats the one guarantee the
+ * subpaths provide, which is that `./validations` (and only it) carries class-validator. A browser
+ * bundle that reaches `@repo/shared/dist/dtos/validations/...` picks up the decorators the subpath
+ * split exists to keep out.
+ *
+ * Scoped to `@repo/*`, and to a workspace `packages/<name>/dist` reached relatively, on purpose. Two
+ * third-party packages here legitimately expose only a deep path — `@phosphor-icons/react/dist/ssr`
+ * and `razorpay/dist/utils/razorpay-utils` publish no exports entry for them — and forbidding those
+ * would be a rule about someone else's packaging rather than about this repo's layering.
+ */
+const NO_PACKAGE_DIST = {
+  group: ['@repo/*/dist', '@repo/*/dist/**', '**/packages/*/dist', '**/packages/*/dist/**'],
+  message:
+    "A workspace package's dist/ is build output, not its API. Import a published subpath instead: '@repo/shared/contracts', '@repo/shared/enums', '@repo/shared/interfaces', '@repo/shared/responses', '@repo/shared/utils', or (server only) '@repo/shared/validations'. Reaching into dist/ pins you to the compiler's layout and bypasses the subpath split that keeps class-validator out of the browser bundles.",
+};
+
+/**
  * Layering, as `error`. Each of these has no violations today; the rule is what keeps it that way.
  * See `packages/ui/README.md` for the reasoning behind each one.
  */
@@ -116,6 +147,7 @@ const layerRules = {
       'error',
       {
         patterns: [
+          NO_PACKAGE_DIST,
           {
             group: ['@repo/ui/ui/*'],
             message:
@@ -136,6 +168,7 @@ const layerRules = {
       'error',
       {
         patterns: [
+          NO_PACKAGE_DIST,
           {
             group: APP_ALIASES,
             message: 'packages/ui cannot import an app. Take the value as a prop instead (README rule 3).',
@@ -173,6 +206,7 @@ const layerRules = {
       'error',
       {
         patterns: [
+          NO_PACKAGE_DIST,
           {
             group: ['react', 'react-*', 'next', 'next/*', '@repo/ui', '@repo/ui/*'],
             message:
@@ -189,6 +223,7 @@ const layerRules = {
       'error',
       {
         patterns: [
+          NO_PACKAGE_DIST,
           {
             group: ['@repo/ui', '@repo/ui/*', 'react', 'react-*'],
             message: 'The server shares code through @repo/shared, never through the React package.',
