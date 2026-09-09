@@ -1,200 +1,272 @@
-import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
-import { AccountType, Gender, DefaultRole, StorageKey } from '../enums';
-import { MappingService, UserService } from '../services';
-import { getObjectId } from '../utils/helpers';
 import {
-  type IOrg,
-  type IStandard,
-  type IStudentStandardMapping,
-  type IUser,
-  Org,
-  StudentStandardMapping,
-  User,
-} from './models';
-import { type IStore } from './root.store';
+  type ClientEntity,
+  type IRequestSlice,
+  type OrgDto,
+  type StudentStandardMappingDto,
+  type UserDto,
+  createRequestSlice,
+} from '@repo/shared';
+import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
+import { AccountType, DefaultRole, Gender, StorageKey } from '../enums';
+import { FollowerService, MappingService, UserService } from '../services';
+import { getObjectId } from '../utils/helpers';
+import { useSelectorStore } from './selector.store';
+import { type IStandard, useStandardStore } from './standard.store';
 
-export const UserStore = t
-  .model({
-    userMaps: t.map(User),
-    orgMaps: t.map(Org),
-    studentStandardMaps: t.map(StudentStandardMapping),
-    loggedInUserIds: t.optional(t.array(t.string), []),
-    isLoadingUsers: t.optional(t.boolean, false),
-    isLoadedUsers: t.optional(t.boolean, false),
-    isLoadingLoggedInUsers: t.optional(t.boolean, false),
-    isLoadedLoggedInUsers: t.optional(t.boolean, false),
-  })
-  .views((self) => ({
-    get rootStore() {
-      return getRoot<IStore>(self);
-    },
+/**
+ * A user in the store. `photoUrl` is client-only — the API sends `avatar` — and is stripped from
+ * every request by `CLIENT_ONLY_KEYS`.
+ */
+export type IUser = ClientEntity<UserDto> & {
+  photoUrl?: string | null;
+  followersCount?: number;
+  isLoadedFollowersCount?: boolean;
+  isLoadingFollowersCount?: boolean;
+  isLoadedCompletedModules?: boolean;
+};
+export type IOrg = ClientEntity<OrgDto>;
+export type IStudentStandardMapping = ClientEntity<StudentStandardMappingDto>;
 
-    getUserById(userId: string): IUser | undefined {
-      return userId ? self.userMaps.get(userId) : undefined;
-    },
+/** Whether a user is a student. Was the `isStudent` view on the MST model. */
+export const isStudentUser = (user: IUser): boolean => user.permission === DefaultRole.STUDENT;
 
-    getOrgById(orgId: string): IOrg | undefined {
-      return orgId ? self.orgMaps.get(orgId) : undefined;
-    },
+/** The fetches this store tracks. */
+type UserFetch = 'loggedInUsers' | 'studentStandardMappings';
 
-    get users(): IUser[] {
-      return Array.from(self.userMaps.values());
-    },
+export interface IUserState extends IRequestSlice<UserFetch> {
+  userMap: Record<string, IUser>;
+  orgMap: Record<string, IOrg>;
+  studentStandardMap: Record<string, IStudentStandardMapping>;
+  loggedInUserIds: string[];
 
-    get studentStandardMappings(): IStudentStandardMapping[] {
-      return Array.from(self.studentStandardMaps.values());
-    },
+  getUserById: (userId: string) => IUser | undefined;
+  getOrgById: (orgId: string) => IOrg | undefined;
+  getUsers: () => IUser[];
+  getUsersByIds: (userIds: string[]) => IUser[];
+  getLoggedInUsers: () => IUser[];
+  getStudents: () => IUser[];
+  getCollaborators: () => IUser[];
+  getStudentStandardMappings: () => IStudentStandardMapping[];
+  getStudentStandardMappingsByStudentId: (studentId: string) => IStudentStandardMapping[];
+  getStudentStandardsByStudentId: (studentId: string) => IStandard[];
+  getStudentEnrolledDateByStudentId: (studentId: string) => string;
 
-    removeUserByUserId(userId: string) {
-      return self.userMaps.delete(userId);
-    },
-  }))
-  .views((self) => ({
-    getUsersByIds(userIds: string[]): IUser[] {
-      const users: IUser[] = [];
-      userIds.forEach((userId) => {
-        const user = self.getUserById(userId);
-        if (user) users.push(user);
-      });
-      return users;
-    },
+  addUsers: (users: IUser[]) => void;
+  addOrgs: (orgs: IOrg[]) => void;
+  addStudentStandardMaps: (mappings: IStudentStandardMapping[]) => void;
+  patchUser: (userId: string, fields: Partial<IUser>) => void;
+  /** Sets a name part and keeps the joined `name` in step — the model's setters did both. */
+  setUserName: (userId: string, parts: { firstName?: string; lastName?: string }) => void;
+  removeUserByUserId: (userId: string) => void;
+  removeNewUsers: () => void;
 
-    getStudentStandardMappingsByStudentId(studentId: string): IStudentStandardMapping[] {
-      return self.studentStandardMappings.filter((item) => item.student === studentId);
-    },
-  }))
-  .views((self) => ({
-    get loggedInUsers(): IUser[] {
-      return self.getUsersByIds(self.loggedInUserIds);
-    },
-  }))
-  .actions((self) => ({
-    addUser: (user: IUser) => {
-      if (!user) return;
-      const userId = user._id;
-      const isUser = self.userMaps.has(userId);
-      if (isUser) self.userMaps.set(userId, user);
-      else self.userMaps.put(user);
-    },
+  /** Adds an unsaved user with the given permission and returns it. */
+  getNewUser: (permission: DefaultRole) => IUser;
+  createStudent: () => IUser;
+  createCollaborator: (permission: DefaultRole) => IUser;
 
-    addOrg: (org: IOrg) => {
-      if (!org) return;
-      const orgId = org._id;
-      const isOrg = self.orgMaps.has(orgId);
-      if (isOrg) self.orgMaps.set(orgId, org);
-      else self.orgMaps.put(org);
-    },
+  /** Fetches a user's follower count into their row. Was `loadFollowersCount` on the model. */
+  loadFollowersCount: (userId: string) => Promise<void>;
+  loadLoggedInUsers: () => Promise<void>;
+  loadStudentStandardMappings: () => Promise<void>;
+  reset: () => void;
+}
 
-    addStudentStandardMap: (obj: IStudentStandardMapping) => {
-      if (!obj) return;
-      const id = obj._id;
-      const isPresent = self.studentStandardMaps.has(id);
-      if (isPresent) self.studentStandardMaps.set(id, obj);
-      else self.studentStandardMaps.put(obj);
-    },
+const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
+  rows.reduce<Record<string, T>>((map, row) => {
+    map[row._id] = row;
+    return map;
+  }, {});
 
-    removeNewUsers: () => {
-      const newUsers = self.users.filter((user) => user.isNew);
-      newUsers.forEach((user) => self.removeUserByUserId(user._id));
-    },
-  }))
-  .actions((self) => ({
-    addUsers: (users: IUser[]) => {
-      users.forEach((user) => self.addUser(user));
-    },
+export const useUserStore = create<IUserState>()((set, get) => ({
+  userMap: {},
+  orgMap: {},
+  studentStandardMap: {},
+  loggedInUserIds: [],
+  ...createRequestSlice(['loggedInUsers', 'studentStandardMappings'], set, get),
 
-    addOrgs: (orgs: IOrg[]) => {
-      orgs.forEach((org) => self.addOrg(org));
-    },
+  getUserById: (userId) => (userId ? get().userMap[userId] : undefined),
 
-    addStudentStandardMaps: (mapItems: IStudentStandardMapping[]) => {
-      mapItems.forEach((mapItem) => self.addStudentStandardMap(mapItem));
-    },
+  getOrgById: (orgId) => (orgId ? get().orgMap[orgId] : undefined),
 
-    getNewUser: (permission: DefaultRole) => {
-      const user = User.create({
-        _id: getObjectId(),
-        firstName: '',
-        lastName: '',
-        name: '',
-        uid: '',
-        email: '',
-        gender: Gender.OTHER,
-        role: '',
-        designation: '',
-        permission,
-        accountType: AccountType.INVITED,
-        isUpdated: false,
-        isNew: true,
-        ...self.rootStore.selectorStore.selectedData,
-      });
-      self.addUser(user);
-      return user;
-    },
-  }))
-  .actions((self) => ({
-    loadLoggedInUsers: flow(function* () {
-      self.isLoadingLoggedInUsers = true;
-      try {
-        const result = yield UserService.getInitialLoginData();
-        if (!result?.data) {
-          self.isLoadingLoggedInUsers = false;
-          return;
-        }
-        self.addUsers(result.data.users);
-        self.addOrgs(result.data.orgs);
-        self.loggedInUserIds = result.data.users.map((user: IUser) => user._id);
-        const org = localStorage.getItem(StorageKey.ORGANIZATION);
-        let user = org ? self.loggedInUsers.find((u) => u.org === org) : self.loggedInUsers[0];
-        user = user || self.loggedInUsers[0];
-        self.rootStore.selectorStore.selectUserAndOrgLeader(user);
-        self.isLoadedLoggedInUsers = true;
-      } catch (error: unknown) {
-        console.error('Error:', error);
-      } finally {
-        self.isLoadingLoggedInUsers = false;
+  getUsers: () => Object.values(get().userMap),
+
+  getUsersByIds: (userIds) => {
+    const { userMap } = get();
+    return userIds.map((userId) => userMap[userId]).filter((user): user is IUser => !!user);
+  },
+
+  getLoggedInUsers: () => get().getUsersByIds(get().loggedInUserIds),
+
+  getStudents: () => get().getUsers().filter(isStudentUser),
+
+  getCollaborators: () =>
+    get()
+      .getUsers()
+      .filter((user) => !isStudentUser(user)),
+
+  getStudentStandardMappings: () => Object.values(get().studentStandardMap),
+
+  getStudentStandardMappingsByStudentId: (studentId) =>
+    get()
+      .getStudentStandardMappings()
+      .filter((mapping) => mapping.student === studentId),
+
+  getStudentStandardsByStudentId: (studentId) =>
+    useStandardStore.getState().getStandardsByIds(
+      get()
+        .getStudentStandardMappingsByStudentId(studentId)
+        .map((mapping) => mapping.standard),
+    ),
+
+  getStudentEnrolledDateByStudentId: (studentId) =>
+    get().getStudentStandardMappingsByStudentId(studentId)[0]?.enrolledAt ?? '',
+
+  addUsers: (users) => {
+    set((state) => ({ userMap: { ...state.userMap, ...keyById(users) } }));
+  },
+
+  addOrgs: (orgs) => {
+    set((state) => ({ orgMap: { ...state.orgMap, ...keyById(orgs) } }));
+  },
+
+  addStudentStandardMaps: (mappings) => {
+    set((state) => ({ studentStandardMap: { ...state.studentStandardMap, ...keyById(mappings) } }));
+  },
+
+  patchUser: (userId, fields) => {
+    set((state) => {
+      const user = state.userMap[userId];
+      if (!user) return state;
+      return { userMap: { ...state.userMap, [userId]: { ...user, ...fields } } };
+    });
+  },
+
+  setUserName: (userId, parts) => {
+    const user = get().getUserById(userId);
+    if (!user) return;
+    const firstName = parts.firstName ?? user.firstName ?? '';
+    const lastName = parts.lastName ?? user.lastName ?? '';
+    get().patchUser(userId, { firstName, lastName, name: `${firstName.trim()} ${lastName.trim()}`.trim() });
+  },
+
+  removeUserByUserId: (userId) => {
+    set((state) => {
+      const { [userId]: removed, ...userMap } = state.userMap;
+      return removed ? { userMap } : state;
+    });
+  },
+
+  removeNewUsers: () => {
+    const newUserIds = new Set(
+      get()
+        .getUsers()
+        .filter((user) => user.isNew)
+        .map((user) => user._id),
+    );
+    if (!newUserIds.size) return;
+    set((state) => ({
+      userMap: Object.fromEntries(Object.entries(state.userMap).filter(([userId]) => !newUserIds.has(userId))),
+    }));
+  },
+
+  getNewUser: (permission) => {
+    const user: IUser = {
+      _id: getObjectId(),
+      uid: '',
+      name: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      role: '',
+      designation: '',
+      gender: Gender.OTHER,
+      permission,
+      accountType: AccountType.INVITED,
+      isUpdated: false,
+      isNew: true,
+    };
+    get().addUsers([user]);
+    return user;
+  },
+
+  createStudent: () => get().getNewUser(DefaultRole.STUDENT),
+
+  createCollaborator: (permission) => get().getNewUser(permission),
+
+  loadFollowersCount: async (userId) => {
+    if (!userId) return;
+    get().patchUser(userId, { isLoadingFollowersCount: true });
+    const result = await FollowerService.getFollowersCount(userId);
+    get().patchUser(userId, {
+      followersCount: result?.data ?? 0,
+      isLoadedFollowersCount: true,
+      isLoadingFollowersCount: false,
+    });
+  },
+
+  loadLoggedInUsers: () =>
+    get().run('loggedInUsers', async () => {
+      const result = await UserService.getInitialLoginData();
+      if (!result?.data) return;
+      const { users, orgs } = result.data;
+      get().addUsers(users);
+      get().addOrgs(orgs);
+      set({ loggedInUserIds: users.map((user) => user._id) });
+      const org = localStorage.getItem(StorageKey.ORGANIZATION);
+      const loggedInUsers = get().getLoggedInUsers();
+      const user = (org ? loggedInUsers.find((item) => item.org === org) : loggedInUsers[0]) ?? loggedInUsers[0];
+      // `org` is optional on a client row but always present on a fetched one. Selection is the
+      // selector store's business; this store only supplies the user.
+      if (user?.org && user.permission) {
+        useSelectorStore.getState().selectUserAndOrg(user._id, user.org, user.permission as DefaultRole);
       }
     }),
 
-    loadStudentStandardMappings: flow(function* () {
-      try {
-        const result = yield MappingService.getOrgStudentStandardMappings();
-        if (result?.data) self.addStudentStandardMaps(result.data);
-      } catch {}
+  loadStudentStandardMappings: () =>
+    get().run('studentStandardMappings', async () => {
+      const result = await MappingService.getOrgStudentStandardMappings();
+      if (result?.data) get().addStudentStandardMaps(result.data);
     }),
-  }))
-  .actions((self) => ({
-    createStudent: () => {
-      const student = self.getNewUser(DefaultRole.STUDENT);
-      self.rootStore.selectorStore.setSelectedStudentId(student._id);
-      return student;
-    },
 
-    createCollaborator: (permission: DefaultRole) => {
-      const collaborator = self.getNewUser(permission);
-      self.rootStore.selectorStore.setSelectedCollaboratorId(collaborator._id);
-      return collaborator;
-    },
-  }))
-  .views((self) => ({
-    get students() {
-      return self.users.filter((user) => user.permission === DefaultRole.STUDENT);
-    },
+  reset: () => {
+    set({ userMap: {}, orgMap: {}, studentStandardMap: {}, loggedInUserIds: [] });
+    get().resetRequests();
+  },
+}));
 
-    get collaborators() {
-      return self.users.filter((user) => user.permission !== DefaultRole.STUDENT);
-    },
+/**
+ * The store's lookups, subscribed to the state they read.
+ *
+ * `getStudentStandardsByStudentId` resolves standards through the standard store, so this
+ * subscribes to both — see decision 4 in the migration plan.
+ */
+export const useUserLookups = (): IUserState => {
+  useStandardStore(useShallow((state) => state.standardMap));
+  return useUserStore(useShallow((state) => state));
+};
 
-    getStudentStandardsByStudentId(studentId: string): IStandard[] {
-      const filteredMaps = self.getStudentStandardMappingsByStudentId(studentId);
-      const standardIds = filteredMaps.map((item) => item.standard);
-      return self.rootStore.standardStore.getStandardsByIds(standardIds);
-    },
+/** The selected user, or `undefined`. Replaces `selectorStore.selectedUser`. */
+export const useSelectedUser = (): IUser | undefined => {
+  const selectedUserId = useSelectorStore((state) => state.selectedUserId);
+  return useUserStore((state) => (selectedUserId ? state.userMap[selectedUserId] : undefined));
+};
 
-    getStudentEnrolledDateByStudentId(studentId: string): string {
-      const filteredMaps = self.getStudentStandardMappingsByStudentId(studentId);
-      return filteredMaps[0]?.enrolledAt || '';
-    },
-  }));
+/** The selected org, or `undefined`. Replaces `selectorStore.selectedOrg`. */
+export const useSelectedOrg = (): IOrg | undefined => {
+  const selectedOrgId = useSelectorStore((state) => state.selectedOrgId);
+  return useUserStore((state) => (selectedOrgId ? state.orgMap[selectedOrgId] : undefined));
+};
 
-export type IUserStore = Instance<typeof UserStore>;
+/** The selected student, or `undefined`. Replaces `selectorStore.selectedStudent`. */
+export const useSelectedStudent = (): IUser | undefined => {
+  const selectedStudentId = useSelectorStore((state) => state.selectedStudentId);
+  return useUserStore((state) => (selectedStudentId ? state.userMap[selectedStudentId] : undefined));
+};
+
+/** The selected collaborator, or `undefined`. Replaces `selectorStore.selectedCollaborator`. */
+export const useSelectedCollaborator = (): IUser | undefined => {
+  const selectedCollaboratorId = useSelectorStore((state) => state.selectedCollaboratorId);
+  return useUserStore((state) => (selectedCollaboratorId ? state.userMap[selectedCollaboratorId] : undefined));
+};

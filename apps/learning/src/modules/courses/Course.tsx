@@ -1,6 +1,5 @@
 import { FullScreenLoader } from '@repo/ui/app';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useCourseLookups, useSelectedCourse, useSelectedUser, useSelectorLookups } from '@stores';
 import { useEffect, useState } from 'react';
 import { CourseModules, CoursePreview } from './components';
 
@@ -9,10 +8,13 @@ interface IProps {
   isPreview: boolean;
 }
 
-export const Course = observer(({ courseId, isPreview }: IProps) => {
-  const { courseStore, selectorStore } = useStores();
+export const Course = ({ courseId, isPreview }: IProps) => {
+  const courseStore = useCourseLookups();
+  const selectorStore = useSelectorLookups();
   const { loadCourseModules, loadCourses, loadCompletedModules } = courseStore;
-  const { selectedUser, selectedCourse, setSelectedCourseId } = selectorStore;
+  const { setSelectedCourseId } = selectorStore;
+  const selectedCourse = useSelectedCourse();
+  const selectedUser = useSelectedUser();
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchCourseData = async () => {
@@ -43,4 +45,4 @@ export const Course = observer(({ courseId, isPreview }: IProps) => {
       )}
     </>
   );
-});
+};

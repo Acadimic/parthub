@@ -11,7 +11,7 @@ class QuestionService {
 
   getQuestions = async () => {
     const url = 'question/all';
-    const resData = await callAuthApi(url, API.GET);
+    const resData = await callAuthApi<IQuestion[]>(url, API.GET);
     return resData;
   };
 }

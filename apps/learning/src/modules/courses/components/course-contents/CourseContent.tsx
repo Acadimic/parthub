@@ -6,9 +6,17 @@ import { CollectionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { useCourse } from '@hooks/course.hook';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
-import { type IMaterial, type ITestPaper, useStores } from '@stores';
+import {
+  type IMaterial,
+  type ITestPaper,
+  useMeetLookups,
+  useSelectedCourse,
+  useSelectedMaterial,
+  useSelectedTestPaper,
+  useSelectorLookups,
+  useUserLookups,
+} from '@stores';
 import { getPlural } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useMemo } from 'react';
 import { BookmarkCourse } from './BookmarkCourse';
@@ -20,19 +28,21 @@ import { MarkCompleteButton } from './MarkCompleteButton';
 import { Sessions } from './Sessions';
 import { ShareCourse } from './ShareCourse';
 
-export const CourseContent = observer(() => {
-  const { selectorStore, userStore, meetStore } = useStores();
+export const CourseContent = () => {
+  const selectorStore = useSelectorLookups();
+  const userStore = useUserLookups();
+  const meetStore = useMeetLookups();
   const {
-    selectedMaterial,
-    selectedTestPaper,
     selectedCourseId,
-    selectedCourse,
     selectedAttachment,
     selectedCourseModuleId,
     selectedContent,
     setSelectedContent,
     removeSelectedAttachment,
   } = selectorStore;
+  const selectedTestPaper = useSelectedTestPaper();
+  const selectedCourse = useSelectedCourse();
+  const selectedMaterial = useSelectedMaterial();
   const { getUserById } = userStore;
   const { handleClickAttachment } = useAttachment();
   const { getModuleContentType } = useCourse();
@@ -60,7 +70,7 @@ export const CourseContent = observer(() => {
     return;
   }
 
-  const meets = getMeetsByIds(selectedCourse.meets);
+  const meets = getMeetsByIds(selectedCourse.meets ?? []);
 
   return (
     <div>
@@ -195,4 +205,4 @@ export const CourseContent = observer(() => {
       </div>
     </div>
   );
-});
+};

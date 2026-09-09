@@ -1,7 +1,6 @@
 import { CheckCircleIcon, type Icon, MinusCircleIcon, RadioButtonIcon, TimerIcon } from '@phosphor-icons/react';
-import { useStores } from '@stores';
+import { useTestPaperLookups } from '@stores';
 import { getTimeString, getTwoDigit } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 
 interface IRow {
   label: string;
@@ -10,21 +9,23 @@ interface IRow {
   icon: Icon;
 }
 
-export const TestPaperSummary = observer(() => {
-  const { testPaperStore } = useStores();
+export const TestPaperSummary = () => {
+  const testPaperStore = useTestPaperLookups();
   const { exam } = testPaperStore;
 
   if (!exam) return <></>;
 
-  const { attemptedCount, numberOfQuestions, markedForReviews, timeLeft } = exam;
+  const { numberOfQuestions, markedForReviews } = exam;
+
+  const { getAttemptedCount, getTimeLeft } = testPaperStore;
 
   const rows = [
-    { icon: TimerIcon, label: 'Time Left', value: getTimeString(timeLeft), className: 'w-16' },
-    { icon: CheckCircleIcon, label: 'Attempted', value: String(getTwoDigit(attemptedCount)), className: '' },
+    { icon: TimerIcon, label: 'Time Left', value: getTimeString(getTimeLeft()), className: 'w-16' },
+    { icon: CheckCircleIcon, label: 'Attempted', value: String(getTwoDigit(getAttemptedCount())), className: '' },
     {
       icon: MinusCircleIcon,
       label: 'Unattempted',
-      value: String(getTwoDigit(numberOfQuestions - attemptedCount)),
+      value: String(getTwoDigit(numberOfQuestions - getAttemptedCount())),
       className: '',
     },
     {
@@ -61,4 +62,4 @@ export const TestPaperSummary = observer(() => {
       </div>
     </div>
   );
-});
+};

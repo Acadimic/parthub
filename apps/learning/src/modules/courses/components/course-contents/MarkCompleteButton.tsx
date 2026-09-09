@@ -1,18 +1,18 @@
 import { SwipeButton } from '@repo/ui/app';
 import { CollectionType } from '@enums';
 import { CourseService } from '@services';
-import { type IMaterial, type ITestPaper, useStores } from '@stores';
+import { type IMaterial, type ITestPaper, useCourseLookups, useSelectorLookups } from '@stores';
 import { successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   testPaper?: ITestPaper;
   material?: IMaterial;
 }
 
-export const MarkCompleteButton = observer(({ testPaper, material }: IProps) => {
+export const MarkCompleteButton = ({ testPaper, material }: IProps) => {
   const item: ITestPaper | IMaterial | undefined = testPaper || material;
-  const { courseStore, selectorStore } = useStores();
+  const courseStore = useCourseLookups();
+  const selectorStore = useSelectorLookups();
   const { selectedCourseId, selectedCourseModuleId } = selectorStore;
   const { isCourseModuleItemCompleted } = courseStore;
 
@@ -46,4 +46,4 @@ export const MarkCompleteButton = observer(({ testPaper, material }: IProps) => 
       <SwipeButton onComplete={handleComplete} isCompleted={isCompleted} />
     </div>
   );
-});
+};

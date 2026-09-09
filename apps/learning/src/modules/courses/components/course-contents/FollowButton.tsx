@@ -1,15 +1,15 @@
 import { Button } from '@repo/ui/app';
 import { CheckIcon } from '@phosphor-icons/react';
-import { type IUser, useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type IUser, useResourceLookups } from '@stores';
 
 interface IProps {
   user: IUser;
 }
 
-export const FollowButton = observer(({ user }: IProps) => {
-  const { resourceStore } = useStores();
-  const { isToggleFollowing, toggleFollowing, isFollowing } = resourceStore;
+export const FollowButton = ({ user }: IProps) => {
+  const resourceStore = useResourceLookups();
+  const { toggleFollowing, isFollowing } = resourceStore;
+  const isToggleFollowing = resourceStore.isLoading('toggleFollowing');
 
   const isFollowingUser = isFollowing(user._id);
 
@@ -23,4 +23,4 @@ export const FollowButton = observer(({ user }: IProps) => {
       leftsection={isFollowingUser ? <CheckIcon weight="bold" className="w-5 h-5" /> : null}
     />
   );
-});
+};

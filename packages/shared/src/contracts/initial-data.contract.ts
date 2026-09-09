@@ -14,6 +14,17 @@ export interface InitialDataResponse {
 }
 
 /**
+ * The `common/public-data` response — the reference data a visitor sees before signing in.
+ *
+ * Standards and subjects only: the endpoint is `GET common/public-data` in the server's common
+ * module, and it is `@Public()`.
+ */
+export interface PublicDataResponse {
+  standards: StandardDto[];
+  subjects: SubjectDto[];
+}
+
+/**
  * The response the apps expect from `test-paper/sections-with-questions/:testPaperId`: a paper's
  * sections plus everything they contain, in one round trip.
  *

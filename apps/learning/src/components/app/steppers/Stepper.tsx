@@ -1,13 +1,12 @@
 import { type IStep } from '@interfaces';
 import { CheckIcon } from '@phosphor-icons/react';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   steps: IStep[];
   activeStep: number;
 }
 
-export const Stepper = observer(({ steps, activeStep }: IProps) => {
+export const Stepper = ({ steps, activeStep }: IProps) => {
   const currentStep = steps[activeStep];
 
   if (!currentStep) return null;
@@ -52,4 +51,4 @@ export const Stepper = observer(({ steps, activeStep }: IProps) => {
       <div>{currentStep.component}</div>
     </div>
   );
-});
+};

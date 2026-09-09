@@ -2,8 +2,7 @@ import { Spinner } from '@repo/ui/app';
 import { type CollectionType } from '@enums';
 import { useBookmark } from '@hooks/bookmark.hook';
 import { BookmarkSimpleIcon } from '@phosphor-icons/react';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useResourceLookups } from '@stores';
 
 interface IProps {
   collectionItem: string;
@@ -13,8 +12,8 @@ interface IProps {
   isLoading?: boolean;
 }
 
-export const Bookmark = observer(({ collectionItem, collectionRef, component, isClickDisabled, isLoading }: IProps) => {
-  const { resourceStore } = useStores();
+export const Bookmark = ({ collectionItem, collectionRef, component, isClickDisabled, isLoading }: IProps) => {
+  const resourceStore = useResourceLookups();
   const { isBookmarked } = resourceStore;
   const { toggleBookmark, isLoadingBookmark } = useBookmark();
 
@@ -43,4 +42,4 @@ export const Bookmark = observer(({ collectionItem, collectionRef, component, is
       )}
     </>
   );
-});
+};

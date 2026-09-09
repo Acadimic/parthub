@@ -1,12 +1,11 @@
 import { type CourseItemType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   courseTab: CourseItemType;
 }
 
-export const CourseTab = observer(({ courseTab }: IProps) => {
+export const CourseTab = ({ courseTab }: IProps) => {
   const { onSelectCourseItem, selectedCourseItem } = useCourse();
   const selectedClass = `border-blue-primary bg-color-light`;
   const notSelectedClass = `border-transparent bg-transparent`;
@@ -20,4 +19,4 @@ export const CourseTab = observer(({ courseTab }: IProps) => {
       {courseTab}
     </div>
   );
-});
+};

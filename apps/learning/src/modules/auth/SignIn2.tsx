@@ -1,12 +1,11 @@
 import { HorizontalLineWithText, Policy, VerticalLineWithText } from '@components/others';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
-import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 import { AuthContainer, AuthTitle, EmailPassword, SignInButtons } from './components';
 import { InfoTextWithLink } from './components/InfoTextWithLink';
 import { useSignInHook } from './hooks';
 
-export const SignIn = observer(() => {
+export const SignIn = () => {
   const { isLoading, handleSignInSubmit } = useSignInHook();
   const [isDisabled, setIsDisabled] = useState(false);
   const { isSmallScreen } = useWindowDimensions();
@@ -29,4 +28,4 @@ export const SignIn = observer(() => {
       <InfoTextWithLink infoText="Don't have an account?" linkText="Sign Up" href="/sign-up" />
     </AuthContainer>
   );
-});
+};

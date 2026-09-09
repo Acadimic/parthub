@@ -1,3 +1,4 @@
+import { type InitialDataResponse, type PublicDataResponse } from '@repo/shared';
 import { API } from '../enums';
 import { callAuthApi, callDefaultApi, callUnAuthApi } from './http.service';
 
@@ -13,11 +14,11 @@ interface IPresignedPutUrlsRequest {
 
 class CommonService {
   getInitialData = async () => {
-    return await callAuthApi('common/initial-data', API.GET);
+    return await callAuthApi<InitialDataResponse>('common/initial-data', API.GET);
   };
 
   getPublicData = async () => {
-    return await callUnAuthApi('common/public-data', API.GET);
+    return await callUnAuthApi<PublicDataResponse>('common/public-data', API.GET);
   };
 
   getPreSignedPUTUrls = async (payload: IPresignedPutUrlsRequest) => {

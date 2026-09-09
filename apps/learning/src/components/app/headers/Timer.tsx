@@ -1,7 +1,6 @@
 import { PauseCircleIcon, PlayCircleIcon } from '@phosphor-icons/react';
-import { useStores } from '@stores';
+import { useTestPaperLookups } from '@stores';
 import { getTimeString } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useEffect, useRef } from 'react';
 import { useSetState } from 'react-use';
 import { Button } from '@repo/ui/app';
@@ -17,8 +16,8 @@ interface IState {
   timeLeftString: string;
 }
 
-export const Timer = observer(({ toggleTimer, isActiveTimer, handleSubmitTest }: IProps) => {
-  const { testPaperStore } = useStores();
+export const Timer = ({ toggleTimer, isActiveTimer, handleSubmitTest }: IProps) => {
+  const testPaperStore = useTestPaperLookups();
   const { exam } = testPaperStore;
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [state, setState] = useSetState<IState>({
@@ -40,7 +39,7 @@ export const Timer = observer(({ toggleTimer, isActiveTimer, handleSubmitTest }:
       intervalRef.current = setInterval(() => {
         const newTimeLeft = timeLeft - 1;
         setState({ timeLeft: newTimeLeft, timeLeftString: getTimeString(newTimeLeft) });
-        exam.increaseSelectedQuestionTimeSpend();
+        testPaperStore.increaseSelectedQuestionTimeSpend();
       }, 1000);
     }
 
@@ -75,4 +74,4 @@ export const Timer = observer(({ toggleTimer, isActiveTimer, handleSubmitTest }:
       <div className="w-16 blue-gradient text-sm font-semibold">{state.timeLeftString}</div>
     </div>
   );
-});
+};

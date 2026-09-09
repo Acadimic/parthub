@@ -5,19 +5,19 @@ import { callAuthApi } from './http.service';
 class ReactionService {
   getReactionsCount = async (itemId: string) => {
     const url = `reaction/count/${itemId}`;
-    const resData = await callAuthApi(url, API.GET);
+    const resData = await callAuthApi<number>(url, API.GET);
     return resData;
   };
 
   getReactions = async () => {
     const url = 'reaction/all';
-    const resData = await callAuthApi(url, API.GET);
+    const resData = await callAuthApi<IReaction[]>(url, API.GET);
     return resData;
   };
 
   upsertReaction = async (payload: IReaction) => {
     const url = 'reaction/upsert';
-    const resData = await callAuthApi(url, API.POST, payload);
+    const resData = await callAuthApi<IReaction>(url, API.POST, payload);
     return resData;
   };
 }

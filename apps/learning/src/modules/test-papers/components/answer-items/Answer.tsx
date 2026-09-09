@@ -1,6 +1,5 @@
 import { Html } from '@components/others';
 import { getAlphabet } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   correctOptionIndexes: number[];
@@ -9,7 +8,7 @@ interface IProps {
   isAnswer: boolean;
 }
 
-export const Answer = observer(({ correctOptionIndexes, solution, answers, isAnswer }: IProps) => {
+export const Answer = ({ correctOptionIndexes, solution, answers, isAnswer }: IProps) => {
   return (
     <>
       <div>
@@ -41,4 +40,4 @@ export const Answer = observer(({ correctOptionIndexes, solution, answers, isAns
       </div>
     </>
   );
-});
+};

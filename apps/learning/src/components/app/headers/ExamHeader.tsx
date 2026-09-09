@@ -1,6 +1,5 @@
 import { DotsNineIcon } from '@phosphor-icons/react';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useTestPaperLookups } from '@stores';
 import { ToggleTheme } from '@repo/ui/app';
 import { Timer } from './';
 
@@ -11,8 +10,8 @@ interface IProps {
   handleSubmitTest: () => void;
 }
 
-export const ExamHeader = observer(({ isPractice, toggleTimer, isActiveTimer, handleSubmitTest }: IProps) => {
-  const { testPaperStore } = useStores();
+export const ExamHeader = ({ isPractice, toggleTimer, isActiveTimer, handleSubmitTest }: IProps) => {
+  const testPaperStore = useTestPaperLookups();
   const { exam } = testPaperStore;
   if (!exam) return null;
   const { title } = exam;
@@ -43,4 +42,4 @@ export const ExamHeader = observer(({ isPractice, toggleTimer, isActiveTimer, ha
       </div>
     </>
   );
-});
+};

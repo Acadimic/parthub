@@ -1,3 +1,4 @@
+import type { CollectionType } from '../enums/plan.enum';
 import type { Marking, SectionCategoryType, SectionType } from '../enums/test-paper.enum';
 import type { QuestionType } from '../enums/question.enum';
 
@@ -45,6 +46,18 @@ export interface ITestPaperSectionFields {
   defaultMarkings?: DefaultMarkingType;
   subsections?: string[];
   instruction?: string;
+}
+
+/** `course/schemas/completed-module.schema.ts` — a learner's progress on one course item. */
+export interface ICompletedModuleFields {
+  _id: string;
+  course: string;
+  courseModule: string;
+  collectionItem: string;
+  /** Which collection `collectionItem` points at; the schema resolves the ref from it. */
+  collectionRef: CollectionType;
+  isCompleted?: boolean;
+  isSkipped?: boolean;
 }
 
 /** No server schema — see the note above. */

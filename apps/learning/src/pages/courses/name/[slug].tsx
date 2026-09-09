@@ -1,6 +1,5 @@
 import { Layout } from '@enums';
 import { Course } from '@modules/courses';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 
 const CoursePreviewPageByName = () => {
@@ -12,4 +11,4 @@ const CoursePreviewPageByName = () => {
 
 CoursePreviewPageByName.layout = Layout.PAGE;
 
-export default observer(CoursePreviewPageByName);
+export default CoursePreviewPageByName;

@@ -1,26 +1,23 @@
 import { AppSidebar } from '@components/app/sidebars';
 import { FullScreenLoader } from '@repo/ui/app';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useRequest } from '@repo/ui/hooks';
+import { useStandardStore, useUserLookups } from '@stores';
 import { useEffect } from 'react';
 
 interface IProps {
   children: React.ReactNode;
 }
 
-export const SidebarLayout = observer(({ children }: IProps) => {
-  const { isLoadingInitialData, isLoadedInitialData, loadInitialData, userStore } = useStores();
-  const { isLoadedLoggedInUsers } = userStore;
+export const SidebarLayout = ({ children }: IProps) => {
+  const userStore = useUserLookups();
+  const isLoadedLoggedInUsers = userStore.isLoaded('loggedInUsers');
+  const initialData = useRequest(useStandardStore, 'initialData');
+  const loadInitialData = useStandardStore((state) => state.loadInitialData);
 
+  // The sign-in data has to land first: the reference load is org-scoped.
   useEffect(() => {
-    if (!isLoadedInitialData && !isLoadingInitialData && isLoadedLoggedInUsers) loadInitialData();
-  }, [isLoadedInitialData, isLoadingInitialData, isLoadedLoggedInUsers]);
+    if (isLoadedLoggedInUsers && useStandardStore.getState().shouldLoad('initialData')) loadInitialData();
+  }, [isLoadedLoggedInUsers, loadInitialData]);
 
-  return (
-    <>
-      <AppSidebar>
-        {isLoadingInitialData ? <FullScreenLoader loading={isLoadingInitialData} withHeader /> : children}
-      </AppSidebar>
-    </>
-  );
-});
+  return <AppSidebar>{initialData.isLoading ? <FullScreenLoader loading withHeader /> : children}</AppSidebar>;
+};

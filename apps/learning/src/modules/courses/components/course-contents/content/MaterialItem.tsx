@@ -1,19 +1,20 @@
 import { VideoPlayer, ViewTextContent, ViewUrlContent } from '@components/tools';
 import { DocumentType, LinkType } from '@enums';
-import { type IMaterial, useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type IMaterial, useSelectorLookups } from '@stores';
 import { useEffect } from 'react';
 
 interface IProps {
   material: IMaterial;
 }
 
-export const MaterialItem = observer(({ material }: IProps) => {
-  const { selectorStore } = useStores();
+export const MaterialItem = ({ material }: IProps) => {
+  const selectorStore = useSelectorLookups();
   const { selectedContent, selectedAttachment, setSelectedContent, removeSelectedAttachment } = selectorStore;
 
   useEffect(() => {
-    const isMaterialAttachment = material.attachments.some((attachment) => attachment._id === selectedAttachment?._id);
+    const isMaterialAttachment = (material.attachments ?? []).some(
+      (attachment) => attachment._id === selectedAttachment?._id,
+    );
     if (!isMaterialAttachment) {
       setSelectedContent(material.content);
       removeSelectedAttachment();
@@ -42,4 +43,4 @@ export const MaterialItem = observer(({ material }: IProps) => {
       <div className="w-full h-full">{getAttachmentItem()}</div>
     </>
   );
-});
+};

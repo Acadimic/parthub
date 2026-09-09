@@ -1,14 +1,13 @@
 import { Button } from '@repo/ui/app';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useTestPaperLookups } from '@stores';
 
 interface IProps {
   openSubmitSummary: () => void;
   openResultPage: () => void;
 }
 
-export const SubmitButton = observer(({ openSubmitSummary, openResultPage }: IProps) => {
-  const { testPaperStore } = useStores();
+export const SubmitButton = ({ openSubmitSummary, openResultPage }: IProps) => {
+  const testPaperStore = useTestPaperLookups();
   const { exam } = testPaperStore;
   if (!exam) return null;
 
@@ -23,4 +22,4 @@ export const SubmitButton = observer(({ openSubmitSummary, openResultPage }: IPr
       />
     </>
   );
-});
+};

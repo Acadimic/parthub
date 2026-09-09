@@ -1,158 +1,183 @@
-import { type IMaterialStat, type IStandardSubjectQuery, type IMaterialInfo } from '@interfaces';
-import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
-import { DocumentType, LevelType, LinkType, MaterialType } from '../enums';
-import { MaterialService } from '../services';
-import { getObjectId } from '../utils/helpers';
-import { type IAttachment, type IMaterial, Material } from './models';
-import { type IStore } from './root.store';
+import {
+  type AttachmentDto,
+  type ClientEntityWith,
+  type IRequestSlice,
+  type MaterialDto,
+  createRequestSlice,
+} from '@repo/shared';
+import { type IMaterialInfo, type IMaterialStat, type IStandardSubjectQuery } from '@interfaces';
+import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
+import { DocumentType, LinkType, MaterialType } from '../enums';
+import { MaterialService, ReactionService } from '../services';
+import { useSelectorStore } from './selector.store';
 
-export const MaterialStore = t
-  .model({
-    materialMaps: t.map(Material),
-    materialStats: t.optional(t.array(t.frozen<IMaterialStat>()), []),
-    isLoading: t.optional(t.boolean, false),
-    isLoaded: t.optional(t.boolean, false),
-    isLoadingMaterials: t.optional(t.boolean, false),
-    isLoadedMaterials: t.optional(t.boolean, false),
-  })
-  .views((self) => ({
-    get rootStore() {
-      return getRoot<IStore>(self);
-    },
+export type IMaterial = ClientEntityWith<
+  MaterialDto,
+  'name' | 'slug' | 'standard' | 'subject' | 'order' | 'content' | 'durationMins' | 'level' | 'attachments' | 'tag'
+> &
+  // Client-only, and stripped from every request by `CLIENT_ONLY_KEYS`: a per-row reaction count
+  // and whether it has been fetched.
+  { reactionsCount?: number; isLoadedReactionsCount?: boolean; isLoadingReactionsCount?: boolean };
+export type IAttachment = AttachmentDto;
 
-    get materials(): IMaterial[] {
-      return Array.from(self.materialMaps.values());
-    },
+/** The fetches this store tracks. */
+type MaterialFetch = 'materialStats' | 'materials';
 
-    getMaterialById(materialId: string): IMaterial | undefined {
-      return materialId ? self.materialMaps.get(materialId) : undefined;
-    },
-  }))
-  .actions((self) => ({
-    addMaterial: (material: IMaterial) => {
-      if (!material) return;
-      const materialId = material._id;
-      const isMaterial = self.materialMaps.has(materialId);
-      if (isMaterial) self.materialMaps.set(materialId, material);
-      else self.materialMaps.put(material);
-    },
+export interface IMaterialState extends IRequestSlice<MaterialFetch> {
+  materialMap: Record<string, IMaterial>;
+  /** Roll-ups the dashboard shows; server-computed, not per-material rows. */
+  materialStats: IMaterialStat[];
 
-    removeMaterialById: (materialId: string) => {
-      self.materialMaps.delete(materialId);
-    },
-  }))
-  .actions((self) => ({
-    addMaterials: (materials: IMaterial[]) => {
-      if (!materials) return;
-      materials.forEach((material) => self.addMaterial(material));
-    },
-  }))
-  .views((self) => ({
-    standardSubjectMaterials(standard: string, subject: string): IMaterial[] {
-      return self.materials.filter((material) => material.standard === standard && material.subject === subject);
-    },
+  getMaterialById: (materialId: string) => IMaterial | undefined;
+  getMaterials: () => IMaterial[];
+  getMaterialsByIds: (materialIds: string[]) => IMaterial[];
+  getStandardSubjectMaterials: (standardId: string, subjectId: string) => IMaterial[];
+  getMaterialsByStandardIds: (standardIds: string[]) => IMaterial[];
+  /** The attachments that play as video, rather than opening as a document. */
+  getMaterialVideos: (material: IMaterial) => IAttachment[];
+  getMaterialDocuments: (material: IMaterial) => IAttachment[];
+  /** Duration and per-type counts across a set of materials. */
+  getMaterialsInfoMaterialIds: (materialIds: string[]) => IMaterialInfo;
 
-    getMaterialsByIds(ids: string[]): IMaterial[] {
-      const items: IMaterial[] = [];
-      ids.forEach((id) => {
-        const item = self.getMaterialById(id);
-        if (item) items.push(item);
-      });
-      return items;
-    },
+  addMaterials: (materials: IMaterial[]) => void;
+  patchMaterial: (materialId: string, fields: Partial<IMaterial>) => void;
+  removeMaterialById: (materialId: string) => void;
 
-    getMaterialVideos(material: IMaterial): IAttachment[] {
-      const videos = material.attachments.filter(
-        (attachment) =>
-          attachment.documentType === DocumentType.VIDEO ||
-          (attachment.documentType === DocumentType.LINK &&
-            attachment.linkType &&
-            [LinkType.YOUTUBE, LinkType.VIDEO].includes(attachment.linkType)),
-      );
-      return videos;
-    },
+  /** Fetches a material's reaction count into its row. Was `loadReactionsCount` on the model. */
+  loadReactionsCount: (materialId: string) => Promise<void>;
+  loadMaterialStats: () => Promise<void>;
+  loadStandardSubjectMaterials: (query: IStandardSubjectQuery) => Promise<void>;
+  loadStandardsMaterials: (standardIds: string[]) => Promise<void>;
+  reset: () => void;
+}
 
-    getMaterialDocuments(material: IMaterial): IAttachment[] {
-      const documents = material.attachments.filter(
-        (attachment) =>
-          attachment.fileType === DocumentType.FILE ||
-          (attachment.fileType === DocumentType.LINK &&
-            attachment.linkType &&
-            ![(LinkType.YOUTUBE, LinkType.VIDEO)].includes(attachment.linkType)),
-      );
-      return documents;
-    },
-  }))
-  .actions((self) => ({
-    loadMaterialStats: flow(function* () {
-      self.isLoading = true;
-      const result = yield MaterialService.getMaterials();
-      self.isLoading = false;
-      if (!result?.data) return;
-      self.isLoaded = true;
-      self.materialStats = result.data;
-    }),
+const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
+  rows.reduce<Record<string, T>>((map, row) => {
+    map[row._id] = row;
+    return map;
+  }, {});
 
-    loadStandardSubjectMaterials: flow(function* (payload: IStandardSubjectQuery) {
-      self.isLoadingMaterials = true;
-      const result = yield MaterialService.getStandardSubjectMaterials(payload);
-      self.isLoadingMaterials = false;
-      if (!result?.data) return;
-      self.isLoadedMaterials = true;
-      self.addMaterials(result?.data);
-    }),
+/** A link attachment that plays as video rather than opening as a document. */
+const VIDEO_LINK_TYPES: LinkType[] = [LinkType.YOUTUBE, LinkType.VIDEO];
 
-    loadStandardsMaterials: flow(function* (standards: string[]) {
-      self.isLoadingMaterials = true;
-      const result = yield MaterialService.getStandardsMaterials(standards);
-      self.isLoadingMaterials = false;
-      if (!result?.data) return;
-      self.isLoadedMaterials = true;
-      self.addMaterials(result?.data);
-    }),
+export const useMaterialStore = create<IMaterialState>()((set, get) => ({
+  materialMap: {},
+  materialStats: [],
+  ...createRequestSlice(['materialStats', 'materials'], set, get),
 
-    createMaterial: (standard: string, subject: string) => {
-      const order = self.standardSubjectMaterials(standard, subject).length;
-      const material = Material.create({
-        _id: getObjectId(),
-        name: '',
-        slug: '',
-        order,
-        isNew: true,
-        standard,
-        subject,
-        durationMins: 30,
-        level: LevelType.EASY,
-        ...self.rootStore.selectorStore.selectedData,
-      });
-      self.addMaterial(material);
-      self.rootStore.selectorStore.setSelectedMaterialId(material._id);
-      return material;
-    },
-  }))
-  .views((self) => ({
-    materialsByStandardIds(standardIds: string[]): IMaterial[] {
-      return self.materials.filter((material) => standardIds.includes(material.standard));
-    },
+  getMaterialById: (materialId) => (materialId ? get().materialMap[materialId] : undefined),
 
-    getMaterialsInfoMaterialIds: (materialIds: string[]): IMaterialInfo => {
-      const materials = self.getMaterialsByIds(materialIds);
-      const materialCountMap: Record<MaterialType, number> = {
-        [MaterialType.VIDEO]: 0,
-        [MaterialType.READING]: 0,
-      };
-      let durationMins = 0;
-      materials.forEach((material) => {
+  getMaterials: () => Object.values(get().materialMap),
+
+  getMaterialsByIds: (materialIds) => {
+    const { materialMap } = get();
+    return materialIds.map((id) => materialMap[id]).filter((material): material is IMaterial => !!material);
+  },
+
+  getStandardSubjectMaterials: (standardId, subjectId) =>
+    get()
+      .getMaterials()
+      .filter((material) => material.standard === standardId && material.subject === subjectId),
+
+  getMaterialsByStandardIds: (standardIds) =>
+    get()
+      .getMaterials()
+      .filter((material) => standardIds.includes(material.standard)),
+
+  getMaterialVideos: (material) =>
+    material.attachments.filter(
+      (attachment) =>
+        attachment.documentType === DocumentType.VIDEO ||
+        (attachment.documentType === DocumentType.LINK &&
+          !!attachment.linkType &&
+          VIDEO_LINK_TYPES.includes(attachment.linkType)),
+    ),
+
+  getMaterialDocuments: (material) =>
+    material.attachments.filter(
+      (attachment) =>
+        attachment.fileType === DocumentType.FILE ||
+        (attachment.fileType === DocumentType.LINK &&
+          !!attachment.linkType &&
+          !VIDEO_LINK_TYPES.includes(attachment.linkType)),
+    ),
+
+  getMaterialsInfoMaterialIds: (materialIds) => {
+    const counts: Record<MaterialType, number> = { [MaterialType.VIDEO]: 0, [MaterialType.READING]: 0 };
+    let durationMins = 0;
+    get()
+      .getMaterialsByIds(materialIds)
+      .forEach((material) => {
         durationMins += material.durationMins;
-        const videos = self.getMaterialVideos(material).length;
-        const documents = self.getMaterialDocuments(material).length;
-        materialCountMap[MaterialType.VIDEO] += videos;
-        materialCountMap[MaterialType.READING] += documents ? documents : videos ? 0 : 1;
+        const videos = get().getMaterialVideos(material).length;
+        const documents = get().getMaterialDocuments(material).length;
+        counts[MaterialType.VIDEO] += videos;
+        // A material with neither still counts as one reading, so it is never invisible.
+        counts[MaterialType.READING] += documents || (videos ? 0 : 1);
       });
-      return { durationMins, types: materialCountMap };
-    },
-  }));
+    return { durationMins, types: counts };
+  },
 
-export type IMaterialStore = Instance<typeof MaterialStore>;
+  addMaterials: (materials) => {
+    set((state) => ({ materialMap: { ...state.materialMap, ...keyById(materials) } }));
+  },
 
-export type { IMaterialStat };
+  removeMaterialById: (materialId) => {
+    set((state) => {
+      const { [materialId]: removed, ...materialMap } = state.materialMap;
+      return removed ? { materialMap } : state;
+    });
+  },
+
+  patchMaterial: (materialId, fields) => {
+    set((state) => {
+      const material = state.materialMap[materialId];
+      if (!material) return state;
+      return { materialMap: { ...state.materialMap, [materialId]: { ...material, ...fields } } };
+    });
+  },
+
+  loadReactionsCount: async (materialId) => {
+    if (!materialId) return;
+    get().patchMaterial(materialId, { isLoadingReactionsCount: true });
+    const result = await ReactionService.getReactionsCount(materialId);
+    get().patchMaterial(materialId, {
+      reactionsCount: result?.data ?? 0,
+      isLoadedReactionsCount: true,
+      isLoadingReactionsCount: false,
+    });
+  },
+
+  loadMaterialStats: () =>
+    get().run('materialStats', async () => {
+      const result = await MaterialService.getMaterials();
+      if (result?.data) set({ materialStats: result.data });
+    }),
+
+  loadStandardSubjectMaterials: (query) =>
+    get().run('materials', async () => {
+      const result = await MaterialService.getStandardSubjectMaterials(query);
+      if (result?.data) get().addMaterials(result.data);
+    }),
+
+  loadStandardsMaterials: (standardIds) =>
+    get().run('materials', async () => {
+      const result = await MaterialService.getStandardsMaterials(standardIds);
+      if (result?.data) get().addMaterials(result.data);
+    }),
+
+  reset: () => {
+    set({ materialMap: {}, materialStats: [] });
+    get().resetRequests();
+  },
+}));
+
+/** The store's lookups, subscribed to its state. */
+export const useMaterialLookups = (): IMaterialState => useMaterialStore(useShallow((state) => state));
+
+/** The selected material, or `undefined`. Replaces `selectorStore.selectedMaterial`. */
+export const useSelectedMaterial = (): IMaterial | undefined => {
+  const selectedMaterialId = useSelectorStore((state) => state.selectedMaterialId);
+  return useMaterialStore((state) => (selectedMaterialId ? state.materialMap[selectedMaterialId] : undefined));
+};

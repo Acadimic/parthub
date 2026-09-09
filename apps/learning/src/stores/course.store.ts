@@ -1,315 +1,324 @@
-import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
-
-const capitalize = (str: string) => (str ? str.charAt(0).toUpperCase() + str.slice(1) : '');
-import { type IGetCompletedModule } from '@interfaces';
-import { type CollectionType, CurrencyType, PeriodType } from '../enums';
-import { CourseService, MeetService, PlanService } from '../services';
-import { getObjectId } from '../utils/helpers';
 import {
-  CompletedModule,
-  Course,
-  CourseModule,
-  type ICompletedModule,
-  type ICourse,
-  type ICourseModule,
-  type IMaterial,
-  type IMeet,
-  type IPlan,
-  type ITestPaper,
-  Plan,
-} from './models';
-import { type IStore } from './root.store';
+  type ClientEntityWith,
+  type CourseDto,
+  type ICompletedModuleFields,
+  type ICourseModuleFields,
+  type IRequestSlice,
+  type PlanDto,
+  createRequestSlice,
+} from '@repo/shared';
+import { type IGetCompletedModule } from '@interfaces';
+import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
+import { type CollectionType, PeriodType, CurrencyType } from '../enums';
+import { CourseService, MeetService, PlanService } from '../services';
+import { capitalize, getObjectId } from '../utils/helpers';
+import { useMaterialStore } from './material.store';
+import { useMeetStore } from './meet.store';
+import { useSelectorStore } from './selector.store';
+import { useTestPaperStore } from './test-paper.store';
+import { useUserStore } from './user.store';
 
-export const CourseStore = t
-  .model({
-    courseMaps: t.map(Course),
-    planMaps: t.map(Plan),
-    courseModuleMaps: t.map(CourseModule),
-    completedModuleMaps: t.map(CompletedModule),
-    isCourseLoading: t.optional(t.boolean, false),
-    isCourseLoaded: t.optional(t.boolean, false),
-    isPlanLoading: t.optional(t.boolean, false),
-    isCourseModuleLoading: t.optional(t.boolean, false),
-  })
-  .views((self) => ({
-    get rootStore() {
-      return getRoot<IStore>(self);
-    },
+/**
+ * A course in the store. `isLoadedContents` is client-only — it records whether this course's
+ * modules have been fetched — and `CLIENT_ONLY_KEYS` strips it from every request.
+ */
+export type ICourse = ClientEntityWith<
+  CourseDto,
+  'name' | 'slug' | 'standards' | 'subjects' | 'courses' | 'meets' | 'order' | 'isPublished' | 'stats'
+> & { isLoadedContents?: boolean };
+export type IPlan = ClientEntityWith<PlanDto, 'name' | 'courses' | 'meets' | 'amount' | 'order'>;
+export type ICourseModule = ICourseModuleFields & { isNew?: boolean };
+export type ICompletedModule = ICompletedModuleFields;
+export type ICourseStats = NonNullable<ICourse['stats']>;
 
-    get courses() {
-      return Array.from(self.courseMaps.values());
-    },
+/** The fetches this store tracks. */
+type CourseFetch = 'courses' | 'plans' | 'courseModules' | 'completedModules';
 
-    get plans() {
-      return Array.from(self.planMaps.values());
-    },
+export interface ICourseState extends IRequestSlice<CourseFetch> {
+  courseMap: Record<string, ICourse>;
+  planMap: Record<string, IPlan>;
+  courseModuleMap: Record<string, ICourseModule>;
+  completedModuleMap: Record<string, ICompletedModule>;
 
-    get courseModules() {
-      return Array.from(self.courseModuleMaps.values());
-    },
+  getCourseById: (courseId: string) => ICourse | undefined;
+  getCourseModuleById: (courseModuleId: string) => ICourseModule | undefined;
+  getCourses: () => ICourse[];
+  getPlans: () => IPlan[];
+  getCourseModules: () => ICourseModule[];
+  getCompletedModules: () => ICompletedModule[];
+  getCoursesByIds: (courseIds: string[]) => ICourse[];
+  getCourseModuleByCourseId: (courseId: string) => ICourseModule[];
+  getPlansByCourseId: (courseId: string) => IPlan[];
+  /** Courses keyed by each standard they belong to; a course appears under every one of them. */
+  getGroupedCoursesByStandardId: () => Record<string, ICourse[]>;
+  getCompletedModule: (data: IGetCompletedModule) => ICompletedModule | undefined;
+  isCourseModuleItemCompleted: (data: IGetCompletedModule) => boolean;
+  isCourseModuleItemSkipped: (data: IGetCompletedModule) => boolean;
+  /** Whether a module's materials and test papers are all done, or only some. */
+  isCourseModuleCompleted: (courseModuleId: string) => { isAllCompleted: boolean; isPartiallyCompleted: boolean };
 
-    get completedModules() {
-      return Array.from(self.completedModuleMaps.values());
-    },
-  }))
-  .views((self) => ({
-    getCourseById(courseId: string): ICourse | undefined {
-      return courseId ? self.courseMaps.get(courseId) : undefined;
-    },
+  addCourses: (courses: ICourse[]) => void;
+  addPlans: (plans: IPlan[]) => void;
+  addCourseModules: (courseModules: ICourseModule[]) => void;
+  addCompletedModules: (completedModules: ICompletedModule[]) => void;
+  patchCourse: (courseId: string, fields: Partial<ICourse>) => void;
+  patchCompletedModule: (completedModuleId: string, fields: Partial<ICompletedModule>) => void;
+  removeCourseById: (courseId: string) => void;
+  removeCourseModuleById: (courseModuleId: string) => void;
 
-    getCourseModuleById(courseModuleId: string): ICourseModule | undefined {
-      return courseModuleId ? self.courseModuleMaps.get(courseModuleId) : undefined;
-    },
+  createPlan: (courseId: string, order: number, period: PeriodType) => IPlan;
+  createCompletedModule: (data: IGetCompletedModule, collectionRef: CollectionType) => ICompletedModule;
 
-    getCourseModuleByCourseId(courseId: string): ICourseModule[] {
-      return self.courseModules.filter((courseModule) => courseModule.course === courseId);
-    },
+  loadCourses: () => Promise<void>;
+  loadCoursePlans: (courseId: string) => Promise<void>;
+  loadCourseModules: (courseId: string) => Promise<void>;
+  loadCompletedModules: () => Promise<void>;
+  reset: () => void;
+}
 
-    getCompletedModule({ course, courseModule, collectionItem }: IGetCompletedModule): ICompletedModule | undefined {
-      return self.completedModules.find(
-        (completedModule) =>
-          completedModule.course === course &&
-          completedModule.courseModule === courseModule &&
-          completedModule.collectionItem === collectionItem,
-      );
-    },
-  }))
-  .actions((self) => ({
-    addCourse: (course: ICourse) => {
-      if (!course) return;
-      const courseId = course._id;
-      const isCourse = self.courseMaps.has(courseId);
-      if (isCourse) self.courseMaps.set(courseId, course);
-      else self.courseMaps.put(course);
-    },
+const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
+  rows.reduce<Record<string, T>>((map, row) => {
+    map[row._id] = row;
+    return map;
+  }, {});
 
-    addPlan: (plan: IPlan) => {
-      if (!plan) return;
-      const planId = plan._id;
-      const isPlan = self.planMaps.has(planId);
-      if (isPlan) self.planMaps.set(planId, plan);
-      else self.planMaps.put(plan);
-    },
+export const useCourseStore = create<ICourseState>()((set, get) => ({
+  courseMap: {},
+  planMap: {},
+  courseModuleMap: {},
+  completedModuleMap: {},
+  ...createRequestSlice(['courses', 'plans', 'courseModules', 'completedModules'], set, get),
 
-    addCourseModule: (courseModule: ICourseModule) => {
-      if (!courseModule) return;
-      const courseModuleId = courseModule._id;
-      const isPresent = self.courseModuleMaps.has(courseModuleId);
-      if (isPresent) self.courseModuleMaps.set(courseModuleId, courseModule);
-      else self.courseModuleMaps.put(courseModule);
-    },
+  getCourseById: (courseId) => (courseId ? get().courseMap[courseId] : undefined),
 
-    addCompletedModule: (completedModule: ICompletedModule) => {
-      if (!completedModule) return;
-      const completedModuleId = completedModule._id;
-      const isPresent = self.completedModuleMaps.has(completedModuleId);
-      if (isPresent) self.completedModuleMaps.set(completedModuleId, completedModule);
-      else self.completedModuleMaps.put(completedModule);
-    },
-  }))
-  .actions((self) => ({
-    addCourses: (courses: ICourse[]) => {
-      if (!courses) return;
-      courses.forEach((course) => self.addCourse(course));
-    },
+  getCourseModuleById: (courseModuleId) => (courseModuleId ? get().courseModuleMap[courseModuleId] : undefined),
 
-    addPlans: (plans: IPlan[]) => {
-      if (!plans) return;
-      plans.forEach((plan) => self.addPlan(plan));
-    },
+  getCourses: () => Object.values(get().courseMap),
 
-    addCourseModules: (courseModules: ICourseModule[]) => {
-      if (!courseModules) return;
-      courseModules.forEach((courseModule) => self.addCourseModule(courseModule));
-    },
+  getPlans: () => Object.values(get().planMap),
 
-    addCompletedModules: (completedModules: ICompletedModule[]) => {
-      if (!completedModules) return;
-      completedModules.forEach((completedModule) => self.addCompletedModule(completedModule));
-    },
+  getCourseModules: () => Object.values(get().courseModuleMap),
 
-    removeCourseById: (courseId: string) => {
-      self.courseMaps.delete(courseId);
-    },
+  getCompletedModules: () => Object.values(get().completedModuleMap),
 
-    removeCourseModuleById: (courseModuleId: string) => {
-      self.courseModuleMaps.delete(courseModuleId);
-    },
-  }))
-  .views((self) => ({
-    getCoursesByIds(ids: string[]): ICourse[] {
-      const items: ICourse[] = [];
-      ids.forEach((id) => {
-        const item = self.getCourseById(id);
-        if (item) items.push(item);
+  getCoursesByIds: (courseIds) => {
+    const { courseMap } = get();
+    return courseIds.map((id) => courseMap[id]).filter((course): course is ICourse => !!course);
+  },
+
+  getCourseModuleByCourseId: (courseId) =>
+    get()
+      .getCourseModules()
+      .filter((courseModule) => courseModule.course === courseId),
+
+  getPlansByCourseId: (courseId) =>
+    get()
+      .getPlans()
+      .filter((plan) => plan.courses.includes(courseId)),
+
+  getGroupedCoursesByStandardId: () =>
+    get()
+      .getCourses()
+      .reduce<Record<string, ICourse[]>>((grouped, course) => {
+        course.standards.forEach((standardId) => {
+          grouped[standardId] = [...(grouped[standardId] ?? []), course];
+        });
+        return grouped;
+      }, {}),
+
+  getCompletedModule: ({ course, courseModule, collectionItem }) =>
+    get()
+      .getCompletedModules()
+      .find(
+        (item) =>
+          item.course === course && item.courseModule === courseModule && item.collectionItem === collectionItem,
+      ),
+
+  isCourseModuleItemCompleted: (data) => get().getCompletedModule(data)?.isCompleted ?? false,
+
+  isCourseModuleItemSkipped: (data) => get().getCompletedModule(data)?.isSkipped ?? false,
+
+  isCourseModuleCompleted: (courseModuleId) => {
+    const courseModule = get().getCourseModuleById(courseModuleId);
+    if (!courseModule) return { isAllCompleted: false, isPartiallyCompleted: false };
+    const items = [...(courseModule.materials ?? []), ...(courseModule.testPapers ?? [])];
+    let isAllCompleted = true;
+    let isPartiallyCompleted = false;
+    items.forEach((collectionItem) => {
+      const isCompleted = get().isCourseModuleItemCompleted({
+        course: courseModule.course,
+        courseModule: courseModule._id,
+        collectionItem,
       });
-      return items;
-    },
+      if (isCompleted) isPartiallyCompleted = true;
+      else isAllCompleted = false;
+    });
+    return { isAllCompleted, isPartiallyCompleted };
+  },
 
-    isCourseModuleItemCompleted(data: IGetCompletedModule): boolean {
-      const item = self.getCompletedModule(data);
-      return item?.isCompleted ?? false;
-    },
+  addCourses: (courses) => {
+    set((state) => ({ courseMap: { ...state.courseMap, ...keyById(courses) } }));
+  },
 
-    isCourseModuleItemSkipped(data: IGetCompletedModule): boolean {
-      const item = self.getCompletedModule(data);
-      return item?.isSkipped ?? false;
-    },
-  }))
-  .actions((self) => ({
-    loadCourses: flow(function* () {
-      self.isCourseLoading = true;
-      const selectedUserId = self.rootStore.selectorStore.selectedUserId;
-      const standardIds = self.rootStore.userStore
+  addPlans: (plans) => {
+    set((state) => ({ planMap: { ...state.planMap, ...keyById(plans) } }));
+  },
+
+  addCourseModules: (courseModules) => {
+    set((state) => ({ courseModuleMap: { ...state.courseModuleMap, ...keyById(courseModules) } }));
+  },
+
+  addCompletedModules: (completedModules) => {
+    set((state) => ({ completedModuleMap: { ...state.completedModuleMap, ...keyById(completedModules) } }));
+  },
+
+  patchCourse: (courseId, fields) => {
+    set((state) => {
+      const course = state.courseMap[courseId];
+      if (!course) return state;
+      return { courseMap: { ...state.courseMap, [courseId]: { ...course, ...fields } } };
+    });
+  },
+
+  patchCompletedModule: (completedModuleId, fields) => {
+    set((state) => {
+      const completedModule = state.completedModuleMap[completedModuleId];
+      if (!completedModule) return state;
+      return {
+        completedModuleMap: {
+          ...state.completedModuleMap,
+          [completedModuleId]: { ...completedModule, ...fields },
+        },
+      };
+    });
+  },
+
+  removeCourseById: (courseId) => {
+    set((state) => {
+      const { [courseId]: removed, ...courseMap } = state.courseMap;
+      return removed ? { courseMap } : state;
+    });
+  },
+
+  removeCourseModuleById: (courseModuleId) => {
+    set((state) => {
+      const { [courseModuleId]: removed, ...courseModuleMap } = state.courseModuleMap;
+      return removed ? { courseModuleMap } : state;
+    });
+  },
+
+  createPlan: (courseId, order, period) => {
+    const plan: IPlan = {
+      _id: getObjectId(),
+      name: capitalize(period),
+      courses: [courseId],
+      meets: [],
+      amount: 0,
+      realAmount: 0,
+      currency: CurrencyType.INR,
+      interval: 1,
+      period,
+      order,
+      isRecommended: period === PeriodType.YEARLY,
+      isNew: true,
+    };
+    get().addPlans([plan]);
+    return plan;
+  },
+
+  createCompletedModule: (data, collectionRef) => {
+    const completedModule: ICompletedModule = {
+      ...data,
+      _id: getObjectId(),
+      collectionRef,
+      isCompleted: true,
+      isSkipped: false,
+    };
+    get().addCompletedModules([completedModule]);
+    return completedModule;
+  },
+
+  loadCourses: () =>
+    get().run('courses', async () => {
+      // The learner's courses are the ones on the standards they are enrolled on.
+      const selectedUserId = useSelectorStore.getState().selectedUserId;
+      const standardIds = useUserStore
+        .getState()
         .getStudentStandardMappingsByStudentId(selectedUserId)
-        .map((obj) => obj.standard);
-      const result = yield CourseService.getCoursesByStandardIds(standardIds);
-      if (!result?.data) {
-        self.isCourseLoading = false;
-        return;
-      }
-      self.addCourses(result.data);
-      self.isCourseLoading = false;
-      self.isCourseLoaded = true;
+        .map((mapping) => mapping.standard);
+      const result = await CourseService.getCoursesByStandardIds(standardIds);
+      if (result?.data) get().addCourses(result.data);
     }),
 
-    loadCoursePlans: flow(function* (courseId: string) {
-      self.isPlanLoading = true;
-      const result = yield PlanService.getCoursePlans(courseId);
-      if (!result?.data) {
-        self.isPlanLoading = false;
-        return;
-      }
-      self.addPlans(result.data);
-      self.isPlanLoading = false;
+  loadCoursePlans: (courseId) =>
+    get().run('plans', async () => {
+      const result = await PlanService.getCoursePlans(courseId);
+      if (result?.data) get().addPlans(result.data);
     }),
 
-    loadCourseModules: flow(function* (courseId: string) {
-      const course = self.getCourseById(courseId);
+  loadCourseModules: (courseId) =>
+    get().run('courseModules', async () => {
+      const course = get().getCourseById(courseId);
       if (!course) return;
-      self.isCourseModuleLoading = true;
-      const [modulesResult, meetsResult] = yield Promise.all([
+      const [modulesResult, meetsResult] = await Promise.all([
         CourseService.getCourseModulesContentsByCourseId(courseId),
         MeetService.getMeetsByIds(courseId, course.meets),
       ]);
-      if (!modulesResult?.data || !meetsResult?.data) {
-        self.isCourseModuleLoading = false;
-        return;
-      }
-      const modules = modulesResult.data;
-      const meets = meetsResult.data;
-      interface IRawCourseModule {
-        testPapers: ITestPaper[] | string[];
-        materials: IMaterial[] | string[];
-        meets: IMeet[] | string[];
-        [key: string]: unknown;
-      }
-      (modules as IRawCourseModule[]).forEach((courseModule) => {
-        self.rootStore.testPaperStore.addTestPapers(courseModule.testPapers as ITestPaper[]);
-        self.rootStore.materialStore.addMaterials(courseModule.materials as IMaterial[]);
-        self.rootStore.meetStore.addMeets(courseModule.meets as IMeet[]);
-        courseModule.testPapers = (courseModule.testPapers as ITestPaper[]).map((testPaper) => testPaper._id);
-        courseModule.materials = (courseModule.materials as IMaterial[]).map((material) => material._id);
-        courseModule.meets = (courseModule.meets as IMeet[]).map((meet) => meet._id);
+      if (!modulesResult?.data || !meetsResult?.data) return;
+      // The modules arrive with their test papers, materials and meets embedded. Each collection
+      // goes to the store that owns it and the module keeps only ids, which is what the rest of the
+      // app reads.
+      const courseModules = modulesResult.data.map((courseModule) => {
+        useTestPaperStore.getState().addTestPapers(courseModule.testPapers);
+        useMaterialStore.getState().addMaterials(courseModule.materials);
+        useMeetStore.getState().addMeets(courseModule.meets);
+        return {
+          ...courseModule,
+          testPapers: courseModule.testPapers.map((testPaper) => testPaper._id),
+          materials: courseModule.materials.map((material) => material._id),
+          meets: courseModule.meets.map((meet) => meet._id),
+        };
       });
-      self.rootStore.meetStore.addMeets(meets);
-      self.addCourseModules(modules);
-      self.rootStore.selectorStore.setSelectedCourseModuleId(modules[0]?._id);
-      self.isCourseModuleLoading = false;
-      course.setIsLoadedContents(true);
+      useMeetStore.getState().addMeets(meetsResult.data);
+      get().addCourseModules(courseModules);
+      const firstModuleId = courseModules[0]?._id;
+      if (firstModuleId) useSelectorStore.getState().setSelectedCourseModuleId(firstModuleId);
+      get().patchCourse(courseId, { isLoadedContents: true });
     }),
 
-    loadCompletedModules: flow(function* () {
-      const result = yield CourseService.getCompletedModules();
+  loadCompletedModules: () =>
+    get().run('completedModules', async () => {
+      const result = await CourseService.getCompletedModules();
       if (!result?.data) return;
-      self.addCompletedModules(result.data);
-      self.rootStore.selectorStore.selectedUser?.setIsLoadedCompletedModules(true);
+      get().addCompletedModules(result.data);
+      const selectedUserId = useSelectorStore.getState().selectedUserId;
+      if (selectedUserId) useUserStore.getState().patchUser(selectedUserId, { isLoadedCompletedModules: true });
     }),
-  }))
-  .actions((self) => ({
-    createPlan: (courseId: string, order: number, period: PeriodType) => {
-      const plan = Plan.create({
-        _id: getObjectId(),
-        name: capitalize(period),
-        courses: [courseId],
-        meets: [],
-        amount: 0,
-        realAmount: 0,
-        currency: CurrencyType.INR,
-        interval: 1,
-        period,
-        order,
-        isRecommended: period === PeriodType.YEARLY,
-        isNew: true,
-        ...self.rootStore.selectorStore.selectedData,
-      });
-      self.addPlan(plan);
-      return plan;
-    },
 
-    createCompletedModule: (data: IGetCompletedModule, collectionRef: CollectionType): ICompletedModule => {
-      const completedModule = CompletedModule.create({
-        ...data,
-        _id: getObjectId(),
-        collectionRef,
-        isCompleted: true,
-        isSkipped: false,
-        ...self.rootStore.selectorStore.selectedData,
-      });
-      self.addCompletedModule(completedModule);
-      return completedModule;
-    },
-  }))
-  .views((self) => ({
-    plansByCourseId(courseId: string) {
-      return self.plans.filter((plan) => plan.courses.includes(courseId));
-    },
+  reset: () => {
+    set({ courseMap: {}, planMap: {}, courseModuleMap: {}, completedModuleMap: {} });
+    get().resetRequests();
+  },
+}));
 
-    get groupedCoursesByStandardId(): Record<string, ICourse[]> {
-      const groupedCourses: Record<string, ICourse[]> = {};
-      self.courses.forEach((course) => {
-        const standards = course.standards;
-        standards.forEach((standard) => {
-          if (!groupedCourses[standard]) {
-            groupedCourses[standard] = [];
-          }
-          groupedCourses[standard].push(course);
-        });
-      });
-      return groupedCourses;
-    },
+/** The store's lookups, subscribed to its state. */
+export const useCourseLookups = (): ICourseState => useCourseStore(useShallow((state) => state));
 
-    isCourseModuleCompleted(courseModuleId: string): { isAllCompleted: boolean; isPartiallyCompleted: boolean } {
-      const courseModule = self.getCourseModuleById(courseModuleId);
-      if (!courseModule) return { isAllCompleted: false, isPartiallyCompleted: false };
-      let isAllCompleted = true;
-      let isPartiallyCompleted = false;
-      courseModule.materials.forEach((materialId) => {
-        const isCompleted = self.isCourseModuleItemCompleted({
-          course: courseModule.course,
-          courseModule: courseModule._id,
-          collectionItem: materialId,
-        });
-        if (!isCompleted) {
-          isAllCompleted = false;
-        } else {
-          isPartiallyCompleted = true;
-        }
-      });
-      courseModule.testPapers.forEach((testPaperId) => {
-        const isCompleted = self.isCourseModuleItemCompleted({
-          course: courseModule.course,
-          courseModule: courseModule._id,
-          collectionItem: testPaperId,
-        });
-        if (!isCompleted) {
-          isAllCompleted = false;
-        } else {
-          isPartiallyCompleted = true;
-        }
-      });
-      return { isAllCompleted, isPartiallyCompleted };
-    },
-  }));
+/** The selected course, or `undefined`. Replaces `selectorStore.selectedCourse`. */
+export const useSelectedCourse = (): ICourse | undefined => {
+  const selectedCourseId = useSelectorStore((state) => state.selectedCourseId);
+  return useCourseStore((state) => (selectedCourseId ? state.courseMap[selectedCourseId] : undefined));
+};
 
-export type ICourseStore = Instance<typeof CourseStore>;
+/** The selected course module, or `undefined`. Replaces `selectorStore.selectedCourseModule`. */
+export const useSelectedCourseModule = (): ICourseModule | undefined => {
+  const selectedId = useSelectorStore((state) => state.selectedCourseModuleId);
+  return useCourseStore((state) => (selectedId ? state.courseModuleMap[selectedId] : undefined));
+};
+
+/** The selected course's plans. Replaces `selectorStore.selectedCoursePlans`. */
+export const useSelectedCoursePlans = (): IPlan[] => {
+  const selectedCourseId = useSelectorStore((state) => state.selectedCourseId);
+  return useCourseStore(useShallow((state) => state.getPlansByCourseId(selectedCourseId)));
+};

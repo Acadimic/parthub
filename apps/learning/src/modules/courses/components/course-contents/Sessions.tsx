@@ -1,7 +1,6 @@
 import { MeetItem } from '@components/meet';
 import { BlankState } from '@components/others';
 import { type IMeet } from '@stores';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   meets: IMeet[];
@@ -9,7 +8,7 @@ interface IProps {
   isCopyIconOnly?: boolean;
 }
 
-export const Sessions = observer(({ meets, isSmallJoinable = false, isCopyIconOnly = false }: IProps) => {
+export const Sessions = ({ meets, isSmallJoinable = false, isCopyIconOnly = false }: IProps) => {
   return (
     <>
       {meets.length ? (
@@ -25,4 +24,4 @@ export const Sessions = observer(({ meets, isSmallJoinable = false, isCopyIconOn
       )}
     </>
   );
-});
+};

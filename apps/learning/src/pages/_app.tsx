@@ -1,14 +1,14 @@
 import { ErrorBoundaryFallback, FullScreenLoader, InternetStatus } from '@repo/ui/app';
+import { useRequest } from '@repo/ui/hooks';
 import { ColorModeContext } from '@repo/ui/contexts';
 import { Layout, StorageKey, Theme } from '@enums';
 import { AuthLayout, PageLayout, PageNavigationLayout, PublicLayout, SidebarLayout } from '@layouts';
 import { ToastContainer } from '@modules/toasts';
-import { useStores } from '@stores';
+import { useStandardStore, useUserLookups } from '@stores';
 import '@styles/globals.scss';
 import { loadFirebaseUser } from '@utils/firebase';
 import { getToken, IS_WINDOW_UNDEFINED } from '@utils/helpers';
 import { MathJaxContext } from 'better-react-mathjax';
-import { observer } from 'mobx-react-lite';
 import type { NextPage } from 'next';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
@@ -40,17 +40,14 @@ const config = {
 type ThemeMode = 'light' | 'dark';
 
 function App({ Component, pageProps }: AppPropsWithLayout) {
-  const {
-    userStore,
-    isLoadingInitialData,
-    isLoadedInitialData,
-    isLoadedPublicData,
-    isLoadingPublicData,
-    loadInitialData,
-    loadPublicData,
-    courseStore,
-  } = useStores();
-  const { isLoadingLoggedInUsers, isLoadedLoggedInUsers, loadLoggedInUsers } = userStore;
+  const userStore = useUserLookups();
+  const { loadLoggedInUsers } = userStore;
+  // `useRequest` rather than `useLoadOnce`: both loads are gated below, not simply on mount.
+  const initialData = useRequest(useStandardStore, 'initialData');
+  const loadInitialData = useStandardStore((state) => state.loadInitialData);
+  const loadPublicData = useStandardStore((state) => state.loadPublicData);
+  const isLoadingLoggedInUsers = userStore.isLoading('loggedInUsers');
+  const isLoadedLoggedInUsers = userStore.isLoaded('loggedInUsers');
   const { route, push } = useRouter();
   const { layout } = Component;
   const [isReady, setIsReady] = useState(false);
@@ -161,14 +158,14 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   }, [route, isReady]);
 
   useEffect(() => {
-    if (!isLoadedInitialData && !isLoadingInitialData && isLoadedLoggedInUsers) loadInitialData();
-  }, [isLoadedInitialData, isLoadingInitialData, isLoadedLoggedInUsers]);
+    if (isLoadedLoggedInUsers && useStandardStore.getState().shouldLoad('initialData')) loadInitialData();
+  }, [isLoadedLoggedInUsers, loadInitialData]);
 
   useEffect(() => {
-    if (!isLoadedPublicData && !isLoadingPublicData) loadPublicData();
-  }, [isLoadedPublicData, isLoadingPublicData]);
+    if (useStandardStore.getState().shouldLoad('publicData')) loadPublicData();
+  }, [loadPublicData]);
 
-  if (!mode || !isReady || (isLoadedLoggedInUsers && !isLoadedInitialData)) return null;
+  if (!mode || !isReady || (isLoadedLoggedInUsers && !initialData.isLoaded)) return null;
 
   return (
     <>
@@ -195,7 +192,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   );
 }
 
-const AppWithErrorBoundary = withErrorBoundary(observer(App), {
+const AppWithErrorBoundary = withErrorBoundary(App, {
   FallbackComponent: ErrorBoundaryFallback,
   onError(error: Error, info: ErrorInfo) {
     console.log(error, info);

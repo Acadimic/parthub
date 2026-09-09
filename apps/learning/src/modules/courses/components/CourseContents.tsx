@@ -1,6 +1,5 @@
 import { Accordions } from '@repo/ui/app';
-import { type ICourse, useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type ICourse, useCourseLookups, useMaterialLookups, useTestPaperLookups } from '@stores';
 import { CourseContentItem } from './CourseContentItem';
 import { CourseInfo } from './CourseInfo';
 
@@ -11,8 +10,10 @@ interface IProps {
   closeCourseOverview: () => void;
 }
 
-export const CourseContents = observer(({ courseId, course, isPreview, closeCourseOverview }: IProps) => {
-  const { courseStore, materialStore, testPaperStore } = useStores();
+export const CourseContents = ({ courseId, course, isPreview, closeCourseOverview }: IProps) => {
+  const courseStore = useCourseLookups();
+  const materialStore = useMaterialLookups();
+  const testPaperStore = useTestPaperLookups();
   const { getMaterialsByIds } = materialStore;
   const { getTestPapersByIds } = testPaperStore;
   const { getCourseModuleByCourseId } = courseStore;
@@ -45,7 +46,7 @@ export const CourseContents = observer(({ courseId, course, isPreview, closeCour
                 ) : null}
 
                 <div className="flex flex-col divide-y divide-color-border">
-                  {getMaterialsByIds(courseModule.materials).map((material) => {
+                  {getMaterialsByIds(courseModule.materials ?? []).map((material) => {
                     return (
                       <CourseContentItem
                         courseId={courseId}
@@ -57,7 +58,7 @@ export const CourseContents = observer(({ courseId, course, isPreview, closeCour
                       />
                     );
                   })}
-                  {getTestPapersByIds(courseModule.testPapers).map((testPaper) => {
+                  {getTestPapersByIds(courseModule.testPapers ?? []).map((testPaper) => {
                     return (
                       <CourseContentItem
                         courseId={courseId}
@@ -77,4 +78,4 @@ export const CourseContents = observer(({ courseId, course, isPreview, closeCour
       </div>
     </div>
   );
-});
+};

@@ -4,7 +4,6 @@ import { type ILoginUser } from '@interfaces';
 import { ArrowCircleLeftIcon, EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
 import { createFirebaseUser, fetchSignInMethods, type FirebaseError, getFirebaseErrorMessage } from '@utils/firebase';
 import { errorToast, getRedirectUri, isValidEmail } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -12,7 +11,7 @@ import { useSetState } from 'react-use';
 import { SignInWithGoogleButton, SignInWithMicrosoftButton } from './components';
 import { OnboardingBanner } from './OnboardingBanner';
 
-export const SignUp = observer(() => {
+export const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDisabled, setIsDisabled] = useState(false);
   const [isShowPassword, setIsShowPassword] = useState(false);
@@ -154,4 +153,4 @@ export const SignUp = observer(() => {
       </div>
     </div>
   );
-});
+};

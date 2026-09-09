@@ -1,211 +1,199 @@
-import { type Instance, flow, getRoot, types as t } from 'mobx-state-tree';
+import {
+  type BookmarkDto,
+  type ClientEntity,
+  type FollowerDto,
+  type IRequestSlice,
+  type ReactionDto,
+  createRequestSlice,
+} from '@repo/shared';
+import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { CollectionType } from '../enums';
 import { BookmarkService, FollowerService, ReactionService } from '../services';
 import { getObjectId } from '../utils/helpers';
-import {
-  Bookmark,
-  Follower,
-  type IBookmark,
-  type IFollower,
-  type IMaterial,
-  type IReaction,
-  type ITestPaper,
-  Reaction,
-} from './models';
-import { type IStore } from './root.store';
+import { useMaterialStore } from './material.store';
+import { useSelectorStore } from './selector.store';
+import { useTestPaperStore } from './test-paper.store';
+import { useUserStore } from './user.store';
 
-export const ResourceStore = t
-  .model({
-    bookmarkMaps: t.map(Bookmark),
-    reactionMaps: t.map(Reaction),
-    followingMaps: t.map(Follower),
-    isLoadingBookmark: t.optional(t.boolean, false),
-    isLoadingReaction: t.optional(t.boolean, false),
-    isLoadingFollowing: t.optional(t.boolean, false),
-    isToggleFollowing: t.optional(t.boolean, false),
-    isToggleReaction: t.optional(t.boolean, false),
-  })
-  .views((self) => ({
-    get rootStore() {
-      return getRoot<IStore>(self);
-    },
+export type IBookmark = ClientEntity<BookmarkDto>;
+export type IReaction = ClientEntity<ReactionDto>;
+export type IFollower = ClientEntity<FollowerDto>;
 
-    get bookmarks(): IBookmark[] {
-      return Array.from(self.bookmarkMaps.values());
-    },
+/** The fetches this store tracks. `toggleReaction` and `toggleFollowing` get their own. */
+type ResourceFetch = 'bookmarks' | 'reactions' | 'followings' | 'toggleReaction' | 'toggleFollowing';
 
-    get reactions(): IReaction[] {
-      return Array.from(self.reactionMaps.values());
-    },
+export interface IResourceState extends IRequestSlice<ResourceFetch> {
+  bookmarkMap: Record<string, IBookmark>;
+  reactionMap: Record<string, IReaction>;
+  followingMap: Record<string, IFollower>;
 
-    get followings(): IFollower[] {
-      return Array.from(self.followingMaps.values());
-    },
-  }))
-  .views((self) => ({
-    getBookmarkByItemId(course: string, collectionItem: string): IBookmark | undefined {
-      return self.bookmarks.find((item) => item.course === course && item.collectionItem === collectionItem);
-    },
+  getBookmarks: () => IBookmark[];
+  getReactions: () => IReaction[];
+  getFollowings: () => IFollower[];
+  getBookmarkByItemId: (courseId: string, collectionItem: string) => IBookmark | undefined;
+  getReactionByItemId: (courseId: string, collectionItem: string) => IReaction | undefined;
+  getFollowerFollowingMap: (followerId: string, followingId: string) => IFollower | undefined;
+  /** Whether the selected course's item is bookmarked — a soft-deleted row counts as not. */
+  isBookmarked: (collectionItem: string) => boolean;
+  isReacted: (collectionItem: string) => boolean;
+  isFollowing: (userId: string) => boolean;
 
-    getReactionByItemId(course: string, collectionItem: string): IReaction | undefined {
-      return self.reactions.find((item) => item.course === course && item.collectionItem === collectionItem);
-    },
+  addBookmarks: (bookmarks: IBookmark[]) => void;
+  addReactions: (reactions: IReaction[]) => void;
+  addFollowings: (followings: IFollower[]) => void;
 
-    getFollowerFollowingMap(followerId: string, followingId: string): IFollower | undefined {
-      return self.followings.find((item) => item.follower === followerId && item.following === followingId);
-    },
-  }))
-  .views((self) => ({
-    isBookmarked(collectionItem: string): boolean {
-      const selectedCourseId = self.rootStore.selectorStore.selectedCourseId;
-      if (!selectedCourseId) return false;
-      const bookmarkItem = self.getBookmarkByItemId(selectedCourseId, collectionItem);
-      return bookmarkItem && !bookmarkItem._deleted ? true : false;
-    },
+  loadBookmarks: () => Promise<void>;
+  loadReactions: () => Promise<void>;
+  loadFollowings: () => Promise<void>;
+  /** Adds the bookmark, or flips `_deleted` on the one already there. */
+  toggleBookmark: (collectionItem: string, collectionRef: CollectionType) => Promise<void>;
+  toggleReaction: (collectionItem: string, collectionRef: CollectionType) => Promise<void>;
+  toggleFollowing: (followingId: string) => Promise<void>;
+  reset: () => void;
+}
 
-    isReacted(collectionItem: string): boolean {
-      const selectedCourseId = self.rootStore.selectorStore.selectedCourseId;
-      if (!selectedCourseId) return false;
-      const reactionItem = self.getReactionByItemId(selectedCourseId, collectionItem);
-      return reactionItem && !reactionItem._deleted ? true : false;
-    },
+const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
+  rows.reduce<Record<string, T>>((map, row) => {
+    map[row._id] = row;
+    return map;
+  }, {});
 
-    isFollowing(userId: string): boolean {
-      const selectedUserId = self.rootStore.selectorStore.selectedUserId;
-      if (!selectedUserId) return false;
-      const followingItem = self.getFollowerFollowingMap(selectedUserId, userId);
-      return followingItem && !followingItem._deleted ? true : false;
-    },
-  }))
-  .actions((self) => ({
-    addBookmark: (obj: IBookmark) => {
-      if (!obj) return;
-      const objId = obj._id;
-      const isObj = self.bookmarkMaps.has(objId);
-      if (isObj) self.bookmarkMaps.set(objId, obj);
-      else self.bookmarkMaps.put(obj);
-    },
+export const useResourceStore = create<IResourceState>()((set, get) => ({
+  bookmarkMap: {},
+  reactionMap: {},
+  followingMap: {},
+  ...createRequestSlice(['bookmarks', 'reactions', 'followings', 'toggleReaction', 'toggleFollowing'], set, get),
 
-    addReaction: (obj: IReaction) => {
-      if (!obj) return;
-      const objId = obj._id;
-      const isObj = self.reactionMaps.has(objId);
-      if (isObj) self.reactionMaps.set(objId, obj);
-      else self.reactionMaps.put(obj);
-    },
+  getBookmarks: () => Object.values(get().bookmarkMap),
 
-    addFollowing: (obj: IFollower) => {
-      if (!obj) return;
-      const objId = obj._id;
-      const isObj = self.followingMaps.has(objId);
-      if (isObj) self.followingMaps.set(objId, obj);
-      else self.followingMaps.put(obj);
-    },
-  }))
-  .actions((self) => ({
-    addBookmarks: (objects: IBookmark[]) => {
-      objects.forEach((obj) => self.addBookmark(obj));
-    },
+  getReactions: () => Object.values(get().reactionMap),
 
-    addReactions: (objects: IReaction[]) => {
-      objects.forEach((obj) => self.addReaction(obj));
-    },
+  getFollowings: () => Object.values(get().followingMap),
 
-    addFollowings: (objects: IFollower[]) => {
-      objects.forEach((obj) => self.addFollowing(obj));
-    },
-  }))
-  .actions((self) => ({
-    loadBookmarks: flow(function* () {
-      self.isLoadingBookmark = true;
-      const result = yield BookmarkService.getBookmarks();
-      if (result?.data) self.addBookmarks(result.data);
-      self.isLoadingBookmark = false;
+  getBookmarkByItemId: (courseId, collectionItem) =>
+    get()
+      .getBookmarks()
+      .find((item) => item.course === courseId && item.collectionItem === collectionItem),
+
+  getReactionByItemId: (courseId, collectionItem) =>
+    get()
+      .getReactions()
+      .find((item) => item.course === courseId && item.collectionItem === collectionItem),
+
+  getFollowerFollowingMap: (followerId, followingId) =>
+    get()
+      .getFollowings()
+      .find((item) => item.follower === followerId && item.following === followingId),
+
+  isBookmarked: (collectionItem) => {
+    const selectedCourseId = useSelectorStore.getState().selectedCourseId;
+    if (!selectedCourseId) return false;
+    const bookmark = get().getBookmarkByItemId(selectedCourseId, collectionItem);
+    return !!bookmark && !bookmark._deleted;
+  },
+
+  isReacted: (collectionItem) => {
+    const selectedCourseId = useSelectorStore.getState().selectedCourseId;
+    if (!selectedCourseId) return false;
+    const reaction = get().getReactionByItemId(selectedCourseId, collectionItem);
+    return !!reaction && !reaction._deleted;
+  },
+
+  isFollowing: (userId) => {
+    const selectedUserId = useSelectorStore.getState().selectedUserId;
+    if (!selectedUserId) return false;
+    const following = get().getFollowerFollowingMap(selectedUserId, userId);
+    return !!following && !following._deleted;
+  },
+
+  addBookmarks: (bookmarks) => {
+    set((state) => ({ bookmarkMap: { ...state.bookmarkMap, ...keyById(bookmarks) } }));
+  },
+
+  addReactions: (reactions) => {
+    set((state) => ({ reactionMap: { ...state.reactionMap, ...keyById(reactions) } }));
+  },
+
+  addFollowings: (followings) => {
+    set((state) => ({ followingMap: { ...state.followingMap, ...keyById(followings) } }));
+  },
+
+  loadBookmarks: () =>
+    get().run('bookmarks', async () => {
+      const result = await BookmarkService.getBookmarks();
+      if (result?.data) get().addBookmarks(result.data);
     }),
 
-    loadReactions: flow(function* () {
-      self.isLoadingReaction = true;
-      const result = yield ReactionService.getReactions();
-      if (result?.data) self.addReactions(result.data);
-      self.isLoadingReaction = false;
+  loadReactions: () =>
+    get().run('reactions', async () => {
+      const result = await ReactionService.getReactions();
+      if (result?.data) get().addReactions(result.data);
     }),
 
-    loadFollowings: flow(function* () {
-      self.isLoadingFollowing = true;
-      const result = yield FollowerService.getFollowings();
-      if (result?.data) self.addFollowings(result.data);
-      self.isLoadingFollowing = false;
+  loadFollowings: () =>
+    get().run('followings', async () => {
+      const result = await FollowerService.getFollowings();
+      if (result?.data) get().addFollowings(result.data);
     }),
 
-    toggleBookmark: flow(function* (collectionItem: string, collectionRef: CollectionType) {
-      const selectedCourseId = self.rootStore.selectorStore.selectedCourseId;
+  toggleBookmark: async (collectionItem, collectionRef) => {
+    const selectedCourseId = useSelectorStore.getState().selectedCourseId;
+    if (!selectedCourseId) return;
+    const existing = get().getBookmarkByItemId(selectedCourseId, collectionItem);
+    // The API removes a row by upserting it with `_deleted`; every read filters those out.
+    const payload: IBookmark = existing
+      ? { ...existing, _deleted: !existing._deleted }
+      : { _id: getObjectId(), collectionItem, collectionRef, course: selectedCourseId };
+    const result = await BookmarkService.upsertBookmark(payload);
+    if (result?.data) get().addBookmarks([result.data]);
+  },
+
+  toggleReaction: (collectionItem, collectionRef) =>
+    get().run('toggleReaction', async () => {
+      const selectedCourseId = useSelectorStore.getState().selectedCourseId;
       if (!selectedCourseId) return;
-      let bookmarkItem = self.getBookmarkByItemId(selectedCourseId, collectionItem);
-      if (bookmarkItem) bookmarkItem.toggleDelete();
-      else {
-        bookmarkItem = Bookmark.create({
-          _id: getObjectId(),
-          collectionItem,
-          collectionRef,
-          course: selectedCourseId,
-          ...self.rootStore.selectorStore.selectedData,
-        });
-      }
-      const result = yield BookmarkService.upsertBookmark(bookmarkItem);
-      if (result?.data) self.addBookmark(result.data);
-    }),
-
-    toggleReaction: flow(function* (collectionItem: string, collectionRef: CollectionType) {
-      const selectedCourseId = self.rootStore.selectorStore.selectedCourseId;
-      let item: IMaterial | ITestPaper | undefined = undefined;
+      const existing = get().getReactionByItemId(selectedCourseId, collectionItem);
+      const payload: IReaction = existing
+        ? { ...existing, _deleted: !existing._deleted }
+        : { _id: getObjectId(), collectionItem, collectionRef, course: selectedCourseId };
+      const result = await ReactionService.upsertReaction(payload);
+      if (result?.data) get().addReactions([result.data]);
+      // The count lives on the row the reaction belongs to, so its own store refreshes it.
       if (collectionRef === CollectionType.MATERIAL) {
-        item = self.rootStore.materialStore.getMaterialById(collectionItem);
+        await useMaterialStore.getState().loadReactionsCount(collectionItem);
       } else if (collectionRef === CollectionType.TEST_PAPER) {
-        item = self.rootStore.testPaperStore.getTestPaperById(collectionItem);
+        await useTestPaperStore.getState().loadReactionsCount(collectionItem);
       }
-      if (!selectedCourseId) return;
-      self.isToggleReaction = true;
-      let reactionItem = self.getReactionByItemId(selectedCourseId, collectionItem);
-      if (reactionItem) reactionItem.toggleDelete();
-      else {
-        reactionItem = Reaction.create({
-          _id: getObjectId(),
-          collectionItem,
-          collectionRef,
-          course: selectedCourseId,
-          ...self.rootStore.selectorStore.selectedData,
-        });
-      }
-      const result = yield ReactionService.upsertReaction(reactionItem);
-      if (result?.data) self.addReaction(result.data);
-      item?.loadReactionsCount();
-      self.isToggleReaction = false;
     }),
 
-    toggleFollowing: flow(function* (followingId: string) {
-      const selectedUserId = self.rootStore.selectorStore.selectedUserId;
-      const following = self.rootStore.userStore.getUserById(followingId);
-      if (!selectedUserId || !following) return;
-      following.setIsLoadingFollowersCount(true);
-      let item = self.getFollowerFollowingMap(selectedUserId, followingId);
-      console.log('item: ', item);
-      self.isToggleFollowing = true;
-      if (item) {
-        item.toggleDelete();
-      } else {
-        item = Follower.create({
-          _id: getObjectId(),
-          follower: selectedUserId,
-          following: followingId,
-          ...self.rootStore.selectorStore.selectedData,
-        });
-      }
-      const result = yield FollowerService.upsertFollower(item);
-      if (result?.data) self.addFollowing(result.data);
-      following.setIsLoadingFollowersCount(false);
-      following.loadFollowersCount();
-      self.isToggleFollowing = false;
+  toggleFollowing: (followingId) =>
+    get().run('toggleFollowing', async () => {
+      const selectedUserId = useSelectorStore.getState().selectedUserId;
+      const userStore = useUserStore.getState();
+      if (!selectedUserId || !userStore.getUserById(followingId)) return;
+      const existing = get().getFollowerFollowingMap(selectedUserId, followingId);
+      const payload: IFollower = existing
+        ? { ...existing, _deleted: !existing._deleted }
+        : { _id: getObjectId(), follower: selectedUserId, following: followingId };
+      const result = await FollowerService.upsertFollower(payload);
+      if (result?.data) get().addFollowings([result.data]);
+      await userStore.loadFollowersCount(followingId);
     }),
-  }));
 
-export type IResourceStore = Instance<typeof ResourceStore>;
+  reset: () => {
+    set({ bookmarkMap: {}, reactionMap: {}, followingMap: {} });
+    get().resetRequests();
+  },
+}));
+
+/**
+ * The store's lookups, subscribed to the state they read.
+ *
+ * `isBookmarked`, `isReacted` and `isFollowing` all depend on the current selection, so this
+ * subscribes to the selector store too — otherwise switching course would leave them stale.
+ */
+export const useResourceLookups = (): IResourceState => {
+  useSelectorStore(useShallow((state) => [state.selectedCourseId, state.selectedUserId]));
+  return useResourceStore(useShallow((state) => state));
+};

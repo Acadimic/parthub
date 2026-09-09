@@ -1,12 +1,11 @@
 import { Tooltip } from '@repo/ui/app';
 import { type ITestPaperSection } from '@stores';
-import { observer } from 'mobx-react-lite';
 
 interface IProps {
   section: ITestPaperSection;
 }
 
-export const TestPaperSection = observer(({ section }: IProps) => {
+export const TestPaperSection = ({ section }: IProps) => {
   return (
     <Tooltip title={section.name}>
       <div
@@ -17,4 +16,4 @@ export const TestPaperSection = observer(({ section }: IProps) => {
       </div>
     </Tooltip>
   );
-});
+};

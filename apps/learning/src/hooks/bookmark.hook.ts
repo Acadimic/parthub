@@ -1,9 +1,9 @@
 import { type CollectionType } from '@enums';
-import { useStores } from '@stores';
+import { useResourceLookups } from '@stores';
 import { useState } from 'react';
 
 export const useBookmark = () => {
-  const { resourceStore } = useStores();
+  const resourceStore = useResourceLookups();
   const [isLoadingBookmark, setIsLoadingBookmark] = useState(false);
 
   const toggleBookmark = async (collectionItem: string, collectionRef: CollectionType) => {

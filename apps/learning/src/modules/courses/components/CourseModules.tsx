@@ -4,15 +4,14 @@ import { useCourse } from '@hooks/course.hook';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { ListIcon } from '@phosphor-icons/react';
 import { House } from '@phosphor-icons/react/dist/ssr';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useSelectedCourse, useStandardLookups } from '@stores';
 import { useState } from 'react';
 import { CourseContent } from './course-contents/CourseContent';
 import { SelectedCourseModules } from './SelectedCourseModules';
 
-export const CourseModules = observer(() => {
-  const { selectorStore, courseStore, standardStore } = useStores();
-  const { selectedCourse } = selectorStore;
+export const CourseModules = () => {
+  const standardStore = useStandardLookups();
+  const selectedCourse = useSelectedCourse();
   const { getStandardById } = standardStore;
   const { onClickCourseContentItem, onClickCoursePreviewContentItem } = useCourse();
   const { isSmallScreen } = useWindowDimensions();
@@ -79,4 +78,4 @@ export const CourseModules = observer(() => {
       </div>
     </div>
   );
-});
+};

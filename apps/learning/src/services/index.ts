@@ -1,5 +1,4 @@
 import AuthService from './auth.service';
-import BatchService from './batch.service';
 import BookmarkService from './bookmark.service';
 import ChapterService from './chapter.service';
 import CommonService from './common.service';
@@ -18,7 +17,6 @@ import UserService from './user.service';
 
 export {
   AuthService,
-  BatchService,
   BookmarkService,
   ChapterService,
   CommonService,

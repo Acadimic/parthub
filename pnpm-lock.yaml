@@ -174,9 +174,6 @@ importers:
       eslint-plugin-react-hooks:
         specifier: ^7.1.1
         version: 7.1.1(eslint@10.10.0(jiti@1.21.7))
-      mobx-devtools-mst:
-        specifier: ^0.9.33
-        version: 0.9.47(mobx-state-tree@6.0.1(mobx@6.16.1))(mobx@6.16.1)
       postcss:
         specifier: ^8
         version: 8.5.15
@@ -282,15 +279,6 @@ importers:
       lucide-react:
         specifier: ^1.25.0
         version: 1.25.0(react@19.2.8)
-      mobx:
-        specifier: ^6.13.2
-        version: 6.16.1
-      mobx-react-lite:
-        specifier: ^4.0.7
-        version: 4.1.1(mobx@6.16.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      mobx-state-tree:
-        specifier: ^6.0.1
-        version: 6.0.1(mobx@6.16.1)
       next:
         specifier: 16.3.4
         version: 16.3.4(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.101.0)
@@ -4537,34 +4525,6 @@ packages:
 
   mj-context-menu@1.0.0:
     resolution: {integrity: sha512-OSgBFQRCVhrZwRa9lhqnKcJU92dd/YXgBjup0uyeuj9bOaVsf4myOyrjU4PfhYkdDk6AqVUTov7v5uFMvIbduA==}
-
-  mobx-devtools-mst@0.9.47:
-    resolution: {integrity: sha512-gwCU4gb0YLJ3Uh/v6EjrWaR7zz1ET7jyInK9hPZeYIZuN5fGIrgsbVUwB0C+PKmadXYSOnVhNMschW2cUvyfEw==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      mobx: ^2.2.0 || ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0
-      mobx-state-tree: '*'
-
-  mobx-react-lite@4.1.1:
-    resolution: {integrity: sha512-iUxiMpsvNraCKXU+yPotsOncNNmyeS2B5DKL+TL6Tar/xm+wwNJAubJmtRSeAoYawdZqwv8Z/+5nPRHeQxTiXg==}
-    peerDependencies:
-      mobx: ^6.9.0
-      react: ^16.8.0 || ^17 || ^18 || ^19
-      react-dom: '*'
-      react-native: '*'
-    peerDependenciesMeta:
-      react-dom:
-        optional: true
-      react-native:
-        optional: true
-
-  mobx-state-tree@6.0.1:
-    resolution: {integrity: sha512-ZmC90+aaZj4Tvwz/G8kihAcZzejiHfkaIrwyneH7ACoZwWY2Gw5SP1mPPPQbVehsXJ8/OhDT4cPUvvzy//+Qog==}
-    peerDependencies:
-      mobx: ^6.3.0
-
-  mobx@6.16.1:
-    resolution: {integrity: sha512-syNcDdX3KT+Jq3je6eGjBhuc24Z68td2VG0zNFqRswaE433D9SNH5VRy/xrGbJsUixfppLLccXhAW9JSf6n+SQ==}
 
   mongodb-connection-string-url@7.0.2:
     resolution: {integrity: sha512-ZoS07RoFqpKYQwAk59qmrx8+jJHNHU30UjlU96QktiGn1ltvDr+vCznLX5DiUBLEpMAHatHNWV1nM/74ul66kA==}
@@ -9731,25 +9691,6 @@ snapshots:
   mj-context-menu@1.0.0:
     dependencies:
       rimraf: 6.1.3
-
-  mobx-devtools-mst@0.9.47(mobx-state-tree@6.0.1(mobx@6.16.1))(mobx@6.16.1):
-    dependencies:
-      mobx: 6.16.1
-      mobx-state-tree: 6.0.1(mobx@6.16.1)
-
-  mobx-react-lite@4.1.1(mobx@6.16.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
-    dependencies:
-      mobx: 6.16.1
-      react: 19.2.8
-      use-sync-external-store: 1.6.0(react@19.2.8)
-    optionalDependencies:
-      react-dom: 19.2.8(react@19.2.8)
-
-  mobx-state-tree@6.0.1(mobx@6.16.1):
-    dependencies:
-      mobx: 6.16.1
-
-  mobx@6.16.1: {}
 
   mongodb-connection-string-url@7.0.2:
     dependencies:

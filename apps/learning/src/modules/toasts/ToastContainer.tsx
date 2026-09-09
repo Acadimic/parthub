@@ -1,9 +1,10 @@
-import { toastStore } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useToastStore } from '@stores';
 import { Toast } from './Toast';
 
-export const ToastContainer = observer(() => {
-  const { toasts } = toastStore;
+export const ToastContainer = () => {
+  // `s.toasts` is the array held in state, so its reference only changes when the array does.
+  // A derived collection (`Object.values(...)`, `.filter(...)`) would need `useShallow` instead.
+  const toasts = useToastStore((state) => state.toasts);
 
   return (
     <>
@@ -12,4 +13,4 @@ export const ToastContainer = observer(() => {
       ))}
     </>
   );
-});
+};

@@ -1,4 +1,4 @@
-import { useStores } from '@stores';
+import { useTestPaperLookups } from '@stores';
 import { useSetState } from 'react-use';
 
 interface IExamState {
@@ -12,7 +12,7 @@ interface IExamState {
 }
 
 export const useExam = () => {
-  const { testPaperStore } = useStores();
+  const testPaperStore = useTestPaperLookups();
   const { exam } = testPaperStore;
   const [examState, setExamState] = useSetState<IExamState>({
     isOpenInstruction: false,
@@ -26,16 +26,17 @@ export const useExam = () => {
 
   const handleSubmitTest = () => {
     if (!exam) return;
-    const { accuracy, percentage, marksObtained } = exam;
+    const { getAccuracy, getMarksObtained, getPercentage } = testPaperStore;
     openResultPage();
     closeSubmitSummary();
-    exam.submitExam();
+    testPaperStore.submitExam();
     setExamState({ isActiveTimer: false });
+    // The result payload is the sitting plus the three figures the store derives from it.
     const data = {
       ...exam,
-      accuracy,
-      percentage,
-      marksObtained,
+      accuracy: getAccuracy(),
+      percentage: getPercentage(),
+      marksObtained: getMarksObtained(),
     };
   };
 

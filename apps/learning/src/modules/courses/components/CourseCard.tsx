@@ -1,18 +1,18 @@
 import { Card } from '@repo/ui/app';
 import { PresignedImage } from '@components/app/attachments';
 import { StandardWithLogo } from '@components/common';
-import { type ICourse, useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type ICourse, useSelectorLookups, useStandardLookups, useUserLookups } from '@stores';
 import Link from 'next/link';
 import { CourseInfo } from './';
 
-export const CourseCard = observer(({ course }: { course: ICourse }) => {
+export const CourseCard = ({ course }: { course: ICourse }) => {
   // const { push } = useRouter();
-  const { userStore, selectorStore, standardStore } = useStores();
+  const userStore = useUserLookups();
+  const selectorStore = useSelectorLookups();
+  const standardStore = useStandardLookups();
   const { getOrgById } = userStore;
   const { setSelectedCourseId } = selectorStore;
   const { getStandardsByIds } = standardStore;
-  const org = getOrgById(course.org);
 
   const onClickCourse = () => {
     setSelectedCourseId(course._id);
@@ -26,7 +26,7 @@ export const CourseCard = observer(({ course }: { course: ICourse }) => {
       <Card className="rounded border-2">
         <div className="flex flex-col space-y-2 w-full">
           <div className="h-60 w-full">
-            <PresignedImage className="rounded-t object-cover" url={course.attachments[0].url} noOpen />
+            <PresignedImage className="rounded-t object-cover" url={(course.attachments ?? [])[0].url} noOpen />
           </div>
           <div className="p-3 flex flex-col space-y-3">
             {/* <div className="text-xs text-color-secondary font-medium flex items-center space-x-2">
@@ -41,7 +41,7 @@ export const CourseCard = observer(({ course }: { course: ICourse }) => {
               </div>
               <div>{org?.name}</div>
             </div> */}
-            <StandardWithLogo standard={getStandardsByIds(course.standards)[0]} />
+            <StandardWithLogo standard={getStandardsByIds(course.standards ?? [])[0]} />
             <div>
               <div className="font-medium truncate">{course.name}</div>
               <div className="text-sm text-color-secondary truncate">{course.description}</div>
@@ -54,7 +54,7 @@ export const CourseCard = observer(({ course }: { course: ICourse }) => {
       </Card>
     </Link>
   );
-});
+};
 
 // import { Button } from '@repo/ui/app';
 // import { DotsNineIcon } from '@phosphor-icons/react';

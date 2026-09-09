@@ -4,14 +4,14 @@ import { useCourse } from '@hooks/course.hook';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { ListIcon } from '@phosphor-icons/react';
 import { House } from '@phosphor-icons/react/dist/ssr';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useSelectedCourse, useSelectorLookups } from '@stores';
 import { CourseSidebar, SessionsInfo } from './';
 import { SelectedCourseModules } from './SelectedCourseModules';
 
-export const CoursePreview = observer(() => {
-  const { selectorStore } = useStores();
-  const { selectedCourse, selectedCourseItem } = selectorStore;
+export const CoursePreview = () => {
+  const selectorStore = useSelectorLookups();
+  const { selectedCourseItem } = selectorStore;
+  const selectedCourse = useSelectedCourse();
   const { isCourseMenuOpen, handleCourseMenuClick } = useCourse();
   const { isSmallScreen } = useWindowDimensions();
 
@@ -48,4 +48,4 @@ export const CoursePreview = observer(() => {
       </CourseSidebar>
     </div>
   );
-});
+};

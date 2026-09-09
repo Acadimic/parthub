@@ -1,14 +1,13 @@
 import { ShareFatIcon } from '@phosphor-icons/react';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useCourseLookups } from '@stores';
 import { useMemo } from 'react';
 
 interface IProps {
   courseId: string;
 }
 
-export const ShareCourse = observer(({ courseId }: IProps) => {
-  const { courseStore } = useStores();
+export const ShareCourse = ({ courseId }: IProps) => {
+  const courseStore = useCourseLookups();
   const { getCourseById } = courseStore;
 
   const course = useMemo(() => {}, [courseId]);
@@ -19,4 +18,4 @@ export const ShareCourse = observer(({ courseId }: IProps) => {
       <div className="text-sm font-medium pr-1">Share</div>
     </div>
   );
-});
+};

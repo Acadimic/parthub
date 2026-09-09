@@ -1,12 +1,13 @@
 import { CourseItemType, ModuleContentType } from '@enums';
 import { type ICourseContentItem } from '@interfaces';
-import { type IMaterial, type ITestPaper, useStores } from '@stores';
+import { type IMaterial, type ITestPaper, useMaterialLookups, useSelectorLookups } from '@stores';
 import { useRouter } from 'next/router';
 import { useApp } from './app.hook';
 import { useWindowDimensions } from './dimensions.hook';
 
 export const useCourse = () => {
-  const { courseStore, selectorStore, materialStore } = useStores();
+  const selectorStore = useSelectorLookups();
+  const materialStore = useMaterialLookups();
   const {
     setSelectedCourseItem,
     setSelectedCourseModuleId,

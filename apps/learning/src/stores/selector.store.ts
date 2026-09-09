@@ -1,270 +1,228 @@
-import { type Instance, getRoot, types as t } from 'mobx-state-tree';
+import { type IAttachment } from './material.store';
+import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { CourseItemType, DefaultRole, QuestionType, StorageKey } from '../enums';
-import {
-  Attachment,
-  type IAttachment,
-  type IBaseOrgOwnerModel,
-  type IBaseTimestampModel,
-  type IBatch,
-  type IChapter,
-  type ICourse,
-  type ICourseModule,
-  type IMaterial,
-  type IOrg,
-  type IPlan,
-  type IQuestion,
-  type IStandard,
-  type ISubject,
-  type ITestPaper,
-  type ITestPaperSection,
-  type IUser,
-} from './models';
-import { type IStore } from './root.store';
 
-export const SelectorStore = t
-  .model({
-    selectedOrgId: t.optional(t.string, ''),
-    selectedUserId: t.optional(t.string, ''),
-    selectedPermission: t.optional(t.enumeration('DefaultRole', Object.values(DefaultRole)), DefaultRole.STUDENT),
-    selectedTestPaperId: t.optional(t.string, ''),
-    selectedTestPaperSectionId: t.optional(t.string, ''),
-    selectedQuestionId: t.optional(t.string, ''),
-    selectedQuestionType: t.optional(
-      t.enumeration('QuestionType', Object.values(QuestionType)),
-      QuestionType.SINGLE_CHOICE,
-    ),
-    selectedUpsertQuestionStep: t.optional(t.number, 0),
-    selectedStandardId: t.optional(t.string, ''),
-    selectedSubjectId: t.optional(t.string, ''),
-    selectedChapterId: t.optional(t.string, ''),
-    selectedMaterialId: t.optional(t.string, ''),
-    selectedCourseId: t.optional(t.string, ''),
-    selectedCourseModuleId: t.optional(t.string, ''),
-    selectedStudentId: t.optional(t.string, ''),
-    selectedCollaboratorId: t.optional(t.string, ''),
-    selectedBatchId: t.optional(t.string, ''),
-    selectedCourseItem: t.optional(
-      t.enumeration('CourseItem', Object.values(CourseItemType)),
-      CourseItemType.COURSE_MATERIALS,
-    ),
-    isCourseMenuOpen: t.optional(t.boolean, true),
-    selectedAttachment: t.maybeNull(Attachment),
-    selectedContent: t.optional(t.string, ''),
-  })
-  .views((self) => ({
-    get rootStore() {
-      return getRoot<IStore>(self);
-    },
-  }))
-  .actions((self) => ({
-    selectUserAndOrgLeader: (user: IUser) => {
-      if (!user) return;
-      self.selectedUserId = user._id;
-      self.selectedOrgId = user.org;
-      self.selectedPermission = user.permission;
-      localStorage.setItem(StorageKey.PERMISSION, user.permission);
-      localStorage.setItem(StorageKey.ORGANIZATION, user.org);
-    },
+/**
+ * What the learner currently has selected. **Ids and plain values only.**
+ *
+ * Under MST this store also held sixteen views reaching into other stores
+ * (`selectedCourse = courseStore.getCourseById(selectedCourseId)`), which made it the most
+ * connected store in the app. Those views now live as composed hooks in the store that owns the
+ * entity — `useSelectedCourse` in `course.store`, `useSelectedUser` in `user.store`, and so on —
+ * each subscribing to both stores properly.
+ *
+ * Because of that this module imports no other store's state, so there is no cycle to be careful
+ * about. `IAttachment` is a type-only import.
+ */
+export interface ISelectorState {
+  selectedOrgId: string;
+  selectedUserId: string;
+  selectedTestPaperId: string;
+  selectedTestPaperSectionId: string;
+  selectedQuestionId: string;
+  selectedStandardId: string;
+  selectedSubjectId: string;
+  selectedChapterId: string;
+  selectedMaterialId: string;
+  selectedCourseId: string;
+  selectedCourseModuleId: string;
+  selectedStudentId: string;
+  selectedCollaboratorId: string;
+  selectedBatchId: string;
+  selectedPermission: DefaultRole;
+  selectedQuestionType: QuestionType;
+  selectedCourseItem: CourseItemType;
+  selectedUpsertQuestionStep: number;
+  isCourseMenuOpen: boolean;
+  selectedContent: string;
+  /** The attachment the learner is viewing. Held whole, not by id — it is a subdocument. */
+  selectedAttachment: IAttachment | null;
+  setSelectedOrgId: (value: string) => void;
+  setSelectedUserId: (value: string) => void;
+  setSelectedTestPaperId: (value: string) => void;
+  setSelectedTestPaperSectionId: (value: string) => void;
+  setSelectedQuestionId: (value: string) => void;
+  setSelectedStandardId: (value: string) => void;
+  setSelectedSubjectId: (value: string) => void;
+  setSelectedChapterId: (value: string) => void;
+  setSelectedMaterialId: (value: string) => void;
+  setSelectedCourseId: (value: string) => void;
+  setSelectedCourseModuleId: (value: string) => void;
+  setSelectedStudentId: (value: string) => void;
+  setSelectedCollaboratorId: (value: string) => void;
+  setSelectedBatchId: (value: string) => void;
+  setSelectedPermission: (value: DefaultRole) => void;
+  setSelectedQuestionType: (value: QuestionType) => void;
+  setSelectedCourseItem: (value: CourseItemType) => void;
+  setSelectedUpsertQuestionStep: (value: number) => void;
+  setIsCourseMenuOpen: (value: boolean) => void;
+  setSelectedContent: (value: string) => void;
+  setSelectedAttachment: (value: IAttachment | null) => void;
+  removeSelectedTestPaperId: () => void;
+  removeSelectedTestPaperSectionId: () => void;
+  removeSelectedQuestionId: () => void;
+  removeSelectedStandardId: () => void;
+  removeSelectedSubjectId: () => void;
+  removeSelectedChapterId: () => void;
+  removeSelectedMaterialId: () => void;
+  removeSelectedCourseId: () => void;
+  removeSelectedCourseModuleId: () => void;
+  removeSelectedStudentId: () => void;
+  removeSelectedCollaboratorId: () => void;
+  removeSelectedBatchId: () => void;
+  removeSelectedContent: () => void;
+  removeSelectedAttachment: () => void;
+  /** Selects a user and the org they belong to. Takes fields, not a user, so this store stays dependency-free. */
+  selectUserAndOrg: (userId: string, org: string, permission: DefaultRole) => void;
+  reset: () => void;
+}
 
-    setSelectedTestPaperId: (testPaperId: string) => {
-      self.selectedTestPaperId = testPaperId;
-    },
+const INITIAL = {
+  selectedOrgId: '',
+  selectedUserId: '',
+  selectedTestPaperId: '',
+  selectedTestPaperSectionId: '',
+  selectedQuestionId: '',
+  selectedStandardId: '',
+  selectedSubjectId: '',
+  selectedChapterId: '',
+  selectedMaterialId: '',
+  selectedCourseId: '',
+  selectedCourseModuleId: '',
+  selectedStudentId: '',
+  selectedCollaboratorId: '',
+  selectedBatchId: '',
+  selectedPermission: DefaultRole.STUDENT,
+  selectedQuestionType: QuestionType.SINGLE_CHOICE,
+  selectedCourseItem: CourseItemType.COURSE_MATERIALS,
+  selectedUpsertQuestionStep: 0,
+  isCourseMenuOpen: true,
+  selectedContent: '',
+  selectedAttachment: null,
+};
 
-    setSelectedTestPaperSectionId: (testPaperSectionId: string) => {
-      self.selectedTestPaperSectionId = testPaperSectionId;
-    },
+export const useSelectorStore = create<ISelectorState>()((set) => ({
+  ...INITIAL,
 
-    setSelectedQuestionId: (questionId: string) => {
-      self.selectedQuestionId = questionId;
-    },
+  setSelectedOrgId: (value) => {
+    set({ selectedOrgId: value });
+  },
+  setSelectedUserId: (value) => {
+    set({ selectedUserId: value });
+  },
+  setSelectedTestPaperId: (value) => {
+    set({ selectedTestPaperId: value });
+  },
+  setSelectedTestPaperSectionId: (value) => {
+    set({ selectedTestPaperSectionId: value });
+  },
+  setSelectedQuestionId: (value) => {
+    set({ selectedQuestionId: value });
+  },
+  setSelectedStandardId: (value) => {
+    set({ selectedStandardId: value });
+  },
+  setSelectedSubjectId: (value) => {
+    set({ selectedSubjectId: value });
+  },
+  setSelectedChapterId: (value) => {
+    set({ selectedChapterId: value });
+  },
+  setSelectedMaterialId: (value) => {
+    set({ selectedMaterialId: value });
+  },
+  setSelectedCourseId: (value) => {
+    set({ selectedCourseId: value });
+  },
+  setSelectedCourseModuleId: (value) => {
+    set({ selectedCourseModuleId: value });
+  },
+  setSelectedStudentId: (value) => {
+    set({ selectedStudentId: value });
+  },
+  setSelectedCollaboratorId: (value) => {
+    set({ selectedCollaboratorId: value });
+  },
+  setSelectedBatchId: (value) => {
+    set({ selectedBatchId: value });
+  },
+  setSelectedPermission: (value) => {
+    set({ selectedPermission: value });
+  },
+  setSelectedQuestionType: (value) => {
+    set({ selectedQuestionType: value });
+  },
+  setSelectedCourseItem: (value) => {
+    set({ selectedCourseItem: value });
+  },
+  setSelectedUpsertQuestionStep: (value) => {
+    set({ selectedUpsertQuestionStep: value });
+  },
+  setIsCourseMenuOpen: (value) => {
+    set({ isCourseMenuOpen: value });
+  },
+  setSelectedContent: (value) => {
+    set({ selectedContent: value });
+  },
+  setSelectedAttachment: (value) => {
+    set({ selectedAttachment: value });
+  },
+  removeSelectedTestPaperId: () => {
+    set({ selectedTestPaperId: '' });
+  },
+  removeSelectedTestPaperSectionId: () => {
+    set({ selectedTestPaperSectionId: '' });
+  },
+  removeSelectedQuestionId: () => {
+    set({ selectedQuestionId: '' });
+  },
+  removeSelectedStandardId: () => {
+    set({ selectedStandardId: '' });
+  },
+  removeSelectedSubjectId: () => {
+    set({ selectedSubjectId: '' });
+  },
+  removeSelectedChapterId: () => {
+    set({ selectedChapterId: '' });
+  },
+  removeSelectedMaterialId: () => {
+    set({ selectedMaterialId: '' });
+  },
+  removeSelectedCourseId: () => {
+    set({ selectedCourseId: '' });
+  },
+  removeSelectedCourseModuleId: () => {
+    set({ selectedCourseModuleId: '' });
+  },
+  removeSelectedStudentId: () => {
+    set({ selectedStudentId: '' });
+  },
+  removeSelectedCollaboratorId: () => {
+    set({ selectedCollaboratorId: '' });
+  },
+  removeSelectedBatchId: () => {
+    set({ selectedBatchId: '' });
+  },
+  removeSelectedContent: () => {
+    set({ selectedContent: '' });
+  },
+  removeSelectedAttachment: () => {
+    set({ selectedAttachment: null });
+  },
+  selectUserAndOrg: (userId, org, permission) => {
+    set({ selectedUserId: userId, selectedOrgId: org, selectedPermission: permission });
+    localStorage.setItem(StorageKey.PERMISSION, permission);
+    localStorage.setItem(StorageKey.ORGANIZATION, org);
+  },
 
-    setSelectedQuestionType: (questionType: QuestionType) => {
-      self.selectedQuestionType = questionType;
-    },
+  reset: () => {
+    set(INITIAL);
+  },
+}));
 
-    setSelectedUpsertQuestionStep: (step: number) => {
-      self.selectedUpsertQuestionStep = step;
-    },
-
-    setSelectedStandardId: (standardId: string) => {
-      self.selectedStandardId = standardId;
-    },
-
-    setSelectedSubjectId: (subjectId: string) => {
-      self.selectedSubjectId = subjectId;
-    },
-
-    setSelectedChapterId: (chapterId: string) => {
-      self.selectedChapterId = chapterId;
-    },
-
-    setSelectedMaterialId: (materialId: string) => {
-      self.selectedMaterialId = materialId;
-    },
-
-    setSelectedCourseId: (courseId: string) => {
-      self.selectedCourseId = courseId;
-    },
-
-    setSelectedCourseModuleId: (courseModuleId: string) => {
-      self.selectedCourseModuleId = courseModuleId;
-    },
-
-    setSelectedStudentId: (studentId: string) => {
-      self.selectedStudentId = studentId;
-    },
-
-    setSelectedCollaboratorId: (teacherId: string) => {
-      self.selectedCollaboratorId = teacherId;
-    },
-
-    setSelectedBatchId: (batchId: string) => {
-      self.selectedBatchId = batchId;
-    },
-
-    setSelectedCourseItem: (courseItem: CourseItemType) => {
-      self.selectedCourseItem = courseItem;
-    },
-
-    setIsCourseMenuOpen: (isOpen: boolean) => {
-      self.isCourseMenuOpen = isOpen;
-    },
-
-    setSelectedAttachment: (attachment: IAttachment) => {
-      self.selectedAttachment = { ...attachment };
-    },
-
-    setSelectedContent: (content: string) => {
-      self.selectedContent = content;
-    },
-
-    removeSelectedTestPaperId: () => {
-      self.selectedTestPaperId = '';
-    },
-
-    removeSelectedTestPaperSectionId: () => {
-      self.selectedTestPaperSectionId = '';
-    },
-
-    removeSelectedQuestionId: () => {
-      self.selectedQuestionId = '';
-    },
-
-    removeSelectedStandardId: () => {
-      self.selectedStandardId = '';
-    },
-
-    removeSelectedSubjectId: () => {
-      self.selectedSubjectId = '';
-    },
-
-    removeSelectedChapterId: () => {
-      self.selectedChapterId = '';
-    },
-
-    removeSelectedMaterialId: () => {
-      self.selectedMaterialId = '';
-    },
-
-    removeSelectedCourseId: () => {
-      self.selectedCourseId = '';
-    },
-
-    removeSelectedCourseModuleId: () => {
-      self.selectedCourseModuleId = '';
-    },
-
-    removeSelectedStudentId: () => {
-      self.selectedStudentId = '';
-    },
-
-    removeSelectedCollaboratorId: () => {
-      self.selectedCollaboratorId = '';
-    },
-
-    removeSelectedBatchId: () => {
-      self.selectedBatchId = '';
-    },
-
-    removeSelectedAttachment: () => {
-      self.selectedAttachment = null;
-    },
-
-    removeSelectedContent: () => {
-      self.selectedContent = '';
-    },
-  }))
-  .views((self) => ({
-    get selectedData(): IBaseOrgOwnerModel & IBaseTimestampModel {
-      return {
-        org: self.rootStore.selectorStore.selectedOrgId,
-        createdBy: self.rootStore.selectorStore.selectedUserId,
-        updatedBy: self.rootStore.selectorStore.selectedUserId,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        _deleted: false,
-      };
-    },
-
-    get selectedOrg(): IOrg | undefined {
-      return self.rootStore.userStore.getOrgById(self.selectedOrgId);
-    },
-
-    get selectedUser(): IUser | undefined {
-      return self.rootStore.userStore.getUserById(self.selectedUserId);
-    },
-
-    get selectedTestPaper(): ITestPaper | undefined {
-      return self.rootStore.testPaperStore.getTestPaperById(self.selectedTestPaperId);
-    },
-
-    get selectedTestPaperSection(): ITestPaperSection | undefined {
-      return self.rootStore.testPaperStore.getTestPaperSectionById(self.selectedTestPaperSectionId);
-    },
-
-    get selectedQuestion(): IQuestion | undefined {
-      return self.rootStore.questionStore.getQuestionById(self.selectedQuestionId);
-    },
-
-    get selectedStandard(): IStandard | undefined {
-      return self.rootStore.standardStore.getStandardById(self.selectedStandardId);
-    },
-
-    get selectedSubject(): ISubject | undefined {
-      return self.rootStore.standardStore.getSubjectById(self.selectedSubjectId);
-    },
-
-    get selectedChapter(): IChapter | undefined {
-      return self.rootStore.standardStore.getChapterById(self.selectedChapterId);
-    },
-
-    get selectedMaterial(): IMaterial | undefined {
-      return self.rootStore.materialStore.getMaterialById(self.selectedMaterialId);
-    },
-
-    get selectedCourse(): ICourse | undefined {
-      return self.rootStore.courseStore.getCourseById(self.selectedCourseId);
-    },
-
-    get selectedCoursePlans(): IPlan[] {
-      return self.rootStore.courseStore.plansByCourseId(self.selectedCourseId);
-    },
-
-    get selectedCourseModule(): ICourseModule | undefined {
-      return self.rootStore.courseStore.getCourseModuleById(self.selectedCourseModuleId);
-    },
-
-    get selectedStudent(): IUser | undefined {
-      return self.rootStore.userStore.getUserById(self.selectedStudentId);
-    },
-
-    get selectedCollaborator(): IUser | undefined {
-      return self.rootStore.userStore.getUserById(self.selectedCollaboratorId);
-    },
-
-    get selectedBatch(): IBatch | undefined {
-      return self.rootStore.batchStore.getBatchById(self.selectedBatchId);
-    },
-  }));
-
-export type ISelectorStore = Instance<typeof SelectorStore>;
+/**
+ * The whole selection, subscribed. Ids are small and change together, so a single shallow-compared
+ * subscription is simpler than one hook per id — and this store holds nothing derived.
+ */
+export const useSelectorLookups = (): ISelectorState => useSelectorStore(useShallow((state) => state));

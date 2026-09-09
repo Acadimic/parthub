@@ -1,8 +1,7 @@
 import { Accordions } from '@repo/ui/app';
 import { DynamicSubtitle } from '@components/common';
-import { useStores } from '@stores';
+import { useCourseLookups, useMeetLookups, useSelectedCourse } from '@stores';
 import { getPlural } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { CourseContents } from './CourseContents';
 import { Sessions } from './course-contents';
 
@@ -11,16 +10,17 @@ interface IProps {
   closeCourseOverview: () => void;
 }
 
-export const SelectedCourseModules = observer(({ isPreview, closeCourseOverview }: IProps) => {
-  const { selectorStore, courseStore, meetStore } = useStores();
+export const SelectedCourseModules = ({ isPreview, closeCourseOverview }: IProps) => {
+  const courseStore = useCourseLookups();
+  const meetStore = useMeetLookups();
   const { getCoursesByIds } = courseStore;
   const { getMeetsByIds } = meetStore;
-  const { selectedCourse } = selectorStore;
+  const selectedCourse = useSelectedCourse();
   const { getCourseModuleByCourseId } = courseStore;
 
   if (!selectedCourse) return <></>;
 
-  const courses = getCoursesByIds(selectedCourse.courses);
+  const courses = getCoursesByIds(selectedCourse.courses ?? []);
   const courseModules = getCourseModuleByCourseId(selectedCourse._id);
 
   return (
@@ -68,4 +68,4 @@ export const SelectedCourseModules = observer(({ isPreview, closeCourseOverview 
       })}
     </div>
   );
-});
+};

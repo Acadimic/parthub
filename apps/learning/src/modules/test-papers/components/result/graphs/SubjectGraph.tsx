@@ -1,5 +1,4 @@
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useTestPaperLookups } from '@stores';
 import {
   Bar,
   CartesianGrid,
@@ -13,22 +12,22 @@ import {
   YAxis,
 } from 'recharts';
 
-export const SubjectGraph = observer(() => {
-  const { testPaperStore } = useStores();
+export const SubjectGraph = () => {
+  const testPaperStore = useTestPaperLookups();
   const { exam } = testPaperStore;
 
   // const COLORS = ['#3699ff', '#f64e76', '#8556e5', '#ffc543', '#49cf95'];
 
   if (!exam) return null;
 
-  const { subjectGraphData } = exam;
-  let height = 50 * subjectGraphData.length;
+  const { getSubjectGraphData } = testPaperStore;
+  let height = 50 * getSubjectGraphData().length;
   height = height > 250 ? height : 250;
 
   return (
     <div className="w-full">
       <ResponsiveContainer height={height} width="100%">
-        <ComposedChart data={subjectGraphData} barSize={24} layout="vertical">
+        <ComposedChart data={getSubjectGraphData()} barSize={24} layout="vertical">
           <CartesianGrid strokeDasharray="2 2" />
           <XAxis allowDecimals={false} type="number" style={{ fontSize: 12, fontWeight: 600 }} />
           <YAxis dataKey="name" style={{ fontSize: 11, fontWeight: 600 }} type="category" />
@@ -45,4 +44,4 @@ export const SubjectGraph = observer(() => {
       </ResponsiveContainer>
     </div>
   );
-});
+};

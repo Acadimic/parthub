@@ -1,22 +1,24 @@
+import { useRequest } from '@repo/ui/hooks';
 import { FullScreenLoader } from '@repo/ui/app';
 import { Container } from '@components/others';
 import { DotsNineIcon } from '@phosphor-icons/react';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useCourseLookups, useStandardLookups, useStandardStore } from '@stores';
 import { CourseCard } from './components/CourseCard';
 
 interface IProps {
   isFilter?: boolean;
 }
 
-export const Courses = observer(({ isFilter }: IProps) => {
-  const { isLoadedPublicData, isLoadingPublicData, courseStore, standardStore } = useStores();
-  const { groupedCoursesByStandardId } = courseStore;
+export const Courses = ({ isFilter }: IProps) => {
+  const courseStore = useCourseLookups();
+  const standardStore = useStandardLookups();
+  const groupedCoursesByStandardId = courseStore.getGroupedCoursesByStandardId();
   const { getStandardById } = standardStore;
+  const publicData = useRequest(useStandardStore, 'publicData');
 
   return (
     <>
-      {isLoadedPublicData ? (
+      {publicData.isLoaded ? (
         <Container>
           <div className="py-6">
             {isFilter && (
@@ -49,8 +51,8 @@ export const Courses = observer(({ isFilter }: IProps) => {
           </div>
         </Container>
       ) : (
-        <FullScreenLoader withHeader loading={isLoadingPublicData} />
+        <FullScreenLoader withHeader loading={publicData.isLoading} />
       )}
     </>
   );
-});
+};

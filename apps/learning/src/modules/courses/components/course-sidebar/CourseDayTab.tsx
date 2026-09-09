@@ -1,14 +1,13 @@
 import { useCourse } from '@hooks/course.hook';
 import { CheckIcon, CircleIcon } from '@phosphor-icons/react';
-import { type ICourseModule, useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type ICourseModule, useCourseLookups } from '@stores';
 
 interface IProps {
   courseModule: ICourseModule;
 }
 
-export const CourseDayTab = observer(({ courseModule }: IProps) => {
-  const { courseStore } = useStores();
+export const CourseDayTab = ({ courseModule }: IProps) => {
+  const courseStore = useCourseLookups();
   const { onSelectCourseModule, selectedCourseModuleId } = useCourse();
   const { isCourseModuleCompleted } = courseStore;
   const selectedClass = `border-blue-primary bg-color-light`;
@@ -40,4 +39,4 @@ export const CourseDayTab = observer(({ courseModule }: IProps) => {
       </div>
     </div>
   );
-});
+};

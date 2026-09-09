@@ -1,20 +1,21 @@
 import { Card, CircularProgress, Tooltip } from '@repo/ui/app';
 import { Marking } from '@enums';
 import { CheckIcon, MedalIcon, MinusIcon, PercentIcon, TimerIcon, XIcon } from '@phosphor-icons/react';
-import { useStores } from '@stores';
+import { useTestPaperLookups } from '@stores';
 import { getMinutesString, getRatingItem, splitCamelCase } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { SubjectGraph } from './graphs';
 
-export const Result = observer(() => {
-  const { testPaperStore } = useStores();
+export const Result = () => {
+  const testPaperStore = useTestPaperLookups();
   const { exam } = testPaperStore;
   if (!exam) return;
 
-  const { marksObtained, maxMarks, percentage, accuracy, resultCounts, totalSpendTime } = exam;
-  const keys = Object.keys(resultCounts) as Marking[];
-  const percentageRatingItem = getRatingItem(percentage);
-  const accuracyRatingItem = getRatingItem(accuracy);
+  const { maxMarks, totalSpendTime } = exam;
+
+  const { getAccuracy, getMarksObtained, getPercentage, getResultCounts } = testPaperStore;
+  const keys = Object.keys(getResultCounts()) as Marking[];
+  const percentageRatingItem = getRatingItem(getPercentage());
+  const accuracyRatingItem = getRatingItem(getAccuracy());
 
   const items = {
     [Marking.CORRECT]: {
@@ -38,12 +39,12 @@ export const Result = observer(() => {
   const leftData = [
     {
       name: 'Score',
-      value: `${marksObtained} out of ${maxMarks}`,
+      value: `${getMarksObtained()} out of ${maxMarks}`,
       icon: MedalIcon,
     },
     {
       name: 'Percentage',
-      value: `${percentage}%`,
+      value: `${getPercentage()}%`,
       icon: PercentIcon,
     },
   ];
@@ -51,7 +52,7 @@ export const Result = observer(() => {
   const rightData = [
     {
       name: 'Accuracy',
-      value: `${accuracy}%`,
+      value: `${getAccuracy()}%`,
       icon: PercentIcon,
     },
     {
@@ -69,13 +70,13 @@ export const Result = observer(() => {
             <div className="flex flex-col items-center justify-center gap-3">
               <CircularProgress
                 thickness={6}
-                value={percentage}
+                value={getPercentage()}
                 className={`${percentageRatingItem.color}`}
                 label={
                   <Tooltip title={percentageRatingItem.text}>
                     <div className="font-bold text-center flex justify-center items-center">
                       <div>
-                        <div className="border-b-2 border-color-border min-w-[48px] pb-0.5">{marksObtained}</div>
+                        <div className="border-b-2 border-color-border min-w-[48px] pb-0.5">{getMarksObtained()}</div>
                         <div className="pt-0.5">{maxMarks}</div>
                       </div>
                     </div>
@@ -87,12 +88,12 @@ export const Result = observer(() => {
             <div className="flex flex-col items-center justify-center gap-3">
               <CircularProgress
                 thickness={6}
-                value={accuracy}
+                value={getAccuracy()}
                 className={`${accuracyRatingItem.color}`}
                 label={
                   <Tooltip title={accuracyRatingItem.text}>
                     <div className="font-bold text-center flex justify-center items-center">
-                      <div>{accuracy} %</div>
+                      <div>{getAccuracy()} %</div>
                     </div>
                   </Tooltip>
                 }
@@ -112,7 +113,7 @@ export const Result = observer(() => {
                     <item.icon color={item.color} weight="bold" className="w-5 h-5" />
                   </div>
                   <div className="capitalize font-medium">{splitCamelCase(key)}</div>
-                  <div className="font-semibold">{resultCounts[key]}</div>
+                  <div className="font-semibold">{getResultCounts()[key]}</div>
                   <div className="font-medium text-light-muted dark:text-dark-muted">Questions</div>
                 </div>
               );
@@ -184,4 +185,4 @@ export const Result = observer(() => {
       </div>
     </div>
   );
-});
+};

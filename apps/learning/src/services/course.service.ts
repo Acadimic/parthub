@@ -1,6 +1,24 @@
-import { type ICompletedModule } from '@stores';
+import {
+  type ICompletedModule,
+  type ICourse,
+  type ICourseModule,
+  type IMaterial,
+  type IMeet,
+  type ITestPaper,
+} from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
+
+/**
+ * `course/course/modules/:courseId` returns each module with its test papers, materials and meets
+ * embedded rather than as ids. Declared here, at the boundary, because the store distributes the
+ * collections and then keeps only ids.
+ */
+interface ICourseModuleContents extends Omit<ICourseModule, 'testPapers' | 'materials' | 'meets'> {
+  testPapers: ITestPaper[];
+  materials: IMaterial[];
+  meets: IMeet[];
+}
 
 class CourseService {
   getCourses = async () => {
@@ -13,13 +31,13 @@ class CourseService {
 
   getCoursesByStandardIds = async (standardIds: string[]) => {
     const url = 'course/standards';
-    const resData = await callAuthApi(url, API.POST, standardIds);
+    const resData = await callAuthApi<ICourse[]>(url, API.POST, standardIds);
     return resData;
   };
 
   getCourseModulesContentsByCourseId = async (courseId: string) => {
     const url = `course/course/modules/contents/${courseId}`;
-    const resData = await callAuthApi(url, API.GET);
+    const resData = await callAuthApi<ICourseModuleContents[]>(url, API.GET);
     return resData;
   };
 
@@ -31,7 +49,7 @@ class CourseService {
 
   getCompletedModules = async () => {
     const url = 'course/completed/modules';
-    const resData = await callAuthApi(url, API.GET);
+    const resData = await callAuthApi<ICompletedModule[]>(url, API.GET);
     return resData;
   };
 }

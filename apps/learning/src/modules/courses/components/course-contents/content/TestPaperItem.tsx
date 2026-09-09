@@ -2,14 +2,13 @@ import { FullScreenModal } from '@repo/ui/app';
 import { ExamLayout } from '@layouts';
 import { TestPaperCard } from '@modules/test-papers/components/TestPaperCard';
 import { type ITestPaper } from '@stores';
-import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
 interface IProps {
   testPaper: ITestPaper;
 }
 
-export const TestPaperItem = observer(({ testPaper }: IProps) => {
+export const TestPaperItem = ({ testPaper }: IProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isPractice, setIsPractice] = useState(false);
 
@@ -37,4 +36,4 @@ export const TestPaperItem = observer(({ testPaper }: IProps) => {
       />
     </div>
   );
-});
+};

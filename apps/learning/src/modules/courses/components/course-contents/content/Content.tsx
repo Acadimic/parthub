@@ -1,5 +1,4 @@
 import { type IMaterial, type ITestPaper } from '@stores';
-import { observer } from 'mobx-react-lite';
 import { MaterialItem } from './MaterialItem';
 import { TestPaperItem } from './TestPaperItem';
 
@@ -10,10 +9,10 @@ interface IProps {
   testPaper?: ITestPaper;
 }
 
-export const Content = observer(({ material, testPaper, courseId, courseModuleId }: IProps) => {
+export const Content = ({ material, testPaper, courseId, courseModuleId }: IProps) => {
   return (
     <div className="h-full w-full flex justify-center items-center relative">
       {material ? <MaterialItem material={material} /> : testPaper ? <TestPaperItem testPaper={testPaper} /> : null}
     </div>
   );
-});
+};

@@ -1,16 +1,17 @@
 import { RectangleSkeleton } from '@repo/ui/app';
-import { type IUser } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type IUser, useUserLookups } from '@stores';
 import { useEffect } from 'react';
 
 interface IProps {
   user: IUser;
 }
 
-export const Followers = observer(({ user }: IProps) => {
+export const Followers = ({ user }: IProps) => {
+  const { loadFollowersCount } = useUserLookups();
+
   useEffect(() => {
-    if (!user.isLoadedFollowersCount) user.loadFollowersCount();
-  }, [user.isLoadedFollowersCount]);
+    if (!user.isLoadedFollowersCount) loadFollowersCount(user._id);
+  }, [user._id, user.isLoadedFollowersCount, loadFollowersCount]);
 
   return (
     <div className="flex items-center gap-2 mt-1 h-[16px]">
@@ -21,4 +22,4 @@ export const Followers = observer(({ user }: IProps) => {
       )}
     </div>
   );
-});
+};

@@ -2,9 +2,8 @@ import { Bookmark } from '@components/common';
 import { Html } from '@components/others';
 import { CollectionType, Marking, QuestionType } from '@enums';
 import { CaretDownIcon } from '@phosphor-icons/react';
-import { useStores } from '@stores';
+import { useQuestionLookups, useSelectedQuestion, useTestPaperLookups } from '@stores';
 import { splitCamelCase } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
 import { Answer } from './components/answer-items';
 import { TestPaperSection } from './components/exam-items';
@@ -18,10 +17,13 @@ interface IProps {
   openInstruction: () => void;
 }
 
-export const Exam = observer(({ isResultPage, openExamSummary, toggleTimer, openInstruction }: IProps) => {
-  const { testPaperStore, selectorStore, questionStore } = useStores();
+export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstruction }: IProps) => {
+  const testPaperStore = useTestPaperLookups();
+  const { getTestPaperSectionsByIds } = testPaperStore;
+  const questionStore = useQuestionLookups();
+  const { getCorrectOptionIndexes } = questionStore;
   const { exam } = testPaperStore;
-  const { selectedQuestion } = selectorStore;
+  const selectedQuestion = useSelectedQuestion();
   const { getSolutionByQuestionId, getOptionsByIds } = questionStore;
   const [refresh, setRefresh] = useState(false);
 
@@ -35,25 +37,28 @@ export const Exam = observer(({ isResultPage, openExamSummary, toggleTimer, open
 
   if (!selectedQuestion) return <></>;
 
+  const { numberOfQuestions } = exam;
+  // Was the `sectionObjects` view on the model; the sections live in the store that owns them.
+  const sectionObjects = getTestPaperSectionsByIds(exam.sections);
+
   const {
-    numberOfQuestions,
-    currentQuestionIndex,
-    sectionObjects,
-    selectedQuestionReplyTime,
-    isSelectedQuestionCompleted,
     canShowAnswer,
-    getResultByQuestionId,
-    getResponsesByQuestionId,
-    setResponse,
     getAnswersByQuestionId,
-  } = exam;
+    getCurrentQuestionIndex,
+    getResponsesByQuestionId,
+    getResultByQuestionId,
+    getSelectedQuestionReplyTime,
+    isSelectedQuestionCompleted,
+    setResponse,
+  } = testPaperStore;
 
   const handleResponses = (responses: string[]) => {
     setResponse(responses);
     setRefresh(!refresh);
   };
 
-  const marks = selectedQuestion.markings[getResultByQuestionId(selectedQuestion._id)];
+  // `partiallyCorrect` is optional on `MarkingType`, so a paper that does not define it scores 0.
+  const marks = selectedQuestion.markings[getResultByQuestionId(selectedQuestion._id)] ?? 0;
 
   return (
     <>
@@ -72,7 +77,7 @@ export const Exam = observer(({ isResultPage, openExamSummary, toggleTimer, open
                 </div>
                 <div className="px-2 md:px-12 flex xl:hidden items-center space-x-3" onClick={openExamSummary}>
                   <div className="text-sm blue-gradient font-semibold flex space-x-1 items-center">
-                    <div className="">{currentQuestionIndex + 1}</div>
+                    <div className="">{getCurrentQuestionIndex() + 1}</div>
                     <div>/</div>
                     <div className="">{numberOfQuestions}</div>
                   </div>
@@ -86,15 +91,15 @@ export const Exam = observer(({ isResultPage, openExamSummary, toggleTimer, open
               <div className="flex justify-between items-center text-sm md:text-base font-medium">
                 <div className="flex justify-start items-center space-x-3">
                   <div className="">
-                    {window.innerWidth < 768 ? 'Que' : 'Question'} {currentQuestionIndex + 1} :
+                    {window.innerWidth < 768 ? 'Que' : 'Question'} {getCurrentQuestionIndex() + 1} :
                   </div>
                   <div className="text-violet-primary text-xs md:text-sm capitalize">
                     {splitCamelCase(selectedQuestion.questionType)}
                   </div>
                 </div>
                 <div className="flex justify-start items-center text-xs font-semibold space-x-3">
-                  <div className="blue-gradient">{selectedQuestionReplyTime}</div>
-                  {isSelectedQuestionCompleted ? (
+                  <div className="blue-gradient">{getSelectedQuestionReplyTime()}</div>
+                  {isSelectedQuestionCompleted() ? (
                     <div className={`${marks > 0 ? 'text-green-primary' : 'text-red-primary'}`}>
                       {marks > 0 ? '+' : ''}
                       {marks}
@@ -119,16 +124,16 @@ export const Exam = observer(({ isResultPage, openExamSummary, toggleTimer, open
                     question={selectedQuestion}
                     selectedValues={getResponsesByQuestionId(selectedQuestion._id)}
                     handleResponses={handleResponses}
-                    isDisabled={isSelectedQuestionCompleted}
-                    answers={isSelectedQuestionCompleted ? getAnswersByQuestionId(selectedQuestion._id) : []}
+                    isDisabled={isSelectedQuestionCompleted()}
+                    answers={isSelectedQuestionCompleted() ? getAnswersByQuestionId(selectedQuestion._id) : []}
                   />
                 </div>
                 <div
-                  className={`mt-8 mb-4 transition-all duration-500 ${isSelectedQuestionCompleted ? 'opacity-100' : 'opacity-0'}`}
+                  className={`mt-8 mb-4 transition-all duration-500 ${isSelectedQuestionCompleted() ? 'opacity-100' : 'opacity-0'}`}
                 >
-                  {isSelectedQuestionCompleted && selectedQuestion ? (
+                  {isSelectedQuestionCompleted() && selectedQuestion ? (
                     <Answer
-                      correctOptionIndexes={selectedQuestion.correctOptionIndexes}
+                      correctOptionIndexes={getCorrectOptionIndexes(selectedQuestion._id)}
                       solution={getSolutionByQuestionId(selectedQuestion._id)?.solution || ''}
                       answers={getOptionsByIds(getAnswersByQuestionId(selectedQuestion._id)).map(
                         (option) => option.option,
@@ -148,4 +153,4 @@ export const Exam = observer(({ isResultPage, openExamSummary, toggleTimer, open
       )}
     </>
   );
-});
+};

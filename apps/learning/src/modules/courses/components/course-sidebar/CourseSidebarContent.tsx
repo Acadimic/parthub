@@ -3,15 +3,16 @@ import { StandardWithLogo } from '@components/common';
 import { CourseItemType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { CaretDoubleRightIcon } from '@phosphor-icons/react';
-import { type ICourseModule, useStores } from '@stores';
+import { type ICourseModule, useCourseLookups, useSelectedCourse, useStandardLookups } from '@stores';
 import { getPlural } from '@utils/helpers';
 import { CourseDayTab } from './CourseDayTab';
 import { CourseTab } from './CourseTab';
 
 export const CourseSidebarContent = () => {
-  const { courseStore, standardStore, selectorStore } = useStores();
+  const courseStore = useCourseLookups();
+  const standardStore = useStandardLookups();
   const { getCourseById, getCourseModuleByCourseId } = courseStore;
-  const { selectedCourse } = selectorStore;
+  const selectedCourse = useSelectedCourse();
   const { getStandardById } = standardStore;
   const { isCourseMenuOpen, handleCourseMenuClick } = useCourse();
 

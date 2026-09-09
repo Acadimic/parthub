@@ -3,8 +3,7 @@ import { TextInput } from '@repo/ui/app';
 import { Html } from '@components/others';
 import { QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
-import { type IQuestion } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type IQuestion, useQuestionLookups } from '@stores';
 import { Option } from './Option';
 
 interface IProps {
@@ -15,8 +14,9 @@ interface IProps {
   answers: string[];
 }
 
-export const Options = observer(({ question, handleResponses, selectedValues, isDisabled, answers }: IProps) => {
-  const optionsItems = question.optionItems;
+export const Options = ({ question, handleResponses, selectedValues, isDisabled, answers }: IProps) => {
+  const { getOptionItems } = useQuestionLookups();
+  const optionsItems = getOptionItems(question._id);
   const questionType = question.questionType;
   const options: ISelectItem[] = optionsItems.map((option, index) => ({
     label: (
@@ -96,4 +96,4 @@ export const Options = observer(({ question, handleResponses, selectedValues, is
       disabled={isDisabled}
     />
   );
-});
+};

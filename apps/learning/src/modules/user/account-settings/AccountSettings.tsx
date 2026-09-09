@@ -5,18 +5,18 @@ import { useAttachment } from '@hooks/attachment.hook';
 import { type IMenuItem } from '@interfaces';
 import { GearSixIcon, LockKeyIcon, UserIcon } from '@phosphor-icons/react';
 import { UserService } from '@services';
-import { useStores } from '@stores';
+import { useSelectedUser, useUserLookups } from '@stores';
 import { AccountSettingsRoutes } from '@utils/constants';
 import { successToast } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { Profile } from './Profile';
 import { Security } from './Security';
 
-export const AccountSettings = observer(() => {
-  const { selectorStore } = useStores();
-  const { selectedUser } = selectorStore;
+export const AccountSettings = () => {
+  const userStore = useUserLookups();
+  const { patchUser } = userStore;
+  const selectedUser = useSelectedUser();
   const { uploadFilesToS3 } = useAttachment();
   const [avatarFile, setAvatarFile] = useState<File | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +28,7 @@ export const AccountSettings = observer(() => {
       setIsLoading(true);
       const attachment = file && (await uploadFilesToS3(selectedUser._id, [file]));
       const photoUrl = attachment?.length ? attachment[0].url : '';
-      selectedUser.setPhotoUrl(photoUrl);
+      patchUser(selectedUser._id, { photoUrl: photoUrl });
       await UserService.updateProfile(selectedUser);
       successToast({ message: 'Avatar updated successfully!' });
       setAvatarFile(undefined);
@@ -116,4 +116,4 @@ export const AccountSettings = observer(() => {
       </div>
     </div>
   );
-});
+};

@@ -1,9 +1,8 @@
 import { Html } from '@components/others';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useTestPaperLookups } from '@stores';
 
-export const Instruction = observer(() => {
-  const { testPaperStore } = useStores();
+export const Instruction = () => {
+  const testPaperStore = useTestPaperLookups();
   const { exam } = testPaperStore;
   if (!exam) return null;
   const { maxMarks, durationMins, numberOfQuestions, sections, title } = exam;
@@ -37,4 +36,4 @@ export const Instruction = observer(() => {
       </div>
     </>
   );
-});
+};

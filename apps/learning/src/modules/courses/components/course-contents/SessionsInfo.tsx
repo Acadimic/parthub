@@ -1,14 +1,13 @@
 import { Accordions } from '@repo/ui/app';
 import { DynamicSubtitle } from '@components/common';
-import { useStores } from '@stores';
+import { useMeetLookups, useSelectedCourse } from '@stores';
 import { getPlural } from '@utils/helpers';
-import { observer } from 'mobx-react-lite';
 import { Sessions } from './Sessions';
 
-export const SessionsInfo = observer(() => {
-  const { selectorStore, meetStore } = useStores();
+export const SessionsInfo = () => {
+  const meetStore = useMeetLookups();
   const { getMeetsByIds } = meetStore;
-  const { selectedCourse } = selectorStore;
+  const selectedCourse = useSelectedCourse();
 
   if (!selectedCourse?.meets.length) return <></>;
 
@@ -33,4 +32,4 @@ export const SessionsInfo = observer(() => {
       />
     </div>
   );
-});
+};

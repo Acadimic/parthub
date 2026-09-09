@@ -1,11 +1,11 @@
 import { DocumentType, StorageKey } from '@enums';
 import { CommonService } from '@services';
-import { type IAttachment, useStores } from '@stores';
+import { type IAttachment, useSelectorLookups } from '@stores';
 import { errorToast, getObjectId, isPresignedUrlExpired, successToast } from '@utils/helpers';
 import { useState } from 'react';
 
 export const useAttachment = () => {
-  const { selectorStore } = useStores();
+  const selectorStore = useSelectorLookups();
   const [isLoadingAttachment, setIsAttachmentLoading] = useState(false);
   const { setSelectedAttachment, setSelectedContent } = selectorStore;
 

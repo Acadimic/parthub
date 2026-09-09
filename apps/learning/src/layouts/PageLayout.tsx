@@ -1,16 +1,14 @@
 import { PageHeader } from '@components/app/headers';
 import { LearnerNavigation } from '@components/app/navigations';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useSelectedUser } from '@stores';
 
 interface IProps {
   children: React.ReactNode;
   withNavigation?: boolean;
 }
 
-export const PageLayout = observer(({ children, withNavigation }: IProps) => {
-  const { selectorStore } = useStores();
-  const { selectedUser } = selectorStore;
+export const PageLayout = ({ children, withNavigation }: IProps) => {
+  const selectedUser = useSelectedUser();
 
   return (
     <>
@@ -35,4 +33,4 @@ export const PageLayout = observer(({ children, withNavigation }: IProps) => {
       </div>
     </>
   );
-});
+};

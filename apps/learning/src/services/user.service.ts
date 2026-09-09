@@ -1,3 +1,4 @@
+import { type InitialDataDto } from '@repo/shared';
 import { type IUser } from '@stores';
 import { API } from '../enums';
 import { getProfilePayload } from '@repo/ui/lib';
@@ -6,7 +7,7 @@ import { callAuthApi } from './http.service';
 class UserService {
   getInitialLoginData = async () => {
     const url = 'user/initial-login-data';
-    return await callAuthApi(url, API.GET);
+    return await callAuthApi<InitialDataDto>(url, API.GET);
   };
 
   /** The signed-in learner's own profile (account settings / onboarding). */

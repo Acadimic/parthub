@@ -1,4 +1,6 @@
 export type {
+  IToast,
+  ToastType,
   IDynamicObject,
   ICreateFirebaseUser,
   ILoginUser,
@@ -22,5 +24,4 @@ export type {
 } from '@repo/shared';
 
 export * from '@repo/ui/types';
-export * from './batch.interface';
 export * from './course.interface';

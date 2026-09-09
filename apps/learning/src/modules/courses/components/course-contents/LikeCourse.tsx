@@ -1,8 +1,7 @@
 import { Spinner, Tooltip } from '@repo/ui/app';
-import { type CollectionType } from '@enums';
+import { CollectionType } from '@enums';
 import { ThumbsUpIcon } from '@phosphor-icons/react';
-import { type IMaterial, type ITestPaper, useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { type IMaterial, type ITestPaper, useMaterialLookups, useResourceLookups, useTestPaperLookups } from '@stores';
 import { useEffect } from 'react';
 
 interface IProps {
@@ -10,9 +9,12 @@ interface IProps {
   collectionRef: CollectionType;
 }
 
-export const LikeCourse = observer(({ collectionItem, collectionRef }: IProps) => {
-  const { resourceStore } = useStores();
-  const { isReacted, toggleReaction, isToggleReaction } = resourceStore;
+export const LikeCourse = ({ collectionItem, collectionRef }: IProps) => {
+  const resourceStore = useResourceLookups();
+  const { loadReactionsCount: loadMaterialReactionsCount } = useMaterialLookups();
+  const { loadReactionsCount: loadTestPaperReactionsCount } = useTestPaperLookups();
+  const { isReacted, toggleReaction } = resourceStore;
+  const isToggleReaction = resourceStore.isLoading('toggleReaction');
   const collectionItemId = collectionItem._id;
 
   const isReactedOnItem = isReacted(collectionItemId);
@@ -23,8 +25,11 @@ export const LikeCourse = observer(({ collectionItem, collectionRef }: IProps) =
   };
 
   useEffect(() => {
-    if (!collectionItem.isLoadedReactionsCount) collectionItem.loadReactionsCount();
-  }, [collectionItem.isLoadedReactionsCount]);
+    if (collectionItem.isLoadedReactionsCount) return;
+    // The count lives on the row, so its own store fetches it.
+    if (collectionRef === CollectionType.MATERIAL) loadMaterialReactionsCount(collectionItemId);
+    else if (collectionRef === CollectionType.TEST_PAPER) loadTestPaperReactionsCount(collectionItemId);
+  }, [collectionItemId, collectionRef, collectionItem.isLoadedReactionsCount]);
 
   return (
     <Tooltip title={isReactedOnItem ? 'Liked' : 'Like'}>
@@ -39,4 +44,4 @@ export const LikeCourse = observer(({ collectionItem, collectionRef }: IProps) =
       </div>
     </Tooltip>
   );
-});
+};

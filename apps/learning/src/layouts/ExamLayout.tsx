@@ -6,8 +6,7 @@ import { BlankState } from '@components/others';
 import { useExam } from '@hooks/exam.hook';
 import { TestPaperSummary } from '@modules/test-papers/components/TestPaperSummary';
 import { Exam } from '@modules/test-papers/Exam';
-import { useStores } from '@stores';
-import { observer } from 'mobx-react-lite';
+import { useTestPaperLookups } from '@stores';
 import { useEffect } from 'react';
 
 interface IProps {
@@ -16,9 +15,10 @@ interface IProps {
   onCloseExam: () => void;
 }
 
-export const ExamLayout = observer(({ testPaperId, isPractice, onCloseExam }: IProps) => {
-  const { testPaperStore } = useStores();
-  const { exam, isSettingExam, loadAndSetExam, unsetExam } = testPaperStore;
+export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => {
+  const testPaperStore = useTestPaperLookups();
+  const { exam, loadAndSetExam, unsetExam } = testPaperStore;
+  const isSettingExam = testPaperStore.isLoading('exam');
   const {
     openInstruction,
     closeInstruction,
@@ -148,4 +148,4 @@ export const ExamLayout = observer(({ testPaperId, isPractice, onCloseExam }: IP
       />
     </>
   );
-});
+};
