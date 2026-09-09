@@ -1,6 +1,6 @@
 ---
 description: >
-  Add or change a screen in apps/learning, apps/teaching or apps/admin — the Next.js Pages Router
+  Add or change a screen in apps/learning, apps/teaching or apps/support — the Next.js Pages Router
   page, the feature module that holds the UI, and the Zustand store wiring behind it. These three
   apps share one shape: a page is four lines and declares its layout, the module selects from one or
   more stores, and every fetch goes through the store's request slice. This skill keeps a new screen

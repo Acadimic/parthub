@@ -1,6 +1,6 @@
 # @repo/ui
 
-Every shared React component for the `learning`, `teaching` and `admin` apps.
+Every shared React component for the `learning`, `teaching` and `support` apps.
 
 The package is consumed as TypeScript source through `transpilePackages`, so it
 has no build step. A change here is picked up by all three apps immediately.
@@ -121,7 +121,7 @@ groups.
 `AppSidebar`, `ProfileDropdown`, `GroupAvatars`, `DocumentLink` and `Stepper`
 subscribe to an app's Zustand stores. Moving them would make the package depend on an app's
 state, which rule 3 forbids. They are app shell, not UI.
-`AuthHeader` stays for a different reason: the admin version is a genuinely
+`AuthHeader` stays for a different reason: the support version is a genuinely
 different, simpler component, not a copy that drifted.
 
 **They need an app service.** `Attachment`, `Attachments`, `PresignedImage`,
@@ -138,7 +138,7 @@ product decision per app, so sharing them would couple the apps to each other.
 `Select`, `DataTable`, `CheckboxSelection` and `RadioSelection` sit just behind
 the second group: each needs `Html` or `BlankState` from `components/others`.
 `Html` pulls in the math-jax editor, which is 60 teaching-only files, and both
-differ in admin. Reconciling those two components is the next step if you want
+differ in support. Reconciling those two components is the next step if you want
 this cluster shared.
 
 ## History

@@ -15,7 +15,7 @@ argument-hint: '[the package and what is changing]'
 
 # Extend a package
 
-Eight workspaces: `apps/{learning,teaching,admin,server}` and
+Eight workspaces: `apps/{learning,teaching,support,server}` and
 `packages/{shared,ui,eslint-config}`, with pnpm 10.12.1 pinned by `packageManager` and the globs
 `apps/*` / `packages/*` in `pnpm-workspace.yaml`.
 

@@ -126,9 +126,9 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   return (
     <>
       <Head>
-        <title>Acadimic Admin App</title>
+        <title>Acadimic Support App</title>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
-        <meta name="description" content="Acadimic Admin App" />
+        <meta name="description" content="Acadimic Support App" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <ColorModeContext.Provider value={colorMode}>

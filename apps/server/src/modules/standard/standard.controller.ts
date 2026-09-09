@@ -14,7 +14,7 @@ export class StandardController {
   ) {}
 
   @Post('upsert')
-  @Subdomains(Subdomain.ADMIN)
+  @Subdomains(Subdomain.SUPPORT)
   @Permissions(PermissionItem.MANAGE_STANDARD)
   async upsertStandard(@Body() payload: StandardDto) {
     const data = await this.standardService.upsert(payload);
@@ -22,7 +22,7 @@ export class StandardController {
   }
 
   @Post('bulk-upsert')
-  @Subdomains(Subdomain.ADMIN)
+  @Subdomains(Subdomain.SUPPORT)
   @Permissions(PermissionItem.MANAGE_STANDARD)
   async bulkUpsertStandards(
     @Body(new ParseArrayPipe({ items: StandardDto, whitelist: true, forbidNonWhitelisted: true }))
@@ -33,7 +33,7 @@ export class StandardController {
   }
 
   @Get('all')
-  @Subdomains(Subdomain.ADMIN, Subdomain.TEACH, Subdomain.LEARN)
+  @Subdomains(Subdomain.SUPPORT, Subdomain.TEACH, Subdomain.LEARN)
   @Permissions()
   async getAllStandards() {
     const data = await this.standardService.getAll();
@@ -41,7 +41,7 @@ export class StandardController {
   }
 
   @Post('mapping/upsert')
-  @Subdomains(Subdomain.ADMIN)
+  @Subdomains(Subdomain.SUPPORT)
   @Permissions(PermissionItem.MANAGE_STANDARD)
   async upsertMapping(@Body() payload: StandardSubjectMappingDto) {
     const data = await this.standardSubjectMappingService.upsert(payload);
@@ -49,7 +49,7 @@ export class StandardController {
   }
 
   @Post('mapping/bulk-upsert')
-  @Subdomains(Subdomain.ADMIN)
+  @Subdomains(Subdomain.SUPPORT)
   @Permissions(PermissionItem.MANAGE_STANDARD)
   async bulkUpsertMappings(
     @Body(new ParseArrayPipe({ items: StandardSubjectMappingDto, whitelist: true, forbidNonWhitelisted: true }))
@@ -60,7 +60,7 @@ export class StandardController {
   }
 
   @Get('mapping/all')
-  @Subdomains(Subdomain.ADMIN, Subdomain.TEACH, Subdomain.LEARN)
+  @Subdomains(Subdomain.SUPPORT, Subdomain.TEACH, Subdomain.LEARN)
   @Permissions()
   async getAllMappings() {
     const data = await this.standardSubjectMappingService.getAll();

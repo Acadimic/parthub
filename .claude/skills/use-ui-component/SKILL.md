@@ -9,7 +9,7 @@ when_to_use: >
   Trigger BEFORE writing or editing any component, page or module that renders UI. Specifically:
   (1) a request to add or change a form, field, input, select, dropdown, dialog, modal, table,
   card, tabs, tooltip, accordion, badge, avatar, menu, stepper or loader anywhere in
-  apps/learning, apps/teaching or apps/admin; (2) you are about to write raw JSX for an element
+  apps/learning, apps/teaching or apps/support; (2) you are about to write raw JSX for an element
   that looks like a shared control (`<input`, `<button`, `<table`, `<select`, `<dialog`);
   (3) you are about to import from `@repo/ui/ui/*`; (4) you catch yourself copying a component
   between apps or between modules.
@@ -19,7 +19,7 @@ argument-hint: '[what you are building]'
 # Use a UI component from the library
 
 All shared UI lives in `@repo/ui` (`packages/ui`), consumed as TypeScript source, so anything
-added there is instantly available to `learning`, `teaching` and `admin`. Read
+added there is instantly available to `learning`, `teaching` and `support`. Read
 `packages/ui/README.md` for the full layer rules.
 
 **The rule: feature code composes library components. It does not create shared UI inline, and it

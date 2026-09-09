@@ -28,9 +28,9 @@ which is why the filter is the thing to get right.
    Two documented exceptions, and only these:
 
    - **Platform collections** are deliberately global: `Standard`, `Subject`,
-     `StandardSubjectMapping` and `Org`. The admin app manages them for the whole platform, so
+     `StandardSubjectMapping` and `Org`. The support app manages them for the whole platform, so
      their queries carry no org clause. Their writes are gated with
-     `@Subdomains(Subdomain.ADMIN)` instead.
+     `@Subdomains(Subdomain.SUPPORT)` instead.
    - **Caller-scoped collections** filter by the caller's own id rather than the org:
      `Bookmark`, `Reaction`, `Follower`, and "my meets". That is narrower than org and therefore
      fine — **provided the id comes from `RequestContextService.getUserId()`**, never from a

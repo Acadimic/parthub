@@ -17,7 +17,7 @@ export const getRegisterPayload = (firebaseUser: FirebaseUserDto): RegisterUserD
 
 const SUBDOMAINS = new Set<string>(Object.values(Subdomain));
 
-/** Extracts the app subdomain segment (learn | teach | admin) from a request path such as `/user/teach/profile`. */
+/** Extracts the app subdomain segment (learn | teach | support) from a request path such as `/user/teach/profile`. */
 export const getSubdomainFromUrl = (url: string): Subdomain | undefined => {
   const path = url.split('?')[0];
   return path.split('/').find((segment) => SUBDOMAINS.has(segment)) as Subdomain | undefined;

@@ -11,8 +11,8 @@
     "build:server": "pnpm --filter @repo/server build",
     "start:teaching": "pnpm --filter @repo/teaching dev",
     "build:teaching": "pnpm --filter @repo/teaching build",
-    "start:admin": "pnpm --filter @repo/admin dev",
-    "build:admin": "pnpm --filter @repo/admin build",
+    "start:support": "pnpm --filter @repo/support dev",
+    "build:support": "pnpm --filter @repo/support build",
     "lint": "pnpm -r --if-present run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,scss,css}\"",
     "typecheck:ui": "pnpm --filter @repo/ui typecheck"

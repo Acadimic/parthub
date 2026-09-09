@@ -6,7 +6,7 @@ description: >
   its service. Use this so a new form behaves like the fifteen that already exist.
 when_to_use: >
   Trigger BEFORE writing any form, edit dialog, upsert modal, filter panel or settings pane in
-  apps/learning, apps/teaching or apps/admin; when adding a field to an existing one; when wiring a
+  apps/learning, apps/teaching or apps/support; when adding a field to an existing one; when wiring a
   save button; and when you are about to write your own validation, your own error text, or a fetch
   call from a component.
 argument-hint: '[what the form edits]'

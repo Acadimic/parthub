@@ -12,7 +12,7 @@ export class ActivityLogController {
   constructor(private readonly activityLogService: ActivityLogService) {}
 
   @Get(':entityType/:entityId')
-  @Subdomains(Subdomain.TEACH, Subdomain.ADMIN)
+  @Subdomains(Subdomain.TEACH, Subdomain.SUPPORT)
   @Permissions(PermissionItem.MANAGE_STAFF)
   async getLogsForEntity(
     @Param('entityType') entityType: string,

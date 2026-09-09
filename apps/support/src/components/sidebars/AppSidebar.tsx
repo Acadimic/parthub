@@ -41,7 +41,7 @@ export const AppSidebar = ({ children }: IProps) => {
           <div>
             <img src={isDark ? '/images/acadimic-dark.svg' : '/images/acadimic-light.svg'} alt="logo" className="h-7" />
           </div>
-          <div className="blue-gradient font-semibold text-xs">Admin</div>
+          <div className="blue-gradient font-semibold text-xs">Support</div>
         </div>
         <hr className="border-color-border" />
         <nav>

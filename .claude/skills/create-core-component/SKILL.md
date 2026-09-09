@@ -19,7 +19,7 @@ Reach this skill through `use-ui-component`, which checks first whether an app c
 existing wrapper already covers the need. Only create a new wrapper when neither does.
 
 All shared React UI lives in the `@repo/ui` workspace package (`packages/ui`). The three Next.js
-apps (`apps/learning`, `apps/teaching`, `apps/admin`) consume it as TypeScript source through
+apps (`apps/learning`, `apps/teaching`, `apps/support`) consume it as TypeScript source through
 `transpilePackages`, so a component added there is available to every app with no build step.
 
 ## Architecture Rules

@@ -24,7 +24,7 @@ export class CommonController {
   ) {}
 
   @Get('initial-data')
-  @Subdomains(Subdomain.ADMIN, Subdomain.TEACH, Subdomain.LEARN)
+  @Subdomains(Subdomain.SUPPORT, Subdomain.TEACH, Subdomain.LEARN)
   @Permissions()
   async getInitialData() {
     const [standards, subjects, mappings] = await Promise.all([

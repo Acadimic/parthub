@@ -1,7 +1,7 @@
 # API conventions
 
 How every endpoint in `apps/server` is structured, and why. Three client apps
-(`learning`, `teaching`, `admin`) call this one API. The rules below keep that
+(`learning`, `teaching`, `support`) call this one API. The rules below keep that
 consistent without duplicating a controller per app.
 
 ## The rules
@@ -49,7 +49,7 @@ Splitting controllers by subdomain would have tripled the file count, made that
 duplication permanent, and still left 84 routes with no authorization check.
 
 The real axes of variation are **who may call an endpoint** and **what data it
-may read**. Neither maps onto the subdomain: admin and teach read standards
+may read**. Neither maps onto the subdomain: support and teach read standards
 identically and differ only in who may write them; learn and teach read org
 courses identically and differ only in what a student should see inside one.
 So permissions became the enforced boundary, and the subdomain is declared only
@@ -195,13 +195,13 @@ view mapper. Do not add a second route.
 Note that the lookup is org-scoped. A bare `findById(id)` lets any authenticated
 user read another organization's document by guessing an id.
 
-## Example: an admin write over platform data
+## Example: a support write over platform data
 
 ```ts
 @Controller('standard')
 export class StandardController {
   @Post('upsert')
-  @Subdomains(Subdomain.ADMIN)
+  @Subdomains(Subdomain.SUPPORT)
   @Permissions(PermissionItem.MANAGE_STANDARD)
   async upsertStandard(@Body() payload: UpsertStandardDto): Promise<StandardDto> {
     const userId = this.requestContextService.getUserId();
@@ -210,7 +210,7 @@ export class StandardController {
   }
 
   @Get('all')
-  @Subdomains(Subdomain.ADMIN, Subdomain.TEACH, Subdomain.LEARN)
+  @Subdomains(Subdomain.SUPPORT, Subdomain.TEACH, Subdomain.LEARN)
   @Permissions(PermissionItem.VIEW_COURSE)
   async getAllStandards(): Promise<StandardDto[]> {
     return await this.standardService.getAll();
@@ -220,10 +220,10 @@ export class StandardController {
 
 Standards, subjects and questions are platform data, so the read is
 deliberately unscoped and shared by all three apps, replacing the identical
-`admin/all` and `teach/all` handlers. Only the write is admin-only.
+`support/all` and `teach/all` handlers. Only the write is support-only.
 
 Platform collections still extend `BaseSchema`, so a write is stamped with the
-acting admin's org for auditing. That org is not a tenancy filter for these
+acting user's org for auditing. That org is not a tenancy filter for these
 collections, and reads must not filter on it.
 
 ## Naming
@@ -264,7 +264,7 @@ The guard fails closed, so annotate module by module.
 3. Drop the manual `{ data, status: HttpStatus.OK }` envelope and return the
    payload.
 4. Remove the subdomain prefix from the path, collapsing duplicated
-   `teach/`, `learn/` and `admin/` routes into one.
+   `teach/`, `learn/` and `support/` routes into one.
 5. Replace any client-supplied org with `requestContextService.getOrgId()`.
 6. Update the matching service in `apps/<app>/src/services` to the new path.
 

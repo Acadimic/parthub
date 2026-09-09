@@ -37,14 +37,14 @@ pnpm install
 # Development
 pnpm start:learning      # Next.js dev server (port 3000)
 pnpm start:teaching      # Next.js dev server (port 3001)
-pnpm start:admin         # Next.js dev server (port 3002)
+pnpm start:support       # Next.js dev server (port 3002)
 pnpm start:server        # NestJS dev server (uses .env.development via env-cmd)
 
 # Build
 pnpm build:shared        # Build shared package (run first if shared types changed)
 pnpm build:learning      # Build Next.js app
 pnpm build:teaching      # Build Next.js teaching app
-pnpm build:admin         # Build Next.js admin app
+pnpm build:support       # Build Next.js support app
 pnpm build:server        # Build NestJS app (nest build)
 pnpm typecheck:ui        # Typecheck the shared React package (packages/ui, no build step)
 
@@ -56,7 +56,7 @@ pnpm format              # Prettier across all workspaces
 # Single workspace commands
 pnpm --filter @repo/learning <script>
 pnpm --filter @repo/teaching <script>
-pnpm --filter @repo/admin <script>
+pnpm --filter @repo/support <script>
 pnpm --filter @repo/server <script>
 pnpm --filter @repo/shared <script>
 pnpm --filter @repo/ui <script>
@@ -64,7 +64,7 @@ pnpm --filter @repo/ui <script>
 
 ## Architecture
 
-**Monorepo** with pnpm workspaces: `apps/learning`, `apps/teaching`, `apps/admin`, `apps/server`, `packages/shared`, `packages/ui`, `packages/eslint-config` (the shared lint rules — see "Code Style").
+**Monorepo** with pnpm workspaces: `apps/learning`, `apps/teaching`, `apps/support`, `apps/server`, `packages/shared`, `packages/ui`, `packages/eslint-config` (the shared lint rules — see "Code Style").
 
 ### Where shared code lives
 
@@ -105,9 +105,9 @@ pnpm --filter @repo/ui <script>
 - **Icons:** Phosphor Icons (`@phosphor-icons/react`).
 - **Auth:** Firebase Authentication (same as Learning).
 
-### Admin (`apps/admin`) — Next.js 15 Pages Router
+### Support (`apps/support`) — Next.js 15 Pages Router
 
-- **Purpose:** Admin app for managing standards, subjects, and test papers across the platform.
+- **Purpose:** Platform support app for managing standards, subjects, and test papers across the platform.
 - **State management:** Zustand (same pattern as Learning): `standard`, `selector` and `toast` stores, no root store.
 - **Component layers:** Same three-layer system, imported directly from `@repo/ui/core` and `@repo/ui/app`.
 - **Styling:** TailwindCSS 3 + shadcn/ui + tw-colors. No MUI dependency.
@@ -169,7 +169,7 @@ touching any version.
 **Teaching** (`apps/teaching/tsconfig.json`):
 `@pages/*`, `@components/*`, `@modules/*`, `@enums`, `@utils/*`, `@interfaces`, `@services`, `@stores`, `@layouts`, `@themes`, `@styles/*`, `@hooks/*`
 
-**Admin** (`apps/admin/tsconfig.json`):
+**Support** (`apps/support/tsconfig.json`):
 `@pages/*`, `@components/*`, `@modules/*`, `@enums`, `@utils/*`, `@interfaces`, `@services`, `@stores`, `@layouts`, `@themes`, `@styles/*`, `@hooks/*`
 
 **Server** (`apps/server/tsconfig.json`):
@@ -218,7 +218,7 @@ ceilings that say "extract something" rather than "this is wrong": `max-params` 
 
 Warnings do not fail the build, so treat them as a nudge on code you are already touching. The
 backlog when the tier was introduced was 341, and every autofixable one had already been applied:
-teaching 173, learning 93, ui 34, admin 28, server 13, shared 0. The bulk is 96 unused bindings
+teaching 173, learning 93, ui 34, support 28, server 13, shared 0. The bulk is 96 unused bindings
 (the rule had been switched off in the apps), 69 `console.log` calls and 52 nested ternaries. If you
 add a warning to a file you are editing, fix it before you finish.
 

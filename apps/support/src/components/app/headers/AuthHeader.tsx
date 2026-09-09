@@ -8,7 +8,7 @@ export const AuthHeader = () => {
           <div className="flex justify-between items-center h-12">
             <div className="flex items-end space-x-2">
               <div className="text-lg font-bold">Acadimic</div>
-              <div className="blue-gradient font-semibold text-xs">Admin</div>
+              <div className="blue-gradient font-semibold text-xs">Support</div>
             </div>
             <div className="flex items-center space-x-4">
               <ToggleTheme />

@@ -102,5 +102,5 @@ export const setTime = (currentDateObj: Date, setTimeDateObj: Date): Date => {
   return new Date(currentDate);
 };
 
-/** @deprecated identical to {@link getTimezoneOffset}; kept for the admin app's existing imports. */
+/** @deprecated identical to {@link getTimezoneOffset}; kept for the support app's existing imports. */
 export const getUtcOffset = getTimezoneOffset;

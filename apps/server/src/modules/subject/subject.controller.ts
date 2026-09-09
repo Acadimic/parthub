@@ -10,7 +10,7 @@ export class SubjectController {
   constructor(private readonly subjectService: SubjectService) {}
 
   @Post('upsert')
-  @Subdomains(Subdomain.ADMIN)
+  @Subdomains(Subdomain.SUPPORT)
   @Permissions(PermissionItem.MANAGE_SUBJECT)
   async upsertSubject(@Body() payload: SubjectDto) {
     const data = await this.subjectService.upsert(payload);
@@ -18,9 +18,9 @@ export class SubjectController {
   }
 
   @Get('all')
-  @Subdomains(Subdomain.ADMIN, Subdomain.TEACH, Subdomain.LEARN)
+  @Subdomains(Subdomain.SUPPORT, Subdomain.TEACH, Subdomain.LEARN)
   @Permissions()
-  async getAdminAll() {
+  async getAllSubjects() {
     const data = await this.subjectService.getAll();
     return data;
   }

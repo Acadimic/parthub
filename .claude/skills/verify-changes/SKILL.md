@@ -40,7 +40,7 @@ pnpm typecheck:ui                              # only if packages/ui changed
 
 pnpm --filter @repo/teaching exec tsc --noEmit  # per affected workspace
 pnpm --filter @repo/learning exec tsc --noEmit
-pnpm --filter @repo/admin    exec tsc --noEmit
+pnpm --filter @repo/support  exec tsc --noEmit
 pnpm --filter @repo/server   exec tsc --noEmit
 pnpm --filter @repo/shared   exec tsc --noEmit
 
