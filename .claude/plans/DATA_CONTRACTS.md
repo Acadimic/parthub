@@ -1,7 +1,7 @@
 # Shared data contracts plan
 
 Goal: the apps should know exactly what the API sends, and the compiler should
-say so. Today that knowledge lives only in each app's MobX State Tree models,
+say so. When this was written that knowledge lived only in each app's MobX State Tree models,
 maintained by hand, and it has drifted from the server.
 
 ## Where things stand
@@ -259,18 +259,20 @@ export const Course = t.compose(
 );
 ```
 
-**Assert the two agree, at compile time.** MobX State Tree needs runtime type
-declarations, so a model cannot be generated from an interface. This one line
-per model closes the loop instead: if the API adds a required field, renames
-one, or changes a type, this fails to compile.
+**Assert the two agree, at compile time.** This was the plan while the stores
+were MobX State Tree: MST needs runtime type declarations, so a model could not
+be generated from an interface, and one guard line per model closed the loop.
 
 ```ts
-// Compile-time guard: everything the API sends must fit the model's snapshot.
+// The guard this section proposed, now obsolete.
 const _assertCourseWire: (dto: CourseDto) => ICourseSnapshotIn = (dto) => dto;
 ```
 
-Put it directly under the model. It costs nothing at runtime and is the whole
-reason the contract cannot drift again.
+**The Zustand migration removed the need for it.** A store entity is now
+derived from its DTO — `export type ICourse = ClientEntity<CourseDto>` — so the
+two cannot disagree: adding a field to the DTO adds it to the store, and the
+compiler names every call site that has to change. What survives is the rule it
+implied: never hand-write a structural copy of a DTO.
 
 ## Migration order
 
@@ -342,4 +344,5 @@ interfaces would then be inferred rather than hand-written.
 **Generate a client from OpenAPI via `@nestjs/swagger`.** Complementary rather
 than an alternative. Once controllers declare contract return types, adding
 Swagger gives browsable docs almost for free. It does not remove the need for
-the contracts, and generated clients fit awkwardly with MobX State Tree.
+the contracts — the apps type their stores against them directly — and a
+generated client would duplicate what `contracts/` already provides.

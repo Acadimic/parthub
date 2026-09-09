@@ -18,7 +18,7 @@ having to be remembered. Each one is split into **must** (a violation is a defec
 | `add-api-endpoint`      | adding or changing a route in an existing server module              |
 | `add-server-module`     | creating a server module, a Mongoose schema, or editing `app.module` |
 | `query-with-mongoose`   | any query, schema or index in `apps/server`                          |
-| `define-data-shape`     | declaring any interface, enum, DTO, MST model or Mongoose schema     |
+| `define-data-shape`     | declaring any interface, enum, DTO, store entity or Mongoose schema  |
 | `write-comments`        | writing comments, docblocks, or any suppression that needs a reason  |
 | `extend-a-package`      | editing a `packages/*` manifest, export, or adding a dependency      |
 | `upgrade-a-dependency`  | bumping any version, or recovering from a breaking upgrade           |
@@ -76,7 +76,7 @@ pnpm --filter @repo/ui <script>
 
 ### Learning (`apps/learning`) — Next.js 15 Pages Router
 
-- **State management:** MobX State Tree. Root store in `src/stores/root.store.ts` with sub-stores (user, course, material, selector, toast). Access via `useStores()` hook. Async actions use MST `flow(function*(...) { ... })`.
+- **State management:** Zustand. One store per domain in `src/stores/*.store.ts` (user, course, material, test-paper, question, resource, standard, meet, selector, toast) — no root store and no provider; each store is a module singleton, so `useUserStore.getState()` works outside React. Entities are typed from the shared DTOs through `ClientEntity`, held as keyed maps, and edited with `patch(id, Partial<T>)`. Fetch state comes from `createRequestSlice`, so a store never hand-assigns a loading flag. Async actions are plain `async` functions wrapped in `run(key, fetcher)`.
 - **Layouts:** Pages declare their layout via `Component.layout = Layout.AUTH | Layout.SIDEBAR | ...`. Layout components live in `src/layouts/`.
 - **Component layers:** Three-layer system enforced by convention, implemented in `packages/ui`:
   - `packages/ui/src/ui/` — Raw shadcn primitives. **Never import these in feature code.**
@@ -91,7 +91,7 @@ pnpm --filter @repo/ui <script>
 ### Teaching (`apps/teaching`) — Next.js 15 Pages Router
 
 - **Purpose:** Teacher-facing app for managing courses, study materials, test papers, students, and sessions.
-- **State management:** MobX State Tree (same pattern as Learning).
+- **State management:** Zustand (same pattern as Learning).
 - **Component layers:** Same three-layer system as Learning, imported directly from `@repo/ui/core` and `@repo/ui/app`.
 - **Styling:** TailwindCSS 3 + shadcn/ui + tw-colors. No MUI dependency.
 - **Icons:** Phosphor Icons (`@phosphor-icons/react`).
@@ -100,7 +100,7 @@ pnpm --filter @repo/ui <script>
 ### Admin (`apps/admin`) — Next.js 15 Pages Router
 
 - **Purpose:** Admin app for managing standards, subjects, and test papers across the platform.
-- **State management:** MobX State Tree. Root store with sub-stores (standard, course, selector). Access via `useStores()` hook.
+- **State management:** Zustand (same pattern as Learning): `standard`, `selector` and `toast` stores, no root store.
 - **Component layers:** Same three-layer system, imported directly from `@repo/ui/core` and `@repo/ui/app`.
 - **Styling:** TailwindCSS 3 + shadcn/ui + tw-colors. No MUI dependency.
 - **Icons:** Phosphor Icons (`@phosphor-icons/react`).
@@ -138,7 +138,7 @@ Pinned, and verified together as of 2026-09-08. Runtime versions come from the r
 | TypeScript | **6.0.3** everywhere                                                                                               |
 | ESLint     | **10.10.0** everywhere, flat config only                                                                           |
 | Server     | NestJS **12.0.1** on Fastify **5.12.1**, Mongoose **9.9.5**, firebase-admin **14.3.0**, class-validator **0.15.1** |
-| Apps       | Next.js 15.0.1, React 19 RC, MobX State Tree 6, TailwindCSS 3                                                      |
+| Apps       | Next.js 16.3.4, React 19.2.8, Zustand 5, TailwindCSS 3                                                             |
 
 Three dependencies are deliberately held back, each on someone else's release:
 
@@ -150,8 +150,8 @@ Three dependencies are deliberately held back, each on someone else's release:
 - **TypeScript stays on 6**, because `@typescript-eslint@8.70` is the newest release and peers
   `typescript <6.1.0`. TypeScript 7 would break linting in all six workspaces.
 
-The frontend has its own pending majors (React 19 stable, Next 16, MobX 7, Tailwind 4). Read the
-`upgrade-a-dependency` skill before touching any version.
+Tailwind 4 is the frontend's remaining pending major. Read the `upgrade-a-dependency` skill before
+touching any version.
 
 ## Path Aliases
 
@@ -190,7 +190,7 @@ The frontend has its own pending majors (React 19 stable, Next 16, MobX 7, Tailw
 - `no-restricted-imports`, which makes the package layering machine-checked. Each of these has zero
   violations, and the rule is what keeps it that way:
   - an app may not import `@repo/ui/ui/*` (a raw shadcn primitive) or climb `../../../`;
-  - `packages/ui` may not import an app alias, `mobx*`, its own `@repo/ui` subpaths, or the barrel
+  - `packages/ui` may not import an app alias, `zustand`, its own `@repo/ui` subpaths, or the barrel
     above a module (`from '..'`);
   - `packages/shared` may not import React, Next or `@repo/ui`;
   - the server may not import React or `@repo/ui`.

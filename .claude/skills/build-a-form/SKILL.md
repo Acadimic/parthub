@@ -96,7 +96,8 @@ object, validation is one helper, and the write goes through the store.
    `toPayload`, so UI-only keys such as `isNew` are already gone. Picking fields manually just
    drifts from the DTO.
 
-8. **`observer` from `mobx-react-lite`,** because the form reads stores. Without it the form will
+8. **Select what the form reads,** rather than taking a whole store object. A row comes from a leaf
+   selector or a `useSelectedX()` hook; a derived list needs `useShallow`. Without a real subscription the form will
    not react when the record it is editing changes.
 
 ## should

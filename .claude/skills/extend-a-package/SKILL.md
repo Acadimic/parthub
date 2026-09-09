@@ -31,12 +31,12 @@ Eight workspaces: `apps/{learning,teaching,admin,server}` and
 
 ## must — any package
 
-1. **A package never imports an app.** No `@components/*`, `@stores`, `@services`, no MobX in
+1. **A package never imports an app.** No `@components/*`, `@stores`, `@services`, no `zustand` in
    `packages/ui`; no React, Next or `@repo/ui` in `packages/shared`. These are
    `no-restricted-imports` errors, so the lint fails rather than the layering rotting quietly.
 
 2. **A dependency belongs to the workspace that imports it.** A new Radix package goes in
-   `packages/ui/package.json`; class-validator lives in `packages/shared`; MobX and Firebase stay
+   `packages/ui/package.json`; class-validator lives in `packages/shared`; Zustand and Firebase stay
    in the apps. Adding it to an app because that is where you noticed the missing module leaves the
    package depending on a hoisted accident.
 

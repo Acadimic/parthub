@@ -141,7 +141,7 @@ const layerRules = {
             message: 'packages/ui cannot import an app. Take the value as a prop instead (README rule 3).',
           },
           {
-            group: ['mobx', 'mobx-*'],
+            group: ['zustand', 'zustand/*'],
             message: 'A component here may not read app state. Everything arrives through props (README rule 3).',
           },
           {

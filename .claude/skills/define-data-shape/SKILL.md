@@ -2,11 +2,11 @@
 description: >
   Decide where a type, interface, enum or model belongs in this monorepo, and shape it the way the
   rest of the codebase does. There are five places a shape can live — packages/shared, @repo/ui/types,
-  an app's src/interfaces, an MST model, a Mongoose schema — and putting one in the wrong place is
+  an app's src/interfaces, a store entity type, a Mongoose schema — and putting one in the wrong place is
   how the same enum ends up declared three times with drifted values. Use this before declaring any
   new data shape.
 when_to_use: >
-  Trigger BEFORE declaring a new interface, type alias, enum, DTO, MST model or Mongoose schema, and
+  Trigger BEFORE declaring a new interface, type alias, enum, DTO, store entity or Mongoose schema, and
   before adding a field to an existing one. Specifically: (1) "add a field to X"; (2) a new entity;
   (3) a new enum or status value; (4) you are about to write `Record<string, unknown>` or reach for
   a cast because a shape is not declared; (5) a client field the server does not know about.
@@ -31,8 +31,9 @@ Work down this list and stop at the first match.
 3. **Only one app has it, and it is not sent anywhere** → that app's `src/interfaces/<name>.interface.ts`,
    re-exported from `src/interfaces/index.ts`. That barrel deliberately mixes shared re-exports with
    app-only types.
-4. **It is the client's stateful copy of an entity** → an MST model in the app's
-   `src/stores/models/<entity>.model.ts`.
+4. **It is the client's stateful copy of an entity** → a type alias in the store that owns it,
+   built from the entity's DTO: `export type IBatch = ClientEntity<BatchDto>;`. There are no model
+   files — the DTO is the single declaration, and `ClientEntity` adds what only the client needs.
 5. **It is how the entity is stored** → the Mongoose schema in the server module, extending
    `BaseSchema`.
 
@@ -46,26 +47,30 @@ Work down this list and stop at the first match.
    It is compiled to CommonJS for the server.
 4. **`_deleted` is the delete mechanism**, on `BaseOwnedDto` and `BaseDeleteModel`. Nothing is ever
    hard-deleted, and every read filters `{ _deleted: { $ne: true } }`.
-5. **Client-only fields are declared as such.** A field the UI adds — `isNew`, an `isLoading*` or
-   `isLoaded*` flag, a derived count — must be listed in `CLIENT_ONLY_KEYS` in
+5. **Client-only fields are declared as such.** A field the UI adds — `isNew`, a per-row
+   `reactionsCount`, a per-row loaded flag — must be listed in `CLIENT_ONLY_KEYS` in
    `packages/ui/src/lib/payload.ts`, or the next write that includes it is rejected whole by
    `forbidNonWhitelisted`. If the field should actually persist, add it to the schema and the DTO
-   and remove it from that list instead.
+   and remove it from that list instead. **A store's fetch state is not one of these:** it belongs
+   to `createRequestSlice`, not to a row.
 6. **No `any`.** Declare the shape, or take `unknown` and narrow. This is an ESLint error in all six
    workspaces.
 
 ## should
 
-- Compose an MST model from the base models rather than repeating their fields:
-  `t.compose(BaseTimestampModel, BaseOrgOwnerModel, t.model('Batch', { ... }))`. They supply
-  `_deleted`, `createdAt`, `updatedAt`, `org`, `createdBy`, `updatedBy`.
-- Key entities in a store by `_id` in a `t.map`, and expose arrays through a view
-  (`get batches()`), not by handing out the map.
-- Separate the wire shape from the view state inside a model: declare the server fields, then the
-  UI-only ones under a comment, so a reader can see when the two have diverged.
-- Export the instance type next to the model: `export type IBatch = Instance<typeof Batch>;`
-  (or `export interface IUser extends Instance<typeof User> {}` where the name is used as an
-  interface elsewhere).
+- Build a store entity from its DTO rather than restating the fields. `ClientEntity<T>` leaves the
+  server-assigned ownership fields optional — a row the user is still creating has no `org` or
+  timestamps yet — and adds `isNew`. Where the client has always relied on a field the DTO marks
+  optional, name it: `ClientEntityWith<MeetDto, 'startTime' | 'endTime' | ...>`. Remember that is an
+  assumption the Mongoose schema may not enforce, which is why the fields are listed explicitly.
+- Key entities in a store by `_id` in a `Record<string, T>`, and expose arrays through a getter
+  (`getBatches()`), not by handing out the map.
+- Put the client-only additions in an intersection after the DTO, so a reader sees exactly which
+  fields are ours: `ClientEntity<UserDto> & { photoUrl?: string | null }`.
+- An entity the API serves but has no DTO for goes in
+  `packages/shared/src/interfaces/entity.interface.ts` as `I<Entity>Fields`, written from the
+  server's Mongoose schema. Five live there today; each names the schema it mirrors, and
+  `ICourseModuleFields` records that it mirrors none.
 - Prefer `interface` for a plain object shape — an ESLint "should" rule — and keep `type` for
   unions, intersections and mapped types, which cannot be interfaces.
 - Give a generic row type a default of `unknown`, not `any`, and make the consumer generic. That is
@@ -76,12 +81,11 @@ Work down this list and stop at the first match.
 
 ## Keeping the two sides honest
 
-When a client model and a server DTO describe the same entity, add the drift guard from
-`DATA_CONTRACTS.md` so a mismatch is a compile error rather than a 400 at run time:
-
-```ts
-const _assertCourseWire: (dto: CourseDto) => ICourseSnapshotIn = (dto) => dto;
-```
+The drift guard this section used to describe is gone, and so is the problem it solved. A client
+entity is now *derived* from its DTO (`ClientEntity<CourseDto>`), so the two cannot disagree:
+adding a field to the DTO adds it to the store, and the compiler names every call site that has to
+change. If you find yourself writing a structural copy of a DTO by hand, that is exactly what the
+guard used to catch — derive it instead.
 
 ## After changing packages/shared
 

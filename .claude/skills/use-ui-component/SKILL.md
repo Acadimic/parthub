@@ -94,7 +94,7 @@ These are `error` in ESLint, not advice — `no-restricted-imports` fails the li
 - A bare `<input>`, `<select>`, `<table>` or `<dialog>` for something a wrapper covers.
 - The same component pasted into two apps, or into two modules. Move it to the library instead,
   following "Moving an app component in" in `packages/ui/README.md`.
-- A component in `packages/ui` that reads app state. No `@stores`, no `@services`, no MobX.
+- A component in `packages/ui` that reads app state. No `@stores`, no `@services`, no `zustand`.
   Everything arrives through props. That is why some components deliberately stay in the apps.
 
 ## After you add to the library

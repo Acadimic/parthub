@@ -48,7 +48,8 @@ disappears.
      types stop matching the adapter's, so `app.register(compression)` fails to typecheck.
    - `@types/node` **tracks the Node major in `volta.node`**, never npm's latest. Types ahead of the
      runtime describe APIs that are not there: it compiles, then fails.
-   - `mobx`, `mobx-react-lite`, `mobx-state-tree`.
+   - `zustand` on its own: it has no companion packages, and `packages/ui` deliberately does not
+     depend on it (the request hooks type the store structurally).
 
 5. **`skipLibCheck: true` is set in all six tsconfigs.** Library type breakages are therefore
    invisible until your own code touches them. A green typecheck after an upgrade is necessary and
@@ -196,7 +197,7 @@ Node is pinned to 24.20.0 LTS via Volta.
 | ------- | ------ |
 | `react` 19.0.0-rc → 19.2.x with `@types/react` 18 → 19 | Removes both the RC pin and the types mismatch. One commit, five manifests, then check `ls node_modules/.pnpm \| grep -E '^react@'` prints one version. |
 | `next` 15 → 16 | Pages Router behaviour. `next lint` is already out of the path, so that part is done. |
-| `mobx` 7 / `mobx-state-tree` 8 / `mobx-react-lite` 5 | The stores are the apps' spine: `flow`, `observer`, snapshot types. Expect real work. |
+| `zustand` 5 → 6, when it lands | The stores are the apps' spine. Check `useShallow`'s import path and whether `getInitialState` is still the SSR snapshot — the request hooks in `@repo/ui/hooks` rely on both. |
 | `tailwindcss` 3 → 4 | Config moves into CSS. **Check `tw-colors` compatibility before starting** — the whole palette comes from that plugin. |
 | `@fullcalendar/*` 6 → 7 | Teaching only, isolated to the calendar module. |
 

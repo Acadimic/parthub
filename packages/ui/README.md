@@ -71,7 +71,7 @@ into this package later means updating its call sites, so check
 2. **Inside the package, imports are relative.** `../../lib/cn`, not
    `@utils/cn`. An app path alias does not resolve here.
 3. **A component in the package may not read app state.** No `@stores`, no
-   `@services`, no MobX. Everything arrives through props.
+   `@services`, no `zustand`. Everything arrives through props.
 4. **Shared data types come from `@repo/shared`.** `types/` holds only the
    types that need React, such as a `ReactNode` label.
 5. **One component per file, named after the file.** The folder's `index.ts`
@@ -83,7 +83,7 @@ into this package later means updating its call sites, so check
    kept 17 shareable components stuck in the apps.
 
 Rules 2, 3 and 6 are enforced: `no-restricted-imports` in `eslint.config.js`
-(from `@repo/eslint-config`) fails the lint on an app alias, on `mobx*`, on an
+(from `@repo/eslint-config`) fails the lint on an app alias, on `zustand`, on an
 `@repo/ui` subpath and on `from '..'`. Rule 1 is enforced from the other side —
 an app may not import `@repo/ui/ui/*`.
 
@@ -119,8 +119,8 @@ groups.
 
 **They read app state.** `PageHeader`, `ExamHeader`, `ExamFooter`, `Timer`,
 `AppSidebar`, `ProfileDropdown`, `GroupAvatars`, `DocumentLink` and `Stepper`
-use `@stores` and MobX observers. Moving them would make the package depend on
-an app's root store, which rule 3 forbids. They are app shell, not UI.
+subscribe to an app's Zustand stores. Moving them would make the package depend on an app's
+state, which rule 3 forbids. They are app shell, not UI.
 `AuthHeader` stays for a different reason: the admin version is a genuinely
 different, simpler component, not a copy that drifted.
 

@@ -1,8 +1,21 @@
 # Replacing MobX State Tree with Zustand
 
-Written 2026-09-08. **Phase 0 and the `{standard, selector}` pair of Phase 1 are done**; the rest
-is still a plan. Decisions 8 and 9, and the notes under each phase, record what executing the first
-steps settled — they were written against real code, not ahead of it.
+Written 2026-09-08. **Done, 2026-09-09.** MobX is gone from the monorepo: no app declares `mobx`,
+`mobx-react-lite`, `mobx-state-tree` or `mobx-devtools-mst`, there are zero `observer()` wrappers,
+and `pnpm-lock.yaml` no longer mentions any of them. 28 MST stores and 67 model files became 24
+Zustand stores.
+
+This file is kept as the record of *how*, and every decision below still governs new code — the
+`add-app-screen` and `define-data-shape` skills point back here. Decisions 8 and 9, the notes under
+each phase, and the two traps in decision 4 were written against real code during the migration
+rather than ahead of it, which is why they are worth reading before touching a store.
+
+What the migration turned up along the way, all pre-existing, is recorded in the commit messages:
+six client/server mismatches (three separate instances of reading fields an endpoint never sends —
+one of which blanked the whole learning app, one of which left every teaching page on a spinner),
+two calls to routes that do not exist, a `timezoneOffset` sent as a number against a String column,
+and a `PARTIALLY_CORRECT` exam branch that is unreachable. Two gaps still need a server change: a
+LEARN-accessible route for a learner's standards, and `test-paper/sections-with-questions`.
 
 ## Why this is worth doing
 
@@ -413,7 +426,7 @@ get selectedStandard(): IStandard | undefined {
 ```
 
 If `standardStore` becomes Zustand while `selectorStore` is still MST, that view keeps returning
-_correct data when called_ — but MobX cannot track Zustand's state, so an `observer` component
+*correct data when called* — but MobX cannot track Zustand's state, so an `observer` component
 reading `selectorStore.selectedStandard` **stops re-rendering when the standard changes**. Nothing
 fails, nothing logs, the screen just goes stale. That is the worst possible failure mode for this
 migration and a compiler cannot see it.
@@ -512,7 +525,7 @@ than pair the stores:
   three or four views come out of `selector` and the lookup happens in the component, which reads
   the id from MST (still tracked by its `observer`) and the row from the Zustand store. Both
   subscriptions are real, so nothing goes stale.
-- Consumers keep `observer` as long as they read _any_ MST store, which during Phase 2 is most of
+- Consumers keep `observer` as long as they read *any* MST store, which during Phase 2 is most of
   them. It comes off per component in the commit that removes its last MST read.
 - `useXLookups()` — a hook in the store module that subscribes to the store's maps and returns
   `getState()` — is what makes the ~26 consumers per store a one-line change each. See decision 4:
@@ -535,13 +548,28 @@ are written exactly once, by `loadInitialData`, and every page is gated on `isLo
 Same order. `resource` and `test-paper` carry the exam flow, which is the most stateful part of the
 codebase and should be last.
 
-**Phase 4 — removal**
-Drop `mobx`, `mobx-react-lite`, `mobx-state-tree` from all three manifests. Delete
-`src/stores/models/`. Confirm `grep -rn "from 'mobx" apps/*/src` returns nothing.
+**Phase 4 — removal** (done)
+The three packages came out of each app's manifest in the same commit that removed its last MST
+store, so no commit ever had a manifest disagreeing with its code. `mobx-devtools-mst` — an admin
+devDependency nothing imported — went too, which is what finally cleared mobx from
+`pnpm-lock.yaml`. A `pnpm store prune` plus a clean reinstall from the lockfile confirmed it: no
+mobx in `node_modules`, and not resolvable from any app. That reinstall also cleared an orphaned
+`react@19.0.0-rc` from the virtual store, so there is now exactly one React.
 
-**Phase 5 — documentation**
-`add-app-screen`, `define-data-shape` and `CLAUDE.md` all describe MST as the state layer. They must
-be rewritten in the same batch, not later.
+**Phase 5 — documentation** (done)
+`CLAUDE.md`, `add-app-screen` and `define-data-shape` are rewritten, and the smaller mentions in
+`use-ui-component`, `extend-a-package`, `build-a-form`, `upgrade-a-dependency`, `DATA_CONTRACTS.md`
+and `packages/ui/README.md` are updated. Two changes worth knowing:
+
+- **The `no-restricted-imports` guard in `@repo/eslint-config` now bans `zustand` in
+  `packages/ui`**, where it used to ban `mobx*`. The rule's intent never changed — a component
+  there may not read app state — but naming an uninstalled package made it vacuous. The request
+  hooks in `@repo/ui/hooks` type the store structurally for exactly this reason, so the ban is
+  enforceable rather than aspirational.
+- **`no-empty-object-type`'s `with-single-extends` allowance now protects nothing.** It was
+  calibrated for `interface IUser extends Instance<typeof User> {}`, the MST instance pattern, and
+  a grep finds no single-extends interface left. The option stays with a comment saying so;
+  tightening it is a separate change.
 
 ## Verification, and why this needs a human
 
