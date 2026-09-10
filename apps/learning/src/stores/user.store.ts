@@ -176,7 +176,6 @@ export const useUserStore = create<IUserState>()((set, get) => ({
       firstName: '',
       lastName: '',
       email: '',
-      role: '',
       designation: '',
       gender: Gender.OTHER,
       permission,
@@ -216,8 +215,8 @@ export const useUserStore = create<IUserState>()((set, get) => ({
       const user = (org ? loggedInUsers.find((item) => item.org === org) : loggedInUsers[0]) ?? loggedInUsers[0];
       // `org` is optional on a client row but always present on a fetched one. Selection is the
       // selector store's business; this store only supplies the user.
-      if (user?.org && user.permission) {
-        useSelectorStore.getState().selectUserAndOrg(user._id, user.org, user.permission as DefaultRole);
+      if (user?.org) {
+        useSelectorStore.getState().selectUserAndOrg(user._id, user.org);
       }
     }),
 

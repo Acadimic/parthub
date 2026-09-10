@@ -1,5 +1,5 @@
 export enum DefaultRole {
-  SUPER_ADMIN = 'super admin',
+  ADMIN = 'admin',
   TEACHER = 'teacher',
   STUDENT = 'student',
   ASSISTANT = 'assistant',

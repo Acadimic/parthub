@@ -1,6 +1,3 @@
-import { AccountType, Gender } from '../../../enums/user.enum';
-import { OrgType } from '../../../enums/org.enum';
-import { DefaultRole } from '../../../enums/role.enum';
 import { Expose, Transform } from 'class-transformer';
 import {
   IsArray,
@@ -15,6 +12,9 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator';
+import { OrgType } from '../../../enums/org.enum';
+import { DefaultRole } from '../../../enums/role.enum';
+import { AccountType, Gender } from '../../../enums/user.enum';
 import { RegisterUserDto } from './register.dto';
 
 export class CreateUserDto extends RegisterUserDto {
@@ -38,9 +38,9 @@ export class CreateUserDto extends RegisterUserDto {
   @IsEnum(AccountType)
   accountType: AccountType;
 
-  @IsMongoId()
   @IsNotEmpty()
-  role: string;
+  @IsEnum(DefaultRole)
+  permission: DefaultRole;
 }
 
 export class UserDto {
@@ -120,10 +120,15 @@ export class UserDto {
   @IsNotEmpty()
   org: string;
 
+  /**
+   * What this member is in the organization, and the only input to what they may do:
+   * permissions come from `DEFAULT_PERMISSIONS[permission]` on both sides of the wire.
+   * Stored on the user, so there is no Role document to join.
+   */
   @Expose()
-  @IsMongoId()
   @IsNotEmpty()
-  role: string;
+  @IsEnum(DefaultRole)
+  permission: DefaultRole;
 
   @Expose()
   @IsNotEmpty()
@@ -174,12 +179,6 @@ export class UserDto {
   @IsOptional()
   @IsMongoId({ each: true })
   standards?: string[];
-
-  /** Name of the user's role (e.g. DefaultRole values); derived from `role`, never stored. */
-  @Expose()
-  @IsOptional()
-  @IsString()
-  permission?: DefaultRole | string;
 }
 
 /** Fields a user may change on their own profile (POST user/<subdomain>/profile). */
@@ -320,9 +319,9 @@ export class UserIdDto {
   userId: string;
 }
 
-/** Body of `user/update-role`. */
-export class UpdateUserRoleDto extends UserIdDto {
+/** Body of `user/update-permission`. */
+export class UpdateUserPermissionDto extends UserIdDto {
   @IsNotEmpty()
-  @IsMongoId()
-  roleId: string;
+  @IsEnum(DefaultRole)
+  permission: DefaultRole;
 }

@@ -1,5 +1,5 @@
 import { Avatar } from '@components/app/avatars';
-import { AccountSettingsType, type DefaultRole } from '@enums';
+import { AccountSettingsType } from '@enums';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IMenuItem } from '@interfaces';
 import { CheckIcon, GearSixIcon, SignOutIcon } from '@phosphor-icons/react';
@@ -44,8 +44,8 @@ export const ProfileDropdown = () => {
   ];
 
   const handleSwitchAccount = (user: IUser) => {
-    if (!user?.org || !user.permission || !selectedUser || user._id === selectedUser._id) return;
-    selectUserAndOrg(user._id, user.org, user.permission as DefaultRole);
+    if (!user?.org || !selectedUser || user._id === selectedUser._id) return;
+    selectUserAndOrg(user._id, user.org);
     window.location.reload();
   };
 

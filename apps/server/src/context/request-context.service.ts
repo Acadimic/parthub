@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { AccessType, Subdomain } from '@repo/shared/enums';
+import { AccessType, DefaultRole, Subdomain } from '@repo/shared/enums';
 import { Types } from 'mongoose';
 import { ClsServiceManager } from 'nestjs-cls';
 import { IRequestContext } from './request-context.interface';
@@ -30,11 +30,7 @@ export class RequestContextService {
   }
 
   getOrgIdSafe(): Types.ObjectId | undefined {
-    return this.toObjectId(this.getContextSafe()?.org);
-  }
-
-  getRoleSafe(): Types.ObjectId | undefined {
-    return this.toObjectId(this.getContextSafe()?.role);
+    return this.toObjectId(this.getContextSafe()?.orgId);
   }
 
   private toObjectId(value?: string): Types.ObjectId | undefined {
@@ -47,11 +43,12 @@ export class RequestContextService {
   }
 
   getOrgId(): Types.ObjectId {
-    return new Types.ObjectId(this.getContext().org);
+    return new Types.ObjectId(this.getContext().orgId);
   }
 
-  getRole(): Types.ObjectId {
-    return new Types.ObjectId(this.getContext().role);
+  /** What the caller is in the current organization, or undefined outside an authenticated request. */
+  getPermission(): DefaultRole | undefined {
+    return this.getContextSafe()?.permission;
   }
 
   getSubdomain(): Subdomain | undefined {
@@ -66,7 +63,7 @@ export class RequestContextService {
   async withOrg<T>(org: string | Types.ObjectId, fn: () => Promise<T>): Promise<T> {
     const cls = ClsServiceManager.getClsService();
     const context = this.getContext();
-    const previousOrgId = context.org;
+    const previousOrgId = context.orgId;
     cls.set('requestContext', { ...context, org: String(org) });
     try {
       return await fn();

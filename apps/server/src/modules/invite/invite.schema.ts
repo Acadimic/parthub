@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { InviteStatus } from '@repo/shared/enums';
+import { DefaultRole, InviteStatus } from '@repo/shared/enums';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 @Schema({ timestamps: true, virtuals: true })
@@ -11,8 +11,8 @@ export class Invite extends BaseSchema {
   @Prop({ type: String, required: true, trim: true, lowercase: true })
   email: string;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Role', required: true })
-  role: MongooseSchema.Types.ObjectId;
+  @Prop({ type: String, enum: DefaultRole, required: true })
+  permission: DefaultRole;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   invitedBy: MongooseSchema.Types.ObjectId;

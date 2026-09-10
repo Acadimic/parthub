@@ -4,7 +4,6 @@ export enum StorageKey {
   TOKEN = 'token',
   STANDARD = 'standard',
   SUBJECT = 'subject',
-  PERMISSION = 'permission',
   ORGANIZATION = 'organization',
   PRESIGNED_URLS = 'presigned-urls',
 }

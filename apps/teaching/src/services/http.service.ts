@@ -1,6 +1,6 @@
 import { type SuccessResponse } from '@repo/shared/responses';
 import axios, { type AxiosError } from 'axios';
-import { API, DefaultRole, StorageKey } from '../enums';
+import { API, StorageKey, Subdomain } from '../enums';
 import { generateAndSetNewToken } from '../utils/firebase';
 import { getTimezone, getTimezoneOffset, getToken, handleError } from '../utils/helpers';
 import { toPayload } from '@repo/ui/lib';
@@ -23,7 +23,9 @@ const createAxiosInstance = (isUnAuth: boolean, url: string) => {
       const token = getToken();
       if (config.headers && token) {
         config.headers.Authorization = `Bearer ${token}`;
-        config.headers.permission = localStorage.getItem(StorageKey.PERMISSION) || DefaultRole.SUPER_ADMIN;
+        // The server restricts app-specific routes with @Subdomains and reads this header to
+        // decide. It used to look for a path segment no client ever sent, so those routes 403'd.
+        config.headers.app = Subdomain.TEACH;
         config.headers.organization = localStorage.getItem(StorageKey.ORGANIZATION);
       }
       return config;

@@ -17,7 +17,6 @@ import { PlanModule } from '@modules/plan/plan.module';
 import { QuestionModule } from '@modules/question/question.module';
 import { RazorpayModule } from '@modules/razorpay/razorpay.module';
 import { ReactionModule } from '@modules/reaction/reaction.module';
-import { RoleModule } from '@modules/role/role.module';
 import { S3Module } from '@modules/s3/s3.module';
 import { SendGridModule } from '@modules/sendgrid/sendgrid.module';
 import { StandardModule } from '@modules/standard/standard.module';
@@ -102,7 +101,6 @@ import { SecretsService } from './secrets/secrets.service';
     UserModule,
     FirebaseModule,
     ActivityLogModule,
-    RoleModule,
     InviteModule,
     StandardModule,
     SubjectModule,

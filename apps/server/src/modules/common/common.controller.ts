@@ -23,9 +23,14 @@ export class CommonController {
     private readonly standardSubjectMappingService: StandardSubjectMappingService,
   ) {}
 
+  /** The reference data every app loads once an organization is selected. */
   @Get('initial-data')
   @Subdomains(Subdomain.SUPPORT, Subdomain.TEACH, Subdomain.LEARN)
   @Permissions()
+  // Deliberately not annotated `Promise<InitialDataResponse>`: standardService, subjectService
+  // and standardSubjectMappingService return lean documents whose `_id` is an ObjectId, while the
+  // contract declares `string`. The wire shape is right (an ObjectId serializes to a string) but
+  // the three collections have no transform step, so the annotation cannot hold until they get one.
   async getInitialData() {
     const [standards, subjects, mappings] = await Promise.all([
       this.standardService.getAll(),

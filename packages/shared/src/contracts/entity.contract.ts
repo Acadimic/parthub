@@ -30,4 +30,3 @@ export type { UserDto } from '../dtos/validations/user/user.dto';
 export type { OrgDto } from '../dtos/validations/user/user.dto';
 export type { InitialDataDto } from '../dtos/validations/user/user.dto';
 export type { InviteDto } from '../dtos/validations/invite/invite.dto';
-export type { RoleDto } from '../dtos/validations/role/role.dto';

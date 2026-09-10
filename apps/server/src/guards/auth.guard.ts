@@ -6,15 +6,15 @@ import { UserDocument } from '@modules/user/user.schema';
 import { UserService } from '@modules/user/user.service';
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { AccessType, DefaultRole, Subdomain } from '@repo/shared/enums';
+import { RegisterUserDto, UserDto } from '@repo/shared/validations';
 import { Secrets } from '@secrets/secrets';
 import { SecretsService } from '@secrets/secrets.service';
-import { AccessType, Subdomain } from '@repo/shared/enums';
-import { RegisterUserDto, UserDto } from '@repo/shared/validations';
 import { INITIAL_LOGIN_DATA_URL } from '@utils/constants';
-import { getRegisterPayload, getSubdomainFromUrl } from '@utils/util';
+import { getRegisterPayload } from '@utils/util';
 import { DecodedIdToken } from 'firebase-admin/auth';
-import { timingSafeEqual } from 'node:crypto';
 import { ClsService } from 'nestjs-cls';
+import { timingSafeEqual } from 'node:crypto';
 import { IRequestContext } from '../context/request-context.interface';
 
 /** The parts of the incoming request this guard reads. */
@@ -61,11 +61,39 @@ export class AuthGuard implements CanActivate {
     return value;
   }
 
+  /**
+   * The app the request came from, or undefined when the header was not sent. An unrecognised
+   * value is always refused, so a typo cannot silently read as "no app".
+   *
+   * It used to be parsed out of the request path, which never worked: no client URL carries a
+   * `learn`/`teach`/`support` segment and no global prefix adds one, so every `@Subdomains` route
+   * was refused.
+   *
+   * Public routes read it through here rather than `getApp`: none of them declares `@Subdomains`,
+   * and an anonymous visitor calls them through `callUnAuthApi`, which sends no app header.
+   * Requiring it there rejected every public request.
+   */
+  readApp(context: ExecutionContext): Subdomain | undefined {
+    const value = this.getHeaderValue(context, 'app') as string | undefined;
+    if (!value) return undefined;
+    if (!(Object.values(Subdomain) as string[]).includes(value)) {
+      throw new UnauthorizedException(`Unknown app: ${value}`);
+    }
+    return value as Subdomain;
+  }
+
+  /** The app header, required. Every authenticated route must say which app it is (@Subdomains). */
+  getApp(context: ExecutionContext): Subdomain {
+    const app = this.readApp(context);
+    if (!app) throw new UnauthorizedException('The app header is required.');
+    return app;
+  }
+
   setRequestContext(payload: UserDto | RegisterUserDto, otherPayload: ContextPayload) {
     const requestContext: IRequestContext = {
       userId: String(payload._id),
-      org: String(payload.org),
-      role: (payload as UserDto).role ? String((payload as UserDto).role) : '',
+      orgId: String(payload.org),
+      permission: payload.permission,
       ...otherPayload,
     };
     this.clsService.set('requestContext', requestContext);
@@ -74,8 +102,8 @@ export class AuthGuard implements CanActivate {
   setMinimalRequestContext(otherPayload: ContextPayload) {
     const requestContext: IRequestContext = {
       userId: '',
-      org: '',
-      role: '',
+      orgId: '',
+      permission: DefaultRole.ADMIN,
       ...otherPayload,
     };
     this.clsService.set('requestContext', requestContext);
@@ -89,7 +117,7 @@ export class AuthGuard implements CanActivate {
     if (!firebaseUser) throw new UnauthorizedException('Firebase user not found!');
     const uid = firebaseUser.uid;
     const email = firebaseUser.email as string;
-    const name = firebaseUser.name as string;
+    const name = (firebaseUser.name || firebaseUser.displayName || firebaseUser.display_name) as string;
     const phone_number = firebaseUser.phone_number as string;
     return { email, uid, name, phone_number };
   }
@@ -99,7 +127,7 @@ export class AuthGuard implements CanActivate {
     const timezone = this.getHeaderValue(context, 'timezone') as string;
     const timezoneOffset = this.getHeaderValue(context, 'timezone-offset') as string;
     const { url } = request;
-    const subdomain = getSubdomainFromUrl(url);
+    const subdomain = this.getApp(context);
     const org = this.getHeaderValue(context, 'organization') as string;
     if (!org && !url.includes(INITIAL_LOGIN_DATA_URL)) {
       throw new UnauthorizedException('Organization is required!');
@@ -112,11 +140,15 @@ export class AuthGuard implements CanActivate {
       : (await this.userService.getUsersByUid(firebaseUser.uid))[0];
     if (org && !user) throw new UnauthorizedException(`DB user not found for org id: ${org}`);
     if (!user && url.includes(INITIAL_LOGIN_DATA_URL)) {
-      const payload = getRegisterPayload(firebaseUser);
+      const payload = getRegisterPayload(subdomain, firebaseUser);
       this.setRequestContext(payload, { apiRoute: url, accessType, subdomain, timezone, timezoneOffset });
       user = await this.userService.registerUser(payload, subdomain);
     }
     if (!user) throw new UnauthorizedException('DB user not found!');
+    // Revoking access writes isInactive and nothing used to read it, so a revoked member kept
+    // their token and every permission their role granted. Refused here rather than in
+    // AccessGuard: an inactive membership is not an authorization question, it is not a session.
+    if (user.isInactive) throw new UnauthorizedException('Your access to this organization has been revoked.');
     this.userService.updateLastActive(String(user._id), new Date());
     return this.userService.transformUser(user as UserDocument);
   }
@@ -133,7 +165,7 @@ export class AuthGuard implements CanActivate {
     const { url } = request;
     const { method } = request;
     const apiRoute = `${method} ${url}`;
-    const subdomain = getSubdomainFromUrl(url);
+    const subdomain = this.readApp(context);
     const timezone = this.getHeaderValue(context, 'timezone') as string;
     const timezoneOffset = this.getHeaderValue(context, 'timezone-offset') as string;
 

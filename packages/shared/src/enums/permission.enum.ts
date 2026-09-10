@@ -7,11 +7,6 @@ export enum PermissionItem {
   // Organization
   EDIT_ORG = 'editOrg',
 
-  // Role
-  EDIT_ROLE = 'editRole',
-  VIEW_ROLE = 'viewRole',
-  DELETE_ROLE = 'deleteRole',
-
   // Staff
   MANAGE_STAFF = 'manageStaff',
   VIEW_STAFF = 'viewStaff',

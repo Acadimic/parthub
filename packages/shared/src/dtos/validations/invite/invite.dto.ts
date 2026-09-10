@@ -1,4 +1,5 @@
 import { InviteStatus } from '../../../enums/invite.enum';
+import { DefaultRole } from '../../../enums/role.enum';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
@@ -17,8 +18,8 @@ export class InviteUserDto {
   email: string;
 
   @IsNotEmpty()
-  @IsString()
-  role: string;
+  @IsEnum(DefaultRole)
+  permission: DefaultRole;
 }
 
 export class InviteDto {
@@ -36,8 +37,8 @@ export class InviteDto {
   email: string;
 
   @IsNotEmpty()
-  @IsString()
-  role: string;
+  @IsEnum(DefaultRole)
+  permission: DefaultRole;
 
   @IsNotEmpty()
   @IsMongoId()

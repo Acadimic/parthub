@@ -1,6 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { AccountType, Gender, PermissionItem } from '@repo/shared/enums';
+import { AccountType, DefaultRole, Gender } from '@repo/shared/enums';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User> & { avatarPresignedUrl?: string };
@@ -66,9 +66,6 @@ export class User extends BaseSchema {
   @Prop({ type: Boolean, default: false })
   isInactive: boolean;
 
-  @Prop({ type: [{ type: String, enum: PermissionItem }] })
-  removedPermissions: PermissionItem[];
-
   @Prop({ type: String, enum: AccountType, required: true })
   accountType: AccountType;
 
@@ -78,8 +75,12 @@ export class User extends BaseSchema {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Invite' })
   invite: MongooseSchema.Types.ObjectId;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Role', required: true })
-  role: MongooseSchema.Types.ObjectId;
+  /**
+   * What this member is in the organization. The only input to what they may do: permissions come
+   * from `DEFAULT_PERMISSIONS[permission]`, so there is no Role document and nothing to join.
+   */
+  @Prop({ type: String, enum: DefaultRole, required: true })
+  permission: DefaultRole;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

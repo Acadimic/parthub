@@ -9,7 +9,7 @@ import {
   InitialDataDto,
   UpdateOrgUserDto,
   UpdateProfileDto,
-  UpdateUserRoleDto,
+  UpdateUserPermissionDto,
   UserDto,
   UserIdDto,
 } from '@repo/shared/validations';
@@ -66,11 +66,11 @@ export class UserController {
     await this.userService.restoreAccess(body.userId);
   }
 
-  @Post('update-role')
+  @Post('update-permission')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.MANAGE_STAFF)
-  async updateUserRole(@Body() body: UpdateUserRoleDto): Promise<void> {
-    await this.userService.updateUserRole(body.userId, body.roleId);
+  async updateUserPermission(@Body() body: UpdateUserPermissionDto): Promise<void> {
+    await this.userService.updateUserPermission(body.userId, body.permission);
   }
 
   @Post('accept-invite')

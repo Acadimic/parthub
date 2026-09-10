@@ -27,7 +27,7 @@ class UserService {
   };
 
   inviteCollaborator = async (collaborator: IUser) => {
-    return await this.invite(collaborator, collaborator.permission as DefaultRole);
+    return await this.invite(collaborator, collaborator.permission);
   };
 
   updateStudent = async (student: IUser) => {
@@ -38,9 +38,11 @@ class UserService {
     return await this.updateOrgUser(collaborator);
   };
 
-  private invite = async (user: IUser, role: string) => {
+  // The key is `permission`, matching InviteUserDto. The validation pipe runs with
+  // `forbidNonWhitelisted`, so the old `role` key failed the whole request.
+  private invite = async (user: IUser, permission: DefaultRole) => {
     const url = 'invite/bulk/upsert';
-    return await callAuthApi(url, API.POST, [{ _id: user._id, name: user.name, email: user.email, role }]);
+    return await callAuthApi(url, API.POST, [{ _id: user._id, name: user.name, email: user.email, permission }]);
   };
 
   private updateOrgUser = async (user: IUser) => {

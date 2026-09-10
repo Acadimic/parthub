@@ -1,12 +1,9 @@
 import { PermissionItem } from '../enums/permission.enum';
 import { DefaultRole } from '../enums/role.enum';
+import { Subdomain } from '../enums/subdomain.enum';
 
 const ALL_PERMISSIONS: PermissionItem[] = [
   PermissionItem.EDIT_ORG,
-
-  PermissionItem.EDIT_ROLE,
-  PermissionItem.VIEW_ROLE,
-  PermissionItem.DELETE_ROLE,
 
   PermissionItem.MANAGE_STAFF,
   PermissionItem.VIEW_STAFF,
@@ -30,12 +27,16 @@ const ALL_PERMISSIONS: PermissionItem[] = [
   PermissionItem.VIEW_QUESTION,
 ];
 
+export const DEFAULT_PERMISSION_BY_APP: Record<Subdomain, DefaultRole> = {
+  [Subdomain.TEACH]: DefaultRole.ADMIN,
+  [Subdomain.LEARN]: DefaultRole.STUDENT,
+  [Subdomain.SUPPORT]: DefaultRole.ADMIN,
+};
+
 export const DEFAULT_PERMISSIONS: Record<DefaultRole, PermissionItem[]> = {
-  [DefaultRole.SUPER_ADMIN]: ALL_PERMISSIONS,
+  [DefaultRole.ADMIN]: ALL_PERMISSIONS,
 
   [DefaultRole.TEACHER]: [
-    PermissionItem.VIEW_ROLE,
-
     PermissionItem.VIEW_STAFF,
 
     PermissionItem.CREATE_COURSE,
@@ -70,8 +71,6 @@ export const DEFAULT_PERMISSIONS: Record<DefaultRole, PermissionItem[]> = {
   ],
 
   [DefaultRole.ASSISTANT]: [
-    PermissionItem.VIEW_ROLE,
-
     PermissionItem.VIEW_COURSE,
 
     PermissionItem.VIEW_MATERIAL,

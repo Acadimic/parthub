@@ -1,23 +1,19 @@
 import { InviteService } from '@modules/invite/invite.service';
 import { OrgService } from '@modules/org/org.service';
-import { RoleService } from '@modules/role/role.service';
 import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  InternalServerErrorException,
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { AccountType, DefaultRole, OrgType, PermissionItem, Subdomain } from '@repo/shared/enums';
-import { DEFAULT_PERMISSIONS } from '@repo/shared/utils';
+import { AccountType, DefaultRole, OrgType, Subdomain } from '@repo/shared/enums';
 import {
   CreateUserDto,
   FindByOrgIdAndUidDto,
   InitialDataDto,
   RegisterUserDto,
-  RoleDto,
   UpdateOrgUserDto,
   UpdateProfileDto,
   UserDto,
@@ -25,18 +21,16 @@ import {
 import { getObjectId } from '@utils/util';
 import { Model, Types } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
-import { RoleDocument } from '@modules/role/role.schema';
 import { User, UserDocument } from './user.schema';
 
 @Injectable()
 export class UserService {
   // NestJS injects collaborators through the constructor, so the count reflects this class's
   // dependencies rather than a parameter list that could be shortened by extraction.
-  // eslint-disable-next-line max-params
+
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly orgService: OrgService,
-    private readonly roleService: RoleService,
     private readonly inviteService: InviteService,
     private readonly requestContextService: RequestContextService,
   ) {}
@@ -45,39 +39,24 @@ export class UserService {
     return {
       ...user,
       _id: user._id.toString(),
-      org: user.org?.toString(),
-      role: user.role?.toString(),
+      org: user.org.toString(),
       standards: user.standards?.map((standard) => standard.toString()),
       dob: user.dob ? new Date(user.dob).toISOString() : undefined,
-      // Mongoose gives these as Date; every contract serializes a timestamp as ISO 8601.
-      createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : undefined,
-      updatedAt: user.updatedAt ? new Date(user.updatedAt).toISOString() : undefined,
+      createdAt: new Date(user.createdAt).toISOString(),
+      updatedAt: new Date(user.updatedAt).toISOString(),
     };
-  }
-
-  /** The role name the apps use as `permission`; falls back to the closest default role for custom roles. */
-  getPermissionForRole(role: RoleDocument | undefined): DefaultRole {
-    // The apps model `permission` as a strict DefaultRole enum, so a custom role must always be
-    // mapped onto the closest default rather than returned verbatim or left undefined.
-    if (role?.isAdmin) return DefaultRole.SUPER_ADMIN;
-    if (role && (Object.values(DefaultRole) as string[]).includes(role.role)) return role.role as DefaultRole;
-    if (role?.permissions?.includes(PermissionItem.STUDENT)) return DefaultRole.STUDENT;
-    if (role?.permissions?.includes(PermissionItem.CREATE_COURSE)) return DefaultRole.TEACHER;
-    return DefaultRole.ASSISTANT;
-  }
-
-  async withPermissions(users: UserDto[]): Promise<UserDto[]> {
-    const roleIds = [...new Set(users.map((user) => user.role).filter(Boolean))];
-    const roles = await this.roleService.getRolesByIds(roleIds);
-    const roleMap = new Map(roles.map((role) => [role._id.toString(), role]));
-    return users.map((user) => ({ ...user, permission: this.getPermissionForRole(roleMap.get(user.role)) }));
   }
 
   /**
    * First login of a Firebase account. Two paths:
-   * - Invited: the user joins the inviting org with the invited role (learner joins a teacher's org).
-   * - Self sign-up: a personal org is created with the default roles. Teachers (and admins) own it as
-   *   SUPER_ADMIN; learners signing up from the learn app get the STUDENT role in their own org.
+   * - Invited: the user joins the inviting org with the permission the invite named.
+   * - Self sign-up: a personal org is created and the user owns it with `payload.permission`,
+   *   which `getRegisterPayload` derived from the app. It is used verbatim rather than re-derived
+   *   here: the same value is already on the request context, and a second ternary disagreed with
+   *   the first one for the support app.
+   *
+   * No roles are created: `permission` is stored on the user and the permission set comes from
+   * `DEFAULT_PERMISSIONS`.
    */
   async registerUser(payload: RegisterUserDto, subdomain?: Subdomain): Promise<UserDto> {
     const invite = await this.inviteService.getPendingInviteByEmail(payload.email);
@@ -93,7 +72,7 @@ export class UserService {
           timezone,
           accountType: AccountType.INVITED,
           invitedBy: invite.invitedBy.toString(),
-          role: invite.role.toString(),
+          permission: invite.permission,
           invite: invite._id.toString(),
         }),
       );
@@ -101,31 +80,18 @@ export class UserService {
       return dbUser;
     }
 
-    const rolePayloads: RoleDto[] = Object.values(DefaultRole).map((role) => ({
-      _id: getObjectId(),
-      role,
-      permissions: DEFAULT_PERMISSIONS[role],
-      org: payload.org,
-      isAdmin: role === DefaultRole.SUPER_ADMIN,
-    }));
-    const ownerRole = subdomain === Subdomain.LEARN ? DefaultRole.STUDENT : DefaultRole.SUPER_ADMIN;
-    const ownerRolePayload = rolePayloads.find((r) => r.role === ownerRole);
-    if (!ownerRolePayload) throw new InternalServerErrorException(`No ${ownerRole} role was prepared for the user.`);
-    const currentRole = ownerRolePayload._id;
-
-    // Roles and org first so a failure never leaves a user pointing at a half-created org.
-    await this.roleService.upsertBulk(rolePayloads);
+    payload.name = payload.name || payload.email.split('@')[0] || '';
+    // The org first, so a failure never leaves a user pointing at an org that was never created.
     await this.orgService.upsert({
       _id: payload.org,
-      name: payload.name || payload.email.split('@')[0],
-      orgType: OrgType.INDIVIDUAL,
+      name: payload.name,
+      orgType: subdomain === Subdomain.LEARN ? OrgType.STUDENT : OrgType.INDIVIDUAL,
     });
     return await this.upsert({
       ...payload,
       isUpdated: false,
       timezone,
       accountType: AccountType.SELF,
-      role: currentRole,
     });
   }
 
@@ -193,18 +159,17 @@ export class UserService {
     ];
     const orgs = await this.orgService.getOrgsByIds(orgIds);
     if (orgIds.length !== orgs.length) throw new NotAcceptableException('Org not found!');
-    return { users: await this.withPermissions(users), orgs };
+    return { users, orgs };
   }
 
   /** A user completing or editing their own profile; marks onboarding as done. */
-  async updateProfile(userId: string | Types.ObjectId, payload: UpdateProfileDto): Promise<UserDto> {
+  async updateProfile(userId: string, payload: UpdateProfileDto): Promise<UserDto> {
     const user = await this.userModel
       .findByIdAndUpdate(userId, { ...payload, isUpdated: true }, { returnDocument: 'after', runValidators: true })
       .lean<UserDocument>()
       .exec();
     if (!user) throw new NotFoundException('User not found.');
-    const [withPermission] = await this.withPermissions([this.transformUser(user)]);
-    return withPermission;
+    return this.transformUser(user);
   }
 
   /** Staff editing another member of the same org (students, collaborators). */
@@ -221,8 +186,7 @@ export class UserService {
       .lean<UserDocument>()
       .exec();
     if (!user) throw new NotFoundException('User not found.');
-    const [withPermission] = await this.withPermissions([this.transformUser(user)]);
-    return withPermission;
+    return this.transformUser(user);
   }
 
   async getOrgUsers(org: string): Promise<UserDocument[]> {
@@ -240,7 +204,7 @@ export class UserService {
       .sort({ isInactive: 1, updatedAt: -1 })
       .lean<UserDocument[]>()
       .exec();
-    return this.withPermissions(users.map((user) => this.transformUser(user)));
+    return users.map((user) => this.transformUser(user));
   }
 
   // The user id comes from the request body, so every one of these is scoped to the caller's
@@ -255,9 +219,9 @@ export class UserService {
     await this.userModel.updateOne({ _id: userId, org }, { isInactive: false }).exec();
   }
 
-  async updateUserRole(userId: string, roleId: string): Promise<void> {
+  async updateUserPermission(userId: string, permission: DefaultRole): Promise<void> {
     const org = this.requestContextService.getOrgId();
-    await this.userModel.updateOne({ _id: userId, org }, { role: new Types.ObjectId(roleId) }).exec();
+    await this.userModel.updateOne({ _id: userId, org }, { permission }).exec();
   }
 
   async acceptInviteAndJoinOrg(currentUser: UserDto, inviteId: string): Promise<UserDto> {
@@ -290,7 +254,7 @@ export class UserService {
         timezone: this.requestContextService.getTimezone() || 'Asia/Kolkata',
         accountType: AccountType.INVITED,
         invitedBy: invite.invitedBy.toString(),
-        role: invite.role.toString(),
+        permission: invite.permission,
         invite: invite._id.toString(),
       }),
     );

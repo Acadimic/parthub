@@ -136,13 +136,27 @@ export const updateUserPassword = async (oldPassword: string, newPassword: strin
   await signIn(email, newPassword);
 };
 
+/**
+ * `auth/invalid-credential` is what Firebase returns for a wrong password OR an unknown email once
+ * email enumeration protection is on, which is the default for new projects. The two cases are
+ * deliberately indistinguishable, so the message must not say which it was — and
+ * `auth/user-not-found` and `auth/wrong-password` stop arriving at all, which is why the sign-in
+ * screens no longer pre-check whether an address exists.
+ */
+const ERROR_MESSAGE_BY_CODE: Record<string, string> = {
+  'auth/invalid-credential': 'Incorrect email or password.',
+  'auth/user-not-found': 'Incorrect email or password.',
+  'auth/wrong-password': 'Incorrect email or password.',
+  'auth/invalid-password': 'Invalid Password!',
+  'auth/email-already-in-use': 'That email already has an account. Please sign in.',
+  'auth/too-many-requests': 'Too many attempts. Please wait a moment and try again.',
+  'auth/network-request-failed': 'Network error. Please check your connection.',
+};
+
 export const getFirebaseErrorMessage = (e: FirebaseError) => {
   console.error('Firebase Error: ', e);
-  if (e?.code === 'auth/user-not-found') return 'User not found!';
-  if (e?.code === 'auth/invalid-password') return 'Invalid Password!';
-  if (e?.code === 'auth/wrong-password') return 'Wrong Password!';
-  if (e?.code === 'auth/email-already-in-use') return 'Email already in use.';
-  return e?.message || 'Something went wrong. Please try again.';
+  const known = e?.code ? ERROR_MESSAGE_BY_CODE[e.code] : undefined;
+  return known ?? e?.message ?? 'Something went wrong. Please try again.';
 };
 
 export const signInWithGoogle = async () => {

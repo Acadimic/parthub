@@ -1,7 +1,7 @@
 import { type AttachmentDto } from '@repo/shared/contracts';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { CourseItemType, DefaultRole, QuestionType, StorageKey } from '../enums';
+import { CourseItemType, QuestionType, StorageKey } from '../enums';
 
 /**
  * What the learner currently has selected. **Ids and plain values only.**
@@ -30,7 +30,6 @@ export interface ISelectorState {
   selectedStudentId: string;
   selectedCollaboratorId: string;
   selectedBatchId: string;
-  selectedPermission: DefaultRole;
   selectedQuestionType: QuestionType;
   selectedCourseItem: CourseItemType;
   selectedUpsertQuestionStep: number;
@@ -52,7 +51,6 @@ export interface ISelectorState {
   setSelectedStudentId: (value: string) => void;
   setSelectedCollaboratorId: (value: string) => void;
   setSelectedBatchId: (value: string) => void;
-  setSelectedPermission: (value: DefaultRole) => void;
   setSelectedQuestionType: (value: QuestionType) => void;
   setSelectedCourseItem: (value: CourseItemType) => void;
   setSelectedUpsertQuestionStep: (value: number) => void;
@@ -74,7 +72,7 @@ export interface ISelectorState {
   removeSelectedContent: () => void;
   removeSelectedAttachment: () => void;
   /** Selects a user and the org they belong to. Takes fields, not a user, so this store stays dependency-free. */
-  selectUserAndOrg: (userId: string, org: string, permission: DefaultRole) => void;
+  selectUserAndOrg: (userId: string, org: string) => void;
   reset: () => void;
 }
 
@@ -93,7 +91,6 @@ const INITIAL = {
   selectedStudentId: '',
   selectedCollaboratorId: '',
   selectedBatchId: '',
-  selectedPermission: DefaultRole.STUDENT,
   selectedQuestionType: QuestionType.SINGLE_CHOICE,
   selectedCourseItem: CourseItemType.COURSE_MATERIALS,
   selectedUpsertQuestionStep: 0,
@@ -146,9 +143,6 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
   },
   setSelectedBatchId: (value) => {
     set({ selectedBatchId: value });
-  },
-  setSelectedPermission: (value) => {
-    set({ selectedPermission: value });
   },
   setSelectedQuestionType: (value) => {
     set({ selectedQuestionType: value });
@@ -210,9 +204,10 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
   removeSelectedAttachment: () => {
     set({ selectedAttachment: null });
   },
-  selectUserAndOrg: (userId, org, permission) => {
-    set({ selectedUserId: userId, selectedOrgId: org, selectedPermission: permission });
-    localStorage.setItem(StorageKey.PERMISSION, permission);
+  selectUserAndOrg: (userId, org) => {
+    set({ selectedUserId: userId, selectedOrgId: org });
+    // Only the org is persisted. The permission used to be stored so http.service could send it
+    // as a header, which the server never read — a client-declared role would be escalation.
     localStorage.setItem(StorageKey.ORGANIZATION, org);
   },
 

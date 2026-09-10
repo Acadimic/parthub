@@ -1,11 +1,10 @@
 import { UserDocument } from '@modules/user/user.schema';
 import { UserService } from '@modules/user/user.service';
-import { RoleService } from '@modules/role/role.service';
-import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { InviteStatus } from '@repo/shared/enums';
 import { InviteLookupDto, InviteDto, InviteUserDto } from '@repo/shared/validations';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
 import { Invite, InviteDocument } from './invite.schema';
 
@@ -16,22 +15,13 @@ export class InviteService {
     private readonly requestContextService: RequestContextService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
-    private readonly roleService: RoleService,
   ) {}
-
-  /** Invites may name the role (e.g. "student") instead of passing a Role id; resolve it within the org. */
-  private async resolveRoleId(role: string, org: Types.ObjectId): Promise<string> {
-    if (Types.ObjectId.isValid(role)) return role;
-    const roleDoc = await this.roleService.findByName(org, role);
-    if (!roleDoc) throw new BadRequestException(`Role "${role}" does not exist in this organization.`);
-    return roleDoc._id.toString();
-  }
 
   getTransformedInvite(invite: InviteDocument): InviteDto {
     return {
       ...invite,
       _id: invite._id.toString(),
-      role: invite.role.toString(),
+      permission: invite.permission,
       invitedBy: invite.invitedBy.toString(),
       acceptedDate: invite.acceptedDate?.toISOString(),
     };
@@ -40,7 +30,6 @@ export class InviteService {
   async upsert(payload: InviteUserDto): Promise<InviteDto> {
     const { email } = payload;
     const org = this.requestContextService.getOrgId();
-    const role = await this.resolveRoleId(payload.role, org);
     // `_id` is client-generated and immutable, so it must not reach the update; matching on
     // (email, org) alone — the unique index — lets a declined or revoked invite be re-sent.
     const { _id, ...fields } = payload;
@@ -49,7 +38,6 @@ export class InviteService {
         { email, org },
         {
           ...fields,
-          role,
           invitedBy: this.requestContextService.getUserId(),
           status: InviteStatus.PENDING,
           acceptedDate: null,
@@ -118,22 +106,16 @@ export class InviteService {
   }
 
   async lookupInvite(inviteId: string): Promise<InviteLookupDto> {
-    const invite = await this.inviteModel
-      .findById(inviteId)
-      .populate('role', 'role')
-      .populate('org', 'name')
-      .lean()
-      .exec();
+    const invite = await this.inviteModel.findById(inviteId).populate('org', 'name').lean().exec();
     if (!invite) {
       throw new NotFoundException('Invite not found.');
     }
-    const role = invite.role as unknown as { role: string };
     const org = invite.org as unknown as { name: string };
     return {
       _id: invite._id.toString(),
       email: invite.email,
       status: invite.status,
-      roleName: role?.role || '',
+      permission: invite.permission,
       orgName: org?.name,
     };
   }

@@ -1,4 +1,5 @@
-import { IsEmail, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { DefaultRole } from '../../../enums/role.enum';
 
 export class RegisterUserDto {
   @IsNotEmpty()
@@ -20,4 +21,8 @@ export class RegisterUserDto {
   @IsMongoId()
   @IsNotEmpty()
   org: string;
+
+  @IsEnum(DefaultRole)
+  @IsNotEmpty()
+  permission: DefaultRole;
 }

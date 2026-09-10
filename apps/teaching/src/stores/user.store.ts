@@ -17,7 +17,11 @@ import { useStandardStore } from './standard.store';
  */
 export type IUser = UserDto & { isNew?: boolean; photoUrl?: string | null };
 
-/** Whether a user is a student. Was the `isStudent` view on the MST model. */
+/**
+ * Whether a user is a student. Decided by what their role grants, not by its name, so a custom
+ * role behaves correctly -- the old check compared against a `DefaultRole` the server had
+ * collapsed every custom role onto.
+ */
 export const isStudentUser = (user: IUser): boolean => user.permission === DefaultRole.STUDENT;
 
 /** The fetches this store tracks. */
@@ -74,7 +78,7 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
 const toUserItem = (user: IUser): ISelectItem => ({
   label: user.name,
   value: user._id,
-  description: `${capitalize(user.role)} (${user.email})`,
+  description: `${capitalize(user.permission)} (${user.email})`,
   group: `${user.permission}s`,
 });
 
@@ -185,7 +189,6 @@ export const useUserStore = create<IUserState>()((set, get) => ({
       firstName: '',
       lastName: '',
       email: '',
-      role: '',
       designation: '',
       gender: Gender.OTHER,
       permission,
@@ -215,8 +218,8 @@ export const useUserStore = create<IUserState>()((set, get) => ({
       // Selection is the selector store's business; this store only supplies the user.
       // `org` is optional on the DTO (a write body never sends the ownership fields) but is
       // always present on a fetched one.
-      if (user?.org && user.permission) {
-        useSelectorStore.getState().selectUserAndOrg(user._id, user.org, user.permission as DefaultRole);
+      if (user?.org) {
+        useSelectorStore.getState().selectUserAndOrg(user._id, user.org);
       }
     }),
 

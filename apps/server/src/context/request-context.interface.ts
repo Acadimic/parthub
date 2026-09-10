@@ -1,9 +1,9 @@
-import { type AccessType, type Subdomain } from '@repo/shared/enums';
+import { type AccessType, type DefaultRole, type Subdomain } from '@repo/shared/enums';
 
 export interface IRequestContext {
   userId: string;
-  org: string;
-  role: string;
+  orgId: string;
+  permission: DefaultRole;
   apiRoute: string;
   accessType: AccessType;
   subdomain?: Subdomain;

@@ -1,6 +1,5 @@
 import { InviteModule } from '@modules/invite/invite.module';
 import { OrgModule } from '@modules/org/org.module';
-import { RoleModule } from '@modules/role/role.module';
 import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserController } from './user.controller';
@@ -11,7 +10,6 @@ import { UserService } from './user.service';
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     OrgModule,
-    RoleModule,
     forwardRef(() => InviteModule),
   ],
   controllers: [UserController],

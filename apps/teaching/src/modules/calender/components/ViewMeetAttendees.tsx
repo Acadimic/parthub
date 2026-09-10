@@ -1,8 +1,7 @@
 import { AvatarWithName } from '@components/app/avatars';
 import { Label } from '@repo/ui/app';
 import { UserIcon } from '@phosphor-icons/react';
-import { DefaultRole } from '@enums';
-import { useUserLookups } from '@stores';
+import { isStudentUser, useUserLookups } from '@stores';
 
 interface IProps {
   attendeeIds: string[];
@@ -17,8 +16,8 @@ export const ViewMeetAttendees = ({ attendeeIds, isStudents, isTeachers, noLabel
   const attendees = getUsersByIds(attendeeIds);
 
   const filteredAttendees = attendees.filter((attendee) => {
-    if (isStudents) return attendee.permission === DefaultRole.STUDENT;
-    if (isTeachers) return attendee.permission !== DefaultRole.STUDENT;
+    if (isStudents) return isStudentUser(attendee);
+    if (isTeachers) return !isStudentUser(attendee);
     return true;
   });
 

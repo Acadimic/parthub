@@ -1,7 +1,7 @@
 import { type IFullCalendarEvent } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { CalendarType, DefaultRole, QuestionType, StorageKey } from '../enums';
+import { CalendarType, QuestionType, StorageKey } from '../enums';
 
 /**
  * What the user currently has selected. **Ids and plain values only.**
@@ -33,7 +33,6 @@ export interface ISelectorState {
   selectedMeetId: string;
   selectedCalenderDate: number;
   selectedSolutionId: string;
-  selectedPermission: DefaultRole;
   selectedQuestionType: QuestionType;
   selectedCalenderType: CalendarType;
   selectedCalenderEvent: IFullCalendarEvent | null;
@@ -55,7 +54,6 @@ export interface ISelectorState {
   setSelectedMeetId: (value: string) => void;
   setSelectedCalenderDate: (value: number) => void;
   setSelectedSolutionId: (value: string) => void;
-  setSelectedPermission: (value: DefaultRole) => void;
   setSelectedQuestionType: (value: QuestionType) => void;
   setSelectedCalenderType: (value: CalendarType) => void;
   setSelectedCalenderEvent: (value: IFullCalendarEvent) => void;
@@ -77,7 +75,7 @@ export interface ISelectorState {
   removeSelectedCalenderEvent: () => void;
   removeSelectedSolutionId: () => void;
   /** Selects a user and the org they lead. Takes fields, not a user, so this store stays dependency-free. */
-  selectUserAndOrg: (userId: string, org: string, permission: DefaultRole) => void;
+  selectUserAndOrg: (userId: string, org: string) => void;
   reset: () => void;
 }
 
@@ -100,7 +98,6 @@ const INITIAL = {
   selectedMeetId: '',
   selectedCalenderDate: Date.now(),
   selectedSolutionId: '',
-  selectedPermission: DefaultRole.SUPER_ADMIN,
   selectedQuestionType: QuestionType.SINGLE_CHOICE,
   selectedCalenderType: CalendarType.DAY,
   selectedCalenderEvent: null,
@@ -163,9 +160,6 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
   setSelectedSolutionId: (value) => {
     set({ selectedSolutionId: value });
   },
-  setSelectedPermission: (value) => {
-    set({ selectedPermission: value });
-  },
   setSelectedQuestionType: (value) => {
     set({ selectedQuestionType: value });
   },
@@ -226,9 +220,10 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
   removeSelectedSolutionId: () => {
     set({ selectedSolutionId: '' });
   },
-  selectUserAndOrg: (userId, org, permission) => {
-    set({ selectedUserId: userId, selectedOrgId: org, selectedPermission: permission });
-    localStorage.setItem(StorageKey.PERMISSION, permission);
+  selectUserAndOrg: (userId, org) => {
+    set({ selectedUserId: userId, selectedOrgId: org });
+    // Only the org is persisted. The permission used to be stored so http.service could send it
+    // as a header, which the server never read — a client-declared role would be escalation.
     localStorage.setItem(StorageKey.ORGANIZATION, org);
   },
 

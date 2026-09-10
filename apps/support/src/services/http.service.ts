@@ -1,6 +1,6 @@
 import { type SuccessResponse } from '@repo/shared/responses';
 import axios, { type AxiosError } from 'axios';
-import { API } from '../enums';
+import { API, StorageKey, Subdomain } from '../enums';
 import { generateAndSetNewToken } from '../utils/firebase';
 import { getToken, getUtcOffset, handleError } from '../utils/helpers';
 import { toPayload } from '@repo/ui/lib';
@@ -21,7 +21,20 @@ const createAxiosInstance = (isUnAuth: boolean, url: string) => {
     try {
       const token = getToken();
       if (config.headers && token) {
+        // Both credentials travel together, deliberately, while this app moves to private APIs.
+        //
+        // `api-key` is what @Private() routes check. It comes from a NEXT_PUBLIC_ variable, so it
+        // is inlined into the browser bundle and readable by anyone who opens this app — it is not
+        // a secret, and @Private() is not a security boundary while that is true.
+        //
+        // The bearer token is still required, because four of the endpoints this app calls
+        // (common/initial-data, standard/all, standard/mapping/all, subject/all) are shared with
+        // teaching and learning and are therefore ordinary authenticated routes. They cannot
+        // become private without breaking those apps.
         config.headers['api-key'] = process.env.NEXT_PUBLIC_PRIVATE_API_KEY;
+        config.headers.Authorization = `Bearer ${token}`;
+        config.headers.app = Subdomain.SUPPORT;
+        config.headers.organization = localStorage.getItem(StorageKey.ORGANIZATION);
       }
       return config;
     } catch (error) {

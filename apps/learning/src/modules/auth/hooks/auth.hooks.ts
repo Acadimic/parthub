@@ -1,11 +1,5 @@
 import { type ILoginUser } from '@interfaces';
-import {
-  createFirebaseUser,
-  fetchSignInMethods,
-  type FirebaseError,
-  getFirebaseErrorMessage,
-  signIn,
-} from '@utils/firebase';
+import { createFirebaseUser, type FirebaseError, getFirebaseErrorMessage, signIn } from '@utils/firebase';
 import { errorToast, getRedirectUri, isValidEmail } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -37,12 +31,6 @@ export const useSignInHook = () => {
         return;
       }
       setIsLoading(true);
-      const result = await Promise.all([fetchSignInMethods(email?.trim()?.toLowerCase())]);
-      const signInMethods = result[0];
-      if (signInMethods.length === 0) {
-        errorToast({ message: 'User not found!' });
-        return;
-      }
       await loginHandler({ email, password });
     } catch (err) {
       errorToast({ message: getFirebaseErrorMessage(err as FirebaseError) });
@@ -81,12 +69,6 @@ export const useSignUpHook = () => {
         return;
       }
       setIsLoading(true);
-      const result = await Promise.all([fetchSignInMethods(email?.trim()?.toLowerCase())]);
-      const signInMethods = result[0];
-      if (signInMethods.length > 0) {
-        errorToast({ message: 'User already found. Please login.' });
-        return;
-      }
       await signUpHandler({ email, password });
     } catch (err) {
       errorToast({ message: getFirebaseErrorMessage(err as FirebaseError) });
