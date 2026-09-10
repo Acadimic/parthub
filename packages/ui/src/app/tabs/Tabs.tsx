@@ -28,7 +28,7 @@ export const Tabs = ({ tabs }: ITabProps) => {
             onClick={() => setSelectedTabIndex(index)}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
               selectedTabIndex === index
-                ? 'border-primary text-info'
+                ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             } ${tab.iconPosition === 'end' ? 'flex-row-reverse' : ''}`}
           >

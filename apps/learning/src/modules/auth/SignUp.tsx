@@ -83,7 +83,7 @@ export const SignUp = () => {
             Create an Account
           </h1>
           <div>
-            <Link className="flex items-center space-x-1.5 text-info font-medium text-sm mb-3 md:my-6" href={'/'}>
+            <Link className="flex items-center space-x-1.5 text-primary font-medium text-sm mb-3 md:my-6" href={'/'}>
               <ArrowCircleLeftIcon className="h-5 w-5" />
               <span>Go Back</span>
             </Link>
@@ -109,7 +109,7 @@ export const SignUp = () => {
               </div>
 
               <div
-                className="text-right text-info text-sm font-medium pt-3 cursor-pointer hover:underline hover:decoration-info"
+                className="text-right text-primary text-sm font-medium pt-3 cursor-pointer hover:underline hover:decoration-primary"
                 onClick={() => router.push('/forgot-password')}
               >
                 Forgot Password?
@@ -140,7 +140,10 @@ export const SignUp = () => {
         </div>
         <div className="text-sm text-center text-muted-foreground my-4 md:my-6">
           Already have an account?&nbsp;
-          <Link href="/sign-in" className="text-info font-medium cursor-pointer hover:underline hover:decoration-info">
+          <Link
+            href="/sign-in"
+            className="text-primary font-medium cursor-pointer hover:underline hover:decoration-primary"
+          >
             Sign In
           </Link>
         </div>

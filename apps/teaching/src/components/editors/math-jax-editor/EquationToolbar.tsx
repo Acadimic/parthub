@@ -313,7 +313,7 @@ export const EquationToolbar = ({ handleChange, block, onClose }: IProps) => {
             EquationType.ROOT,
           ].map((item) => (
             <div
-              className="text-sm cursor-pointer px-3 py-1 hover:text-info h-full flex items-center"
+              className="text-sm cursor-pointer px-3 py-1 hover:text-primary h-full flex items-center"
               onClick={() => {
                 // event.stopPropagation();
                 handleSelect(item);
@@ -331,7 +331,7 @@ export const EquationToolbar = ({ handleChange, block, onClose }: IProps) => {
                 {groupedEquationToolbarItems.map((groupedItem) => (
                   <div key={groupedItem.group} className="mb-8">
                     <div className="font-medium text-base mb-4 pb-2 border-b border-border flex items-center gap-2">
-                      <DotsNineIcon weight="bold" className="w-4 h-4 text-info" /> {groupedItem.group}
+                      <DotsNineIcon weight="bold" className="w-4 h-4 text-primary" /> {groupedItem.group}
                     </div>
                     <div className="flex flex-wrap gap-4">
                       {groupedItem.items.map((item) => (
@@ -343,7 +343,7 @@ export const EquationToolbar = ({ handleChange, block, onClose }: IProps) => {
                             handleSelect(item.name);
                             handleClose?.();
                           }}
-                          className="hover:text-info flex w-[calc(33.33%-8px)] md:w-[calc(25%-12px)] flex-col items-center p-4 hover:bg-card cursor-pointer rounded border border-border transition-colors duration-200"
+                          className="hover:text-primary flex w-[calc(33.33%-8px)] md:w-[calc(25%-12px)] flex-col items-center p-4 hover:bg-card cursor-pointer rounded border border-border transition-colors duration-200"
                         >
                           <div className="text-sm border border-dotted border-border p-2 h-16 w-16 flex items-center justify-center mb-2 rounded bg-card">
                             {item.icon}

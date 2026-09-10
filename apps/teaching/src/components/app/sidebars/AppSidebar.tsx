@@ -45,7 +45,7 @@ const DrawerContent = ({ open, route, onToggle, onNavigate }: IDrawerProps) => (
       </div>
       <span
         className={cn(
-          'text-info font-semibold text-xs whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out',
+          'text-primary font-semibold text-xs whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out',
           open ? 'ml-2 max-w-20 opacity-100' : 'ml-0 max-w-0 opacity-0',
         )}
       >
@@ -81,13 +81,13 @@ const DrawerContent = ({ open, route, onToggle, onNavigate }: IDrawerProps) => (
                       'w-full flex items-center pr-2.5 py-3 border-l-2 hover:bg-accent',
                       'transition-[padding,background-color,border-color] duration-300 ease-in-out',
                       open ? 'pl-2.5' : 'pl-5',
-                      isActive ? 'bg-accent border-info' : 'border-transparent',
+                      isActive ? 'bg-accent border-primary' : 'border-transparent',
                     )}
                     onClick={() => onNavigate(menu.route, menu.isOpenInNewTab)}
                   >
                     <span className="flex w-5 shrink-0 items-center justify-center">
                       <menu.icon
-                        className={cn('w-5 h-5', isActive ? 'text-info' : 'text-foreground')}
+                        className={cn('w-5 h-5', isActive ? 'text-primary' : 'text-foreground')}
                         weight={isActive ? 'fill' : 'regular'}
                       />
                     </span>
@@ -97,7 +97,7 @@ const DrawerContent = ({ open, route, onToggle, onNavigate }: IDrawerProps) => (
                       className={cn(
                         'text-sm font-semibold truncate transition-all duration-300 ease-in-out',
                         open ? 'ml-3 max-w-40 opacity-100' : 'ml-0 max-w-0 opacity-0',
-                        isActive ? 'text-info' : 'text-foreground',
+                        isActive ? 'text-primary' : 'text-foreground',
                       )}
                     >
                       {menu.name}
@@ -117,7 +117,7 @@ const DrawerContent = ({ open, route, onToggle, onNavigate }: IDrawerProps) => (
         title={open ? 'Collapse sidebar' : 'Expand sidebar'}
         aria-label={open ? 'Collapse sidebar' : 'Expand sidebar'}
         aria-expanded={open}
-        className="flex h-8 w-8 items-center justify-center border border-border text-foreground hover:border-info hover:bg-accent hover:text-info"
+        className="flex h-8 w-8 items-center justify-center border border-border text-foreground hover:border-primary hover:bg-accent hover:text-primary"
       >
         <CaretDoubleRightIcon weight="bold" className={cn('w-4 h-4 transition-transform', open && 'rotate-180')} />
       </button>

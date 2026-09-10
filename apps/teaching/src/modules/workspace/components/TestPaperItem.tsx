@@ -29,7 +29,7 @@ export const TestPaperItem = ({ testPaper }: IProps) => {
         <div className="flex flex-1 flex-col gap-2 p-3">
           <StandardWithLogo standard={getStandardsByIds(testPaper.standards ?? [])[0]} />
           <div className="max-w-full">
-            <div className="line-clamp-1 font-medium group-hover:text-info">{testPaper.name}</div>
+            <div className="line-clamp-1 font-medium group-hover:text-primary">{testPaper.name}</div>
             {/* No description exists on a test paper; the stats row below carries the detail. The
                 literal string "Test Paper Description" used to ship here as visible placeholder. */}
           </div>

@@ -9,8 +9,8 @@ export const MenuList = <T,>({ menuItems, data }: { menuItems: IMenuItem<T>[]; d
           <div key={index}>
             <button
               onClick={() => item.onClick(data)}
-              className={`w-full flex items-center gap-2 hover:text-info hover:bg-transparent py-3 px-4 text-sm font-medium ${
-                item.isCurrent ? 'text-info' : ''
+              className={`w-full flex items-center gap-2 hover:text-primary hover:bg-transparent py-3 px-4 text-sm font-medium ${
+                item.isCurrent ? 'text-primary' : ''
               } ${!isLastItem ? 'border-b border-border' : ''}`}
             >
               <span className="text-inherit w-5 flex-shrink-0">{item.icon}</span>

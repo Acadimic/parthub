@@ -33,11 +33,11 @@ export const RadioGroup = ({
             <RadioGroupItem
               value={option.value}
               id={`radio-${option.value}`}
-              className={cn('border-border', value === option.value && 'border-primary text-info')}
+              className={cn('border-border', value === option.value && 'border-primary text-primary')}
             />
             <label
               htmlFor={`radio-${option.value}`}
-              className={cn('text-sm font-medium cursor-pointer', value === option.value && 'text-info')}
+              className={cn('text-sm font-medium cursor-pointer', value === option.value && 'text-primary')}
             >
               {isHtml ? <span dangerouslySetInnerHTML={{ __html: option.label as string }} /> : option.label}
             </label>

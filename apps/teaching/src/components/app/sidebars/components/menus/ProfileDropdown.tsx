@@ -103,7 +103,7 @@ export const ProfileDropdown = () => {
                       <CheckIcon
                         weight="bold"
                         size={16}
-                        className={`${isSelected ? 'text-info' : 'text-transparent'}`}
+                        className={`${isSelected ? 'text-primary' : 'text-transparent'}`}
                       />
                     </div>
                   );

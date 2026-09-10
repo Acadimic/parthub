@@ -54,7 +54,7 @@ export const Batches = () => {
       dataKey: 'name',
       valueFormatter: (row: BatchDto) => {
         return (
-          <div className="cursor-pointer truncate text-info" onClick={() => onClickBatch(row)}>
+          <div className="cursor-pointer truncate text-primary" onClick={() => onClickBatch(row)}>
             <span className="text-inherit">{row.name}</span>
           </div>
         );

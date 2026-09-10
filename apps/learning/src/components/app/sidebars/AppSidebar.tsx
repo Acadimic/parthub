@@ -72,7 +72,7 @@ export const AppSidebar = ({ children }: IProps) => {
                       className={`flex items-center justify-center ${open ? 'mr-3' : 'mx-auto'}`}
                       style={{ minWidth: 0 }}
                     >
-                      <menu.icon className={`w-5 h-5 ${menu.route === route ? 'text-info' : 'text-foreground'}`} />
+                      <menu.icon className={`w-5 h-5 ${menu.route === route ? 'text-primary' : 'text-foreground'}`} />
                     </span>
                     {open && (
                       <span className={`text-sm font-semibold ${menu.route === route ? 'blue-gradient' : ''}`}>
@@ -88,7 +88,10 @@ export const AppSidebar = ({ children }: IProps) => {
       </div>
       <div className="p-4 flex justify-end">
         <button onClick={handleDrawerClick} className="p-1 rounded hover:bg-accent">
-          <CaretDoubleRightIcon weight="bold" className={`w-5 h-5 transition ${open ? 'rotate-180' : 'text-info'}`} />
+          <CaretDoubleRightIcon
+            weight="bold"
+            className={`w-5 h-5 transition ${open ? 'rotate-180' : 'text-primary'}`}
+          />
         </button>
       </div>
     </div>

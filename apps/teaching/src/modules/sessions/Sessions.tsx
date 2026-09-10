@@ -55,7 +55,7 @@ export const Sessions = () => {
       dataKey: 'name',
       valueFormatter: (row: MeetDto) => {
         return (
-          <div className="cursor-pointer text-info" onClick={() => onClickSession(row)}>
+          <div className="cursor-pointer text-primary" onClick={() => onClickSession(row)}>
             <MeetingTitle meet={row} />
           </div>
         );

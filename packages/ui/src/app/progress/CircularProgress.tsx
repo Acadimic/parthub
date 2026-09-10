@@ -38,7 +38,7 @@ export const CircularProgress = ({ className, value: valueProp, size, thickness:
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
-          className={className || 'text-info'}
+          className={className || 'text-primary'}
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">

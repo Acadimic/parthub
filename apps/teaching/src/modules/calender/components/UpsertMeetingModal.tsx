@@ -169,7 +169,7 @@ export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
               className="flex items-center gap-1 cursor-pointer"
               onClick={() => patchMeet(selectedMeet._id, { isRepeat: !selectedMeet.isRepeat })}
             >
-              <Checkbox selectedClassName="text-info" checked={selectedMeet.isRepeat} />
+              <Checkbox selectedClassName="text-primary" checked={selectedMeet.isRepeat} />
               <span className="text-sm font-medium">Repeat</span>
             </div>
           </div> */}

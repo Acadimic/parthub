@@ -32,7 +32,7 @@ export const Stepper = ({ steps, activeStep }: IProps) => {
                   )}
                 </div>
                 <div
-                  className={`text-xs mt-1 text-center ${isActive ? 'font-medium text-info' : 'text-muted-foreground'}`}
+                  className={`text-xs mt-1 text-center ${isActive ? 'font-medium text-primary' : 'text-muted-foreground'}`}
                 >
                   {step.label}
                 </div>

@@ -24,7 +24,7 @@ export const SectionHeader = ({ title, count, href }: IProps) => {
       {href ? (
         <Link
           href={href}
-          className="flex shrink-0 items-center gap-1 text-sm font-medium text-muted-foreground hover:text-info"
+          className="flex shrink-0 items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary"
         >
           View all
           <ArrowRightIcon weight="bold" className="h-3.5 w-3.5" />

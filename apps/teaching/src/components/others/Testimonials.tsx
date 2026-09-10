@@ -21,7 +21,7 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
       {[...Array(5)].map((_, index) => (
         <svg
           key={index}
-          className={`w-4 h-4 ${index < rating ? 'text-yellow-400' : 'text-gray-300'}`}
+          className={`w-4 h-4 ${index < rating ? 'text-yellow-400' : 'text-muted-foreground'}`}
           fill="currentColor"
           viewBox="0 0 20 20"
         >

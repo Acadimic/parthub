@@ -38,7 +38,7 @@ export const CourseItem = ({ course }: IProps) => {
         <div className="flex flex-1 flex-col gap-2 p-3">
           <StandardWithLogo standard={getStandardsByIds(course.standards ?? [])[0]} />
           <div className="max-w-full">
-            <div className="line-clamp-1 font-medium group-hover:text-info">{course.name}</div>
+            <div className="line-clamp-1 font-medium group-hover:text-primary">{course.name}</div>
             {course.description ? (
               <div className="line-clamp-1 text-sm text-muted-foreground">{course.description}</div>
             ) : null}

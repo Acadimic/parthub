@@ -29,7 +29,7 @@ export const Breadcrumb = ({ items }: IBreadcrumbProps) => {
                 <NextLink
                   href={item.href}
                   onClick={item.onClick}
-                  className="text-xs font-medium text-muted-foreground hover:text-info flex items-center space-x-1"
+                  className="text-xs font-medium text-muted-foreground hover:text-primary flex items-center space-x-1"
                 >
                   {item.icon && <span>{item.icon}</span>}
                   <span>{item.label}</span>

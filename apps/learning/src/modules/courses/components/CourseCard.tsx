@@ -87,7 +87,7 @@ export const CourseCard = ({ course }: { course: ICourse }) => {
 //     <>
 //       <div className="box-shadow border border-border rounded-sm flex flex-col space-y-6 p-4 bg-muted">
 //         <div className="flex justify-start items-center space-x-3">
-//           <DotsNineIcon className="w-4 h-4 text-info" />
+//           <DotsNineIcon className="w-4 h-4 text-primary" />
 //           <div className="text-sm font-semibold truncate">{course.name}</div>
 //         </div>
 //         <div className="flex justify-center space-x-8 items-center">

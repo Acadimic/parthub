@@ -16,24 +16,24 @@ export const Confirm = ({ onForceClose, onCancel, message }: IProps) => {
             <div className="font-medium text-lg text[#464E5F]">Confirm Leave?</div>
             <div>
               <button onClick={onCancel} className="bg-transparent">
-                <XIcon className="font-bold w-5 h-5 text-gray-400" />
+                <XIcon className="font-bold w-5 h-5 text-muted-foreground" />
               </button>
             </div>
           </div>
         </div>
         <div className="px-4 md:px-6 py-6">
-          <div className="text-gray-800">
+          <div className="text-foreground">
             {message ||
               'Data is still saving. Leaving now may lead to data loss. Do you still want to leave this event?'}
           </div>
         </div>
-        <div className="px-4 md:px-6 py-3 bg-gray-50 flex flex-row-reverse rounded-b-lg gap-x-4">
+        <div className="px-4 md:px-6 py-3 bg-muted flex flex-row-reverse rounded-b-lg gap-x-4">
           <Button onClick={onCancel}>Cancel</Button>
           <Button
             onClick={onForceClose}
             color="secondary"
             isSecondary
-            className="text-gray-500 border-gray-200 hover:text-gray-500"
+            className="text-muted-foreground border-border hover:text-muted-foreground"
           >
             Leave
           </Button>

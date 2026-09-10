@@ -140,7 +140,7 @@ export function serializeBlock(block: Block, isEditing = false): React.ReactNode
       return <div className="inline-table">{serializeBlocks(block.content, isEditing)}</div>;
     case EditorContentType.LINK:
       const linkItem = (
-        <a className="text-info font-medium" href={block.href} target="_blank">
+        <a className="text-primary font-medium" href={block.href} target="_blank">
           {serializeBlocks(block.content, isEditing)}
         </a>
       );

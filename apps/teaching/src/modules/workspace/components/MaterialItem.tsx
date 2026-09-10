@@ -34,7 +34,7 @@ export const MaterialItem = ({ materialStat }: IProps) => {
         <div className="flex flex-1 flex-col gap-2 p-3">
           <StandardWithLogo standard={standard} />
           <div className="max-w-full">
-            <div className="line-clamp-1 font-medium group-hover:text-info">
+            <div className="line-clamp-1 font-medium group-hover:text-primary">
               {standard?.name} - {subject?.name}
             </div>
             {/* "Material Description" used to ship here as visible placeholder text. A stat row has

@@ -1,59 +1,61 @@
 /**
- * Dark theme. Same key set as `light.ts` — a key missing from either file makes that class
- * disappear in one mode, so the two must stay in lockstep.
+ * Dark theme. Same key set as `light.ts` — a key missing from either file makes that class vanish
+ * in one mode, so the two move together.
  *
- * Surfaces are slate rather than pure black: an unlit black leaves borders and elevation nothing to
- * sit against. Ordered most recessed to raised: `muted` (canvas) < `background` (base) <
- * `accent`/`secondary` (hover) < `card`/`popover` (raised). That ordering is inverted from the light
- * theme — recessed means darker here and lighter there — which is exactly what the tokens exist to
- * hide from call sites.
+ * The surfaces are a neutral grey ramp that starts just above black. Two reasons: an unlit black leaves
+ * borders and elevation nothing to sit against, and even ~5% lightness steps let depth be carried
+ * by the surface itself instead of a shadow. Ordered recessed to raised — `muted` (canvas) <
+ * `background` (base) < `accent`/`secondary` (hover) < `card`/`popover` (raised) — which is the
+ * inverse of the light ramp, and exactly what the tokens exist to hide from call sites.
  *
- * `primary` inverts to near-white, so `bg-primary text-primary-foreground` stays a high-contrast
- * button in both modes, and the status colours lighten so they read against a dark ground.
+ * `foreground` is deliberately off-white rather than `#ffffff`: pure white on a dark ground
+ * halates, and the difference is very visible over a long session.
  */
 export const dark = {
   colors: {
-    background: '#0f172a',
-    foreground: '#f8fafc',
+    background: '#171717',
+    foreground: '#e5e5e5',
 
-    card: '#1a2438',
-    'card-foreground': '#f8fafc',
+    card: '#333333',
+    'card-foreground': '#e5e5e5',
 
-    popover: '#1a2438',
-    'popover-foreground': '#f8fafc',
+    popover: '#333333',
+    'popover-foreground': '#e5e5e5',
 
-    primary: '#f8fafc',
-    'primary-foreground': '#0f172a',
+    // Inverts to near-white: emphasis is the brightest value on a dark ground, the same way it is
+    // the darkest on a light one. Its foreground flips to the canvas colour.
+    primary: '#fafafa',
+    'primary-foreground': '#0a0a0a',
 
-    secondary: '#1e293b',
-    'secondary-foreground': '#f8fafc',
+    secondary: '#262626',
+    'secondary-foreground': '#e5e5e5',
 
-    muted: '#020617',
-    'muted-foreground': '#94a3b8',
+    muted: '#0a0a0a',
+    'muted-foreground': '#a3a3a3',
 
-    accent: '#1e293b',
-    'accent-foreground': '#f8fafc',
+    accent: '#262626',
+    'accent-foreground': '#e5e5e5',
 
     destructive: '#f87171',
-    'destructive-foreground': '#0f172a',
+    'destructive-foreground': '#0a0a0a',
 
     success: '#4ade80',
-    'success-foreground': '#0f172a',
+    'success-foreground': '#0a0a0a',
 
     warning: '#fbbf24',
-    'warning-foreground': '#0f172a',
+    'warning-foreground': '#0a0a0a',
 
-    info: '#4da3ff',
-    'info-foreground': '#0f172a',
+    info: '#60a5fa',
+    'info-foreground': '#0a0a0a',
 
-    border: '#263349',
-    input: '#334155',
-    ring: '#cbd5e1',
+    border: '#363636',
+    input: '#4a4a4a',
+    ring: '#fafafa',
 
-    'chart-1': '#4da3ff',
-    'chart-2': '#4ade80',
-    'chart-3': '#c084fc',
-    'chart-4': '#fbbf24',
-    'chart-5': '#f472b6',
+    'chart-1': '#60a5fa',
+    'chart-2': '#2dd4bf',
+    'chart-3': '#fbbf24',
+    'chart-4': '#fb7185',
+    'chart-5': '#a78bfa',
   },
 };

@@ -94,7 +94,7 @@ const TestPage = () => {
           setHtml(html);
         }}
       /> */}
-      <textarea value={data.y} readOnly className="text-sm text-gray-500" />
+      <textarea value={data.y} readOnly className="text-sm text-muted-foreground" />
 
       {/* <HtmlEditor3
         content={html}

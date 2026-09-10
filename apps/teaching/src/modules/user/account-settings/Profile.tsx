@@ -115,7 +115,7 @@ export const Profile = () => {
             <div className="text-lg font-medium">Your Profile</div>
             <div>
               <Button
-                className="px-0 py-0 text-sm text-muted-foreground hover:text-info"
+                className="px-0 py-0 text-sm text-muted-foreground hover:text-primary"
                 isSubtle
                 text={state.isEditing ? 'Close' : 'Edit'}
                 leftsection={<PencilLineIcon />}

@@ -11,7 +11,7 @@ export const Confirm = ({ message, accept, reject }: IProps) => {
     <div className="w-full max-w-lg min-w-[300px]">
       <div className="w-full px-6 py-6 bg-card rounded">
         <div className="mt-6 mb-2">
-          <div className="text-center text-sm font-semibold text-gray-800">{message}</div>
+          <div className="text-center text-sm font-semibold text-foreground">{message}</div>
           <div className="flex justify-center mt-8 space-x-4">
             <div>
               <Button isSecondary text="No" onClick={reject} />

@@ -23,7 +23,7 @@ export const Progress = ({ value, showLabel, className, variant = 'linear' }: IP
             r="18"
             fill="none"
             stroke="currentColor"
-            className="text-info"
+            className="text-primary"
             strokeWidth="3"
             strokeDasharray={circumference}
             strokeDashoffset={offset}

@@ -49,7 +49,7 @@ const SwipeSlider = ({
       {isCompleted ? (
         <CheckIcon weight="bold" className="text-white w-5 h-5" />
       ) : (
-        <CaretDoubleRightIcon weight="bold" className="text-info w-5 h-5" />
+        <CaretDoubleRightIcon weight="bold" className="text-primary w-5 h-5" />
       )}
     </div>
   </div>

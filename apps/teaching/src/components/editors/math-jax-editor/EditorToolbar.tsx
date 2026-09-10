@@ -263,7 +263,7 @@ export const EditorToolbar = ({ handleChange, block, onClose, isVertical }: IPro
                 return (
                   <Tooltip key={index} title={item.tooltip}>
                     <div
-                      className="hover:text-info text-sm cursor-pointer px-2 py-1"
+                      className="hover:text-primary text-sm cursor-pointer px-2 py-1"
                       onMouseDown={(event) => {
                         event.preventDefault();
                         // event.stopPropagation();

@@ -65,7 +65,7 @@ export const Modal = ({
           <SheetTitle className="md:text-base font-bold">{title}</SheetTitle>
           {!withoutClose && (
             <button onClick={closeModal} className="p-0 hover:bg-transparent">
-              <XIcon weight="bold" className="w-4 h-4 hover:text-info" />
+              <XIcon weight="bold" className="w-4 h-4 hover:text-primary" />
             </button>
           )}
         </SheetHeader>

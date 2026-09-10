@@ -69,7 +69,7 @@ export const ExamFooter = ({
                         isSubtle
                         text={isSelectedQuestionMarkedForReview() ? 'Clear From Review' : 'Mark For Review'}
                         onClick={toggleSelectedQuestionMarkForReview}
-                        className="text-xs text-info"
+                        className="text-xs text-primary"
                       />
                     )}
                     {!isSelectedQuestionResponded() || isSubmitted ? null : (
@@ -77,7 +77,7 @@ export const ExamFooter = ({
                         isSubtle
                         text={isPractice ? 'Reset Answer' : 'Clear'}
                         onClick={isPractice ? resetResponse : clearResponse}
-                        className="text-xs text-info"
+                        className="text-xs text-primary"
                       />
                     )}
                     <div className="xl:hidden">

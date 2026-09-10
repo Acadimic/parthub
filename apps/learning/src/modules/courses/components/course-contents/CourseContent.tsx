@@ -184,14 +184,14 @@ export const CourseContent = () => {
           <Button
             className="px-0 blue-gradient"
             isSubtle
-            leftsection={<CaretLeftIcon weight="bold" className="w-4 h-4 text-info" />}
+            leftsection={<CaretLeftIcon weight="bold" className="w-4 h-4 text-primary" />}
           >
             Prev
           </Button>
           <Button
             className="px-0 blue-gradient"
             isSubtle
-            rightsection={<CaretRightIcon weight="bold" className="w-4 h-4 text-info" />}
+            rightsection={<CaretRightIcon weight="bold" className="w-4 h-4 text-primary" />}
           >
             Next
           </Button>

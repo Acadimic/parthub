@@ -27,7 +27,7 @@ export const ExamHeader = ({ isPractice, toggleTimer, isActiveTimer, handleSubmi
               } justify-start items-center font-bold text-sm space-x-2`}
             >
               <div className="">
-                <DotsNineIcon weight="bold" className="w-5 h-5 text-info" />
+                <DotsNineIcon weight="bold" className="w-5 h-5 text-primary" />
               </div>
               <div className="truncate">{title}</div>
             </div>

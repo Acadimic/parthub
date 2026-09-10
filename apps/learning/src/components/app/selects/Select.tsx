@@ -156,7 +156,7 @@ const SelectElement = ({
     return (
       <button
         key={option.value}
-        className="w-full bg-background m-0 font-medium text-sm flex py-2 px-3 cursor-pointer items-center space-x-1 border-b border-x border-border hover:text-info text-left"
+        className="w-full bg-background m-0 font-medium text-sm flex py-2 px-3 cursor-pointer items-center space-x-1 border-b border-x border-border hover:text-primary text-left"
         onClick={() => handleSelect(option)}
       >
         <CheckIcon
@@ -201,7 +201,7 @@ const SelectElement = ({
           )}
           <div className="border border-border border-t rounded-t-sm bg-background">
             <div className="flex items-center px-3 py-1.5 border-b border-border">
-              <MagnifyingGlassIcon className="w-5 h-5 text-info mr-2 flex-shrink-0" />
+              <MagnifyingGlassIcon className="w-5 h-5 text-primary mr-2 flex-shrink-0" />
               <input
                 type="text"
                 placeholder={label ? `Search ${label}` : 'Search'}
@@ -225,7 +225,7 @@ const SelectElement = ({
               Object.entries(groupedItems).map(([group, groupItems]) => (
                 <div key={group}>
                   <div className="flex items-center text-xs font-medium text-muted-foreground px-3 py-2 border-b border-x border-border bg-background capitalize space-x-2">
-                    <SquaresFourIcon className="text-info h-4 w-4" />
+                    <SquaresFourIcon className="text-primary h-4 w-4" />
                     <div>{group}</div>
                   </div>
                   {groupItems.map(renderOption)}

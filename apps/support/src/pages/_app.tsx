@@ -137,7 +137,9 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
         ) : (
           <>
             <InternetStatus />
-            <div data-theme={mode}>{getLayout()}</div>
+            <div data-theme={mode} className="bg-background text-foreground">
+              {getLayout()}
+            </div>
           </>
         )}
         <ToastContainer />

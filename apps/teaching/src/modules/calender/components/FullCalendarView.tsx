@@ -38,7 +38,7 @@ const EmptyListView = () => {
   return (
     <div className="flex flex-col items-center justify-center h-full py-12 px-4">
       <CalendarXIcon className="w-12 h-12 text-text-secondary mb-4" />
-      <h6 className="text-lg font-semibold text-text-info mb-2">No Events Scheduled</h6>
+      <h6 className="text-lg font-semibold text-text-primary mb-2">No Events Scheduled</h6>
       <p className="text-sm text-text-secondary text-center max-w-md">
         There are no events scheduled for this time period. Click the + create button to add a new event.
       </p>
@@ -61,7 +61,7 @@ const EventContentDefaultView = ({ event, calenderType }: { event: EventInput; c
     >
       <div className="flex items-center gap-2 font-medium w-full">
         <div>{getFormattedTime(event.start as Date)}</div>
-        <div className="w-1 h-1 rounded-full bg-white" />
+        <div className="w-1 h-1 rounded-full bg-background" />
         <div className="truncate flex-1">{event.title}</div>
       </div>
       {calenderType === CalendarType.DAY ? (

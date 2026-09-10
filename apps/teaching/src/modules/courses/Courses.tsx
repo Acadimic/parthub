@@ -64,7 +64,7 @@ export const Courses = () => {
                 </div>
               ) : null}
             </div>
-            <div className="flex-1 truncate text-info cursor-pointer" onClick={() => onClickCourse(row)}>
+            <div className="flex-1 truncate text-primary cursor-pointer" onClick={() => onClickCourse(row)}>
               {row.name}
             </div>
           </div>

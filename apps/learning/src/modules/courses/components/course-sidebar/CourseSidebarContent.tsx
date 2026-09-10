@@ -86,7 +86,7 @@ export const CourseSidebarContent = () => {
             <button onClick={handleCourseMenuClick} className="p-1 rounded hover:bg-accent">
               <CaretDoubleRightIcon
                 weight="bold"
-                className={`w-5 h-5 transition ${isCourseMenuOpen ? 'rotate-180' : 'text-info'}`}
+                className={`w-5 h-5 transition ${isCourseMenuOpen ? 'rotate-180' : 'text-primary'}`}
               />
             </button>
           </div>

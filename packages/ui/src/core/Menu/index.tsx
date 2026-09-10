@@ -44,8 +44,8 @@ export const Menu = ({ items, trigger, data, className, header }: IMenuProps) =>
                 onClick={() => item.onClick(data)}
                 className={cn(
                   'py-3 px-3 text-sm font-medium rounded-none cursor-pointer',
-                  item.isDanger ? 'text-destructive hover:text-destructive' : 'hover:text-info',
-                  item.isCurrent && 'text-info',
+                  item.isDanger ? 'text-destructive hover:text-destructive' : 'hover:text-primary',
+                  item.isCurrent && 'text-primary',
                 )}
               >
                 {item.icon && <span className="mr-2 text-inherit">{item.icon}</span>}

@@ -71,7 +71,7 @@ export const Collaborators = () => {
       dataKey: 'name',
       valueFormatter: (row: IUser) => {
         return (
-          <div className="cursor-pointer truncate text-info" onClick={() => onClickCollaborator(row)}>
+          <div className="cursor-pointer truncate text-primary" onClick={() => onClickCollaborator(row)}>
             <span className="text-inherit">{row.name}</span>
           </div>
         );

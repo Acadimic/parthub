@@ -20,7 +20,7 @@ export const CourseModuleView = ({ courseModule }: IProps) => {
         items={getMaterialsByIds(courseModule.materials ?? []).map((material: MaterialDto) => ({
           title: (
             <div className="flex justify-between w-full items-center relative">
-              <div className="text-sm font-semibold text-info">{material.name}</div>
+              <div className="text-sm font-semibold text-primary">{material.name}</div>
             </div>
           ),
           component: <StudyMaterialView material={material} />,
@@ -31,7 +31,7 @@ export const CourseModuleView = ({ courseModule }: IProps) => {
         items={getTestPapersByIds(courseModule.testPapers ?? []).map((testPaper: TestPaperDto) => ({
           title: (
             <div className="flex justify-between w-full items-center relative">
-              <div className="text-sm font-semibold text-info">{testPaper.name}</div>
+              <div className="text-sm font-semibold text-primary">{testPaper.name}</div>
               {/* {onEdit && (
                 <div className="absolute -right-4">
                   <Menu

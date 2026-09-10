@@ -14,7 +14,7 @@ export const UpcomingSessions = () => {
       <div className="flex flex-col items-center justify-center gap-2 border border-dashed border-border px-4 py-8 text-center">
         <CalendarBlankIcon className="h-7 w-7 text-muted-foreground" />
         <p className="text-sm font-medium text-muted-foreground">Nothing scheduled today</p>
-        <Link href="/calender" className="text-sm font-medium text-info hover:underline">
+        <Link href="/calender" className="text-sm font-medium text-primary hover:underline">
           Open the calendar
         </Link>
       </div>

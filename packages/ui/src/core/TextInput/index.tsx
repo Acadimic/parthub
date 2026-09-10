@@ -56,7 +56,7 @@ export const TextInput = (props: ITextInputProps) => {
       {label && <Label label={label} required={required} />}
       <div className={cn('bg-background hover:bg-accent flex items-center border rounded-none', borderClass)}>
         {leftSection ? (
-          <div className={cn('flex items-center pl-3', isFocused && 'text-info')}>{leftSection}</div>
+          <div className={cn('flex items-center pl-3', isFocused && 'text-primary')}>{leftSection}</div>
         ) : null}
         <input
           {...rest}
@@ -68,7 +68,7 @@ export const TextInput = (props: ITextInputProps) => {
           autoFocus={autoFocus}
         />
         {rightSection ? (
-          <div className={cn('flex items-center pr-3', isFocused && 'text-info')}>{rightSection}</div>
+          <div className={cn('flex items-center pr-3', isFocused && 'text-primary')}>{rightSection}</div>
         ) : null}
       </div>
       {helperText && (

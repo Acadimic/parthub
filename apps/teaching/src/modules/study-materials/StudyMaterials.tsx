@@ -56,9 +56,9 @@ export const StudyMaterials = () => {
           <Link
             isSubtle
             href={`/study-materials/${row.standard}/${row.subject}`}
-            className="text-info cursor-pointer truncate"
+            className="text-primary cursor-pointer truncate"
           >
-            <span className="text-info">{getStandardById(row.standard)?.name}</span>
+            <span className="text-primary">{getStandardById(row.standard)?.name}</span>
           </Link>
         );
       },
@@ -71,9 +71,9 @@ export const StudyMaterials = () => {
           <Link
             isSubtle
             href={`/study-materials/${row.standard}/${row.subject}`}
-            className="text-info cursor-pointer truncate"
+            className="text-primary cursor-pointer truncate"
           >
-            <span className="text-info">{getSubjectById(row.subject)?.name}</span>
+            <span className="text-primary">{getSubjectById(row.subject)?.name}</span>
           </Link>
         );
       },

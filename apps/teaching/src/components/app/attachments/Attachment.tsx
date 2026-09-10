@@ -28,7 +28,7 @@ export const Attachment = ({ fileName, extension, index, onRemove, url, classNam
     >
       {getFileIcon(extension, url)}
       <div
-        className={`flex-1 flex justify-center items-center font-medium relative ${url ? 'cursor-pointer hover:text-info' : ''}`}
+        className={`flex-1 flex justify-center items-center font-medium relative ${url ? 'cursor-pointer hover:text-primary' : ''}`}
       >
         <Tooltip title={fileName}>
           <p className="truncate max-w-[200px]">{fileName}</p>

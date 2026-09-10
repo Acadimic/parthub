@@ -10,7 +10,11 @@ export const InfoTextWithLink = ({ infoText, linkText, href }: IProps) => {
   return (
     <div className="text-sm text-center text-muted-foreground my-4 md:my-4">
       {infoText}&nbsp;
-      <Link isSubtle href={href} className="text-info font-medium cursor-pointer hover:underline hover:decoration-info">
+      <Link
+        isSubtle
+        href={href}
+        className="text-primary font-medium cursor-pointer hover:underline hover:decoration-primary"
+      >
         {linkText}
       </Link>
     </div>

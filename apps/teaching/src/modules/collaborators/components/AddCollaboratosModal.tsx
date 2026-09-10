@@ -57,7 +57,7 @@ export const AddCollaboratorsModal = ({
                       <div className="flex flex-col items-center justify-center gap-3">
                         <div>{item.icon}</div>
                         <div className="font-medium text-center">{item.label}</div>
-                        <div className="text-sm text-gray-500 text-center">{item.description}</div>
+                        <div className="text-sm text-muted-foreground text-center">{item.description}</div>
                       </div>
                     </Card>
                   </div>

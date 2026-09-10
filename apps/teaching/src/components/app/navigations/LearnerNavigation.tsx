@@ -48,12 +48,12 @@ export const LearnerNavigation = () => {
               className="cursor-pointer py-1 md:py-0 text-foreground"
             >
               <div className="flex justify-center md:hidden pb-1">
-                <nav.icon weight="regular" className={`w-5 h-5 ${isActive ? 'text-info' : ''}`} />
+                <nav.icon weight="regular" className={`w-5 h-5 ${isActive ? 'text-primary' : ''}`} />
               </div>
               <div
                 className={`text-xxs sm:text-sm font-medium md:border-b-2 px-2.5 md:py-3 ${isActive ? 'border-primary' : 'border-transparent'}`}
               >
-                <span className={`${isActive ? 'text-info' : ''}`}>{nav.name}</span>
+                <span className={`${isActive ? 'text-primary' : ''}`}>{nav.name}</span>
               </div>
             </Link>
           );

@@ -10,7 +10,7 @@ export const Checkbox = ({ checked, selectedClassName }: IProps) => {
         type="checkbox"
         checked={checked}
         readOnly
-        className={`h-4 w-4 rounded border-border text-info focus:ring-primary ${selectedClassName || ''}`}
+        className={`h-4 w-4 rounded border-border text-primary focus:ring-primary ${selectedClassName || ''}`}
       />
     </div>
   );

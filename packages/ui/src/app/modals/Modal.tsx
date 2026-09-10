@@ -54,7 +54,7 @@ export function Modal({
             <div className="md:text-base font-bold">{title}</div>
             {!withoutClose && (
               <button className="p-0 hover:bg-transparent" onClick={closeModal}>
-                <XIcon weight="bold" className="w-4 h-4 hover:text-info" />
+                <XIcon weight="bold" className="w-4 h-4 hover:text-primary" />
               </button>
             )}
           </div>

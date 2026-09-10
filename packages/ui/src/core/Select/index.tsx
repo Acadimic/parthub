@@ -148,7 +148,7 @@ const SelectElement = ({
                       key={item.value}
                       value={typeof item.label === 'string' ? item.label : item.value}
                       onSelect={() => handleSelect(item)}
-                      className="font-medium text-sm py-2 px-3 cursor-pointer border-b border-border hover:!text-info rounded-none"
+                      className="font-medium text-sm py-2 px-3 cursor-pointer border-b border-border hover:!text-primary rounded-none"
                     >
                       <CheckIcon className={cn('w-4 h-4 mr-1.5', isSelected ? 'opacity-100' : 'opacity-0')} />
                       <div className="flex-1 truncate">

@@ -37,7 +37,7 @@ export const Tabs = ({ tabs, value, onChange }: ITabsProps) => {
             value={String(index)}
             className={cn(
               'text-sm font-semibold rounded-none border-b-2 border-transparent px-4 py-2',
-              'data-[state=active]:border-primary data-[state=active]:text-info data-[state=active]:shadow-none',
+              'data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none',
             )}
           >
             <div className={cn('flex items-center gap-1.5', tab.iconPosition === 'end' && 'flex-row-reverse')}>

@@ -18,8 +18,8 @@ export const AddItem = ({ text, href }: IProps) => {
       href={href}
       className="group flex h-full min-h-48 w-full flex-col items-center justify-center gap-2 border border-dashed border-border bg-background transition-colors hover:border-primary hover:bg-accent"
     >
-      <PlusIcon weight="bold" className="h-7 w-7 text-muted-foreground group-hover:text-info" />
-      <span className="text-sm font-medium text-muted-foreground group-hover:text-info">{text}</span>
+      <PlusIcon weight="bold" className="h-7 w-7 text-muted-foreground group-hover:text-primary" />
+      <span className="text-sm font-medium text-muted-foreground group-hover:text-primary">{text}</span>
     </Link>
   );
 };

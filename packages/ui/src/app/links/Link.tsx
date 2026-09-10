@@ -13,7 +13,11 @@ export const Link = (props: IProps) => {
   const { href, children, linkClassName, target } = props;
 
   return (
-    <NextLink className={linkClassName ? linkClassName : `text-info font-medium text-sm`} href={href} target={target}>
+    <NextLink
+      className={linkClassName ? linkClassName : `text-primary font-medium text-sm`}
+      href={href}
+      target={target}
+    >
       <Button {...props}>{children}</Button>
     </NextLink>
   );
