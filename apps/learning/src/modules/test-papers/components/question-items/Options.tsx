@@ -19,10 +19,10 @@ export const Options = ({ question, handleResponses, selectedValues, isDisabled,
   const optionsItems = getOptionItems(question._id);
   const questionType = question.questionType;
   const getOptionColor = (value: string) => {
-    if (!isDisabled) return 'text-blue-primary';
-    if (answers.includes(value)) return 'text-green-primary';
-    if (selectedValues.includes(value)) return 'text-red-primary';
-    return 'text-blue-primary';
+    if (!isDisabled) return 'text-info';
+    if (answers.includes(value)) return 'text-success';
+    if (selectedValues.includes(value)) return 'text-destructive';
+    return 'text-info';
   };
 
   const options: ISelectItem[] = optionsItems.map((option, index) => ({

@@ -18,9 +18,9 @@ export interface IButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
 type ButtonVariant = Pick<IButtonProps, 'isRound' | 'isSecondary' | 'isSubtle' | 'isLoading' | 'isFull' | 'className'>;
 
 const getVariantClass = ({ isSecondary, isSubtle }: ButtonVariant) => {
-  if (isSecondary) return 'bg-color-opposite';
+  if (isSecondary) return 'bg-background';
   if (isSubtle) return 'bg-transparent';
-  return 'bg-color-primary border-color-primary text-color-opposite';
+  return 'bg-primary border-primary text-primary-foreground';
 };
 
 const getButtonClass = (variant: ButtonVariant) =>
@@ -28,7 +28,7 @@ const getButtonClass = (variant: ButtonVariant) =>
         ${variant.isRound ? 'rounded-full' : 'rounded-none'}
         ${getVariantClass(variant)}
         ${variant.isLoading ? 'opacity-80' : ''}
-        ${variant.isSubtle ? 'border-transparent' : 'border-color-border'}
+        ${variant.isSubtle ? 'border-transparent' : 'border-border'}
         ${variant.isFull ? 'w-full text-center' : ''}
       `;
 

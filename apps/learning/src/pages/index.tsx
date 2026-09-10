@@ -79,7 +79,7 @@ const Home = () => {
               </Link>
               <Link
                 isSecondary
-                className="px-6 md:px-8 py-3 text-color-primary"
+                className="px-6 md:px-8 py-3 text-foreground"
                 href="https://teach.acadimic.com"
                 target="_blank"
               >
@@ -93,11 +93,11 @@ const Home = () => {
         </div>
         <BannerImg />
       </Container>
-      <div className="py-8 bg-background-primary">
+      <div className="py-8 bg-background">
         <Title title="Explore Courses" subtitle="Discover paths to your personal and professional growth" />
         <Courses />
       </div>
-      <div className="py-8 bg-background-primary">
+      <div className="py-8 bg-background">
         <Title
           title="What Our Students Say"
           subtitle="Read what our students have to say about their learning experience"

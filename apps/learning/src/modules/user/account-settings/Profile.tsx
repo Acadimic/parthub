@@ -111,11 +111,11 @@ export const Profile = () => {
     <div className="flex flex-col">
       <Card>
         <div className="flex flex-col gap-6 w-full">
-          <div className="flex items-center justify-between border-b border-color-border border-dashed pb-1">
+          <div className="flex items-center justify-between border-b border-border border-dashed pb-1">
             <div className="text-lg font-medium">Your Profile</div>
             <div>
               <Button
-                className="px-0 py-0 text-sm text-color-secondary hover:text-blue-primary"
+                className="px-0 py-0 text-sm text-muted-foreground hover:text-info"
                 isSubtle
                 text={state.isEditing ? 'Close' : 'Edit'}
                 leftsection={<PencilLineIcon />}
@@ -183,7 +183,7 @@ export const Profile = () => {
                 disabled={!state.isEditing || state.isLoading}
                 leftsection={
                   <div
-                    className={`${!state.isEditing ? 'text-color-secondary' : 'text-color-primary'} text-sm font-medium`}
+                    className={`${!state.isEditing ? 'text-muted-foreground' : 'text-foreground'} text-sm font-medium`}
                   >
                     {state.countryCode}
                   </div>

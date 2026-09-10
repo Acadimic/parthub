@@ -18,7 +18,7 @@ export const ExamHeader = ({ isPractice, toggleTimer, isActiveTimer, handleSubmi
 
   return (
     <>
-      <div className="w-full h-14 xl:h-16 header-shadow relative border-b border-color-border">
+      <div className="w-full h-14 xl:h-16 header-shadow relative border-b border-border">
         <div className="px-4 md:px-8 h-full">
           <div className="flex justify-between items-center h-full space-x-6">
             <div
@@ -27,7 +27,7 @@ export const ExamHeader = ({ isPractice, toggleTimer, isActiveTimer, handleSubmi
               } justify-start items-center font-bold text-sm space-x-2`}
             >
               <div className="">
-                <DotsNineIcon weight="bold" className="w-5 h-5 text-blue-primary" />
+                <DotsNineIcon weight="bold" className="w-5 h-5 text-info" />
               </div>
               <div className="truncate">{title}</div>
             </div>

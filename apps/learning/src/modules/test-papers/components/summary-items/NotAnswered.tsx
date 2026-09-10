@@ -8,9 +8,9 @@ export const NotAnswered = ({ count, title, isLarge }: IProps) => {
   const className = isLarge ? 'w-8 p-2 text-xs' : 'w-6 p-1 text-[11px]';
   return (
     <>
-      <div className="flex space-x-2 items-center text-color-secondary">
+      <div className="flex space-x-2 items-center text-muted-foreground">
         <div
-          className={`${className} font-bold text-white rounded-b-full bg-red-primary flex justify-center items-center`}
+          className={`${className} font-bold text-destructive-foreground rounded-b-full bg-destructive flex justify-center items-center`}
         >
           {count}
         </div>

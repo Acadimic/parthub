@@ -79,7 +79,7 @@ const getFullCalendarEvent = (meet: MeetDto, currentDate: Date, times: IMeetTime
     attendees: meet.attendees ?? [],
     meetingLink: meet.meetingLink,
     color: meet.color,
-    borderColor: 'border-color-border',
+    borderColor: 'border-border',
   };
 };
 

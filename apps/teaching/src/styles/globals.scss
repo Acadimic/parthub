@@ -3,7 +3,18 @@
 @tailwind utilities;
 
 html {
+  /* `overlay` paints the document scrollbar *on top of* the page rather than in a gutter, so it
+     ran the full viewport height straight across the sticky header. The layout already owns its
+     scrolling — a 100vh shell with its own scroller under the header — so the document bar is only
+     ever an artefact. Hidden rather than `overflow: hidden`, which would strand content on any
+     screen that genuinely does rely on the document scrolling (auth, 404). */
   overflow: overlay;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 body {
@@ -36,18 +47,19 @@ input[type='number'] {
     height: 8px;
   }
 
+  /* The thumb needs a colour at rest. It previously had none, so the scrollbar was invisible until
+     the cursor entered the region — the `div:hover` rule below was the workaround for that, and is
+     no longer needed. A neutral alpha grey reads on both the light and the dark surface. */
   ::-webkit-scrollbar-thumb {
     border: 2px solid transparent;
     background-clip: padding-box;
+    background-color: rgba(128, 128, 128, 0.35);
+    border-radius: 8px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
     border: 0px solid transparent;
-    background-color: rgba(128, 128, 128, 0.3);
-  }
-
-  div:hover::-webkit-scrollbar-thumb {
-    background-color: rgba(128, 128, 128, 0.3);
+    background-color: rgba(128, 128, 128, 0.55);
   }
 }
 

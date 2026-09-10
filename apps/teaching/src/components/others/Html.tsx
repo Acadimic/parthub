@@ -4,7 +4,7 @@ export const Html = ({ html, prefix }: { html: string; prefix?: string }): React
   const blocks = getBlocks(html);
   return (
     <>
-      <div className="text-sm font-medium text-color-primary !border-color-border">
+      <div className="text-sm font-medium text-foreground !border-border">
         {prefix ? (
           <>
             <span className="font-bold">{prefix}</span>&nbsp;&nbsp;

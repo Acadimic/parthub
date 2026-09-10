@@ -50,7 +50,7 @@ export const DateInput = ({
           />
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-3 bg-background-primary border border-color-border" align="start">
+      <PopoverContent className="w-auto p-3 bg-background border border-border" align="start">
         <input
           ref={inputRef}
           type="date"
@@ -58,7 +58,7 @@ export const DateInput = ({
           onChange={(e) => onChange?.(e.target.value)}
           min={min}
           max={max}
-          className="text-sm bg-transparent outline-none border border-color-border rounded px-2 py-1"
+          className="text-sm bg-transparent outline-none border border-border rounded px-2 py-1"
         />
       </PopoverContent>
     </ShadcnPopover>

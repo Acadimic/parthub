@@ -18,12 +18,12 @@ export const MeetItem = ({ meet, isSmallJoinable = false, isCopyIconOnly = false
   };
 
   return (
-    <Card className="px-3 py-2 border border-color-border">
+    <Card className="px-3 py-2 border border-border">
       <div className="flex flex-col md:flex-row md:items-center justify-between w-full gap-2">
         <div className="max-w-full md:max-w-[50%] cursor-pointer" onClick={onClickMeet}>
           <MeetingTitle meet={meet} />
         </div>
-        <div className="text-xs text-color-secondary font-medium text-center md:max-w-[36%]">
+        <div className="text-xs text-muted-foreground font-medium text-center md:max-w-[36%]">
           <div>
             {getStringFormattedDate(new Date())} {meet.startTime ? getFormattedTime(meet.startTime) : ''} -{' '}
             {meet.endTime ? getFormattedTime(meet.endTime) : ''}

@@ -1,6 +1,6 @@
 import {
   CalendarBlankIcon,
-  ChatsCircleIcon,
+  ChalkboardTeacherIcon,
   ColumnsIcon,
   FileTextIcon,
   FolderIcon,
@@ -31,7 +31,7 @@ export const Routes: ISidebarRoute[] = [
     menus: [
       {
         name: 'Home',
-        route: '/',
+        route: '/home',
         icon: HouseIcon,
       },
       {
@@ -55,8 +55,13 @@ export const Routes: ISidebarRoute[] = [
     type: 'Manage',
     menus: [
       {
-        name: 'Classes',
-        route: '/classes',
+        name: 'Sessions',
+        route: '/sessions',
+        icon: ChalkboardTeacherIcon,
+      },
+      {
+        name: 'Calendar',
+        route: '/calender',
         icon: CalendarBlankIcon,
       },
       {
@@ -79,11 +84,6 @@ export const Routes: ISidebarRoute[] = [
   {
     type: 'General',
     menus: [
-      {
-        name: 'Community',
-        route: '/community',
-        icon: ChatsCircleIcon,
-      },
       {
         name: 'Support',
         route: 'https://www.parthhub.com/contact-us',

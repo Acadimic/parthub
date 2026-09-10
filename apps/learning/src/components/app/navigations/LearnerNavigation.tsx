@@ -36,7 +36,7 @@ export const LearnerNavigation = () => {
   const { route } = useRouter();
   return (
     <>
-      <div className="w-full bg-background-primary flex justify-between items-center">
+      <div className="w-full bg-background flex justify-between items-center">
         {learnerRoutes.map((nav) => {
           const isActive = route === nav.route;
           return (
@@ -45,15 +45,15 @@ export const LearnerNavigation = () => {
               key={nav.name}
               href={nav.route}
               // onClick={() => !nav.disabled && !isActive && push(nav.route)}
-              className="cursor-pointer py-1 md:py-0 text-color-primary"
+              className="cursor-pointer py-1 md:py-0 text-foreground"
             >
               <div className="flex justify-center md:hidden pb-1">
-                <nav.icon weight="regular" className={`w-5 h-5 ${isActive ? 'text-blue-primary' : ''}`} />
+                <nav.icon weight="regular" className={`w-5 h-5 ${isActive ? 'text-info' : ''}`} />
               </div>
               <div
-                className={`text-xxs sm:text-sm font-medium md:border-b-2 px-2.5 md:py-3 ${isActive ? 'border-blue-primary' : 'border-transparent'}`}
+                className={`text-xxs sm:text-sm font-medium md:border-b-2 px-2.5 md:py-3 ${isActive ? 'border-primary' : 'border-transparent'}`}
               >
-                <span className={`${isActive ? 'text-blue-primary' : ''}`}>{nav.name}</span>
+                <span className={`${isActive ? 'text-info' : ''}`}>{nav.name}</span>
               </div>
             </Link>
           );

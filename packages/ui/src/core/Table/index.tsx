@@ -29,11 +29,11 @@ export const Table = <T extends Record<string, unknown>>({
     <div className={cn('w-full overflow-auto', className)}>
       <ShadcnTable>
         <TableHeader>
-          <TableRow className="border-color-border bg-background-secondary">
+          <TableRow className="border-border bg-muted">
             {columns.map((col) => (
               <TableHead
                 key={col.key}
-                className={cn('text-xs font-semibold text-color-secondary', col.className)}
+                className={cn('text-xs font-semibold text-muted-foreground', col.className)}
                 style={{ width: col.width }}
               >
                 {col.label}
@@ -44,7 +44,7 @@ export const Table = <T extends Record<string, unknown>>({
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={columns.length} className="text-center text-sm text-color-secondary py-8">
+              <TableCell colSpan={columns.length} className="text-center text-sm text-muted-foreground py-8">
                 {emptyMessage}
               </TableCell>
             </TableRow>
@@ -52,7 +52,7 @@ export const Table = <T extends Record<string, unknown>>({
             rows.map((row, rowIndex) => (
               <TableRow
                 key={rowIndex}
-                className={cn('border-color-border', onRowClick && 'cursor-pointer hover:bg-background-secondary')}
+                className={cn('border-border', onRowClick && 'cursor-pointer hover:bg-accent')}
                 onClick={() => onRowClick?.(row, rowIndex)}
               >
                 {columns.map((col) => (

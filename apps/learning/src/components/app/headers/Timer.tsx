@@ -65,9 +65,9 @@ export const Timer = ({ toggleTimer, isActiveTimer, handleSubmitTest }: IProps) 
       {exam.isSubmitted ? null : (
         <Button onClick={toggleTimer} isSubtle className="px-1 md:px-4">
           {isActiveTimer ? (
-            <PauseCircleIcon className="w-6 h-6 text-blue-primary" />
+            <PauseCircleIcon className="w-6 h-6 text-info" />
           ) : (
-            <PlayCircleIcon className="w-6 h-6 text-blue-primary" />
+            <PlayCircleIcon className="w-6 h-6 text-info" />
           )}
         </Button>
       )}

@@ -10,7 +10,7 @@ const INDEX_FIELD = 'index';
 
 const VirtuosoTableComponents: TableComponents<Record<string, unknown>> = {
   Scroller: React.forwardRef<HTMLDivElement>((props, ref) => (
-    <div {...props} ref={ref} className="!bg-background-primary overflow-auto" />
+    <div {...props} ref={ref} className="!bg-background overflow-auto" />
   )),
   Table: (props) => <table {...props} className="border-collapse w-full table-fixed text-sm" />,
   TableHead: React.forwardRef<HTMLTableSectionElement>((props, ref) => <thead {...props} ref={ref} />),
@@ -37,7 +37,7 @@ export const DataTable = <T extends object>({ rows, columns }: IProps<T>) => {
               key={column.dataKey}
               align="left"
               style={{ width: column.width || DEFAULT_CELL_WIDTH }}
-              className={`bg-background-primary truncate font-bold border-b ${isFirstColumn ? '' : 'border-l'} ${isAction ? 'sticky right-0 text-center' : ''} border-color-border px-2 py-2`}
+              className={`bg-background truncate font-bold border-b ${isFirstColumn ? '' : 'border-l'} ${isAction ? 'sticky right-0 text-center' : ''} border-border px-2 py-2`}
             >
               <Tooltip>{column.label}</Tooltip>
             </th>
@@ -77,7 +77,7 @@ export const DataTable = <T extends object>({ rows, columns }: IProps<T>) => {
               key={dataKey}
               align="left"
               style={{ width: width || DEFAULT_CELL_WIDTH, background: bg, color }}
-              className={`py-0 h-full ${column.getColor ? '' : 'bg-background-primary'} truncate font-medium border-b ${isFirstColumn ? '' : 'border-l'} ${isAction ? 'sticky right-0' : ''} border-color-border px-2`}
+              className={`py-0 h-full ${column.getColor ? '' : 'bg-background'} truncate font-medium border-b ${isFirstColumn ? '' : 'border-l'} ${isAction ? 'sticky right-0' : ''} border-border px-2`}
             >
               <div>{cell}</div>
             </td>
@@ -88,7 +88,7 @@ export const DataTable = <T extends object>({ rows, columns }: IProps<T>) => {
   };
 
   return (
-    <div className="shadow-none border h-[calc(100vh-140px)] sm:h-[calc(100vh-148px)] w-full overflow-auto border-color-border rounded-sm">
+    <div className="shadow-none border h-[calc(100vh-140px)] sm:h-[calc(100vh-148px)] w-full overflow-auto border-border rounded-sm">
       {rows.length ? (
         <TableVirtuoso
           data={rows as Record<string, unknown>[]}

@@ -31,8 +31,8 @@ export const ProfileDropdown = () => {
     <React.Fragment>
       <Menu
         component={
-          <button className="p-0 text-color-text rounded-full">
-            <div className="w-8 h-8 rounded-full bg-color-light flex items-center justify-center text-sm font-semibold text-color-text">
+          <button className="p-0 text-foreground rounded-full">
+            <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-semibold text-foreground">
               {user?.displayName?.[0]}
             </div>
           </button>

@@ -23,7 +23,7 @@ export const Accordion = ({ items, openIndexes, isIconLast, className, type = 'm
     return (
       <ShadcnAccordion type="single" collapsible defaultValue={defaultValues[0]} className={cn('w-full', className)}>
         {items.map((item, index) => (
-          <AccordionItem key={index} value={String(index)} className="border-color-border">
+          <AccordionItem key={index} value={String(index)} className="border-border">
             <AccordionTrigger
               className={cn('text-sm font-semibold py-3 px-3 hover:no-underline', isIconLast && 'flex-row-reverse')}
             >
@@ -42,7 +42,7 @@ export const Accordion = ({ items, openIndexes, isIconLast, className, type = 'm
   return (
     <ShadcnAccordion type="multiple" defaultValue={defaultValues} className={cn('w-full', className)}>
       {items.map((item, index) => (
-        <AccordionItem key={index} value={String(index)} className="border-color-border">
+        <AccordionItem key={index} value={String(index)} className="border-border">
           <AccordionTrigger
             className={cn('text-sm font-semibold py-3 px-3 hover:no-underline', isIconLast && 'flex-row-reverse')}
           >

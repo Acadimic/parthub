@@ -11,7 +11,7 @@ export const HandleContentError = ({ url }: IProps) => {
   };
 
   return (
-    <div className="flex items-center justify-center h-full w-full bg-background-primary">
+    <div className="flex items-center justify-center h-full w-full bg-background">
       <div className="m-auto">
         <Image width={80} height={80} src="/images/alert-circle.svg" alt="error" className="m-auto" />
         <h1 className="m-auto font-bold text-xl text-center py-4">Oops! Something went wrong</h1>

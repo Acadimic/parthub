@@ -16,15 +16,15 @@ export const Question = ({ question, prefix, marks }: IProps) => {
       </div>
       {marks && (
         <div className="absolute -top-4 text-[10px] font-bold flex items-center space-x-1.5">
-          <div className="text-green-primary">
+          <div className="text-success">
             {marks.correct > 0 ? '+' : ''}
             {marks.correct}
           </div>
-          <div className="text-red-primary">
+          <div className="text-destructive">
             {marks.incorrect > 0 ? '+' : ''}
             {marks.incorrect}
           </div>
-          <div className="text-yellow-primary">
+          <div className="text-warning">
             {marks.unattempted > 0 ? '+' : ''}
             {marks.unattempted < 0 ? '-' : ''}
             {marks.unattempted}

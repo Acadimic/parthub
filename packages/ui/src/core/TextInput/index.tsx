@@ -47,21 +47,16 @@ export const TextInput = (props: ITextInputProps) => {
     if (autoFocus) ref.current?.focus();
   }, [autoFocus]);
 
-  let borderClass = 'border-color-border';
-  if (isFocused) borderClass = 'border-blue-primary ring-1 ring-blue-primary bg-background-secondary';
-  else if (error) borderClass = 'border-red-primary';
+  let borderClass = 'border-border';
+  if (isFocused) borderClass = 'border-primary ring-1 ring-primary bg-muted';
+  else if (error) borderClass = 'border-destructive';
 
   return (
     <div className={className}>
       {label && <Label label={label} required={required} />}
-      <div
-        className={cn(
-          'bg-background-primary hover:bg-background-secondary flex items-center border rounded-none',
-          borderClass,
-        )}
-      >
+      <div className={cn('bg-background hover:bg-accent flex items-center border rounded-none', borderClass)}>
         {leftSection ? (
-          <div className={cn('flex items-center pl-3', isFocused && 'text-blue-primary')}>{leftSection}</div>
+          <div className={cn('flex items-center pl-3', isFocused && 'text-info')}>{leftSection}</div>
         ) : null}
         <input
           {...rest}
@@ -73,11 +68,11 @@ export const TextInput = (props: ITextInputProps) => {
           autoFocus={autoFocus}
         />
         {rightSection ? (
-          <div className={cn('flex items-center pr-3', isFocused && 'text-blue-primary')}>{rightSection}</div>
+          <div className={cn('flex items-center pr-3', isFocused && 'text-info')}>{rightSection}</div>
         ) : null}
       </div>
       {helperText && (
-        <p className={cn('text-xs mt-1', error ? 'text-red-primary' : 'text-color-secondary')}>{helperText}</p>
+        <p className={cn('text-xs mt-1', error ? 'text-destructive' : 'text-muted-foreground')}>{helperText}</p>
       )}
     </div>
   );

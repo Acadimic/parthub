@@ -159,11 +159,11 @@ export const getMinutesString = (seconds: number) => {
 };
 
 export const getRatingItem = (num = 0): IScoreRating => {
-  if (num < 18) return { color: 'text-red-primary', text: 'Poor' };
-  if (num >= 18 && num < 35) return { color: 'text-yellow-primary', text: 'Good' };
-  if (num >= 35 && num < 60) return { color: 'text-green-primary', text: 'Good' };
-  if (num >= 60 && num < 80) return { color: 'text-green-primary', text: 'Very Good' };
-  return { color: 'text-green-primary', text: 'Excellent' };
+  if (num < 18) return { color: 'text-destructive', text: 'Poor' };
+  if (num >= 18 && num < 35) return { color: 'text-warning', text: 'Good' };
+  if (num >= 35 && num < 60) return { color: 'text-success', text: 'Good' };
+  if (num >= 60 && num < 80) return { color: 'text-success', text: 'Very Good' };
+  return { color: 'text-success', text: 'Excellent' };
 };
 
 export const parseCompactUTCDate = (dateStr: string) => {

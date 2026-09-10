@@ -17,7 +17,7 @@ export const Tabs = ({ tabs }: ITabProps) => {
 
   return (
     <div>
-      <div className="flex border-b border-color-border overflow-x-auto" role="tablist" aria-label="scrollable-tabs">
+      <div className="flex border-b border-border overflow-x-auto" role="tablist" aria-label="scrollable-tabs">
         {tabs.map((tab, index) => (
           <button
             key={index}
@@ -28,8 +28,8 @@ export const Tabs = ({ tabs }: ITabProps) => {
             onClick={() => setSelectedTabIndex(index)}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
               selectedTabIndex === index
-                ? 'border-blue-primary text-blue-primary'
-                : 'border-transparent text-color-secondary hover:text-color-primary'
+                ? 'border-primary text-info'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             } ${tab.iconPosition === 'end' ? 'flex-row-reverse' : ''}`}
           >
             {tab.icon && <span className="flex items-center">{tab.icon}</span>}

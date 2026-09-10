@@ -55,17 +55,17 @@ export const Modal = ({
     <Sheet open={isOpen} onOpenChange={(open) => !open && closeModal()}>
       <SheetContent
         side={sideMap[anchorPosition]}
-        className={cn('bg-background-primary border-color-border p-0 flex flex-col', className || widthClass)}
+        className={cn('bg-background border-border p-0 flex flex-col', className || widthClass)}
         id={id}
         onInteractOutside={(e) => {
           if (withoutClose) e.preventDefault();
         }}
       >
-        <SheetHeader className="py-3 px-4 flex flex-row justify-between items-center space-x-3 md:space-x-4 border-b border-color-border">
+        <SheetHeader className="py-3 px-4 flex flex-row justify-between items-center space-x-3 md:space-x-4 border-b border-border">
           <SheetTitle className="md:text-base font-bold">{title}</SheetTitle>
           {!withoutClose && (
             <button onClick={closeModal} className="p-0 hover:bg-transparent">
-              <XIcon weight="bold" className="w-4 h-4 hover:text-blue-primary" />
+              <XIcon weight="bold" className="w-4 h-4 hover:text-info" />
             </button>
           )}
         </SheetHeader>
@@ -74,7 +74,7 @@ export const Modal = ({
         >
           {children}
         </div>
-        {footer ? <div className="px-4 py-4 border-t border-color-border">{footer}</div> : null}
+        {footer ? <div className="px-4 py-4 border-t border-border">{footer}</div> : null}
       </SheetContent>
     </Sheet>
   );

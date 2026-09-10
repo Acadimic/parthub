@@ -21,7 +21,7 @@ export const SignInButton = ({ name, isLoading, onClick, isDisabled }: IProps) =
       onClick={onClick}
       disabled={disabled}
     >
-      <div className="flex justify-center space-x-3 items-center px-4 py-2 w-36 h-12 border border-color-border rounded-sm bg-white">
+      <div className="flex justify-center space-x-3 items-center px-4 py-2 w-36 h-12 border border-border rounded-sm bg-white">
         {isLoading ? (
           <Spinner className="w-8 h-8" />
         ) : (

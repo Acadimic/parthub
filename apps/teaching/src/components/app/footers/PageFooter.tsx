@@ -45,7 +45,7 @@ export const PageFooter: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-background-primary py-12 border-t border-color-border px-1">
+    <footer className="bg-background py-12 border-t border-border px-1">
       <Container>
         <div className="flex flex-wrap justify-between gap-8 w-full">
           {/* Logo and Description */}
@@ -69,7 +69,7 @@ export const PageFooter: React.FC = () => {
                     <li key={link.text}>
                       <Link
                         href={link.href}
-                        className="text-sm hover:opacity-90 transition-colors text-color-secondary font-medium"
+                        className="text-sm hover:opacity-90 transition-colors text-muted-foreground font-medium"
                       >
                         {link.text}
                       </Link>
@@ -82,7 +82,7 @@ export const PageFooter: React.FC = () => {
         </div>
 
         {/* Copyright and Bottom Links */}
-        <div className="mt-12 py-6 border-t border-color-border flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+        <div className="mt-12 py-6 border-t border-border flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
           <p className="text-sm">© {currentYear} Acadimic. All rights reserved.</p>
           <div className="flex flex-wrap gap-4 md:gap-6">
             <a href="/privacy" className="text-sm hover:opacity-90 transition-colors">

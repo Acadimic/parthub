@@ -8,7 +8,7 @@ interface IProps {
 
 export const MaterialInfo = ({ materialStat }: IProps) => {
   return (
-    <div className="flex items-center text-color-secondary w-full">
+    <div className="flex items-center text-muted-foreground w-full">
       <div className="flex items-center gap-4 font-medium w-full">
         <div className="flex flex-col">
           <div className="flex items-center gap-1">

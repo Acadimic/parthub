@@ -11,7 +11,7 @@ interface ISkeletonProps {
 export const Skeleton = ({ width, height, className, variant = 'rectangle' }: ISkeletonProps) => {
   return (
     <ShadcnSkeleton
-      className={cn('bg-background-secondary', variant === 'circle' && 'rounded-full', className)}
+      className={cn('bg-muted', variant === 'circle' && 'rounded-full', className)}
       style={{
         width: width || '100%',
         height: height || '100%',

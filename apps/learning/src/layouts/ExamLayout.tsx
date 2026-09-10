@@ -56,7 +56,7 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
 
   return (
     <>
-      <div className="bg-background-secondary relative">
+      <div className="bg-muted relative">
         <div className="fixed top-0 w-full z-10">
           <ExamHeader
             isPractice={isPractice}

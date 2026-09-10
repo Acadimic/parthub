@@ -253,7 +253,7 @@ export const EditorToolbar = ({ handleChange, block, onClose, isVertical }: IPro
 
   return (
     <div
-      className={`opacity-90 flex items-center gap-2 bg-background-paper border border-color-border flex-wrap ${isVertical ? 'flex-col' : ''}`}
+      className={`opacity-90 flex items-center gap-2 bg-card border border-border flex-wrap ${isVertical ? 'flex-col' : ''}`}
     >
       <div className={`flex items-center overflow-auto ${isVertical ? 'flex-col' : ''}`}>
         {groupedEditorToolbarItems.map((groupedItem, groupIndex) => {
@@ -263,7 +263,7 @@ export const EditorToolbar = ({ handleChange, block, onClose, isVertical }: IPro
                 return (
                   <Tooltip key={index} title={item.tooltip}>
                     <div
-                      className="hover:text-blue-primary text-sm cursor-pointer px-2 py-1"
+                      className="hover:text-info text-sm cursor-pointer px-2 py-1"
                       onMouseDown={(event) => {
                         event.preventDefault();
                         // event.stopPropagation();
@@ -276,7 +276,7 @@ export const EditorToolbar = ({ handleChange, block, onClose, isVertical }: IPro
                 );
               })}
               {groupIndex < groupedEditorToolbarItems.length - 1 && (
-                <div className={`bg-color-border mx-1 ${isVertical ? 'w-full h-px' : 'h-6 w-px'}`} />
+                <div className={`bg-border mx-1 ${isVertical ? 'w-full h-px' : 'h-6 w-px'}`} />
               )}
             </div>
           );

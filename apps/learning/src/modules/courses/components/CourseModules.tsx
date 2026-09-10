@@ -54,7 +54,7 @@ export const CourseModules = () => {
             <CourseContent />
           </div>
         </div>
-        <div className="hidden md:block md:w-[30%] overflow-auto h-[calc(100vh-4rem)] bg-background-primary py-4 border-l border-color-border">
+        <div className="hidden md:block md:w-[30%] overflow-auto h-[calc(100vh-4rem)] bg-background py-4 border-l border-border">
           <div>
             <div className="px-4">
               <StandardWithLogo standard={selectedCourse && getStandardById(selectedCourse.standards?.[0] ?? '')} />

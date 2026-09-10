@@ -50,7 +50,7 @@ export const MeetingOverviewModal = ({ isOpen, onClose, openEditModal, openDelet
             </div>
           </div>
           <div className="text-xs font-medium flex flex-col gap-1.5 px-0.5">
-            <div className="flex items-center gap-2 text-sm font-medium text-color-secondary">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <CalendarBlankIcon weight="bold" className="w-4 h-4" />
               <Label label="Date and Time" />
             </div>

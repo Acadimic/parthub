@@ -35,7 +35,7 @@ export const Bookmark = ({ collectionItem, collectionRef, component, isClickDisa
           ) : (
             <BookmarkSimpleIcon
               weight={isItemBookmarked ? 'fill' : 'regular'}
-              className={`w-5 h-5 ${isItemBookmarked ? 'text-yellow-primary' : 'text-color-primary'}`}
+              className={`w-5 h-5 ${isItemBookmarked ? 'text-warning' : 'text-foreground'}`}
             />
           )}
         </div>

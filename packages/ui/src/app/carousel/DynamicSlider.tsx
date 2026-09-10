@@ -102,19 +102,13 @@ export const DynamicSlider = ({
       </div>
       {showArrows && items.length > itemsPerView && (
         <>
-          <div className="absolute left-2 top-1/2 -translate-y-1/2 border border-color-border rounded-full">
-            <button
-              onClick={goToPrevious}
-              className="bg-background-paper hover:bg-background-paper shadow-md z-10 p-1.5 rounded-full"
-            >
+          <div className="absolute left-2 top-1/2 -translate-y-1/2 border border-border rounded-full">
+            <button onClick={goToPrevious} className="bg-card hover:bg-card shadow-md z-10 p-1.5 rounded-full">
               <CaretLeftIcon weight="bold" className="w-4 h-4" />
             </button>
           </div>
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 border border-color-border rounded-full">
-            <button
-              onClick={goToNext}
-              className="bg-background-paper hover:bg-background-paper shadow-md z-10 p-1.5 rounded-full"
-            >
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 border border-border rounded-full">
+            <button onClick={goToNext} className="bg-card hover:bg-card shadow-md z-10 p-1.5 rounded-full">
               <CaretRightIcon weight="bold" className="w-4 h-4" />
             </button>
           </div>
@@ -124,7 +118,7 @@ export const DynamicSlider = ({
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
           {Array.from({ length: maxIndex + 1 }).map((_, index) => (
             <button key={index} onClick={() => goToIndex(index * itemsPerView)} className="p-0.5">
-              <CircleIcon weight="fill" className="w-2 h-2 text-color-secondary" />
+              <CircleIcon weight="fill" className="w-2 h-2 text-muted-foreground" />
             </button>
           ))}
         </div>

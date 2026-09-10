@@ -33,11 +33,11 @@ export const LikeCourse = ({ collectionItem, collectionRef }: IProps) => {
 
   return (
     <Tooltip title={isReactedOnItem ? 'Liked' : 'Like'}>
-      <div className="rounded-full flex items-center bg-color-light border border-color-border">
+      <div className="rounded-full flex items-center bg-accent border border-border">
         <div className="cursor-pointer h-full w-full py-1.5 px-4" onClick={handleLike}>
           <ThumbsUpIcon weight={isReactedOnItem ? 'fill' : 'bold'} className="w-5 h-5" />
         </div>
-        <div className="h-6 w-px bg-color-border" />
+        <div className="h-6 w-px bg-border" />
         <div className="text-sm font-bold px-4 min-w-14 text-center">
           {isToggleReaction || collectionItem.isLoadingReactionsCount ? <Spinner /> : collectionItem.reactionsCount}
         </div>

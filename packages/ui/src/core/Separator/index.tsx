@@ -7,7 +7,7 @@ interface ISeparatorProps {
 }
 
 export const Separator = ({ orientation = 'horizontal', className }: ISeparatorProps) => {
-  return <ShadcnSeparator orientation={orientation} className={cn('bg-color-border', className)} />;
+  return <ShadcnSeparator orientation={orientation} className={cn('bg-border', className)} />;
 };
 
 export type { ISeparatorProps };

@@ -70,7 +70,7 @@ export const Chapters = ({ standard, subject }: IProps) => {
           {chapters.map((chapter) => (
             <div
               key={chapter._id}
-              className="flex items-center justify-between space-x-2 border border-color-border px-4 py-2 rounded"
+              className="flex items-center justify-between space-x-2 border border-border px-4 py-2 rounded"
             >
               <div>{chapter.name}</div>
               <div className="cursor-pointer" onClick={() => onEditChapter(chapter._id)}>

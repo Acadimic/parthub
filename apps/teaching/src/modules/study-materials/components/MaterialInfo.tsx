@@ -24,7 +24,7 @@ export const MaterialInfo = ({ materialIds, testPaperIds }: IProps) => {
   }, [testPaperIds]);
 
   return (
-    <div className="flex items-center text-color-secondary">
+    <div className="flex items-center text-muted-foreground">
       (
       <div className="flex items-center gap-2 text-sm font-medium">
         <div className="flex gap-2">

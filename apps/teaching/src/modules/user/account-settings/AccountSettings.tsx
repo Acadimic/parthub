@@ -103,7 +103,7 @@ export const AccountSettings = () => {
               />
               <div className="flex flex-col items-center">
                 <h1 className="text-xl md:text-2xl font-bold">{selectedUser?.name}</h1>
-                <div className="text-sm flex items-center justify-center font-medium tracking-wider text-color-secondary">
+                <div className="text-sm flex items-center justify-center font-medium tracking-wider text-muted-foreground">
                   {selectedUser.email}
                 </div>
               </div>

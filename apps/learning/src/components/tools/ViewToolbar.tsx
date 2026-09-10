@@ -7,7 +7,7 @@ interface IProps {
 
 export const ViewToolbar = ({ setIsFullScreen, isFullScreen }: IProps) => {
   return (
-    <div className="absolute bottom-0 w-full h-8 z-[50] bg-background-primary border-t border-color-border">
+    <div className="absolute bottom-0 w-full h-8 z-[50] bg-background border-t border-border">
       <div className="flex items-center justify-center h-full">
         <div
           className="px-4 flex items-center justify-center space-x-1 cursor-pointer hover:opacity-80 h-full"

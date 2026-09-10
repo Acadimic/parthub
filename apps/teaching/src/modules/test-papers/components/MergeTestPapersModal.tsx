@@ -106,7 +106,7 @@ export const MergeTestPapersModal = ({ isOpen, onClose, primaryTestPaperId }: IP
                   label: (
                     <div className="font-medium text-sm py-2">
                       {paper.name}
-                      <div className="text-xs text-color-secondary">
+                      <div className="text-xs text-muted-foreground">
                         Questions({paper.totalQuestions}), Duration({paper.durationMins} mins), Marks({paper.maxMarks}
                         ){' '}
                       </div>

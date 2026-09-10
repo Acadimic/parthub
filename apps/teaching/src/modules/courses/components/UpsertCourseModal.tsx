@@ -162,7 +162,7 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
                 <div>
                   <Label label="Course Image" required />
                   <div className="flex justify-center mt-1 w-full">
-                    <div className="w-full border border-dotted border-color-border py-2 px-2">
+                    <div className="w-full border border-dotted border-border py-2 px-2">
                       <UploadFiles
                         selectedFiles={selectedFiles}
                         setSelectedFiles={setSelectedFiles}

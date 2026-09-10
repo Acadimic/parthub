@@ -1,12 +1,4 @@
-import {
-  AccountSettingsType,
-  CalendarType,
-  ColorType,
-  FCCalendarType,
-  Marking,
-  QuestionType,
-  StandardGroup,
-} from '../../enums';
+import { AccountSettingsType, CalendarType, FCCalendarType, Marking, QuestionType, StandardGroup } from '../../enums';
 import { type IDynamicObject } from '../../interfaces';
 
 export const RANDOM = '';
@@ -297,30 +289,6 @@ export const STANDARD_GROUP_ORDER: IDynamicObject = {
 export const ACTIONS = 'actions';
 
 export const ALL = 'ALL';
-
-export const ColorTypeMap: Record<ColorType, string> = {
-  [ColorType.RED]: 'text-red-primary',
-  [ColorType.GREEN]: 'text-green-primary',
-  [ColorType.BLUE]: 'text-blue-primary',
-  [ColorType.YELLOW]: 'text-yellow-primary',
-  [ColorType.ORANGE]: 'text-orange-primary',
-  [ColorType.PURPLE]: 'text-purple-primary',
-  [ColorType.PINK]: 'text-pink-primary',
-  [ColorType.VIOLET]: 'text-violet-primary',
-  [ColorType.GREY]: 'text-grey-primary',
-};
-
-export const BgColorTypeMap: Record<ColorType, string> = {
-  [ColorType.RED]: 'bg-red-primary',
-  [ColorType.GREEN]: 'bg-green-primary',
-  [ColorType.BLUE]: 'bg-blue-primary',
-  [ColorType.YELLOW]: 'bg-yellow-primary',
-  [ColorType.ORANGE]: 'bg-orange-primary',
-  [ColorType.PURPLE]: 'bg-purple-primary',
-  [ColorType.PINK]: 'bg-pink-primary',
-  [ColorType.VIOLET]: 'bg-violet-primary',
-  [ColorType.GREY]: 'bg-grey-primary',
-};
 
 export const AccountSettingsRoutes: Record<AccountSettingsType, string> = {
   [AccountSettingsType.ACCOUNT_SETTINGS]: '/account-settings',

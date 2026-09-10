@@ -27,7 +27,7 @@ export const ViewMeetAttendees = ({ attendeeIds, isStudents, isTeachers, noLabel
 
   return (
     <div>
-      <div className="flex items-center text-sm text-color-secondary">
+      <div className="flex items-center text-sm text-muted-foreground">
         {!noLabel && (
           <div className="flex items-center gap-2">
             <UserIcon weight="bold" className="w-4 h-4" />

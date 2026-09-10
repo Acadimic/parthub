@@ -13,12 +13,12 @@ export const UploadFiles = ({ ...props }: IFileUploadProps) => {
           <div></div>
           <div className="text-sm font-medium">
             Drag and Drop Files{' '}
-            <span className="text-xs text-color-secondary italic">
+            <span className="text-xs text-muted-foreground italic">
               ({`max ${maxFileCount} ${getPlural(maxFileCount, 'file')}`})
             </span>
           </div>
         </div>
-        <div className="text-xs text-color-secondary font-medium">or</div>
+        <div className="text-xs text-muted-foreground font-medium">or</div>
         <div className="mt-2 flex flex-col items-center">
           <Button text="Browse Files" leftsection={<CloudArrowUpIcon weight="regular" className="w-5 h-5" />} />
         </div>

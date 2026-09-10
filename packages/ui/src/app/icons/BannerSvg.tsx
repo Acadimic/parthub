@@ -1,6 +1,6 @@
 export const BannerSvg = () => {
   return (
-    <div className="text-color-primary">
+    <div className="text-foreground">
       <svg
         width="618"
         height="454"

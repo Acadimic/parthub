@@ -8,9 +8,9 @@ export const Reviewed = ({ count, title, isLarge }: IProps) => {
   const className = isLarge ? 'w-8 p-2 text-xs' : 'w-6 p-1 text-[11px]';
   return (
     <>
-      <div className="flex space-x-2 items-center text-color-secondary">
+      <div className="flex space-x-2 items-center text-muted-foreground">
         <div
-          className={`${className} flex-none font-bold text-white rounded-full bg-violet-primary flex justify-center items-center`}
+          className={`${className} flex-none font-bold text-warning-foreground rounded-full bg-chart-4 flex justify-center items-center`}
         >
           {count}
         </div>

@@ -125,7 +125,7 @@ export const EquationEditor = ({ blocks, handleChange, label, autoFocus }: IProp
         handleChange={handleBlockChange}
         onClose={onCloseModal}
       />
-      <div className="border border-color-border py-2 px-2 text-sm" onClick={onClickEditor} ref={editorContainerRef}>
+      <div className="border border-border py-2 px-2 text-sm" onClick={onClickEditor} ref={editorContainerRef}>
         {equationBlocks.map((block, index) => {
           const isText = block.type === EquationType.TEXT;
           // if (isText && !block.content.trim() && index !== equationBlocks.length - 1) return null;
@@ -146,7 +146,7 @@ export const EquationEditor = ({ blocks, handleChange, label, autoFocus }: IProp
                 />
               ) : (
                 <div
-                  className="relative group border border-transparent h-full inline-table mx-0.5 hover:border-blue-primary"
+                  className="relative group border border-transparent h-full inline-table mx-0.5 hover:border-primary"
                   key={index}
                   contentEditable={false}
                   onClick={(event) => {
@@ -165,7 +165,7 @@ export const EquationEditor = ({ blocks, handleChange, label, autoFocus }: IProp
           hasFocus === false &&
           equationBlocks[0].type === EquationType.TEXT &&
           !equationBlocks[0].content && (
-            <div className="inline-table text-color-secondary">{`Write ${label?.toLowerCase() || 'here'}...`}</div>
+            <div className="inline-table text-muted-foreground">{`Write ${label?.toLowerCase() || 'here'}...`}</div>
           )} */}
       </div>
     </div>

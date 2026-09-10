@@ -28,7 +28,7 @@ export const Options = ({ question }: IProps) => {
             handleClick={() => {}}
             isDisabled
             isHtml
-            selectedClassName="text-green-primary"
+            selectedClassName="text-success"
           />
         )}
         {isSingleOrBoolean && (
@@ -38,7 +38,7 @@ export const Options = ({ question }: IProps) => {
             handleClick={() => {}}
             isDisabled
             isHtml
-            selectedClassName="text-green-primary"
+            selectedClassName="text-success"
           />
         )}
         {!isMultipleChoice && !isSingleOrBoolean && (

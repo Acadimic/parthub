@@ -65,7 +65,7 @@ export const TestPapers = () => {
       valueFormatter: (row: TestPaperDto) => {
         return (
           <Link href={`/test-papers/${row._id}`} isSubtle className="px-0">
-            <span className="text-blue-primary">{row.name}</span>
+            <span className="text-info">{row.name}</span>
           </Link>
         );
       },

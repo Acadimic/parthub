@@ -97,9 +97,9 @@ export const ExamSidebar = ({
 
   return (
     <div
-      className={`bg-background-primary ${
+      className={`bg-background ${
         isOpen ? 'w-full xl:w-[380px] max-w-full xl:max-w-[380px]' : 'w-0'
-      } h-full duration-300 xl:border-l border-color-border transition-width transition-slowest ease`}
+      } h-full duration-300 xl:border-l border-border transition-width transition-slowest ease`}
     >
       <div className={`w-full h-full relative`}>
         <div className="hidden xl:block absolute top-[calc(50%-20px)] -ml-6">
@@ -152,12 +152,12 @@ export const ExamSidebar = ({
                     <div className="flex justify-start items-center text-sm font-medium gap-2 flex-wrap">
                       <div className="text-xs flex flex-nowrap">Section :</div>
                       <TestPaperSection section={section} />
-                      <div className="text-xs text-color-secondary font-medium">
+                      <div className="text-xs text-muted-foreground font-medium">
                         {questionIds.length} {getPlural(questionIds.length, 'Question')}
                       </div>
                     </div>
                   </div>
-                  <div className="grow px-3 py-6 border-y border-color-border border-dotted">
+                  <div className="grow px-3 py-6 border-y border-border border-dotted">
                     <div className="grid grid-cols-5 gap-3">
                       {questionIds.map((questionId: string, index: number) => {
                         return (

@@ -21,7 +21,7 @@ export const Answer = ({ correctOptionIndexes, solution, answers, isAnswer }: IP
                   const isLastIndex = index === correctOptionIndexes.length - 1;
                   return (
                     <div key={answerIndex}>
-                      <span className="text-green-primary">{getAlphabet(answerIndex)}</span>
+                      <span className="text-success">{getAlphabet(answerIndex)}</span>
                       <span className="text-gradient">{!isLastIndex ? ',' : ''}&nbsp;</span>
                     </div>
                   );

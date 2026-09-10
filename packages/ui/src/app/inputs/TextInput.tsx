@@ -48,10 +48,10 @@ export const TextInput = (props: IProps) => {
     <div>
       {label && <Label label={label} required={required} />}
       <div
-        className={`bg-background-primary hover:bg-background-secondary flex items-center border rounded-none ${isFocused ? 'border-blue-primary bg-background-secondary' : 'border-color-border'}`}
+        className={`bg-background hover:bg-accent flex items-center border rounded-none ${isFocused ? 'border-primary bg-muted' : 'border-border'}`}
       >
         {leftsection ? (
-          <div className={`flex items-center ${isFocused ? 'text-blue-primary' : ''} pl-3`}>{leftsection}</div>
+          <div className={`flex items-center ${isFocused ? 'text-info' : ''} pl-3`}>{leftsection}</div>
         ) : null}
         <input
           {...rest}
@@ -63,7 +63,7 @@ export const TextInput = (props: IProps) => {
           autoFocus={autoFocus}
         />
         {rightsection ? (
-          <div className={`flex items-center ${isFocused ? 'text-blue-primary' : ''} pr-3`}>{rightsection}</div>
+          <div className={`flex items-center ${isFocused ? 'text-info' : ''} pr-3`}>{rightsection}</div>
         ) : null}
       </div>
     </div>

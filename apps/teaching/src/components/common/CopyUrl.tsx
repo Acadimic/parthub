@@ -19,9 +19,9 @@ export const CopyUrl = ({ url, isCopyIconOnly = false }: IProps) => {
         <CopyIcon className="w-6 h-6" />
       </Tooltip>
       {isCopyIconOnly ? null : (
-        <div className="text-xs text-blue-primary !font-normal flex flex-col">
+        <div className="text-xs text-info !font-normal flex flex-col">
           <div className="font-medium">Copy Link</div>
-          <div className="text-xxs text-blue-primary !font-normal italic max-w-28 md:max-w-52 truncate">{url}</div>
+          <div className="text-xxs text-info !font-normal italic max-w-28 md:max-w-52 truncate">{url}</div>
         </div>
       )}
     </div>

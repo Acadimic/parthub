@@ -22,14 +22,14 @@ export const Breadcrumb = ({ items }: IBreadcrumbProps) => {
           const isLast = index === items.length - 1;
           return (
             <li key={item.label} className="flex items-center space-x-1.5">
-              {index > 0 && <CaretRightIcon weight="bold" className="w-3 h-3 text-color-secondary" />}
+              {index > 0 && <CaretRightIcon weight="bold" className="w-3 h-3 text-muted-foreground" />}
               {isLast ? (
-                <span className="text-xs font-bold text-color-primary">{item.label}</span>
+                <span className="text-xs font-bold text-foreground">{item.label}</span>
               ) : (
                 <NextLink
                   href={item.href}
                   onClick={item.onClick}
-                  className="text-xs font-medium text-color-secondary hover:text-blue-primary flex items-center space-x-1"
+                  className="text-xs font-medium text-muted-foreground hover:text-info flex items-center space-x-1"
                 >
                   {item.icon && <span>{item.icon}</span>}
                   <span>{item.label}</span>

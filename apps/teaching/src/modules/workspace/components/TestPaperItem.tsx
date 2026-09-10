@@ -1,8 +1,8 @@
 import { type TestPaperDto } from '@repo/shared/contracts';
-import { Card } from '@repo/ui/app';
 import { StandardWithLogo, TestPaperInfo } from '@components/common';
 import { TestPaperIconSvg } from '@components/images';
-import { useStandardLookups, useSelectorLookups } from '@stores';
+import { Card } from '@repo/ui/app';
+import { useSelectorLookups, useStandardLookups } from '@stores';
 import Link from 'next/link';
 
 interface IProps {
@@ -19,25 +19,22 @@ export const TestPaperItem = ({ testPaper }: IProps) => {
   };
 
   return (
-    <Card className="rounded border-2 py-8">
-      <Link href={`/test-papers/${testPaper._id}`} onClick={handleClick}>
-        <div className="flex flex-col space-y-2 w-full">
-          <div className="h-40 w-full border-b border-color-border">
-            <div className="flex justify-center items-center">
-              <div className="h-24 w-24">
-                <TestPaperIconSvg />
-              </div>
-            </div>
+    <Card className="group flex h-full flex-col overflow-hidden border border-border transition-colors hover:border-primary">
+      <Link href={`/test-papers/${testPaper._id}`} onClick={handleClick} className="flex h-full flex-col">
+        <div className="flex h-40 w-full shrink-0 items-center justify-center border-b border-border bg-muted">
+          <div className="h-20 w-20">
+            <TestPaperIconSvg />
           </div>
-          <div className="p-3 flex flex-col space-y-3 px-4">
-            <StandardWithLogo standard={getStandardsByIds(testPaper.standards ?? [])[0]} />
-            <div className="max-w-full">
-              <div className="font-medium line-clamp-1">{testPaper.name}</div>
-              <div className="text-sm text-color-secondary line-clamp-1">Test Paper Description</div>
-            </div>
-            <div className="text-xs text-color-secondary w-full">
-              <TestPaperInfo testPaper={testPaper} />
-            </div>
+        </div>
+        <div className="flex flex-1 flex-col gap-2 p-3">
+          <StandardWithLogo standard={getStandardsByIds(testPaper.standards ?? [])[0]} />
+          <div className="max-w-full">
+            <div className="line-clamp-1 font-medium group-hover:text-info">{testPaper.name}</div>
+            {/* No description exists on a test paper; the stats row below carries the detail. The
+                literal string "Test Paper Description" used to ship here as visible placeholder. */}
+          </div>
+          <div className="mt-auto w-full text-xs text-muted-foreground">
+            <TestPaperInfo testPaper={testPaper} />
           </div>
         </div>
       </Link>

@@ -5,9 +5,6 @@ interface IProps {
 
 export const RectangleSkeleton = ({ width, height }: IProps) => {
   return (
-    <div
-      className="bg-color-light animate-pulse rounded"
-      style={{ width: width || '100%', height: height || '100%' }}
-    />
+    <div className="bg-accent animate-pulse rounded" style={{ width: width || '100%', height: height || '100%' }} />
   );
 };

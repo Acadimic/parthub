@@ -30,7 +30,7 @@ export const DateInput = ({ value, label, handleChange, required, isDisabled }: 
                 type="date"
                 defaultValue={value ? dayjs(value).format('YYYY-MM-DD') : ''}
                 onChange={onDateChange}
-                className="bg-background-primary border border-color-border rounded px-3 py-2 text-sm font-medium outline-none focus:border-blue-primary"
+                className="bg-background border border-border rounded px-3 py-2 text-sm font-medium outline-none focus:border-primary"
               />
             </div>
           );
@@ -40,7 +40,7 @@ export const DateInput = ({ value, label, handleChange, required, isDisabled }: 
           label={label}
           type="text"
           placeholder="Select Date"
-          rightsection={<CalendarBlankIcon className="w-5 h-5 text-color-text" />}
+          rightsection={<CalendarBlankIcon className="w-5 h-5 text-foreground" />}
           readOnly
           value={value ? dayjs(value).format('MMM, DD, YYYY') : ''}
           required={required}

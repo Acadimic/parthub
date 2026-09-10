@@ -35,7 +35,7 @@ export const AppSidebar = ({ children }: IProps) => {
   };
 
   const DrawerContent = () => (
-    <div className="bg-background-primary min-h-screen flex flex-col justify-between items-stretch">
+    <div className="bg-background min-h-screen flex flex-col justify-between items-stretch">
       <div className="grow">
         <div className="flex items-end w-full space-x-2 p-4 h-16">
           <div>
@@ -43,16 +43,16 @@ export const AppSidebar = ({ children }: IProps) => {
           </div>
           <div className="blue-gradient font-semibold text-xs">Support</div>
         </div>
-        <hr className="border-color-border" />
+        <hr className="border-border" />
         <nav>
           {Routes.map((item) => (
             <div key={item.type} className="py-3">
-              <div className="text-xs font-semibold my-3 mx-5 text-color-secondary truncate">{item.type}</div>
+              <div className="text-xs font-semibold my-3 mx-5 text-muted-foreground truncate">{item.type}</div>
               <div>
                 {item.menus.map((menu) => (
                   <button
                     key={menu.name}
-                    className="w-full flex items-center px-2.5 py-3 hover:bg-background-secondary"
+                    className="w-full flex items-center px-2.5 py-3 hover:bg-accent"
                     onClick={() => {
                       if (menu.isOpenInNewTab) {
                         window.open(menu.route, '_blank');
@@ -65,9 +65,7 @@ export const AppSidebar = ({ children }: IProps) => {
                       className={`flex items-center justify-center ${open ? 'mr-3' : 'mx-auto'}`}
                       style={{ minWidth: 0 }}
                     >
-                      <menu.icon
-                        className={`w-5 h-5 ${menu.route === route ? 'text-blue-primary' : 'text-color-primary'}`}
-                      />
+                      <menu.icon className={`w-5 h-5 ${menu.route === route ? 'text-info' : 'text-foreground'}`} />
                     </span>
                     {open && (
                       <span className={`text-sm font-semibold ${menu.route === route ? 'blue-gradient' : ''}`}>
@@ -82,11 +80,8 @@ export const AppSidebar = ({ children }: IProps) => {
         </nav>
       </div>
       <div className="p-4 flex justify-end">
-        <button onClick={handleDrawerClick} className="p-1 rounded hover:bg-background-secondary">
-          <CaretDoubleRightIcon
-            weight="bold"
-            className={`w-5 h-5 transition ${open ? 'rotate-180' : 'text-blue-primary'}`}
-          />
+        <button onClick={handleDrawerClick} className="p-1 rounded hover:bg-accent">
+          <CaretDoubleRightIcon weight="bold" className={`w-5 h-5 transition ${open ? 'rotate-180' : 'text-info'}`} />
         </button>
       </div>
     </div>
@@ -117,7 +112,7 @@ export const AppSidebar = ({ children }: IProps) => {
       {/* Main content */}
       <main className="flex-1 h-screen w-full">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-background-primary border-b border-color-border">
+        <header className="sticky top-0 z-30 bg-background border-b border-border">
           <div className="flex justify-between items-center w-full px-4 h-16">
             <div className="flex items-center">
               <button
@@ -142,7 +137,7 @@ export const AppSidebar = ({ children }: IProps) => {
           </div>
         </header>
         <div className="overflow-y-auto" style={{ height: 'calc(100vh - 64px)' }}>
-          <div className="py-4 px-4 md:py-4 md:px-4 bg-background-secondary min-h-full">{children}</div>
+          <div className="py-4 px-4 md:py-4 md:px-4 bg-muted min-h-full">{children}</div>
         </div>
       </main>
     </div>

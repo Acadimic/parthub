@@ -32,9 +32,9 @@ export const EmailPassword = ({ isDisabled, isLoading, handleSubmit, text }: IPr
 
   return (
     <div className={`px-2 md:px-4 py-2 min-w-[300px]`}>
-      {/* <h1 className="pb-6 lg:pb-4 text-center font-medium text-2xl lg:text-2xl text-color-primary">Welcome Back 👋</h1> */}
+      {/* <h1 className="pb-6 lg:pb-4 text-center font-medium text-2xl lg:text-2xl text-foreground">Welcome Back 👋</h1> */}
       <div>
-        {/* <Link className="flex items-center space-x-1.5 text-blue-primary font-medium text-sm mb-3 md:my-6" href={'/'}>
+        {/* <Link className="flex items-center space-x-1.5 text-info font-medium text-sm mb-3 md:my-6" href={'/'}>
           <ArrowCircleLeft className="h-5 w-5" />
           <span>Go Back</span>
         </Link> */}
@@ -70,7 +70,7 @@ export const EmailPassword = ({ isDisabled, isLoading, handleSubmit, text }: IPr
 
           <div className="flex justify-end text-sm font-medium pt-3">
             <div
-              className="cursor-pointer text-blue-primary hover:underline hover:decoration-blue-primary"
+              className="cursor-pointer text-info hover:underline hover:decoration-info"
               onClick={() => push('/forgot-password')}
             >
               Forgot Password?

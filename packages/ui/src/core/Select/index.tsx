@@ -122,19 +122,19 @@ const SelectElement = ({
         </div>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] p-0 bg-background-primary border border-color-border rounded-none"
+        className="w-[var(--radix-popover-trigger-width)] p-0 bg-background border border-border rounded-none"
         align="start"
       >
         {title && (
-          <div className="border-b border-color-border px-3 py-2 text-sm font-medium bg-background-primary">
+          <div className="border-b border-border px-3 py-2 text-sm font-medium bg-background">
             <span>{title}</span>
           </div>
         )}
-        <Command className="bg-background-primary" shouldFilter>
+        <Command className="bg-background" shouldFilter>
           <CommandInput placeholder={label ? `Search ${label}` : 'Search'} className="text-sm font-medium" />
           <CommandList className="max-h-[300px]">
             <CommandEmpty>
-              <div className="h-full flex flex-col items-center justify-center gap-2 text-color-secondary text-sm">
+              <div className="h-full flex flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
                 No options found
                 {notFoundComponent}
               </div>
@@ -148,13 +148,13 @@ const SelectElement = ({
                       key={item.value}
                       value={typeof item.label === 'string' ? item.label : item.value}
                       onSelect={() => handleSelect(item)}
-                      className="font-medium text-sm py-2 px-3 cursor-pointer border-b border-color-border hover:!text-blue-primary rounded-none"
+                      className="font-medium text-sm py-2 px-3 cursor-pointer border-b border-border hover:!text-info rounded-none"
                     >
                       <CheckIcon className={cn('w-4 h-4 mr-1.5', isSelected ? 'opacity-100' : 'opacity-0')} />
                       <div className="flex-1 truncate">
                         <div className="truncate capitalize">{item.label}</div>
                         {item.description && (
-                          <div className="truncate text-xs text-color-secondary">{item.description}</div>
+                          <div className="truncate text-xs text-muted-foreground">{item.description}</div>
                         )}
                       </div>
                       <XIcon className={cn('w-4 h-4 opacity-60', isSelected ? 'opacity-60' : 'opacity-0')} />

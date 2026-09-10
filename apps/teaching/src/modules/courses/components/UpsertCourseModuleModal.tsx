@@ -143,7 +143,7 @@ export const UpsertCourseModuleModal = ({ isOpen, onClose }: IProps) => {
                 />
                 {(selectedCourseModule.materials ?? []).length || (selectedCourseModule.testPapers ?? []).length ? (
                   <div className="">
-                    <div className="border border-color-border mt-8 pt-4 pb-8 px-4">
+                    <div className="border border-border mt-8 pt-4 pb-8 px-4">
                       <Label label="Course Preview" required />
                       <div>
                         <CourseModuleView courseModule={selectedCourseModule} />

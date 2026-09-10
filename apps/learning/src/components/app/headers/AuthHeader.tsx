@@ -6,8 +6,8 @@ export const AuthHeader = () => {
 
   return (
     <>
-      <div className={`bg-background-primary w-full`}>
-        <div className="px-4 md:px-8 py-1.5 border-b border-color-border">
+      <div className={`bg-background w-full`}>
+        <div className="px-4 md:px-8 py-1.5 border-b border-border">
           <div className="flex justify-between items-center h-12">
             <div className="flex justify-start items-center space-x-2">
               {/* <div className="block md:hidden">
@@ -20,11 +20,11 @@ export const AuthHeader = () => {
             <div className="flex items-center space-x-4">
               <ToggleTheme />
               {pathname?.includes('/sign-up') ? (
-                <Link isSubtle linkClassName="font-medium text-sm text-color-primary" href="/sign-in">
+                <Link isSubtle linkClassName="font-medium text-sm text-foreground" href="/sign-in">
                   SIGN IN
                 </Link>
               ) : (
-                <Link isSubtle linkClassName="font-medium text-sm text-color-primary" href="/sign-up">
+                <Link isSubtle linkClassName="font-medium text-sm text-foreground" href="/sign-up">
                   SIGN UP
                 </Link>
               )}

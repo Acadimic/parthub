@@ -33,7 +33,7 @@ export const TimeInput = ({ value, label, handleChange, required, isDisabled, cl
                 type="time"
                 defaultValue={currentValue}
                 onChange={onTimeChange}
-                className="bg-background-primary border border-color-border rounded px-3 py-2 text-sm font-medium outline-none focus:border-blue-primary"
+                className="bg-background border border-border rounded px-3 py-2 text-sm font-medium outline-none focus:border-primary"
               />
             </div>
           );
@@ -43,7 +43,7 @@ export const TimeInput = ({ value, label, handleChange, required, isDisabled, cl
           label={label}
           type="text"
           placeholder="Select Time"
-          rightsection={<ClockIcon className="w-5 h-5 text-color-text" />}
+          rightsection={<ClockIcon className="w-5 h-5 text-foreground" />}
           readOnly
           value={value ? dayjs(value).format('hh:mm A') : ''}
           required={required}

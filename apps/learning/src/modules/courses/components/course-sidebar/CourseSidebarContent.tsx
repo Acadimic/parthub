@@ -17,7 +17,7 @@ export const CourseSidebarContent = () => {
   const { isCourseMenuOpen, handleCourseMenuClick } = useCourse();
 
   return (
-    <div className={`h-full bg-background-primary`}>
+    <div className={`h-full bg-background`}>
       <div className="h-screen flex flex-col justify-between pl-7">
         <div className="hidden sm:block h-16" />
         <div className={`overflow-y-auto grow ${isCourseMenuOpen ? 'opacity-100' : 'opacity-0'}`}>
@@ -45,7 +45,7 @@ export const CourseSidebarContent = () => {
                           title: (
                             <div className="flex-1 truncate flex flex-col space-y-0.5">
                               <div className="truncate">{course.name}</div>
-                              <div className="text-xs text-color-secondary">
+                              <div className="text-xs text-muted-foreground">
                                 ({courseModules.length} {getPlural(courseModules.length, 'Module')})
                               </div>
                             </div>
@@ -83,10 +83,10 @@ export const CourseSidebarContent = () => {
         </div>
         <div>
           <div className="py-4 w-full flex justify-end items-center pr-3">
-            <button onClick={handleCourseMenuClick} className="p-1 rounded hover:bg-background-secondary">
+            <button onClick={handleCourseMenuClick} className="p-1 rounded hover:bg-accent">
               <CaretDoubleRightIcon
                 weight="bold"
-                className={`w-5 h-5 transition ${isCourseMenuOpen ? 'rotate-180' : 'text-blue-primary'}`}
+                className={`w-5 h-5 transition ${isCourseMenuOpen ? 'rotate-180' : 'text-info'}`}
               />
             </button>
           </div>

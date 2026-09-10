@@ -53,7 +53,7 @@ export const Menu = <T,>({ component, menuItems, data, className, header }: IPro
       </div>
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 z-50 border border-color-border rounded-sm shadow-lg min-w-[180px] bg-background-primary"
+          className="absolute right-0 mt-2 z-50 border border-border rounded-sm shadow-lg min-w-[180px] bg-background"
           onClick={handleClose}
         >
           {header}

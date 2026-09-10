@@ -60,9 +60,9 @@ export const TestPaperDetails = ({ testPaper, addNewSection }: IProps) => {
               text={isPublished ? 'Published' : 'Publish'}
               leftsection={
                 isPublished ? (
-                  <CheckIcon weight="bold" className="w-5 h-5 text-green-primary" />
+                  <CheckIcon weight="bold" className="w-5 h-5 text-success" />
                 ) : (
-                  <WarningIcon weight="bold" className="w-5 h-5 text-yellow-primary" />
+                  <WarningIcon weight="bold" className="w-5 h-5 text-warning" />
                 )
               }
               isSecondary={isPublished}

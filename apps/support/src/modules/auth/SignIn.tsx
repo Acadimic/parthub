@@ -61,17 +61,12 @@ export const SignIn = () => {
 
   return (
     <div className="w-full flex h-full">
-      <div className="lg:w-[50%] hidden lg:block border-r border-r-color-border"></div>
+      <div className="lg:w-[50%] hidden lg:block border-r border-r-border"></div>
       <div className="w-full lg:w-[50%]">
         <div className={`mx-auto max-w-xs lg:max-w-md px-2 md:px-4 py-2 md:pt-10`}>
-          <h1 className="pb-6 lg:pb-4 text-center font-medium text-2xl lg:text-2xl text-color-primary">
-            Welcome Back 👋
-          </h1>
+          <h1 className="pb-6 lg:pb-4 text-center font-medium text-2xl lg:text-2xl text-foreground">Welcome Back 👋</h1>
           <div>
-            <Link
-              className="flex items-center space-x-1.5 text-blue-primary font-medium text-sm mb-3 md:my-6"
-              href={'/'}
-            >
+            <Link className="flex items-center space-x-1.5 text-info font-medium text-sm mb-3 md:my-6" href={'/'}>
               <ArrowCircleLeftIcon className="h-5 w-5" />
               <span>Go Back</span>
             </Link>

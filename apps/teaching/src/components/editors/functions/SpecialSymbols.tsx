@@ -20,7 +20,7 @@ const Symbols = (props: IFunctionProps) => {
               onClick={() => {
                 handleSubmit(item.code);
               }}
-              className="p-1 rounded hover:bg-background-secondary"
+              className="p-1 rounded hover:bg-accent"
               style={{ fontFamily: '"Times New Roman", Courier, Garamond, serif' }}
             >
               <span dangerouslySetInnerHTML={{ __html: item.code }} />

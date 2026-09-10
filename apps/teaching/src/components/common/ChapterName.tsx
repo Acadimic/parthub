@@ -8,7 +8,7 @@ export const ChapterName = ({ chapterId }: IProps) => {
   const { getChapterById } = useStandardLookups();
 
   return (
-    <div className="text-xs text-color-secondary flex justify-end mt-1 italic truncate">
+    <div className="text-xs text-muted-foreground flex justify-end mt-1 italic truncate">
       {chapterId ? getChapterById(chapterId)?.name : null}
     </div>
   );

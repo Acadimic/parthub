@@ -27,7 +27,7 @@ export const Avatar = ({ name, src, size = 'md', className, showTooltip = true }
   const avatar = (
     <ShadcnAvatar className={cn(sizeMap[size], className)}>
       {src && <AvatarImage src={src} alt={name || 'avatar'} />}
-      <AvatarFallback className="bg-blue-primary text-white font-semibold">{getInitials(name)}</AvatarFallback>
+      <AvatarFallback className="bg-primary text-primary-foreground font-semibold">{getInitials(name)}</AvatarFallback>
     </ShadcnAvatar>
   );
 

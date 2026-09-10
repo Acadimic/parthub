@@ -3,7 +3,7 @@ import { Spinner } from '../core';
 export const FullScreenLoader = ({ loading }: { loading: boolean }) => {
   if (!loading) return null;
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-background-primary">
+    <div className="flex h-screen w-screen items-center justify-center bg-background">
       <Spinner size="lg" />
     </div>
   );

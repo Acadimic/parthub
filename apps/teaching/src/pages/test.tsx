@@ -102,7 +102,7 @@ const TestPage = () => {
           setHtml(html);
         }}
       /> */}
-      <div className="text-color-primary font-medium text-sm">
+      <div className="text-foreground font-medium text-sm">
         <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg" fill="currentColor" stroke="currentColor">
           <circle cx="25" cy="25" r="20" />
         </svg>

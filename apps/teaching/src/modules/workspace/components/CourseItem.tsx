@@ -1,8 +1,9 @@
 import { type CourseDto } from '@repo/shared/contracts';
-import { Card } from '@repo/ui/app';
 import { PresignedImage } from '@components/app/attachments';
 import { CourseInfo, StandardWithLogo } from '@components/common';
-import { useStandardLookups, useSelectorLookups } from '@stores';
+import { ImageSquareIcon } from '@phosphor-icons/react';
+import { Card } from '@repo/ui/app';
+import { useSelectorLookups, useStandardLookups } from '@stores';
 import Link from 'next/link';
 
 interface IProps {
@@ -18,22 +19,32 @@ export const CourseItem = ({ course }: IProps) => {
     setSelectedCourseId(course._id);
   };
 
+  // A course with no attachments is normal — one is only added when the teacher uploads a cover.
+  // Indexing [0] straight into `.url` threw a TypeError and took the whole home page down with it.
+  const coverUrl = (course.attachments ?? [])[0]?.url;
+
   return (
-    <Card className="rounded border-2">
-      <Link href={`/courses/${course._id}`} onClick={handleClick}>
-        <div className="flex flex-col space-y-2 w-full">
-          <div className="h-48 w-full">
-            <PresignedImage className="rounded-t object-cover" url={(course.attachments ?? [])[0].url} noOpen />
+    <Card className="group flex h-full flex-col overflow-hidden border border-border transition-colors hover:border-primary">
+      <Link href={`/courses/${course._id}`} onClick={handleClick} className="flex h-full flex-col">
+        <div className="h-40 w-full shrink-0 bg-muted">
+          {coverUrl ? (
+            <PresignedImage className="h-full w-full object-cover" url={coverUrl} noOpen />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <ImageSquareIcon className="h-10 w-10 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+        <div className="flex flex-1 flex-col gap-2 p-3">
+          <StandardWithLogo standard={getStandardsByIds(course.standards ?? [])[0]} />
+          <div className="max-w-full">
+            <div className="line-clamp-1 font-medium group-hover:text-info">{course.name}</div>
+            {course.description ? (
+              <div className="line-clamp-1 text-sm text-muted-foreground">{course.description}</div>
+            ) : null}
           </div>
-          <div className="p-3 flex flex-col space-y-3">
-            <StandardWithLogo standard={getStandardsByIds(course.standards ?? [])[0]} />
-            <div className="max-w-full">
-              <div className="font-medium line-clamp-1">{course.name}</div>
-              <div className="text-sm text-color-secondary line-clamp-1">{course.description}</div>
-            </div>
-            <div className="text-xs text-color-secondary">
-              <CourseInfo courseStats={course.stats} />
-            </div>
+          <div className="mt-auto text-xs text-muted-foreground">
+            <CourseInfo courseStats={course.stats} />
           </div>
         </div>
       </Link>

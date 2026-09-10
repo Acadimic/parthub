@@ -25,11 +25,11 @@ export const StudyMaterialDetails = ({ standard, subject, count, lastUpdatedAt }
           <div className="truncate">link</div>
         </div> */}
         <div className="w-[200px] flex space-x-2">
-          <div className="font-medium text-color-secondary">Number of contents:</div>
+          <div className="font-medium text-muted-foreground">Number of contents:</div>
           <div>{count}</div>
         </div>
         <div className="flex space-x-2">
-          <div className="font-medium text-color-secondary">Last updated at: </div>
+          <div className="font-medium text-muted-foreground">Last updated at: </div>
           <div>{lastUpdatedAt ? getStringFormattedDateWithTime(lastUpdatedAt) : 'None'}</div>
         </div>
       </div>

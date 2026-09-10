@@ -226,12 +226,12 @@ const ShowFunction = (props: { name: string; handleChange: (target: ITarget) => 
       <div className="">
         <Popover
           component={({ handleClose }) => (
-            <div className="bg-background-primary">
+            <div className="bg-background">
               <div className="max-w-[460px] max-h-[500px] overflow-y-auto p-4">
                 {groupedItems.map((groupedItem) => (
                   <div key={groupedItem.group} className="mb-8">
-                    <div className="font-medium text-base mb-4 pb-2 border-b border-color-border flex items-center gap-2">
-                      <DotsNineIcon weight="bold" className="w-4 h-4 text-blue-primary" /> {groupedItem.group}
+                    <div className="font-medium text-base mb-4 pb-2 border-b border-border flex items-center gap-2">
+                      <DotsNineIcon weight="bold" className="w-4 h-4 text-info" /> {groupedItem.group}
                     </div>
                     <div className="flex flex-wrap gap-4">
                       {groupedItem.items.map((item) => (
@@ -241,9 +241,9 @@ const ShowFunction = (props: { name: string; handleChange: (target: ITarget) => 
                             handleSelect([item]);
                             handleClose?.();
                           }}
-                          className="flex w-[calc(50%-8px)] md:w-[calc(33.33%-11px)] flex-col items-center p-4 hover:bg-background-paper cursor-pointer rounded-lg border border-color-border transition-colors duration-200"
+                          className="flex w-[calc(50%-8px)] md:w-[calc(33.33%-11px)] flex-col items-center p-4 hover:bg-card cursor-pointer rounded-lg border border-border transition-colors duration-200"
                         >
-                          <div className="w-12 h-12 flex items-center justify-center mb-2 rounded-full bg-background-paper">
+                          <div className="w-12 h-12 flex items-center justify-center mb-2 rounded-full bg-card">
                             {item.icon}
                           </div>
                           <span className="text-center font-medium">{item.label}</span>

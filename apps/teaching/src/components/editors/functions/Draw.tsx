@@ -74,7 +74,7 @@ function Draw(props: IFunctionProps) {
     <>
       <div className="flex justify-center">
         <div
-          className="border border-color-border mb-4 sm:w-[310px]"
+          className="border border-border mb-4 sm:w-[310px]"
           ref={renderRef}
           style={{ height: maxHeight, width: maxHeight }}
         />

@@ -12,7 +12,7 @@ const sizeMap = {
 export const Spinner = ({ size = 'md', className }: ISpinnerProps) => {
   return (
     <div
-      className={`${className || sizeMap[size]} border-2 border-solid border-blue-primary rounded-full animate-spin border-t-transparent`}
+      className={`${className || sizeMap[size]} border-2 border-solid border-primary rounded-full animate-spin border-t-transparent`}
     />
   );
 };

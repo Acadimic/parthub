@@ -27,7 +27,7 @@ export const Accordions = ({ items, openIndexes, isIconLast }: IProps) => {
       {items.map((item, index) => (
         <div key={index} id={item.id} className="relative">
           <button
-            className={`w-full bg-background-primary flex items-center py-2 px-4 ${isIconLast ? 'flex-row' : 'flex-row-reverse'}`}
+            className={`w-full bg-background flex items-center py-2 px-4 ${isIconLast ? 'flex-row' : 'flex-row-reverse'}`}
             onClick={() => handleChange(index)}
             aria-controls={`${index}-content`}
             aria-expanded={opens[index]}
@@ -37,11 +37,11 @@ export const Accordions = ({ items, openIndexes, isIconLast }: IProps) => {
             </div>
             <CaretRightIcon
               weight="bold"
-              className={`w-4 h-4 text-color-primary transition-transform duration-200 flex-shrink-0 ${opens[index] ? 'rotate-90' : ''}`}
+              className={`w-4 h-4 text-foreground transition-transform duration-200 flex-shrink-0 ${opens[index] ? 'rotate-90' : ''}`}
             />
           </button>
           {opens[index] && (
-            <div id={`${index}-content`} className="bg-background-primary w-full">
+            <div id={`${index}-content`} className="bg-background w-full">
               {item.component}
             </div>
           )}

@@ -95,7 +95,7 @@ export const TextEditor = ({
         id={`text-editor-${index}`}
         onInput={handleTextChange}
         onFocus={() => onFocus(index)}
-        className={`bg-transparent outline-none px-1 py-[7px] h-full w-auto border border-transparent leading-8 hover:border-blue-primary focus:border-blue-primary ${className}`}
+        className={`bg-transparent outline-none px-1 py-[7px] h-full w-auto border border-transparent leading-8 hover:border-primary focus:border-primary ${className}`}
         contentEditable={true}
         suppressContentEditableWarning
         onBlur={() => onBlur(index)}
@@ -112,7 +112,7 @@ export const TextEditor = ({
           event.stopPropagation();
           onFocus(index);
         }}
-        className={`pr-1.5 py-1 bg-transparent w-full leading-7 outline-none h-full border border-transparent hover:border-blue-primary focus:border-blue-primary ${className}`}
+        className={`pr-1.5 py-1 bg-transparent w-full leading-7 outline-none h-full border border-transparent hover:border-primary focus:border-primary ${className}`}
         suppressContentEditableWarning
         // autoFocus={isFocused}
         tagName="span"

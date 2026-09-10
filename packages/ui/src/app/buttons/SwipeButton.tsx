@@ -36,7 +36,7 @@ const SwipeSlider = ({
     ref={sliderRef}
     className={`absolute top-0 h-full aspect-square rounded-full shadow-lg transition-colors ${
       isDragging ? 'cursor-grabbing' : 'cursor-grab'
-    } ${isCompleted ? 'bg-green-primary' : 'bg-background-secondary'}`}
+    } ${isCompleted ? 'bg-success' : 'bg-muted'}`}
     style={{
       left: 0,
       transform: `translateX(${offsetX}px)`,
@@ -49,7 +49,7 @@ const SwipeSlider = ({
       {isCompleted ? (
         <CheckIcon weight="bold" className="text-white w-5 h-5" />
       ) : (
-        <CaretDoubleRightIcon weight="bold" className="text-blue-primary w-5 h-5" />
+        <CaretDoubleRightIcon weight="bold" className="text-info w-5 h-5" />
       )}
     </div>
   </div>
@@ -124,7 +124,7 @@ export const SwipeButton: React.FC<SwipeButtonProps> = ({
       ref={buttonRef}
       className={`relative overflow-hidden rounded-full ${
         disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-      } ${className} border ${isCompleted ? 'border-green-primary' : 'border-blue-primary bg-transparent'}`}
+      } ${className} border ${isCompleted ? 'border-success' : 'border-primary bg-transparent'}`}
       style={{ width, height }}
     >
       <div

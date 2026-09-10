@@ -115,7 +115,7 @@ export const MathEditor = ({ blocks, handleChange, label, autoFocus }: IProps) =
     <div>
       {label && <Label label={label} required />}
       <EditorToolbar block={editorBlocks[selectedBlockIndex]} handleChange={handleBlockChange} onClose={onCloseModal} />
-      <div className="relative border border-color-border px-2 text-sm" onContextMenu={handleContextMenu}>
+      <div className="relative border border-border px-2 text-sm" onContextMenu={handleContextMenu}>
         <div className="py-2" onClick={onClickEditor} ref={editorContainerRef}>
           {editorBlocks.map((block, index) => {
             const isText = block.type === EditorContentType.TEXT;
@@ -137,7 +137,7 @@ export const MathEditor = ({ blocks, handleChange, label, autoFocus }: IProps) =
                   />
                 ) : (
                   <div
-                    className={`relative group h-full border border-transparent hover:border-blue-primary ${[EditorContentType.LIST, EditorContentType.ORDERED_LIST, EditorContentType.IMAGE, EditorContentType.HEADING, EditorContentType.CODE].includes(block.type) ? '' : 'inline-table'}`}
+                    className={`relative group h-full border border-transparent hover:border-primary ${[EditorContentType.LIST, EditorContentType.ORDERED_LIST, EditorContentType.IMAGE, EditorContentType.HEADING, EditorContentType.CODE].includes(block.type) ? '' : 'inline-table'}`}
                     contentEditable={false}
                   >
                     <span
@@ -159,7 +159,7 @@ export const MathEditor = ({ blocks, handleChange, label, autoFocus }: IProps) =
             hasFocus === false &&
             editorBlocks[0].type === EditorContentType.TEXT &&
             !editorBlocks[0].content && (
-              <div className="inline-table text-color-secondary">{`Write ${label?.toLowerCase() || 'here'}...`}</div>
+              <div className="inline-table text-muted-foreground">{`Write ${label?.toLowerCase() || 'here'}...`}</div>
             )} */}
         </div>
 

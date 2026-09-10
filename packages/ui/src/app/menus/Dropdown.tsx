@@ -14,7 +14,7 @@ export const Dropdown = ({ menuItems, selected, component }: IDropdownProps) => 
     <Menu
       menuItems={menuItems}
       component={
-        <div className="border border-color-border">
+        <div className="border border-border">
           <Button isSubtle className="px-4 py-1.5" rightsection={<CaretDownIcon weight="bold" />}>
             {component || selected}
           </Button>

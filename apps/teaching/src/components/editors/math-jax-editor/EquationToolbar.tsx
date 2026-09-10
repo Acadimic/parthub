@@ -303,8 +303,8 @@ export const EquationToolbar = ({ handleChange, block, onClose }: IProps) => {
 
   return (
     <div className="text-sm opacity-90">
-      <div className="flex gap-2 items-center bg-background-paper w-full border border-color-border">
-        <div className="flex items-center truncate divide-x divide-color-border h-6 py-0.5">
+      <div className="flex gap-2 items-center bg-card w-full border border-border">
+        <div className="flex items-center truncate divide-x divide-border h-6 py-0.5">
           {[
             EquationType.FRACTION,
             EquationType.SUPERSCRIPT,
@@ -313,7 +313,7 @@ export const EquationToolbar = ({ handleChange, block, onClose }: IProps) => {
             EquationType.ROOT,
           ].map((item) => (
             <div
-              className="text-sm cursor-pointer px-3 py-1 hover:text-blue-primary h-full flex items-center"
+              className="text-sm cursor-pointer px-3 py-1 hover:text-info h-full flex items-center"
               onClick={() => {
                 // event.stopPropagation();
                 handleSelect(item);
@@ -326,12 +326,12 @@ export const EquationToolbar = ({ handleChange, block, onClose }: IProps) => {
         </div>
         <Popover
           component={({ handleClose }) => (
-            <div className="bg-background-primary">
+            <div className="bg-background">
               <div className="min-w-[460px] max-h-[500px] overflow-y-auto p-4">
                 {groupedEquationToolbarItems.map((groupedItem) => (
                   <div key={groupedItem.group} className="mb-8">
-                    <div className="font-medium text-base mb-4 pb-2 border-b border-color-border flex items-center gap-2">
-                      <DotsNineIcon weight="bold" className="w-4 h-4 text-blue-primary" /> {groupedItem.group}
+                    <div className="font-medium text-base mb-4 pb-2 border-b border-border flex items-center gap-2">
+                      <DotsNineIcon weight="bold" className="w-4 h-4 text-info" /> {groupedItem.group}
                     </div>
                     <div className="flex flex-wrap gap-4">
                       {groupedItem.items.map((item) => (
@@ -343,9 +343,9 @@ export const EquationToolbar = ({ handleChange, block, onClose }: IProps) => {
                             handleSelect(item.name);
                             handleClose?.();
                           }}
-                          className="hover:text-blue-primary flex w-[calc(33.33%-8px)] md:w-[calc(25%-12px)] flex-col items-center p-4 hover:bg-background-paper cursor-pointer rounded border border-color-border transition-colors duration-200"
+                          className="hover:text-info flex w-[calc(33.33%-8px)] md:w-[calc(25%-12px)] flex-col items-center p-4 hover:bg-card cursor-pointer rounded border border-border transition-colors duration-200"
                         >
-                          <div className="text-sm border border-dotted border-color-border p-2 h-16 w-16 flex items-center justify-center mb-2 rounded bg-background-paper">
+                          <div className="text-sm border border-dotted border-border p-2 h-16 w-16 flex items-center justify-center mb-2 rounded bg-card">
                             {item.icon}
                           </div>
                           <span className="text-center text-sm font-medium capitalize text-inherit hover:text-inherit">

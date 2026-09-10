@@ -49,22 +49,22 @@ export function Modal({
       <div
         className={`absolute ${isTop ? 'top-[8%] left-1/2 -translate-x-1/2' : ''} ${isRight ? 'top-0 right-0 h-full' : ''} ${isLeft ? 'top-0 left-0 h-full' : ''} ${anchorPosition === PositionType.BOTTOM ? 'bottom-0 left-0 right-0' : ''} ${className ?? (isTop ? 'w-full md:w-[60%] lg:w-[40%]' : defaultWidthClass)}`}
       >
-        <div className="flex flex-col h-full rounded-sm border border-color-border bg-background-primary">
+        <div className="flex flex-col h-full rounded-sm border border-border bg-background">
           <div className="py-3 px-4 flex justify-between items-center space-x-3 md:space-x-4">
             <div className="md:text-base font-bold">{title}</div>
             {!withoutClose && (
               <button className="p-0 hover:bg-transparent" onClick={closeModal}>
-                <XIcon weight="bold" className="w-4 h-4 hover:text-blue-primary" />
+                <XIcon weight="bold" className="w-4 h-4 hover:text-info" />
               </button>
             )}
           </div>
-          <hr className="border-color-border" />
+          <hr className="border-border" />
           <div
             className={`flex-1 h-full ${childrenClassName ? '' : 'py-4 px-4'} overflow-y-auto min-h-[30vh] md:min-h-[20vh]`}
           >
             {component}
           </div>
-          {footer ? <div className="px-4 py-4 border-t border-color-border">{footer}</div> : null}
+          {footer ? <div className="px-4 py-4 border-t border-border">{footer}</div> : null}
         </div>
       </div>
     </div>

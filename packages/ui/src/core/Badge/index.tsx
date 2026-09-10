@@ -11,11 +11,7 @@ export const Badge = ({ children, variant = 'default', className }: IBadgeProps)
   return (
     <ShadcnBadge
       variant={variant}
-      className={cn(
-        'text-xs font-medium',
-        variant === 'default' && 'bg-blue-primary hover:bg-blue-primary/90',
-        className,
-      )}
+      className={cn('text-xs font-medium', variant === 'default' && 'bg-primary hover:bg-primary/90', className)}
     >
       {children}
     </ShadcnBadge>

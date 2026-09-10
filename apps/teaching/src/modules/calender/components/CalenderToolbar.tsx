@@ -120,13 +120,13 @@ export const CustomToolbar = ({
     <div className="flex items-center justify-between pb-3 md:pb-3">
       <div className="flex md:justify-start flex-col md:flex-row md:items-center gap-2 w-full">
         <div className="flex items-center gap-2">
-          <button onClick={handleToday} className="px-4 py-1 md:py-2 text-sm bg-color-light font-medium">
+          <button onClick={handleToday} className="px-4 py-1 md:py-2 text-sm bg-accent font-medium">
             Today
           </button>
-          <button className="p-1 rounded hover:bg-background-secondary" onClick={handlePrev}>
+          <button className="p-1 rounded hover:bg-accent" onClick={handlePrev}>
             <CaretLeftIcon className="w-5 h-5" />
           </button>
-          <button className="p-1 rounded hover:bg-background-secondary" onClick={handleNext}>
+          <button className="p-1 rounded hover:bg-accent" onClick={handleNext}>
             <CaretRightIcon className="w-5 h-5" />
           </button>
           <div className="font-semibold text-md md:text-lg truncate max-w-[120px] md:max-w-full">{dateLabel}</div>

@@ -16,7 +16,7 @@ export const Tooltip = ({ children, title, placement = 'top', className }: ITool
         <TooltipTrigger asChild>
           <span>{children}</span>
         </TooltipTrigger>
-        <TooltipContent side={placement} className={cn('bg-color-primary text-color-opposite text-xs', className)}>
+        <TooltipContent side={placement} className={cn('bg-primary text-primary-foreground text-xs', className)}>
           {title || children}
         </TooltipContent>
       </ShadcnTooltip>

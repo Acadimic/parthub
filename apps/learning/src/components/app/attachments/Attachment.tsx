@@ -14,11 +14,11 @@ interface IProps {
 }
 
 const getFileIcon = (extension: FileExtension, url?: string) => {
-  if (extension === FileExtension.PDF) return <FilePdfIcon weight="fill" className="w-5 h-5 text-red-primary" />;
+  if (extension === FileExtension.PDF) return <FilePdfIcon weight="fill" className="w-5 h-5 text-destructive" />;
   if ([FileExtension.JPEG, FileExtension.PNG, FileExtension.JPG].includes(extension)) {
     return <ImagesIcon weight="bold" className="w-5 h-5 text-inherit" />;
   }
-  if (url?.includes(LinkType.YOUTUBE)) return <YoutubeLogoIcon weight="fill" className="w-5 h-5 text-red-primary" />;
+  if (url?.includes(LinkType.YOUTUBE)) return <YoutubeLogoIcon weight="fill" className="w-5 h-5 text-destructive" />;
   return <LinkSimpleIcon weight="bold" className="w-5 h-5 text-inherit rotate-45" />;
 };
 
@@ -27,11 +27,11 @@ export const Attachment = ({ fileName, extension, index, onRemove, url, classNam
 
   return (
     <div
-      className={`border border-color-border px-2 py-1 flex items-center justify-start gap-1 text-xs font-medium rounded-full ${className ? className : ''}`}
+      className={`border border-border px-2 py-1 flex items-center justify-start gap-1 text-xs font-medium rounded-full ${className ? className : ''}`}
     >
       {getFileIcon(extension, url)}
       <div
-        className={`flex-1 flex justify-center items-center font-medium relative ${url ? 'cursor-pointer hover:text-blue-primary' : ''}`}
+        className={`flex-1 flex justify-center items-center font-medium relative ${url ? 'cursor-pointer hover:text-info' : ''}`}
         // onClick={() => handleClickAttachment(url, isStatic)}
       >
         <Tooltip title={fileName}>

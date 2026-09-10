@@ -104,15 +104,15 @@ export const Symbol = ({ handleChange, closeModal }: IProps) => {
     <div className="flex flex-col gap-6">
       {groupedItems.map((group) => (
         <div key={group.group} className="flex flex-col">
-          <div className="font-medium text-base mb-4 pb-2 border-b border-color-border flex items-center gap-2">
-            <DotsNineIcon weight="bold" className="w-4 h-4 text-blue-primary" />{' '}
+          <div className="font-medium text-base mb-4 pb-2 border-b border-border flex items-center gap-2">
+            <DotsNineIcon weight="bold" className="w-4 h-4 text-info" />{' '}
             <span className="font-semibold text-sm">{group.group}</span>
           </div>
           <div className="flex flex-wrap gap-1">
             {group.items.map((item) => {
               return (
                 <div
-                  className="flex items-center cursor-pointer hover:bg-background-paper rounded"
+                  className="flex items-center cursor-pointer hover:bg-card rounded"
                   key={item.tooltip}
                   onClick={() => handleSubmit(item.name, item.content)}
                 >

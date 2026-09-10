@@ -223,7 +223,7 @@ export const GenerateQuestionsModal = ({ isOpen, onClose }: IProps) => {
           <div>
             <Label label="Question Prompt" required />
             <div className="flex items-start justify-between gap-2">
-              <div className="line-clamp-6 text-color-secondary text-sm">{questionPrompt}</div>
+              <div className="line-clamp-6 text-muted-foreground text-sm">{questionPrompt}</div>
               <div className="py-2">
                 <CopyUrl url={questionPrompt} isCopyIconOnly />
               </div>

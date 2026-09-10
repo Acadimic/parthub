@@ -18,7 +18,7 @@ const ICON_MAPS = {
   [ModuleContentType.READING]: <BookOpenTextIcon className="w-5 h-5" />,
   [ModuleContentType.TEST_PAPER]: <ClipboardTextIcon className="w-5 h-5" />,
   [ModuleContentType.COMPLETED]: (
-    <CheckIcon weight="bold" className="w-5 h-5 p-1 bg-green-primary text-white rounded-full" />
+    <CheckIcon weight="bold" className="w-5 h-5 p-1 bg-success text-success-foreground rounded-full" />
   ),
 };
 
@@ -66,21 +66,21 @@ export const CourseContentItem = ({
 
   return (
     <div
-      className={`flex items-start space-x-3 px-4 hover:bg-color-light py-3 cursor-pointer ${
+      className={`flex items-start space-x-3 px-4 hover:bg-accent py-3 cursor-pointer ${
         !isPreview &&
         selectedCourseModuleId === courseModuleId &&
         (selectedMaterialId === material?._id || selectedTestPaperId === testPaper?._id)
-          ? 'bg-color-light'
+          ? 'bg-accent'
           : ''
       }`}
       onClick={handleClick}
     >
-      <div className="w-8 h-8 rounded-full bg-color-light flex items-center justify-center">
+      <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
         {ICON_MAPS[isCompleted ? ModuleContentType.COMPLETED : moduleContentType]}
       </div>
       <div className="flex-1">
         <p className="text-sm font-medium">{item.name}</p>
-        <div className="text-xs text-color-secondary flex items-center space-x-1">
+        <div className="text-xs text-muted-foreground flex items-center space-x-1">
           <span className="capitalize">{moduleContentType}</span>
           <span className="mx-1 text-xs">•</span>
           <span>{item.durationMins} mins</span>

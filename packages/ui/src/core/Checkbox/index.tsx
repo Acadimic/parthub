@@ -19,10 +19,7 @@ export const Checkbox = ({ checked, onChange, label, className, disabled, id }: 
       checked={checked}
       onCheckedChange={onChange}
       disabled={disabled}
-      className={cn(
-        'border-color-border data-[state=checked]:bg-blue-primary data-[state=checked]:border-blue-primary',
-        className,
-      )}
+      className={cn('border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary', className)}
     />
   );
 
@@ -30,7 +27,7 @@ export const Checkbox = ({ checked, onChange, label, className, disabled, id }: 
     return (
       <div className="flex items-center space-x-2">
         {checkbox}
-        <label htmlFor={checkboxId} className="text-sm text-color-primary cursor-pointer">
+        <label htmlFor={checkboxId} className="text-sm text-foreground cursor-pointer">
           {label}
         </label>
       </div>

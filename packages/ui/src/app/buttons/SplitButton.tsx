@@ -12,7 +12,7 @@ interface IProps {
 
 export const SplitButton = ({ text, menuItems, onClick }: IProps) => {
   return (
-    <div className="inline-flex rounded-sm border border-color-border">
+    <div className="inline-flex rounded-sm border border-border">
       <Button className="!rounded-l-sm rounded-r-none px-3 md:px-4 border-0" text={text} onClick={onClick} />
       <Menu
         menuItems={menuItems}
@@ -21,7 +21,7 @@ export const SplitButton = ({ text, menuItems, onClick }: IProps) => {
             <CaretDownIcon weight="fill" className="w-5" />
           </Button>
         }
-        className="!px-0 border-l border-color-border"
+        className="!px-0 border-l border-border"
       />
     </div>
   );

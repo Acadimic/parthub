@@ -12,7 +12,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IFullCalendarEvent } from '@interfaces';
 import { useUserLookups, useMeetLookups, useSelectorLookups } from '@stores';
-import { dark, light } from '@themes';
+import { getEventColor } from '@themes';
 import { CalendarViewMap } from '@utils/constants';
 import { getFormattedTime } from '@utils/helpers';
 import { useEffect, useRef } from 'react';
@@ -38,7 +38,7 @@ const EmptyListView = () => {
   return (
     <div className="flex flex-col items-center justify-center h-full py-12 px-4">
       <CalendarXIcon className="w-12 h-12 text-text-secondary mb-4" />
-      <h6 className="text-lg font-semibold text-text-primary mb-2">No Events Scheduled</h6>
+      <h6 className="text-lg font-semibold text-text-info mb-2">No Events Scheduled</h6>
       <p className="text-sm text-text-secondary text-center max-w-md">
         There are no events scheduled for this time period. Click the + create button to add a new event.
       </p>
@@ -50,9 +50,9 @@ const EventContentDefaultView = ({ event, calenderType }: { event: EventInput; c
   const userStore = useUserLookups();
   const { getUsersByIds } = userStore;
   const attendees = getUsersByIds(event.extendedProps?.attendees || []);
-  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-  const colorObject = isDark ? dark : light;
-  const color = colorObject.colors[event.backgroundColor as keyof typeof colorObject.colors]?.primary;
+  const mode =
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  const color = getEventColor(mode, event.backgroundColor);
 
   return (
     <div
@@ -117,7 +117,7 @@ export const FullCalendarView = ({ onEventClick, onDateClick }: IProps) => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-background-primary">
+    <div className="h-full flex flex-col bg-background">
       <CustomToolbar
         calendarRef={calendarRef}
         setCalenderType={setSelectedCalenderType}

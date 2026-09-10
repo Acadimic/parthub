@@ -33,7 +33,7 @@ export const Fraction = ({ block, handleChange, closeModal }: IProps) => {
 
   return (
     <div>
-      <div className="flex flex-col gap-2 divide-y-2 divide-color-border py-8">
+      <div className="flex flex-col gap-2 divide-y-2 divide-border py-8">
         <div>
           <EquationEditor blocks={numerator} handleChange={handleNumeratorChange} label="Numerator" autoFocus />
         </div>

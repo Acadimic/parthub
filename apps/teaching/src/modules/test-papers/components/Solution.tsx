@@ -12,7 +12,7 @@ export const Solution = ({ question, prefix }: IProps) => {
   const { getSolutionByQuestionId } = questionStore;
   const solution = getSolutionByQuestionId(question._id);
 
-  const emptyText = '<span class="text-color-secondary">No solution added</span>';
+  const emptyText = '<span class="text-muted-foreground">No solution added</span>';
 
   return <Html html={solution?.solution || emptyText} prefix={prefix} />;
 };

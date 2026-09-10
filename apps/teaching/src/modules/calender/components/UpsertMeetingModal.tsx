@@ -5,7 +5,7 @@ import { ColorType, MeetFrequency, PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { MeetService } from '@services';
 import { useStandardLookups, useBatchLookups, useMeetLookups, useSelectedMeet, useUserLookups } from '@stores';
-import { dark, light } from '@themes';
+import { getEventColor } from '@themes';
 import { WEEK_DAYS_INTEGER_MAPPINGS } from '@utils/constants';
 import { splitCamelCase, successToast } from '@utils/helpers';
 import { useState } from 'react';
@@ -40,9 +40,6 @@ const toValues = (value: string | undefined): string[] => (value ? [value] : [])
 
 const isRepeatingFrequency = (frequency: MeetFrequency | undefined): boolean =>
   !!frequency && [MeetFrequency.WEEKLY, MeetFrequency.THIS_WEEK].includes(frequency);
-
-const toSwatch = (colors: (typeof light)['colors'], color: ColorType | undefined): string | undefined =>
-  color ? colors[color]?.primary : undefined;
 
 export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
   const meetStore = useMeetLookups();
@@ -79,8 +76,8 @@ export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
     }
   };
 
-  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-  const colorObject = isDark ? dark : light;
+  const mode =
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'dark' : 'light';
 
   return (
     <Modal
@@ -99,11 +96,7 @@ export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
                     menuItems={Object.values(ColorType).map((item) => ({
                       label: capitalize(item),
                       icon: (
-                        <CircleIcon
-                          weight="fill"
-                          style={{ color: colorObject.colors[item]?.primary }}
-                          className={` w-5 h-5`}
-                        />
+                        <CircleIcon weight="fill" style={{ color: getEventColor(mode, item) }} className={` w-5 h-5`} />
                       ),
                       onClick: () => patchMeet(selectedMeet._id, { color: item }),
                     }))}
@@ -113,7 +106,7 @@ export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
                         <CircleIcon
                           weight="fill"
                           style={{
-                            color: toSwatch(colorObject.colors, selectedMeet.color),
+                            color: getEventColor(mode, selectedMeet.color),
                           }}
                           className={`w-5 h-5`}
                         />
@@ -176,7 +169,7 @@ export const UpsertMeetingModal = ({ isOpen, onClose }: IProps) => {
               className="flex items-center gap-1 cursor-pointer"
               onClick={() => patchMeet(selectedMeet._id, { isRepeat: !selectedMeet.isRepeat })}
             >
-              <Checkbox selectedClassName="text-blue-primary" checked={selectedMeet.isRepeat} />
+              <Checkbox selectedClassName="text-info" checked={selectedMeet.isRepeat} />
               <span className="text-sm font-medium">Repeat</span>
             </div>
           </div> */}

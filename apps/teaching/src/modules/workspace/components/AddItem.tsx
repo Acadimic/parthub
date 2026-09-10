@@ -1,36 +1,25 @@
-import { Card, Link } from '@repo/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
-import React from 'react';
+import Link from 'next/link';
 
 interface IProps {
-  /**
-   * Text to display next to the add icon
-   */
+  /** Label under the plus, e.g. "Add Course". */
   text: string;
-  /**
-   * Optional click handler
-   */
+  /** Where the tile navigates. */
   href: string;
-  /**
-   * Optional class name for additional styling
-   */
-  className?: string;
-  /**
-   * Optional disabled state
-   */
-  isDisabled?: boolean;
 }
 
-export const AddItem: React.FC<IProps> = ({ text, href, isDisabled = false }) => {
+/**
+ * The trailing tile in each home-page row. It is a dashed outline rather than a filled card so it
+ * reads as an affordance and not as one more piece of content among the real ones.
+ */
+export const AddItem = ({ text, href }: IProps) => {
   return (
-    <Card className="h-full w-full border border-color-border">
-      {' '}
-      <Link isSecondary href={href} disabled={isDisabled} className="w-full h-full">
-        <div className="flex justify-center py-4">
-          <PlusIcon weight="bold" className="w-8 h-8" />
-        </div>
-        {text}{' '}
-      </Link>
-    </Card>
+    <Link
+      href={href}
+      className="group flex h-full min-h-48 w-full flex-col items-center justify-center gap-2 border border-dashed border-border bg-background transition-colors hover:border-primary hover:bg-accent"
+    >
+      <PlusIcon weight="bold" className="h-7 w-7 text-muted-foreground group-hover:text-info" />
+      <span className="text-sm font-medium text-muted-foreground group-hover:text-info">{text}</span>
+    </Link>
   );
 };

@@ -51,7 +51,7 @@ const UploadImage = (props: IFunctionProps) => {
           type="file"
           accept="image/*"
           onChange={handleFileChange}
-          className="w-full block text-sm text-color-primary file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary cursor-pointer border border-color-border rounded-md p-2"
+          className="w-full block text-sm text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary cursor-pointer border border-border rounded-md p-2"
         />
       </div>
       {selectedFile && <img src={URL.createObjectURL(selectedFile)} alt="name" className="max-w-[250px]" />}

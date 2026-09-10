@@ -17,7 +17,7 @@ export const BookmarkCourse = ({ collectionItem, collectionRef }: IProps) => {
   return (
     <div
       onClick={handleBookmark}
-      className="cursor-pointer flex items-center space-x-2 rounded-full bg-color-light border border-color-border py-1.5 px-4"
+      className="cursor-pointer flex items-center space-x-2 rounded-full bg-accent border border-border py-1.5 px-4"
     >
       <Bookmark
         isLoading={isLoadingBookmark}

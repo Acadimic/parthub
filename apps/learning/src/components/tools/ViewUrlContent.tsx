@@ -37,7 +37,7 @@ export const ViewUrlContent = ({ url, isStatic }: IProps) => {
         {presignedUrl ? (
           <iframe
             src={`${presignedUrl}#view=fitH&toolbar=0&navpanes=0&zoom=100&scrollbar=0`}
-            className="w-full h-full bg-background-primary scale-x-[1.02] scale-y-[1.04]"
+            className="w-full h-full bg-background scale-x-[1.02] scale-y-[1.04]"
             frameBorder="0"
             title="PDF Viewer"
             seamless

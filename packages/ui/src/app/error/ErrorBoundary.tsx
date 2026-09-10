@@ -7,7 +7,7 @@ const resetAppState = () => {
 
 export function ErrorBoundaryFallback() {
   return (
-    <div className="flex h-screen text-color-primary">
+    <div className="flex h-screen text-foreground">
       <div className="m-auto">
         <Image width={80} height={80} src="/images/alert-circle.svg" alt="error" className="m-auto" />
         <h1 className="m-auto font-bold text-xl text-center py-4">Oops! Something went wrong</h1>

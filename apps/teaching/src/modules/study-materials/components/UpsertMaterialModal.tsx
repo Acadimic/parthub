@@ -130,7 +130,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                 </div>
                 <div className="flex flex-col gap-3">
                   <Label label="Attachments" required />
-                  <div className="flex justify-center border border-color-border py-2.5 px-3">
+                  <div className="flex justify-center border border-border py-2.5 px-3">
                     <div className="w-full cursor-pointer">
                       <UploadFiles
                         selectedFiles={selectedFiles}
@@ -187,7 +187,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                           title: <Label label="Content Preview" required />,
                           component: (
                             <div className="w-full">
-                              <div className="border border-color-border py-2 px-2 w-full flex flex-col gap-2">
+                              <div className="border border-border py-2 px-2 w-full flex flex-col gap-2">
                                 <StudyMaterialView
                                   material={selectedMaterial}
                                   otherAttachments={selectedFiles.map((file, index) => ({

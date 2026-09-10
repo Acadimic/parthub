@@ -76,7 +76,7 @@ export const Result = () => {
                   <Tooltip title={percentageRatingItem.text}>
                     <div className="font-bold text-center flex justify-center items-center">
                       <div>
-                        <div className="border-b-2 border-color-border min-w-[48px] pb-0.5">{getMarksObtained()}</div>
+                        <div className="border-b-2 border-border min-w-[48px] pb-0.5">{getMarksObtained()}</div>
                         <div className="pt-0.5">{maxMarks}</div>
                       </div>
                     </div>
@@ -107,7 +107,7 @@ export const Result = () => {
               return (
                 <div
                   key={key}
-                  className="bg-background-primary text-sm flex py-4 rounded flex-col justify-center border border-color-border items-center space-y-1"
+                  className="bg-background text-sm flex py-4 rounded flex-col justify-center border border-border items-center space-y-1"
                 >
                   <div className="mb-2">
                     <item.icon color={item.color} weight="bold" className="w-5 h-5" />

@@ -18,7 +18,7 @@ export const Followers = ({ user }: IProps) => {
       {user.isLoadingFollowersCount ? (
         <RectangleSkeleton width={100} height={16} />
       ) : (
-        <div className="text-xs font-medium text-color-secondary">{user.followersCount} followers</div>
+        <div className="text-xs font-medium text-muted-foreground">{user.followersCount} followers</div>
       )}
     </div>
   );

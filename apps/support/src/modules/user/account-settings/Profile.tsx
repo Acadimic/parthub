@@ -52,14 +52,14 @@ export const Profile = () => {
         <div className="fixed inset-0 z-[1300]">
           <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
           <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-full max-w-md">
-            <div className="bg-background-primary border border-color-border rounded-sm p-6">
+            <div className="bg-background border border-border rounded-sm p-6">
               <h2 className="text-lg font-bold mb-4">Upload your profile photo</h2>
               <form onSubmit={handleUpload} className="flex flex-col gap-12">
                 <input type="file" onChange={(e) => setFile(e.target.files?.[0])} />
                 <Button
                   type="submit"
                   text={loading ? undefined : 'Submit'}
-                  className="bg-color-primary text-color-opposite flex justify-center items-center p-3"
+                  className="bg-primary text-primary-foreground flex justify-center items-center p-3"
                 >
                   {loading && <Spinner className="w-5 h-5" />}
                 </Button>
@@ -70,9 +70,9 @@ export const Profile = () => {
       )}
 
       <div className="flex justify-center items-center my-4">
-        <div className="w-full md:w-[50%] border border-color-border rounded-sm shadow-lg flex flex-col gap-6 items-center p-8">
+        <div className="w-full md:w-[50%] border border-border rounded-sm shadow-lg flex flex-col gap-6 items-center p-8">
           <img src="/images/logo-light.svg" alt="logo" />
-          <div className="w-[100px] h-[100px] rounded-full bg-color-light flex items-center justify-center text-[50px] font-medium text-color-text">
+          <div className="w-[100px] h-[100px] rounded-full bg-accent flex items-center justify-center text-[50px] font-medium text-foreground">
             {user.displayName?.[0]}
           </div>
           <h1 className="text-4xl uppercase font-bold text-[#d029d6]">{user.displayName}</h1>

@@ -6,14 +6,14 @@ import { ProfileDropdown } from '../sidebars/components';
 const SearchBar = () => {
   return (
     <div className="w-full max-w-xl">
-      <div className="flex items-center rounded-full bg-background-primary border border-color-border">
+      <div className="flex items-center rounded-full bg-background border border-border">
         <input
           type="text"
           placeholder="Find courses, materials, papers"
           className="flex-1 pl-4 py-3 pr-0 text-sm bg-transparent outline-none rounded-l-full"
         />
-        <button className="bg-color-primary hover:bg-blue-700 rounded-full p-2 mr-2" aria-label="search">
-          <MagnifyingGlassIcon weight="bold" className="w-4 h-4 text-color-opposite" />
+        <button className="bg-primary hover:bg-blue-700 rounded-full p-2 mr-2" aria-label="search">
+          <MagnifyingGlassIcon weight="bold" className="w-4 h-4 text-primary-foreground" />
         </button>
       </div>
     </div>
@@ -26,7 +26,7 @@ export const PageHeader = () => {
   return (
     <div>
       <header className="fixed top-0 left-0 right-0 z-40">
-        <div className="bg-background-primary px-4">
+        <div className="bg-background px-4">
           <div className="flex justify-between items-center w-full space-x-6 h-16">
             <div className="flex items-center space-x-3">
               <div className="flex md:hidden">
@@ -40,8 +40,8 @@ export const PageHeader = () => {
               <div>
                 <Button
                   isSubtle
-                  className="text-color-primary px-3 ml-4 hover:border hover:border-color-border py-1.5"
-                  rightsection={<CaretDownIcon weight="bold" className="w-4 h-4 text-color-primary" />}
+                  className="text-foreground px-3 ml-4 hover:border hover:border-border py-1.5"
+                  rightsection={<CaretDownIcon weight="bold" className="w-4 h-4 text-foreground" />}
                 >
                   Explore
                 </Button>
@@ -62,7 +62,7 @@ export const PageHeader = () => {
                 ) : (
                   <div className="flex items-center space-x-2">
                     <div className="hidden md:block">
-                      <Link isSecondary className="text-color-primary px-4 py-1.5" href="/sign-up">
+                      <Link isSecondary className="text-foreground px-4 py-1.5" href="/sign-up">
                         Sign Up
                       </Link>
                     </div>
@@ -73,7 +73,7 @@ export const PageHeader = () => {
             </div>
           </div>
         </div>
-        <hr className="border-color-border" />
+        <hr className="border-border" />
       </header>
     </div>
   );

@@ -114,9 +114,7 @@ export const RowsInput = ({ rows, handleChange, closeModal, isRowColSame, isBord
         )}
       </div>
       {row && col ? <Label label="Rows" required /> : null}
-      <table
-        className={`w-full border-collapse border ${isTableBordered ? 'border-color-border' : 'border-transparent'}`}
-      >
+      <table className={`w-full border-collapse border ${isTableBordered ? 'border-border' : 'border-transparent'}`}>
         {[...Array(row)].map((_, rIndex) => (
           <tr key={rIndex}>
             {[...Array(col)].map((_, cIndex) => {
@@ -125,10 +123,7 @@ export const RowsInput = ({ rows, handleChange, closeModal, isRowColSame, isBord
                 return null;
               }
               return (
-                <td
-                  key={cIndex}
-                  className={`p-1 border ${isTableBordered ? 'border-color-border' : 'border-transparent'}`}
-                >
+                <td key={cIndex} className={`p-1 border ${isTableBordered ? 'border-border' : 'border-transparent'}`}>
                   <EquationEditor
                     blocks={equationRows[rIndex][cIndex]}
                     handleChange={(blocks) => handleBlockChange(rIndex, cIndex, blocks)}

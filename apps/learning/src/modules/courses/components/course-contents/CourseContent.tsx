@@ -54,7 +54,7 @@ const AttachmentsRow = ({
       <div className="flex gap-3 items-center flex-wrap py-4">
         <div className="text-sm font-medium">Attachments :</div>
         <div className="flex gap-3 items-center">
-          <div className="border border-color-border rounded-full">
+          <div className="border border-border rounded-full">
             <Button onClick={onClickContent} isSecondary={!hasSelectedContent} className="px-4 py-1" isRound>
               Content
             </Button>
@@ -95,7 +95,7 @@ const ContentActionsRow = ({
 }) => {
   const collectionRef = isMaterial ? CollectionType.MATERIAL : CollectionType.TEST_PAPER;
   return (
-    <div className="flex justify-start flex-col md:flex-row md:justify-between py-4 gap-3 w-full border-y border-color-border">
+    <div className="flex justify-start flex-col md:flex-row md:justify-between py-4 gap-3 w-full border-y border-border">
       <div className="flex items-center gap-6">
         {createdBy && (
           <>
@@ -171,7 +171,7 @@ export const CourseContent = () => {
     <div>
       <div className="flex flex-col space-y-1 py-2 h-full w-full">
         <div
-          className={`relative overflow-auto w-full h-[50vh] md:h-[500px] border border-color-border ${selectedContent ? '' : 'bg-cross-vector'}`}
+          className={`relative overflow-auto w-full h-[50vh] md:h-[500px] border border-border ${selectedContent ? '' : 'bg-cross-vector'}`}
         >
           <Content
             material={selectedMaterial}
@@ -184,14 +184,14 @@ export const CourseContent = () => {
           <Button
             className="px-0 blue-gradient"
             isSubtle
-            leftsection={<CaretLeftIcon weight="bold" className="w-4 h-4 text-blue-primary" />}
+            leftsection={<CaretLeftIcon weight="bold" className="w-4 h-4 text-info" />}
           >
             Prev
           </Button>
           <Button
             className="px-0 blue-gradient"
             isSubtle
-            rightsection={<CaretRightIcon weight="bold" className="w-4 h-4 text-blue-primary" />}
+            rightsection={<CaretRightIcon weight="bold" className="w-4 h-4 text-info" />}
           >
             Next
           </Button>
@@ -202,7 +202,7 @@ export const CourseContent = () => {
               <div className=" flex-wrap">{item.name}</div>
             </div>
             <div>
-              <div className="text-xs text-color-secondary flex items-center space-x-1">
+              <div className="text-xs text-muted-foreground flex items-center space-x-1">
                 <span className="capitalize">{moduleContentType}</span>
                 <span className="mx-1 text-xs">•</span>
                 <span>{getDurationMins(selectedMaterial, selectedTestPaper)} mins</span>
@@ -226,7 +226,7 @@ export const CourseContent = () => {
             courseId={selectedCourseId}
           />
           <Card className="py-4 bg-transparent">
-            <div className="px-2 bg-background-primary">
+            <div className="px-2 bg-background">
               <SimpleAccordions
                 items={[
                   {

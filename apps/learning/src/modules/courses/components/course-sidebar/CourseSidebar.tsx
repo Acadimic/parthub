@@ -12,7 +12,7 @@ export const CourseSidebar = ({ children }: IProps) => {
   const { isCourseMenuOpen, handleCourseMenuClick } = useCourse();
 
   return (
-    <div className="bg-background-primary">
+    <div className="bg-background">
       <div className="flex">
         {/* Mobile drawer overlay */}
         {isCourseMenuOpen && (

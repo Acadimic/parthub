@@ -31,7 +31,7 @@ export const Courses = ({ isFilter }: IProps) => {
                 const courses = groupedCoursesByStandardId[standardId];
                 return (
                   <div key={standardId} className="flex flex-col space-y-6">
-                    <div className="font-medium py-3 border-b border-color-border">
+                    <div className="font-medium py-3 border-b border-border">
                       <div className="flex items-center space-x-2">
                         <div>
                           <DotsNineIcon weight="bold" className="w-6 h-6" />

@@ -151,7 +151,7 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
           <div>
             <Label label="Topic Prompt" required />
             <div className="flex items-start justify-between gap-2">
-              <div className="line-clamp-6 text-color-secondary text-sm">{questionPrompt}</div>
+              <div className="line-clamp-6 text-muted-foreground text-sm">{questionPrompt}</div>
               <div className="py-2">
                 <CopyUrl url={questionPrompt} isCopyIconOnly />
               </div>
@@ -169,7 +169,7 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
           />
           <div className="flex flex-col gap-3">
             <Label label="Attachments" required />
-            <div className="flex justify-center border border-color-border py-2.5 px-3">
+            <div className="flex justify-center border border-border py-2.5 px-3">
               <div className="w-full cursor-pointer">
                 <UploadFiles
                   selectedFiles={selectedFiles}

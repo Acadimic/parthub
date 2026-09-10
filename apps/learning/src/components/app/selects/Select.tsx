@@ -156,7 +156,7 @@ const SelectElement = ({
     return (
       <button
         key={option.value}
-        className="w-full bg-background-primary m-0 font-medium text-sm flex py-2 px-3 cursor-pointer items-center space-x-1 border-b border-x border-color-border hover:text-blue-primary text-left"
+        className="w-full bg-background m-0 font-medium text-sm flex py-2 px-3 cursor-pointer items-center space-x-1 border-b border-x border-border hover:text-info text-left"
         onClick={() => handleSelect(option)}
       >
         <CheckIcon
@@ -166,7 +166,7 @@ const SelectElement = ({
         />
         <div className="flex-grow truncate">
           <div className="truncate capitalize w-full">{option.label}</div>
-          {option.description && <div className="truncate text-xs text-color-secondary">{option.description}</div>}
+          {option.description && <div className="truncate text-xs text-muted-foreground">{option.description}</div>}
         </div>
         <XIcon
           weight="bold"
@@ -195,13 +195,13 @@ const SelectElement = ({
       {isOpen && (
         <div className={`absolute top-full left-0 z-[1400] ${withInPortal ? 'w-[200px]' : 'w-full'} shadow-lg`}>
           {title && (
-            <div className="border-b border-color-border px-3 py-2 text-sm font-medium bg-background-primary">
+            <div className="border-b border-border px-3 py-2 text-sm font-medium bg-background">
               <span>{title}</span>
             </div>
           )}
-          <div className="border border-color-border border-t rounded-t-sm bg-background-primary">
-            <div className="flex items-center px-3 py-1.5 border-b border-color-border">
-              <MagnifyingGlassIcon className="w-5 h-5 text-blue-primary mr-2 flex-shrink-0" />
+          <div className="border border-border border-t rounded-t-sm bg-background">
+            <div className="flex items-center px-3 py-1.5 border-b border-border">
+              <MagnifyingGlassIcon className="w-5 h-5 text-info mr-2 flex-shrink-0" />
               <input
                 type="text"
                 placeholder={label ? `Search ${label}` : 'Search'}
@@ -214,8 +214,8 @@ const SelectElement = ({
           </div>
           <div className="max-h-[300px] overflow-y-auto">
             {memoizedItems.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center gap-2 py-4 bg-background-primary border-x border-b border-color-border">
-                <BlankState label="Not Found" iconSize="h-8" />
+              <div className="h-full flex flex-col items-center justify-center gap-2 py-4 bg-background border-x border-b border-border">
+                <BlankState label="Not Found" iconSize="h-5 w-5" />
                 {notFoundComponent}
               </div>
             )}
@@ -224,8 +224,8 @@ const SelectElement = ({
               groupedItems &&
               Object.entries(groupedItems).map(([group, groupItems]) => (
                 <div key={group}>
-                  <div className="flex items-center text-xs font-medium text-color-secondary px-3 py-2 border-b border-x border-color-border bg-background-primary capitalize space-x-2">
-                    <SquaresFourIcon className="text-blue-primary h-4 w-4" />
+                  <div className="flex items-center text-xs font-medium text-muted-foreground px-3 py-2 border-b border-x border-border bg-background capitalize space-x-2">
+                    <SquaresFourIcon className="text-info h-4 w-4" />
                     <div>{group}</div>
                   </div>
                   {groupItems.map(renderOption)}

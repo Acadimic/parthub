@@ -30,9 +30,9 @@ export const FullScreenModal = ({ isOpen, onClose, component, id, footer }: IPro
 
   return (
     <div className="fixed inset-0 z-[1300]" id={id}>
-      <div className="flex flex-col h-full w-full bg-background-primary">
+      <div className="flex flex-col h-full w-full bg-background">
         <div className="flex-1 h-full overflow-y-auto min-h-[60vh] md:min-h-[30vh]">{isOpen ? component : null}</div>
-        {footer ? <div className="border-t border-color-border">{footer}</div> : null}
+        {footer ? <div className="border-t border-border">{footer}</div> : null}
       </div>
     </div>
   );

@@ -22,7 +22,7 @@ export const Stepper = ({ steps, activeStep }: IProps) => {
               <div className="flex flex-col items-center">
                 <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                    isCompleted || isActive ? 'bg-blue-primary text-white' : 'bg-color-border text-color-secondary'
+                    isCompleted || isActive ? 'bg-primary text-primary-foreground' : 'bg-border text-muted-foreground'
                   }`}
                 >
                   {isCompleted ? (
@@ -32,13 +32,13 @@ export const Stepper = ({ steps, activeStep }: IProps) => {
                   )}
                 </div>
                 <div
-                  className={`text-xs mt-1 text-center ${isActive ? 'font-medium text-blue-primary' : 'text-color-secondary'}`}
+                  className={`text-xs mt-1 text-center ${isActive ? 'font-medium text-info' : 'text-muted-foreground'}`}
                 >
                   {step.label}
                 </div>
               </div>
               {index < steps.length - 1 && (
-                <div className={`flex-1 h-px mx-2 mt-[-16px] ${isCompleted ? 'bg-blue-primary' : 'bg-color-border'}`} />
+                <div className={`flex-1 h-px mx-2 mt-[-16px] ${isCompleted ? 'bg-primary' : 'bg-border'}`} />
               )}
             </div>
           );

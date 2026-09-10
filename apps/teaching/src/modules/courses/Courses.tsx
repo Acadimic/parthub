@@ -59,12 +59,12 @@ export const Courses = () => {
           <div className="flex items-center space-x-2">
             <div>
               {(row.attachments ?? []).length ? (
-                <div className="w-6 h-6 p-1 rounded-full border border-color-secondary border-dashed">
+                <div className="w-6 h-6 p-1 rounded-full border border-border border-dashed">
                   <PresignedImage url={(row.attachments ?? [])[0].url} />
                 </div>
               ) : null}
             </div>
-            <div className="flex-1 truncate text-blue-primary cursor-pointer" onClick={() => onClickCourse(row)}>
+            <div className="flex-1 truncate text-info cursor-pointer" onClick={() => onClickCourse(row)}>
               {row.name}
             </div>
           </div>

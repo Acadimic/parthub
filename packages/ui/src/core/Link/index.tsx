@@ -24,11 +24,7 @@ export const Link = (props: ILinkProps) => {
   }
 
   return (
-    <NextLink
-      className={linkClassName || 'text-blue-primary font-medium text-sm hover:underline'}
-      href={href}
-      target={target}
-    >
+    <NextLink className={linkClassName || 'text-info font-medium text-sm hover:underline'} href={href} target={target}>
       <Button isSubtle leftSection={leftSection} rightSection={rightSection} className="px-0.5 text-xs" {...rest}>
         {children}
       </Button>

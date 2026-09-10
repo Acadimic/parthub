@@ -48,11 +48,11 @@ export const CheckboxSelection = ({
               checked={isSelected(option)}
               name={option.value}
               readOnly
-              className={`h-4 w-4 rounded border-color-border ${
-                isSelected(option) && selectedClassName ? selectedClassName : option.color || 'text-blue-primary'
+              className={`h-4 w-4 rounded border-border ${
+                isSelected(option) && selectedClassName ? selectedClassName : option.color || 'text-info'
               }`}
             />
-            <span className="text-color-primary text-sm font-medium">
+            <span className="text-foreground text-sm font-medium">
               {isHtml && typeof option.label === 'string' ? <Html html={option.label} /> : option.label}
             </span>
           </label>

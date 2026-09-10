@@ -1,29 +1,29 @@
 .fc .fc-timegrid-col {
-  @apply bg-background-primary !important;
+  @apply bg-background !important;
 }
 
 .fc .fc-daygrid-day.fc-day-today {
-  @apply bg-background-primary !important;
+  @apply bg-background !important;
 }
 
 .fc-theme-standard .fc-list-day-cushion {
-  @apply bg-background-primary !important;
+  @apply bg-background !important;
 }
 
 .fc-theme-standard .fc-list {
-  @apply bg-background-primary border-color-border !important;
+  @apply bg-background border-border !important;
 }
 
 .fc .fc-v-event {
-  @apply bg-background-primary border-color-border !important;
+  @apply bg-background border-border !important;
 }
 
 .fc .fc-list-event-dot {
-  @apply border-color-border !important;
+  @apply border-border !important;
 }
 
 .fc .fc-list-empty {
-  @apply bg-background-primary !important;
+  @apply bg-background !important;
   height: calc(100% - 30px) !important;
 }
 
@@ -62,20 +62,20 @@
 }
 
 .fc .fc-list-sticky .fc-list-day > * {
-  @apply bg-background-primary;
+  @apply bg-background;
 }
 
 .fc .fc-timegrid-slot-label {
   border: none !important;
-  // @apply border bg-background-primary border-color-border border-dashed !important;
+  // @apply border bg-background border-border border-dashed !important;
 }
 .fc .fc-timegrid-slot-minor {
   border-top-style: solid;
-  @apply border bg-background-primary border-color-border;
+  @apply border bg-background border-border;
 }
 
 .fc .fc-view-harness {
-  @apply bg-background-primary;
+  @apply bg-background;
 }
 
 .fc .fc-timegrid-slots {
@@ -100,18 +100,18 @@
 }
 
 .fc-theme-standard .fc-scrollgrid {
-  @apply border-color-border !important;
+  @apply border-border !important;
 }
 
 .fc-theme-standard td,
 .fc-theme-standard th {
-  @apply border-color-border !important;
+  @apply border-border !important;
 }
 
 .fc-theme-standard .fc-timegrid-slots td,
 .fc-theme-standard th {
   height: 3.125rem !important;
-  @apply border-color-border !important;
+  @apply border-border !important;
 }
 .fc-theme-standard .fc-timeGridDay-view .fc-timegrid-slots td,
 .fc-theme-standard .fc-timeGridDay-view th {
@@ -172,7 +172,7 @@
 }
 
 .fc .fc-daygrid-day.fc-day-today {
-  // @apply bg-background-primary text-color-secondary;
+  // @apply bg-background text-muted-foreground;
 }
 
 .fc .fc-daygrid-day-top {
@@ -187,7 +187,7 @@
   padding: 0px;
   width: 100%;
   font-family: 'Roboto', sans-serif;
-  @apply text-color-text text-end;
+  @apply text-foreground text-end;
 }
 
 .fc-daygrid-more-link {
@@ -196,7 +196,7 @@
   color: #285380;
   font-size: 12px;
   margin: 2px 0px;
-  @apply bg-background-primary;
+  @apply bg-background;
 }
 
 .fc .fc-popover {
@@ -219,13 +219,13 @@
       font-weight: 500;
       font-size: 14px;
       font-family: 'Roboto', sans-serif;
-      @apply text-color-secondary;
+      @apply text-muted-foreground;
     }
     .fc-popover-close {
       cursor: pointer;
       font-size: 1.1em;
     }
-    @apply bg-background-primary !important;
+    @apply bg-background !important;
   }
 }
 
@@ -260,7 +260,7 @@ th .fc-scrollgrid-sync-inner {
   position: relative;
   z-index: 1;
   margin-left: -1px;
-  @apply border-l border-color-border;
+  @apply border-l border-border;
 }
 
 .fc .fc-timegrid-divider {

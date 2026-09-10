@@ -19,7 +19,7 @@ export const CoursePreview = () => {
     <div className="relative">
       <CourseSidebar>
         <>
-          <div className="px-3 pt-5 pb-1 bg-background-primary">
+          <div className="px-3 pt-5 pb-1 bg-background">
             <Breadcrumb
               items={
                 [

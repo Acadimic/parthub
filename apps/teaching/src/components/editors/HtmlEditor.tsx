@@ -171,7 +171,7 @@ export function HtmlEditor(props: IProps) {
               text = replaceColor(text);
               document.execCommand('insertText', false, text);
             }}
-            className={`text-color-primary !overflow-x-none w-full select-none border outline-0 outline-color-border text-sm border-color-border px-3 py-2 font-medium rounded-none bg-background-primary focus:border-blue-primary focus:bg-background-secondary hover:bg-background-secondary ${
+            className={`text-foreground !overflow-x-none w-full select-none border outline-0 outline-border text-sm border-border px-3 py-2 font-medium rounded-none bg-background focus:border-primary focus:bg-muted hover:bg-accent ${
               !html.current && !isFocused ? 'empty-content' : ''
             }`}
             onKeyUp={handleKeyUp}
@@ -181,7 +181,7 @@ export function HtmlEditor(props: IProps) {
             disabled={isDisabled || false}
           />
           {!html.current && !isFocused && (
-            <div className="absolute top-0 left-0 px-3 py-2 text-sm text-color-secondary pointer-events-none">
+            <div className="absolute top-0 left-0 px-3 py-2 text-sm text-muted-foreground pointer-events-none">
               {placeholder}
             </div>
           )}

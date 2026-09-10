@@ -1,6 +1,6 @@
 export const TestPaperIconSvg = () => {
   return (
-    <div className="text-color-secondary">
+    <div className="text-muted-foreground">
       <svg
         version="1.0"
         xmlns="http://www.w3.org/2000/svg"

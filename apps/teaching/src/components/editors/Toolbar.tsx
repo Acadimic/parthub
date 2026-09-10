@@ -109,7 +109,7 @@ export const Toolbar = ({ name, handleChange }: IProps) => {
 
   return (
     <>
-      <div className="flex items-center gap-1 p-0.5 bg-background-paper border border-color-border flex-wrap mb-2">
+      <div className="flex items-center gap-1 p-0.5 bg-card border border-border flex-wrap mb-2">
         {TOOLBAR_ITEMS.map((group, groupIndex) => (
           <div key={group.group} className="flex items-center">
             {group.items.map((item) => (
@@ -120,13 +120,13 @@ export const Toolbar = ({ name, handleChange }: IProps) => {
                     e.preventDefault();
                     handleCommand(item.command);
                   }}
-                  className="p-1 rounded hover:bg-background-secondary text-color-secondary"
+                  className="p-1 rounded hover:bg-accent text-muted-foreground"
                 >
                   {item.icon}
                 </button>
               </Tooltip>
             ))}
-            {groupIndex < TOOLBAR_ITEMS.length && <div className="w-px h-6 bg-color-border mx-1" />}
+            {groupIndex < TOOLBAR_ITEMS.length && <div className="w-px h-6 bg-border mx-1" />}
           </div>
         ))}
 

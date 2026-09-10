@@ -44,15 +44,15 @@ export const UploadAvatar = ({ file, url, setFile, removeFile }: IProps) => {
 
   return (
     <div className="flex flex-col justify-center items-center w-full">
-      <div className="relative w-24 h-24 border border-color-border rounded-full border-dashed">
+      <div className="relative w-24 h-24 border border-border rounded-full border-dashed">
         <div className="flex justify-center items-center w-full h-full p-0">
           {fileUrl ? (
             <PresignedImage isStatic={url ? false : true} url={fileUrl} className="w-full h-full rounded-full" />
           ) : (
-            <CameraIcon className="w-12 h-12 text-color-secondary" />
+            <CameraIcon className="w-12 h-12 text-muted-foreground" />
           )}
         </div>
-        <div className="absolute rounded-full bg-background-primary -bottom-3 w-full border border-color-border">
+        <div className="absolute rounded-full bg-background -bottom-3 w-full border border-border">
           {fileUrl ? (
             <>{buttonComponent}</>
           ) : (

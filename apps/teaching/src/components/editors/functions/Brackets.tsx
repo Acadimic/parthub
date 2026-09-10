@@ -83,11 +83,7 @@ const Brackets = (props: IFunctionProps) => {
       {BRACKETS.map((item) => {
         return (
           <Tooltip title={item.name} key={item.name}>
-            <button
-              type="button"
-              onClick={() => handleSubmit(item.code)}
-              className="p-1 rounded hover:bg-background-secondary"
-            >
+            <button type="button" onClick={() => handleSubmit(item.code)} className="p-1 rounded hover:bg-accent">
               <Html html={item.code} />
             </button>
           </Tooltip>

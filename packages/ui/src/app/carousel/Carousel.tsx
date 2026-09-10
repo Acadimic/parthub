@@ -66,13 +66,13 @@ export const Carousel = ({
         <>
           <button
             onClick={goToPrevious}
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-background-paper hover:bg-background-paper shadow-md p-1.5 rounded-full border border-color-border"
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-card hover:bg-card shadow-md p-1.5 rounded-full border border-border"
           >
             <CaretLeftIcon weight="bold" className="w-4 h-4" />
           </button>
           <button
             onClick={goToNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-background-paper hover:bg-background-paper shadow-md p-1.5 rounded-full border border-color-border"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-card hover:bg-card shadow-md p-1.5 rounded-full border border-border"
           >
             <CaretRightIcon weight="bold" className="w-4 h-4" />
           </button>
@@ -84,7 +84,7 @@ export const Carousel = ({
             <button key={index} onClick={() => goToIndex(index)} className="p-0.5">
               <CircleIcon
                 weight="fill"
-                className={`w-2 h-2 ${index === activeIndex ? 'text-color-primary' : 'text-color-secondary'}`}
+                className={`w-2 h-2 ${index === activeIndex ? 'text-foreground' : 'text-muted-foreground'}`}
               />
             </button>
           ))}

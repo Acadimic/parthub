@@ -58,18 +58,18 @@ export const DefaultMarkingsModal = ({ defaultMarkings, onSave, isOpen, isLoadin
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-color-border">
-                  <th className="text-left py-3 px-4 font-medium text-color-secondary">Type</th>
-                  <th className="text-left py-3 px-4 font-medium text-color-secondary">Correct</th>
-                  <th className="text-left py-3 px-4 font-medium text-color-secondary">Incorrect</th>
-                  <th className="text-left py-3 px-4 font-medium text-color-secondary">Unattempted</th>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Type</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Correct</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Incorrect</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Unattempted</th>
                 </tr>
               </thead>
               <tbody>
                 {(Object.keys(markings) as QuestionType[]).map((queType: QuestionType) => {
                   const marks = markings[queType];
                   return (
-                    <tr key={queType} className="border-b border-color-border">
+                    <tr key={queType} className="border-b border-border">
                       <td className="py-3 px-4 text-sm capitalize font-medium">{splitCamelCase(queType)}</td>
                       <td className="py-3 px-4">
                         <div className="w-28">

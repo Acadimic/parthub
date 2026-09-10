@@ -1,6 +1,6 @@
 export const PointerSvg = () => {
   return (
-    <div className="text-color-primary">
+    <div className="text-foreground">
       <svg
         fill="currentColor"
         stroke="currentColor"

@@ -71,7 +71,7 @@ export const Students = () => {
       dataKey: 'name',
       valueFormatter: (row: IUser) => {
         return (
-          <div className="cursor-pointer truncate text-blue-primary" onClick={() => onClickStudent(row)}>
+          <div className="cursor-pointer truncate text-info" onClick={() => onClickStudent(row)}>
             <span className="text-inherit">{row.name}</span>
           </div>
         );

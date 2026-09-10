@@ -37,7 +37,7 @@ export const Popover = ({ children, component: Component }: IProps) => {
         {children}
       </div>
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 z-50 bg-background-primary border border-color-border rounded-sm shadow-lg">
+        <div className="absolute top-full left-0 mt-2 z-50 bg-background border border-border rounded-sm shadow-lg">
           <Component handleClose={handleClose} />
         </div>
       )}

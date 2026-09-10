@@ -50,7 +50,7 @@ export const AddImage = ({ block, handleChange, closeModal }: IProps) => {
           type="file"
           accept="image/*"
           onChange={handleFileChange}
-          className="w-full block text-sm text-color-primary file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary cursor-pointer border border-color-border rounded-md p-2"
+          className="w-full block text-sm text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary cursor-pointer border border-border rounded-md p-2"
         />
       </div>
       {(selectedFile ?? block.data) && (
@@ -59,7 +59,7 @@ export const AddImage = ({ block, handleChange, closeModal }: IProps) => {
           <img
             src={(selectedFile && URL.createObjectURL(selectedFile)) || block.data}
             alt="name"
-            className="max-w-[340px] border border-color-border"
+            className="max-w-[340px] border border-border"
           />
         </>
       )}

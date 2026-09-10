@@ -83,7 +83,7 @@ const Fraction = (props: IProps) => {
           placeholder={`Add ${FRACTION.NUMERATOR}`}
         />
         <div className="py-4">
-          <hr className="border border-color-border" />
+          <hr className="border border-border" />
         </div>
         <HtmlEditor
           name={`${name}-${FRACTION.DENOMINATOR}`}

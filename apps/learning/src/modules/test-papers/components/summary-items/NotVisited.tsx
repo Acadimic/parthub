@@ -8,9 +8,9 @@ export const NotVisited = ({ count, title, isLarge }: IProps) => {
   const className = isLarge ? 'w-8 h-8 p-2 text-xs' : 'w-6 h-6 p-1 text-[11px]';
   return (
     <>
-      <div className="flex space-x-2 items-center text-color-secondary">
+      <div className="flex space-x-2 items-center text-muted-foreground">
         <div
-          className={`${className} font-bold rounded border border-color-border bg-color-light flex justify-center items-center`}
+          className={`${className} font-bold rounded border border-border bg-accent flex justify-center items-center`}
         >
           {count}
         </div>

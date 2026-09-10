@@ -17,11 +17,11 @@ export const ToggleTheme = () => {
 
   return (
     <div className="relative">
-      <button className="p-1 rounded hover:bg-background-secondary" onClick={colorMode.toggleColorMode}>
+      <button className="p-1 rounded hover:bg-accent" onClick={colorMode.toggleColorMode}>
         {isDark ? (
-          <SunIcon className="w-4 h-4 md:w-5 md:h-5 text-color-text" weight="bold" />
+          <SunIcon className="w-4 h-4 md:w-5 md:h-5 text-foreground" weight="bold" />
         ) : (
-          <MoonIcon className="w-4 h-4 md:w-5 md:h-5 text-color-text" weight="bold" />
+          <MoonIcon className="w-4 h-4 md:w-5 md:h-5 text-foreground" weight="bold" />
         )}
       </button>
     </div>

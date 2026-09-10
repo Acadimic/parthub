@@ -43,7 +43,7 @@ export const ExamFooter = ({
 
   return (
     <>
-      <div className="h-14 xl:h-16 footer-shadow border-t border-color-border">
+      <div className="h-14 xl:h-16 footer-shadow border-t border-border">
         <div className="flex justify-between items-center h-full space-x-3">
           <div className="flex items-center w-full h-full px-4 md:px-8">
             {isResultPage ? (
@@ -69,7 +69,7 @@ export const ExamFooter = ({
                         isSubtle
                         text={isSelectedQuestionMarkedForReview() ? 'Clear From Review' : 'Mark For Review'}
                         onClick={toggleSelectedQuestionMarkForReview}
-                        className="text-xs text-blue-primary"
+                        className="text-xs text-info"
                       />
                     )}
                     {!isSelectedQuestionResponded() || isSubmitted ? null : (
@@ -77,7 +77,7 @@ export const ExamFooter = ({
                         isSubtle
                         text={isPractice ? 'Reset Answer' : 'Clear'}
                         onClick={isPractice ? resetResponse : clearResponse}
-                        className="text-xs text-blue-primary"
+                        className="text-xs text-info"
                       />
                     )}
                     <div className="xl:hidden">

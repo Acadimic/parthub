@@ -8,7 +8,7 @@ interface IProps {
 export const AuthLayout = ({ children }: IProps) => {
   return (
     <>
-      <div className={`bg-background-secondary relative`}>
+      <div className={`bg-muted relative`}>
         <div className="fixed top-0 z-10 w-full">
           <AuthHeader />
         </div>

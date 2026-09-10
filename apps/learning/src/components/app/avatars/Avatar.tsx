@@ -37,7 +37,7 @@ export const Avatar = ({ id, name, avatar, size = 32, bg: bgProp, color: colorPr
 
   return (
     <div
-      className={`uppercase text-sm font-medium border border-color-border rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 ${className || ''}`}
+      className={`uppercase text-sm font-medium border border-border rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 ${className || ''}`}
       style={{
         width: size,
         height: size,

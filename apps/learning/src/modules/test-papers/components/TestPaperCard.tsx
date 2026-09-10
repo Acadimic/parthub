@@ -39,10 +39,10 @@ export const TestPaperCard = ({ paper, handleOpen }: IProps) => {
 
   return (
     <>
-      <div className="box-shadow border border-color-border rounded-sm flex flex-col space-y-6 p-4 bg-background-primary">
+      <div className="box-shadow border border-border rounded-sm flex flex-col space-y-6 p-4 bg-background">
         <div className="flex justify-start items-center space-x-3">
           <div className="w-5 h-5">
-            <DotsNineIcon className="w-5 h-5 text-blue-primary" />
+            <DotsNineIcon className="w-5 h-5 text-info" />
           </div>
           <div className="text-sm font-semibold truncate">{paper.name}</div>
         </div>

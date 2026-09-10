@@ -54,7 +54,7 @@ export const Standards = () => {
         <div className="flex items-center space-x-2">
           <div>
             {row.logo ? (
-              <div className="w-6 h-6 p-1 rounded-full border border-color-secondary border-dashed">
+              <div className="w-6 h-6 p-1 rounded-full border border-border border-dashed">
                 <PresignedImage url={row.logo} />
               </div>
             ) : null}

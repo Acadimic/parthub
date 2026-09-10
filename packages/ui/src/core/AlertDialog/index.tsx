@@ -35,23 +35,21 @@ export const AlertDialog = ({
 }: IAlertDialogProps) => {
   return (
     <ShadcnAlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <AlertDialogContent className={cn('bg-background-primary border-color-border', className)}>
+      <AlertDialogContent className={cn('bg-background border-border', className)}>
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-color-primary">{title}</AlertDialogTitle>
-          {message && <AlertDialogDescription className="text-color-secondary">{message}</AlertDialogDescription>}
+          <AlertDialogTitle className="text-foreground">{title}</AlertDialogTitle>
+          {message && <AlertDialogDescription className="text-muted-foreground">{message}</AlertDialogDescription>}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel
-            onClick={onClose}
-            className="border-color-border text-color-primary bg-transparent hover:bg-background-secondary"
-          >
+          <AlertDialogCancel onClick={onClose} className="border-border text-foreground bg-transparent hover:bg-accent">
             {cancelText}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className={cn(
-              isDanger ? 'bg-red-primary hover:bg-red-primary/90' : 'bg-blue-primary hover:bg-blue-primary/90',
-              'text-white',
+              isDanger
+                ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90',
             )}
           >
             {confirmText}

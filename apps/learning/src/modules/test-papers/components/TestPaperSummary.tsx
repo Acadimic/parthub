@@ -42,10 +42,10 @@ export const TestPaperSummary = () => {
         <div className="">
           {rows.map((row: IRow) => {
             return (
-              <div key={row.label} className="px-1 flex justify-between border-b border-color-border py-2">
+              <div key={row.label} className="px-1 flex justify-between border-b border-border py-2">
                 <div>
                   <div className="flex items-center space-x-2 blue-gradient">
-                    <row.icon className="w-5 font-bold text-blue-primary" />
+                    <row.icon className="w-5 font-bold text-info" />
                     <div className="text-sm font-semibold">{row.label}</div>
                   </div>
                 </div>

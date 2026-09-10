@@ -45,7 +45,7 @@ export const AddStudentsModal = ({ isOpen, onClose, openUpsertStudentModal, open
                 {addStudentsItems.map((item) => (
                   <div
                     key={item.label}
-                    className="cursor-pointer md:w-[50%] h-auto border border-color-border"
+                    className="cursor-pointer md:w-[50%] h-auto border border-border"
                     onClick={item.onClick}
                   >
                     <Card>

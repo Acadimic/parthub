@@ -35,11 +35,11 @@ const PresignedImageComponent = ({ url, className, isStatic, noOpen }: IProps) =
 
   return (
     <div
-      className={`flex items-center justify-center w-full h-full text-color-secondary ${noOpen ? '' : 'cursor-pointer'}`}
+      className={`flex items-center justify-center w-full h-full text-muted-foreground ${noOpen ? '' : 'cursor-pointer'}`}
       onClick={onClick}
     >
       {isLoading || !url || !presignedUrl ? (
-        <div className="bg-background-secondary w-full h-full">
+        <div className="bg-muted w-full h-full">
           <Img weight="light" className={`w-full h-full ${className ? className : ''}`} />
         </div>
       ) : (

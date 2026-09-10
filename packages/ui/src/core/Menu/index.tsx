@@ -34,10 +34,7 @@ export const Menu = ({ items, trigger, data, className, header }: IMenuProps) =>
           {trigger ?? <DotsThreeOutlineVerticalIcon weight="fill" className="h-5 w-5" />}
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="bg-background-primary border border-color-border rounded-sm min-w-[180px] p-0"
-      >
+      <DropdownMenuContent align="end" className="bg-background border border-border rounded-sm min-w-[180px] p-0">
         {header}
         {items.map((item, index) => {
           const isLastItem = index === items.length - 1;
@@ -47,8 +44,8 @@ export const Menu = ({ items, trigger, data, className, header }: IMenuProps) =>
                 onClick={() => item.onClick(data)}
                 className={cn(
                   'py-3 px-3 text-sm font-medium rounded-none cursor-pointer',
-                  item.isDanger ? 'text-red-primary hover:text-red-primary' : 'hover:text-blue-primary',
-                  item.isCurrent && 'text-blue-primary',
+                  item.isDanger ? 'text-destructive hover:text-destructive' : 'hover:text-info',
+                  item.isCurrent && 'text-info',
                 )}
               >
                 {item.icon && <span className="mr-2 text-inherit">{item.icon}</span>}

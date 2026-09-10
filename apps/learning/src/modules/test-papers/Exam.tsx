@@ -34,13 +34,13 @@ const QuestionScore = ({
   if (!isCompleted) {
     return (
       <>
-        <div className="text-green-primary">+{markings[Marking.CORRECT]}</div>
-        <div className="text-red-primary">-{-markings[Marking.INCORRECT]}</div>
+        <div className="text-success">+{markings[Marking.CORRECT]}</div>
+        <div className="text-destructive">-{-markings[Marking.INCORRECT]}</div>
       </>
     );
   }
   return (
-    <div className={`${marks > 0 ? 'text-green-primary' : 'text-red-primary'}`}>
+    <div className={`${marks > 0 ? 'text-success' : 'text-destructive'}`}>
       {marks > 0 ? '+' : ''}
       {marks}
     </div>
@@ -116,13 +116,13 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
                 </div>
               </div>
             </div>
-            <div className="box-shadow grow-0 px-4 md:px-12 py-2 bg-background-primary">
+            <div className="box-shadow grow-0 px-4 md:px-12 py-2 bg-background">
               <div className="flex justify-between items-center text-sm md:text-base font-medium">
                 <div className="flex justify-start items-center space-x-3">
                   <div className="">
                     {window.innerWidth < 768 ? 'Que' : 'Question'} {getCurrentQuestionIndex() + 1} :
                   </div>
-                  <div className="text-violet-primary text-xs md:text-sm capitalize">
+                  <div className="text-chart-4 text-xs md:text-sm capitalize">
                     {splitCamelCase(selectedQuestion.questionType)}
                   </div>
                 </div>
@@ -138,7 +138,7 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
               </div>
             </div>
             <div className="grow py-0 h-0 w-full mt-2">
-              <div className="box-shadow overflow-auto py-3 h-full px-4 md:px-12 bg-background-primary">
+              <div className="box-shadow overflow-auto py-3 h-full px-4 md:px-12 bg-background">
                 <div className="">
                   <Html html={selectedQuestion.question || ''} />
                 </div>

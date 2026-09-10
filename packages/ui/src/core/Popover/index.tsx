@@ -37,7 +37,7 @@ export const Popover = ({ children, trigger, anchorOrigin, className }: IPopover
       <PopoverContent
         side={side}
         align={align}
-        className={cn('bg-background-primary border border-color-border rounded-sm mt-2 p-0', className)}
+        className={cn('bg-background border border-border rounded-sm mt-2 p-0', className)}
       >
         {typeof children === 'function' ? children({ handleClose }) : children}
       </PopoverContent>
