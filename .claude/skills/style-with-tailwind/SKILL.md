@@ -102,6 +102,10 @@ silently produces no CSS.
 
 ## Changing the theme
 
+Use the `add-a-theme` skill for this — it owns the token vocabulary, the `<role>`/
+`-foreground` contract, adding a third theme, the contrast script every palette has to pass,
+and the move from `tw-colors` to CSS variables. The short version:
+
 1. Edit `packages/ui/src/themes/light.ts` **and** `dark.ts` — a token must exist in both, or the
    class disappears in one mode.
 2. Keep the nesting shallow: `group: { shade: value }` becomes `group-shade`.
