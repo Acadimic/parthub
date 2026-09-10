@@ -1,28 +1,108 @@
 {
+  // ---------------------------------------------------------------------------
+  // Formatting. The source of truth is .prettierrc.json at the repo root, so no
+  // prettier.* options are set here — duplicating them lets the editor and
+  // `pnpm format` drift apart.
+  // ---------------------------------------------------------------------------
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "prettier.trailingComma": "all",
-  "prettier.singleQuote": true,
+  "editor.tabSize": 2,
+  // printWidth in .prettierrc.json.
+  "editor.rulers": [120],
+  // Prettier writes lf; CRLF here would show every line as changed.
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
-    "source.sortImports": "explicit",
-    "source.organizeImports": "explicit",
-    "source.fixAll.format": "explicit"
+    // Superset of source.sortImports, which is why that is not listed too.
+    "source.organizeImports": "explicit"
   },
+
+  // Every file type `pnpm format` covers goes through Prettier, JavaScript
+  // included — the config files (eslint.config.js, tailwind.config.js) are
+  // linted with prettier/prettier as an error, so a second formatter fights it.
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[scss]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[css]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[markdown]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+
+  // ---------------------------------------------------------------------------
+  // ESLint. Seven workspaces each own an eslint.config.js, so "auto" resolves
+  // the working directory from the nearest config rather than a fixed list.
+  // ---------------------------------------------------------------------------
   "eslint.useFlatConfig": true,
-  "eslint.workingDirectories": [
-    { "directory": "server", "changeProcessCWD": true },
-    { "directory": "client", "changeProcessCWD": true },
-    { "directory": "family-portal", "changeProcessCWD": true }
-  ],
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+
+  // ---------------------------------------------------------------------------
+  // TypeScript. The repo pins 6.0.3 in every workspace and typescript-eslint
+  // peers `typescript <6.1`, so the editor must not silently use its own
+  // bundled version. Every workspace resolves the same copy; shared is used
+  // here because it is the leaf the others depend on.
+  // ---------------------------------------------------------------------------
+  "js/ts.tsdk.path": "packages/shared/node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  // consistent-type-imports is on (inline style), so auto-import should add
+  // `type` itself instead of leaving a warning behind.
+  "js/ts.preferences.preferTypeOnlyAutoImports": true,
+  "js/ts.experimental.useTsgo": false,
+
+  // ---------------------------------------------------------------------------
+  // Search and file watching. Without these, four build outputs and seven
+  // node_modules trees are indexed, and @repo/shared/dist shows up as a second
+  // hit for every shared type.
+  // ---------------------------------------------------------------------------
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.next": true,
+    "**/pnpm-lock.yaml": true,
+    "**/*.tsbuildinfo": true
   },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/.next/**": true
   },
-  "[javascript]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/*.tsbuildinfo": true
   },
-  "js/ts.experimental.useTsgo": false
+
+  // ---------------------------------------------------------------------------
+  // Window colours, so this repo is identifiable at a glance.
+  // On macOS the title bar only tints when window.titleBarStyle is "custom",
+  // which is an application-scoped setting and has to live in user settings.
+  // ---------------------------------------------------------------------------
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#2D2A5A",
+    "titleBar.activeForeground": "#ECEBF7",
+    "titleBar.inactiveBackground": "#2D2A5AAA",
+    "titleBar.inactiveForeground": "#ECEBF7AA",
+    "titleBar.border": "#7C6CF0",
+
+    "activityBar.background": "#241F4D",
+    "activityBar.foreground": "#ECEBF7",
+    "activityBar.inactiveForeground": "#ECEBF780",
+    "activityBar.activeBorder": "#7C6CF0",
+    "activityBarBadge.background": "#7C6CF0",
+    "activityBarBadge.foreground": "#FFFFFF",
+
+    "statusBar.background": "#3A3482",
+    "statusBar.foreground": "#ECEBF7",
+    "statusBar.border": "#4A4399",
+    "statusBarItem.hoverBackground": "#4A4399",
+    "statusBarItem.remoteBackground": "#7C6CF0",
+    // Deliberately unrelated to the palette: you should notice a debug session.
+    "statusBar.debuggingBackground": "#B4472F",
+    "statusBar.debuggingForeground": "#FFFFFF",
+
+    "sash.hoverBorder": "#7C6CF0",
+    "focusBorder": "#7C6CF0"
+  }
 }
