@@ -74,7 +74,7 @@ Run all of it on the **pinned** runtime. Claude Code is itself installed through
 command:
 
 ```bash
-env -u _VOLTA_TOOL_RECURSION volta run --node 24.20.0 -- pnpm exec tsc --noEmit
+env -u _VOLTA_TOOL_RECURSION volta run --node 24.21.0 -- pnpm exec tsc --noEmit
 ```
 
 ```bash
@@ -180,7 +180,7 @@ Already on their latest: NestJS 12.0.1 (core, common, platform-fastify, mongoose
 schematics), Mongoose 9.9.5, firebase-admin 14.3.0, class-validator 0.15.1, the pino stack
 (10.3.1 / 11 / 5.1.0 / 13.1.3), nestjs-cls 6.3, `@fastify/compress` 9.2, `@fastify/helmet` 13.1,
 AWS SDK 3.1127, env-cmd 11, ESLint 10.10, prettier 3.9.6, typescript-eslint 8.70, TypeScript 6.0.3.
-Node is pinned to 24.20.0 LTS via Volta.
+Node is pinned to 24.21.0 LTS via Volta.
 
 **Held back on purpose** — each waits on someone else's release, so re-check before "fixing" one:
 
@@ -212,7 +212,9 @@ volta install node@<version> && volta pin node@<version>
 Take the latest **LTS**, not the newest release — a server is the wrong place for the Current line.
 Then move `@types/node` to the matching major, force a reinstall so native modules rebuild for the
 new ABI (`pnpm install --force`), and walk the whole ladder. Node's floor is what gates several
-upgrades: NestJS 12's CLI wants 22.22.3+, 24.15+ or 26+, Mongoose 9 wants 20.19+, firebase-admin 14
+upgrades: the Nest CLI's own `engines` says only `>= 20.11`, but it drags in
+`@angular-devkit/schematics@22.1.5`, whose floor is the real one — `^22.22.3 || ^24.15.0 || >=26.0.0`.
+Below it, `nest build` and `nest start` die with `ERR_REQUIRE_CYCLE_MODULE` on `ora`; Mongoose 9 wants 20.19+, firebase-admin 14
 wants 22+, and ESLint 10 wants 20.19+/22.13+/24+.
 
 ## Worth doing before any UI upgrade

@@ -593,7 +593,7 @@ Per store commit, alongside the ladder:
 Then:
 
 ```bash
-env -u _VOLTA_TOOL_RECURSION volta run --node 24.20.0 -- pnpm exec tsc --noEmit   # in the app
+env -u _VOLTA_TOOL_RECURSION volta run --node 24.21.0 -- pnpm exec tsc --noEmit   # in the app
 pnpm lint                                                                         # 0 errors
 pnpm build:<app>
 ```

@@ -30,9 +30,23 @@ Longer-form reasoning lives in `.claude/plans/API_CONVENTIONS.md` and
 ## Build & Development Commands
 
 ```bash
-# Node 24.20.0 LTS is pinned in the root package.json via Volta; pnpm 10.12.1 via packageManager.
+# Node 24.21.0 LTS is pinned in the root package.json via Volta; pnpm 10.12.1 via packageManager.
 # With Volta installed, `node` in this repo is the pinned version automatically.
+pnpm bootstrap           # first-time setup: pnpm install && pnpm build:shared (see README.md)
 pnpm install
+
+# Install, scoped to one workspace — the `...` suffix adds the packages it depends on
+pnpm install:learning    # learning + shared + ui + eslint-config
+pnpm install:teaching
+pnpm install:support
+pnpm install:server      # server + shared (the server has no @repo/ui dependency)
+
+# Add a dependency to one workspace. Arguments forward, and no `--` separator is needed.
+pnpm add:server dayjs           # → pnpm --filter @repo/server add dayjs
+pnpm add:learning -D @types/foo # add:learning | add:teaching | add:support | add:server
+# Use these rather than a bare `pnpm add` at the root, which writes the dependency to the root
+# manifest. Hoisting still makes the import resolve, so nothing looks broken — but the workspace
+# never declares it. See the `extend-a-package` skill.
 
 # Development
 pnpm start:learning      # Next.js dev server (port 3000)
@@ -136,12 +150,13 @@ Shared React layer for the apps (see "Where shared code lives"). No build step; 
 
 ## Toolchain
 
-Pinned, and verified together as of 2026-09-08. Runtime versions come from the root
+Pinned, and verified together as of 2026-09-11 — all six workspaces build, lint and
+typecheck on Node 24.21.0. Runtime versions come from the root
 `package.json` (`volta.node`, `packageManager`).
 
 |            |                                                                                                                    |
 | ---------- | ------------------------------------------------------------------------------------------------------------------ |
-| Node       | **24.20.0 LTS**, pinned via Volta                                                                                  |
+| Node       | **24.21.0 LTS**, pinned via Volta                                                                                  |
 | pnpm       | 10.12.1 via `packageManager`                                                                                       |
 | TypeScript | **6.0.3** everywhere                                                                                               |
 | ESLint     | **10.10.0** everywhere, flat config only                                                                           |

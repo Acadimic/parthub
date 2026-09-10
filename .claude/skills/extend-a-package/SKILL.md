@@ -38,7 +38,14 @@ Eight workspaces: `apps/{learning,teaching,support,server}` and
 2. **A dependency belongs to the workspace that imports it.** A new Radix package goes in
    `packages/ui/package.json`; class-validator lives in `packages/shared`; Zustand and Firebase stay
    in the apps. Adding it to an app because that is where you noticed the missing module leaves the
-   package depending on a hoisted accident.
+   package depending on a hoisted accident. Never a bare `pnpm add` at the repo root, which writes
+   the dependency to the root manifest — the import still resolves via hoisting, so the mistake is
+   invisible until an install that scopes to one workspace. Always name the target:
+
+   ```bash
+   pnpm add:server dayjs                     # root script; also add:learning|teaching|support
+   pnpm --filter @repo/ui add @radix-ui/react-popover   # packages have no add:* script
+   ```
 
 3. **React, React-DOM and Next are exact pins in five places.** All three apps declare
    `react@19.0.0-rc-69d4b800-20241021` and `next@15.0.1`, and `packages/ui` mirrors them in

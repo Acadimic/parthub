@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "pnpm@10.12.1",
   "scripts": {
+    "bootstrap": "pnpm install && pnpm build:shared",
     "start:learning": "pnpm --filter @repo/learning dev",
     "start:server": "pnpm --filter @repo/server start:dev",
     "build:shared": "pnpm --filter @repo/shared build",
@@ -13,6 +14,14 @@
     "build:teaching": "pnpm --filter @repo/teaching build",
     "start:support": "pnpm --filter @repo/support dev",
     "build:support": "pnpm --filter @repo/support build",
+    "install:learning": "pnpm install --filter @repo/learning...",
+    "install:teaching": "pnpm install --filter @repo/teaching...",
+    "install:support": "pnpm install --filter @repo/support...",
+    "install:server": "pnpm install --filter @repo/server...",
+    "add:learning": "pnpm --filter @repo/learning add",
+    "add:teaching": "pnpm --filter @repo/teaching add",
+    "add:support": "pnpm --filter @repo/support add",
+    "add:server": "pnpm --filter @repo/server add",
     "lint": "pnpm -r --if-present run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,scss,css}\"",
     "typecheck:ui": "pnpm --filter @repo/ui typecheck"
@@ -21,6 +30,6 @@
     "prettier": "^3.9.6"
   },
   "volta": {
-    "node": "24.20.0"
+    "node": "24.21.0"
   }
 }
