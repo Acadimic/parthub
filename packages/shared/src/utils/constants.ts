@@ -2,30 +2,16 @@ import { PermissionItem } from '../enums/permission.enum';
 import { DefaultRole } from '../enums/role.enum';
 import { Subdomain } from '../enums/subdomain.enum';
 
-const ALL_PERMISSIONS: PermissionItem[] = [
-  PermissionItem.EDIT_ORG,
-
-  PermissionItem.MANAGE_STAFF,
-  PermissionItem.VIEW_STAFF,
-
-  PermissionItem.CREATE_COURSE,
-  PermissionItem.EDIT_COURSE,
-  PermissionItem.DELETE_COURSE,
-  PermissionItem.VIEW_COURSE,
-
-  PermissionItem.MANAGE_SUBJECT,
-
-  PermissionItem.MANAGE_MATERIAL,
-  PermissionItem.VIEW_MATERIAL,
-
-  PermissionItem.MANAGE_TEST_PAPER,
-  PermissionItem.VIEW_TEST_PAPER,
-
-  PermissionItem.MANAGE_CHAPTER,
-
-  PermissionItem.MANAGE_QUESTION,
-  PermissionItem.VIEW_QUESTION,
-];
+/**
+ * Every permission the system defines.
+ *
+ * Derived from the enum rather than hand-listed. The list that was here was maintained by hand and
+ * had fallen seven items behind it — `manageStandard`, `managePlan`, `viewPlan`, `manageMeet`,
+ * `manageBatch`, `viewBatch` and `manageMapping` were defined but granted to nobody, so 20 routes
+ * across meet, plan, batch, mappings and standard were unreachable by every role including admin.
+ * Deriving it means a new `PermissionItem` cannot be silently ungranted again.
+ */
+const ALL_PERMISSIONS: PermissionItem[] = Object.values(PermissionItem);
 
 export const DEFAULT_PERMISSION_BY_APP: Record<Subdomain, DefaultRole> = {
   [Subdomain.TEACH]: DefaultRole.ADMIN,
@@ -34,28 +20,13 @@ export const DEFAULT_PERMISSION_BY_APP: Record<Subdomain, DefaultRole> = {
 };
 
 export const DEFAULT_PERMISSIONS: Record<DefaultRole, PermissionItem[]> = {
+  // Provisional: admin, teacher and assistant all hold every permission until the per-role split
+  // is decided. The apps stay separated by @Subdomains regardless of this map — the learn-only
+  // routes (bookmark, reaction, follower, meet/my, meet/by-ids) cannot be reached from the
+  // teaching app, and the teach-only ones cannot be reached from learning.
   [DefaultRole.ADMIN]: ALL_PERMISSIONS,
-
-  [DefaultRole.TEACHER]: [
-    PermissionItem.VIEW_STAFF,
-
-    PermissionItem.CREATE_COURSE,
-    PermissionItem.EDIT_COURSE,
-    PermissionItem.VIEW_COURSE,
-
-    PermissionItem.MANAGE_SUBJECT,
-
-    PermissionItem.MANAGE_MATERIAL,
-    PermissionItem.VIEW_MATERIAL,
-
-    PermissionItem.MANAGE_TEST_PAPER,
-    PermissionItem.VIEW_TEST_PAPER,
-
-    PermissionItem.MANAGE_CHAPTER,
-
-    PermissionItem.MANAGE_QUESTION,
-    PermissionItem.VIEW_QUESTION,
-  ],
+  [DefaultRole.TEACHER]: ALL_PERMISSIONS,
+  [DefaultRole.ASSISTANT]: ALL_PERMISSIONS,
 
   [DefaultRole.STUDENT]: [
     PermissionItem.VIEW_COURSE,
@@ -68,15 +39,5 @@ export const DEFAULT_PERMISSIONS: Record<DefaultRole, PermissionItem[]> = {
     PermissionItem.MANAGE_REACTION,
     PermissionItem.MANAGE_FOLLOWER,
     PermissionItem.STUDENT,
-  ],
-
-  [DefaultRole.ASSISTANT]: [
-    PermissionItem.VIEW_COURSE,
-
-    PermissionItem.VIEW_MATERIAL,
-
-    PermissionItem.VIEW_TEST_PAPER,
-
-    PermissionItem.VIEW_QUESTION,
   ],
 };
