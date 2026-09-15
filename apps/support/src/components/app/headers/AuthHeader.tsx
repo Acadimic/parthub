@@ -1,4 +1,4 @@
-import { ToggleTheme } from '@repo/ui/app';
+import { FullLogo, ToggleTheme } from '@repo/ui/app';
 
 export const AuthHeader = () => {
   return (
@@ -7,7 +7,7 @@ export const AuthHeader = () => {
         <div className="px-4 md:px-8 py-1.5 border-b border-border">
           <div className="flex justify-between items-center h-12">
             <div className="flex items-end space-x-2">
-              <div className="text-lg font-bold">Acadimic</div>
+              <FullLogo className="h-6 md:h-7" />
               <div className="blue-gradient font-semibold text-xs">Support</div>
             </div>
             <div className="flex items-center space-x-4">

@@ -68,7 +68,9 @@ export const AppSidebar = ({ children }: IProps) => {
                       <menu.icon className={`w-5 h-5 ${menu.route === route ? 'text-primary' : 'text-foreground'}`} />
                     </span>
                     {open && (
-                      <span className={`text-sm font-semibold ${menu.route === route ? 'blue-gradient' : ''}`}>
+                      <span
+                        className={`text-sm font-semibold ${menu.route === route ? 'text-primary' : 'text-foreground'}`}
+                      >
                         {menu.name}
                       </span>
                     )}
