@@ -4,10 +4,10 @@ import { useToastStore } from '@stores';
 import { useEffect, useState } from 'react';
 
 const variantStyles: Record<ToastType, string> = {
-  success: 'bg-green-50 border-green-300 text-green-800',
-  error: 'bg-red-50 border-red-300 text-red-800',
-  warning: 'bg-yellow-50 border-yellow-300 text-yellow-800',
-  info: 'bg-blue-50 border-blue-300 text-blue-800',
+  success: 'bg-success/15 border-success/30 text-success',
+  error: 'bg-destructive/15 border-destructive/30 text-destructive',
+  warning: 'bg-warning/15 border-warning/30 text-warning',
+  info: 'bg-info/15 border-info/30 text-info',
 };
 
 const iconByVariant: Record<ToastType, string> = {

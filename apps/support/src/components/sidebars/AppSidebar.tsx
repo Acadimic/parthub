@@ -35,7 +35,7 @@ export const AppSidebar = ({ children }: IProps) => {
   };
 
   const DrawerContent = () => (
-    <div className="bg-background min-h-screen flex flex-col justify-between items-stretch">
+    <div className="bg-background min-h-screen flex flex-col justify-between items-stretch border-r border-border">
       <div className="grow">
         <div className="flex items-end w-full space-x-2 p-4 h-16">
           <div>

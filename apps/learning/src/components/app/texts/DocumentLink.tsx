@@ -12,7 +12,7 @@ export const DocumentLink = ({ documentObject }: IProps) => {
         href={documentObject.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-500 truncate hover:underline max-w-12"
+        className="text-primary truncate hover:underline max-w-12"
       >
         {documentObject.fileName}
       </Link>

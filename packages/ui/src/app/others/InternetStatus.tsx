@@ -26,8 +26,8 @@ export const InternetStatus = () => {
       <div className={`transition-all duration-300 overflow-hidden ${isIndicator ? 'max-h-20' : 'max-h-0'}`}>
         <div
           className={`${
-            isOnline ? 'bg-[#479F60]' : 'bg-[#4087FF]'
-          } text-white py-2.5 text-sm font-medium flex gap-2 justify-center items-center`}
+            isOnline ? 'bg-success text-success-foreground' : 'bg-info text-info-foreground'
+          } py-2.5 text-sm font-medium flex gap-2 justify-center items-center`}
         >
           {isOnline ? <WifiHighIcon weight="bold" size={18} /> : <WifiSlashIcon weight="bold" size={18} />}
           <p>

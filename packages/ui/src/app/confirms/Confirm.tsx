@@ -13,7 +13,7 @@ export const Confirm = ({ onForceClose, onCancel, message }: IProps) => {
       <div className="pt-4">
         <div className="mb-2 px-4 md:px-6">
           <div className="flex justify-between items-center space-x-6 pr-1">
-            <div className="font-medium text-lg text[#464E5F]">Confirm Leave?</div>
+            <div className="font-medium text-lg text-foreground">Confirm Leave?</div>
             <div>
               <button onClick={onCancel} className="bg-transparent">
                 <XIcon className="font-bold w-5 h-5 text-muted-foreground" />

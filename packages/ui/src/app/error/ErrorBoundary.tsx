@@ -13,7 +13,7 @@ export function ErrorBoundaryFallback() {
         <h1 className="m-auto font-bold text-xl text-center py-4">Oops! Something went wrong</h1>
         <h3 className="m-auto text-sm text-center py-2">
           Try refreshing the page and if it doesn&#39;t solve the issue, please email us at{' '}
-          <a href="mailto:contact@parthhub.com" className="text-blue-500">
+          <a href="mailto:contact@parthhub.com" className="text-primary">
             contact@acadimic.com
           </a>
         </h3>

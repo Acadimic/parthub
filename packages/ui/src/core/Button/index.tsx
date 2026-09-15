@@ -17,19 +17,31 @@ export interface IButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
 
 type ButtonVariant = Pick<IButtonProps, 'isRound' | 'isSecondary' | 'isSubtle' | 'isLoading' | 'isFull' | 'className'>;
 
+/**
+ * Hover shifts the fill rather than the whole button's opacity. Opacity fades the label and the
+ * border with the background, so a hovered button reads as disabled; it also lets whatever sits
+ * behind it bleed through. The alpha is on the token instead, which only resolves because the
+ * palette is emitted as bare HSL channels — see `themes/tailwind.ts`.
+ */
 const getVariantClass = ({ isSecondary, isSubtle }: ButtonVariant) => {
-  if (isSecondary) return 'bg-background border-border text-foreground';
-  if (isSubtle) return 'bg-transparent border-transparent';
-  return 'bg-primary border-primary text-primary-foreground';
+  if (isSecondary) return 'bg-background border-border text-foreground hover:bg-accent';
+  if (isSubtle) return 'bg-transparent border-transparent hover:bg-accent';
+  return 'bg-primary border-primary text-primary-foreground hover:bg-primary/90 hover:border-primary/90';
 };
 
 const getButtonClass = (variant: ButtonVariant) =>
   cn(
-    'select-none text-sm font-semibold border hover:opacity-80 transition-opacity',
-    variant.isRound ? 'rounded-full' : 'rounded-none',
+    'select-none text-sm font-semibold border transition-colors',
+    // Keyboard users had no focus indicator at all before this. `focus-visible` rather than
+    // `focus`, so a pointer click does not leave a ring behind.
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+    'disabled:opacity-50 disabled:pointer-events-none',
+    variant.isRound ? 'rounded-full' : 'rounded-md',
     getVariantClass(variant),
     variant.isLoading && 'opacity-80',
     variant.isFull ? 'w-full text-center' : '',
+    // A caller passing `className` replaces the padding rather than adding to it. Long-standing
+    // behaviour that several call sites rely on to render a padding-free text button.
     variant.className ?? 'px-3 md:px-4 py-1.5',
   );
 

@@ -43,7 +43,7 @@ export const Menu = ({ items, trigger, data, className, header }: IMenuProps) =>
               <DropdownMenuItem
                 onClick={() => item.onClick(data)}
                 className={cn(
-                  'py-3 px-3 text-sm font-medium rounded-none cursor-pointer',
+                  'py-3 px-3 text-sm font-medium rounded-sm cursor-pointer',
                   item.isDanger ? 'text-destructive hover:text-destructive' : 'hover:text-primary',
                   item.isCurrent && 'text-primary',
                 )}

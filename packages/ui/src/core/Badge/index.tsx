@@ -1,21 +1,27 @@
 import { Badge as ShadcnBadge } from '../../ui/badge';
-import { cn } from '../../lib/cn';
 
-interface IBadgeProps {
+type BadgeTone = 'neutral' | 'primary' | 'success' | 'warning' | 'destructive' | 'info' | 'brand';
+type BadgeAppearance = 'soft' | 'solid' | 'outline';
+
+export interface IBadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'secondary' | 'destructive' | 'outline';
+  /** Which token the pill is built from. `neutral` for a plain label, a status tone for a state. */
+  tone?: BadgeTone;
+  /** `soft` is a tinted fill, `solid` a filled block, `outline` a bordered label. Defaults to `soft`. */
+  appearance?: BadgeAppearance;
+  /** Renders a filled dot in the pill's tone. Use when the pill sits in a dense column and the
+   *  colour alone has to be findable at a glance — colour is not available to every reader. */
+  withDot?: boolean;
   className?: string;
 }
 
-export const Badge = ({ children, variant = 'default', className }: IBadgeProps) => {
+export const Badge = ({ children, tone = 'neutral', appearance = 'soft', withDot, className }: IBadgeProps) => {
   return (
-    <ShadcnBadge
-      variant={variant}
-      className={cn('text-xs font-medium', variant === 'default' && 'bg-primary hover:bg-primary/90', className)}
-    >
+    <ShadcnBadge tone={tone} appearance={appearance} className={className}>
+      {withDot ? <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" aria-hidden="true" /> : null}
       {children}
     </ShadcnBadge>
   );
 };
 
-export type { IBadgeProps };
+export type { BadgeTone, BadgeAppearance };

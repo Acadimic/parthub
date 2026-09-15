@@ -1,11 +1,18 @@
 /** @type {import('tailwindcss').Config} */
-import { dark, light } from '../../packages/ui/src/themes';
-import { getColors } from '../../packages/ui/src/lib';
+import { uiPreset } from '../../packages/ui/src/themes/preset';
 
-const { createThemes } = require('tw-colors');
 const tailwindcssAnimate = require('tailwindcss-animate');
 
+/**
+ * Everything shared — the palette, radius, type scale, keyframes — lives in `uiPreset` so the three
+ * apps cannot drift. Only `content` is app-specific.
+ *
+ * `important: true` makes every utility emit `!important`, so a plain CSS rule cannot override one
+ * but an inline `style={{}}` still beats it. Removing it would silently change which rule wins in
+ * every app — see `style-with-tailwind` must #6.
+ */
 module.exports = {
+  presets: [uiPreset],
   darkMode: ['class', '[data-theme="dark"]'],
   important: true,
   content: [
@@ -15,34 +22,5 @@ module.exports = {
     './src/layouts/**/*.{js,ts,jsx,tsx}',
     '../../packages/ui/src/**/*.{ts,tsx}',
   ],
-  theme: {
-    extend: {
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-      },
-      transitionProperty: {
-        width: 'width',
-        height: 'height',
-      },
-      fontSize: {
-        xxs: '10px',
-      },
-      keyframes: {
-        'accordion-down': {
-          from: { height: '0' },
-          to: { height: 'var(--radix-accordion-content-height)' },
-        },
-        'accordion-up': {
-          from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: '0' },
-        },
-      },
-      animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
-      },
-    },
-  },
-  plugins: [tailwindcssAnimate, createThemes({ light: getColors(light.colors), dark: getColors(dark.colors) })],
+  plugins: [tailwindcssAnimate],
 };

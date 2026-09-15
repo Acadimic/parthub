@@ -105,7 +105,7 @@ export const Symbol = ({ handleChange, closeModal }: IProps) => {
       {groupedItems.map((group) => (
         <div key={group.group} className="flex flex-col">
           <div className="font-medium text-base mb-4 pb-2 border-b border-border flex items-center gap-2">
-            <DotsNineIcon weight="bold" className="w-4 h-4 text-primary" />{' '}
+            <DotsNineIcon weight="bold" className="w-4 h-4 text-muted-foreground" />{' '}
             <span className="font-semibold text-sm">{group.group}</span>
           </div>
           <div className="flex flex-wrap gap-1">

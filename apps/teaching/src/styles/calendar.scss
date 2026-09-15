@@ -200,7 +200,7 @@
 }
 
 .fc .fc-popover {
-  border-radius: 6px;
+  border-radius: var(--radius);
   max-width: 30vw;
   .fc-popover-body {
     padding: 8px;
@@ -214,7 +214,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 3px 4px;
-    border-radius: 6px;
+    border-radius: var(--radius);
     .fc-popover-title {
       font-weight: 500;
       font-size: 14px;

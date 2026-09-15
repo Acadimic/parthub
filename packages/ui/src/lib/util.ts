@@ -22,19 +22,6 @@ export const clearLocalStorage = () => {
   if (!IS_WINDOW_UNDEFINED) localStorage.clear();
 };
 
-export const getColors = (colors: Record<string, string | Record<string, string>>) => {
-  const resColors: Record<string, string> = {};
-  Object.keys(colors).forEach((key) => {
-    const value = colors[key];
-    if (typeof value === 'object') {
-      Object.keys(value).forEach((itemKey) => {
-        resColors[`${key}-${itemKey}`] = value[itemKey];
-      });
-    } else resColors[key] = value;
-  });
-  return resColors;
-};
-
 export const formatPhoneNumber = (phoneNumber: string): string => {
   if (!phoneNumber) return '';
   let newNumber = String(phoneNumber);

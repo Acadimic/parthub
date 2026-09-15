@@ -122,7 +122,7 @@ const SelectElement = ({
         </div>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] p-0 bg-background border border-border rounded-none"
+        className="w-[var(--radix-popover-trigger-width)] p-0 bg-background border border-border rounded-md"
         align="start"
       >
         {title && (

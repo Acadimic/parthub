@@ -45,7 +45,7 @@ export const TestPaperSummary = () => {
               <div key={row.label} className="px-1 flex justify-between border-b border-border py-2">
                 <div>
                   <div className="flex items-center space-x-2 blue-gradient">
-                    <row.icon className="w-5 font-bold text-primary" />
+                    <row.icon className="w-5 font-bold text-muted-foreground" />
                     <div className="text-sm font-semibold">{row.label}</div>
                   </div>
                 </div>

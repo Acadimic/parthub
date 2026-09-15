@@ -53,10 +53,18 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   const [isReady, setIsReady] = useState(false);
   const [mode, setMode] = useState<ThemeMode>();
 
+  /**
+   * Writes the theme to `<html>`, not just to React state. `_document.tsx` stamps the same
+   * attribute before first paint; this keeps it in step on a toggle. Updating only the wrapper div
+   * would leave `<body>`, the full-screen loader and the toast container on the previous theme,
+   * because all three render outside it.
+   */
   const setTheme = (currentTheme: ThemeMode) => {
     setMode(currentTheme);
-    if (currentTheme === Theme.DARK) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
+    const element = document.documentElement;
+    element.setAttribute('data-theme', currentTheme);
+    if (currentTheme === Theme.DARK) element.classList.add('dark');
+    else element.classList.remove('dark');
   };
 
   const colorMode = useMemo(

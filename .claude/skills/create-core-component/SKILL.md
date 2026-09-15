@@ -104,7 +104,7 @@ tokens — see the `style-with-tailwind` skill, and never use shadcn's own `bord
 - **Shared types:** React-aware item types (`ISelectItem`, `IMenuItem`, `IColumnData`, ...) live in
   `packages/ui/src/types`; pure data types and enums live in `@repo/shared`
 - **Icons:** `@phosphor-icons/react`
-- **Styling:** Tailwind classes; theme colors come from `packages/ui/src/themes` via the `tw-colors` plugin
+- **Styling:** Tailwind classes; theme colours come from `packages/ui/src/themes` as CSS variables, so every token also takes an opacity modifier (`bg-primary/12`)
   (e.g. `text-color-primary`, `bg-background-secondary`, `text-red-primary`)
 - **No "use client"** — the apps use the Pages Router
 
@@ -142,7 +142,7 @@ Then check the file against the ones already there:
 - Icons in a wrapper or in feature code come from `@phosphor-icons/react`. A generated primitive
   keeps whatever it came with: nine of them import `lucide-react`, which is why that package is a
   `packages/ui` dependency. Leave those as they are rather than churning the file.
-- Theme colours come from `packages/ui/src/themes` through the `tw-colors` plugin, so prefer
+- Theme colours come from `packages/ui/src/themes` as CSS variables, so prefer
   `text-color-primary` / `bg-background-secondary` / `text-red-primary` over raw palette classes
   when you touch the classes at all.
 - A new Radix dependency goes in `packages/ui/package.json`, not an app's.

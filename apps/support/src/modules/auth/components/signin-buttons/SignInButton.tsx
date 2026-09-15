@@ -27,7 +27,7 @@ export const SignInButton = ({ name, isLoading, onClick, isDisabled }: IProps) =
         ) : (
           <>
             <img src={BUTTON_IMAGES[name]} alt={`${name} auth button`} className="h-6 w-auto" />
-            <span className="text-lg font-rubik text-foreground">{name}</span>
+            <span className="text-lg text-foreground">{name}</span>
           </>
         )}
       </div>

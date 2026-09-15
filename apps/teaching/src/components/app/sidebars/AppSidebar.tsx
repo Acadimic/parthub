@@ -31,7 +31,7 @@ const DrawerContent = ({ open, route, onToggle, onNavigate }: IDrawerProps) => (
   // h-screen with a scrolling nav, not min-h-screen: the parent clips overflow, so a column taller
   // than the window pushed the collapse control out of sight with no way to reach it. The nav is
   // the only part allowed to grow; the logo and the toggle are pinned.
-  <div className="bg-background h-screen flex flex-col items-stretch">
+  <div className="bg-background h-screen flex flex-col items-stretch border-r border-border">
     <div
       className={cn(
         'flex items-center h-16 shrink-0 pr-2.5 transition-[padding] duration-300 ease-in-out',
@@ -45,7 +45,7 @@ const DrawerContent = ({ open, route, onToggle, onNavigate }: IDrawerProps) => (
       </div>
       <span
         className={cn(
-          'text-primary font-semibold text-xs whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out',
+          'text-foreground font-semibold text-xs whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out',
           open ? 'ml-2 max-w-20 opacity-100' : 'ml-0 max-w-0 opacity-0',
         )}
       >

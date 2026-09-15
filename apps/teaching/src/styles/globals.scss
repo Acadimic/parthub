@@ -54,7 +54,9 @@ input[type='number'] {
     border: 2px solid transparent;
     background-clip: padding-box;
     background-color: rgba(128, 128, 128, 0.35);
-    border-radius: 8px;
+    /* Follows the design system's corner knob rather than a fixed 8px, so the thumb does not stay
+       rounded when the rest of the interface is square. */
+    border-radius: var(--radius);
   }
 
   ::-webkit-scrollbar-thumb:hover {

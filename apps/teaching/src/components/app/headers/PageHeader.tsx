@@ -12,7 +12,7 @@ const SearchBar = () => {
           placeholder="Find courses, materials, papers"
           className="flex-1 pl-4 py-3 pr-0 text-sm bg-transparent outline-none rounded-l-full"
         />
-        <button className="bg-primary hover:bg-blue-700 rounded-full p-2 mr-2" aria-label="search">
+        <button className="bg-primary hover:bg-primary/90 rounded-full p-2 mr-2" aria-label="search">
           <MagnifyingGlassIcon weight="bold" className="w-4 h-4 text-primary-foreground" />
         </button>
       </div>

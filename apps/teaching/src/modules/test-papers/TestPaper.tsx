@@ -194,7 +194,7 @@ export const TestPaper = ({ testPaperId }: IProps) => {
           items={sections.map((section) => ({
             title: (
               <div className="flex justify-between w-full items-center relative">
-                <div className="text-sm font-bold text-primary">
+                <div className="text-sm font-bold text-foreground">
                   {section.name}{' '}
                   <Tooltip
                     title={`${getSectionQuestions(section._id).length} Question${getSectionQuestions(section._id).length > 1 ? 's' : ''}`}

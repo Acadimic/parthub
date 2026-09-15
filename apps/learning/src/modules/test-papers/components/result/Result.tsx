@@ -114,7 +114,7 @@ export const Result = () => {
                   </div>
                   <div className="capitalize font-medium">{splitCamelCase(key)}</div>
                   <div className="font-semibold">{getResultCounts()[key]}</div>
-                  <div className="font-medium text-light-muted dark:text-dark-muted">Questions</div>
+                  <div className="font-medium text-muted-foreground">Questions</div>
                 </div>
               );
             })}

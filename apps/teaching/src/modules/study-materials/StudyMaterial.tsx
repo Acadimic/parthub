@@ -104,7 +104,7 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
             return {
               title: (
                 <div className="flex justify-between w-full items-center relative">
-                  <div className="text-sm font-bold text-primary">
+                  <div className="text-sm font-bold text-foreground">
                     <span className="text-muted-foreground">{index + 1}.</span> {material.name}
                   </div>
                   <div className="absolute -right-4">

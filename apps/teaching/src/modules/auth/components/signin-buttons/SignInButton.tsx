@@ -25,11 +25,9 @@ export const SignInButton = ({ name, isLoading, onClick, isDisabled }: IProps) =
         {isLoading ? (
           <Spinner className="w-8 h-8" />
         ) : (
-          <div className="flex justify-between w-full">
-            <div>
-              <img src={BUTTON_IMAGES[name]} alt={`${name} auth button`} className="h-6 w-auto" />
-            </div>
-            <div className="text-sm font-rubik text-foreground flex-1">Continue with {name}</div>
+          <div className="flex w-full items-center">
+            <img src={BUTTON_IMAGES[name]} alt={`${name} auth button`} className="h-6 w-auto" />
+            <div className="flex-1 text-center text-sm text-foreground">Continue with {name}</div>
           </div>
         )}
       </div>

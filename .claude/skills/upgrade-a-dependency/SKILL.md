@@ -198,7 +198,7 @@ Node is pinned to 24.21.0 LTS via Volta.
 | `react` 19.0.0-rc → 19.2.x with `@types/react` 18 → 19 | Removes both the RC pin and the types mismatch. One commit, five manifests, then check `ls node_modules/.pnpm \| grep -E '^react@'` prints one version. |
 | `next` 15 → 16 | Pages Router behaviour. `next lint` is already out of the path, so that part is done. |
 | `zustand` 5 → 6, when it lands | The stores are the apps' spine. Check `useShallow`'s import path and whether `getInitialState` is still the SSR snapshot — the request hooks in `@repo/ui/hooks` rely on both. |
-| `tailwindcss` 3 → 4 | Config moves into CSS. **Check `tw-colors` compatibility before starting** — the whole palette comes from that plugin. |
+| `tailwindcss` 3 → 4 | Config moves into CSS. `tw-colors` used to be the blocker and is gone — the palette is emitted as CSS variables by `packages/ui/src/themes/preset.ts`, which is already the v4-shaped form. The remaining work is the config itself and `tailwindcss-animate`. |
 | `@fullcalendar/*` 6 → 7 | Teaching only, isolated to the calendar module. |
 
 ## Upgrading Node itself

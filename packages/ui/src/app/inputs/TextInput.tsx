@@ -48,7 +48,7 @@ export const TextInput = (props: IProps) => {
     <div>
       {label && <Label label={label} required={required} />}
       <div
-        className={`bg-background hover:bg-accent flex items-center border rounded-none ${isFocused ? 'border-primary bg-muted' : 'border-border'}`}
+        className={`bg-background hover:bg-accent flex items-center border rounded-md ${isFocused ? 'border-primary bg-muted' : 'border-border'}`}
       >
         {leftsection ? (
           <div className={`flex items-center ${isFocused ? 'text-primary' : ''} pl-3`}>{leftsection}</div>

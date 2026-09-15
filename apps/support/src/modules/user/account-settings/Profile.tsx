@@ -75,8 +75,8 @@ export const Profile = () => {
           <div className="w-[100px] h-[100px] rounded-full bg-accent flex items-center justify-center text-[50px] font-medium text-foreground">
             {user.displayName?.[0]}
           </div>
-          <h1 className="text-4xl uppercase font-bold text-[#d029d6]">{user.displayName}</h1>
-          <div className="py-2 px-6 rounded-2xl flex items-center justify-center bg-blue-600 font-bold uppercase tracking-widest text-white">
+          <h1 className="text-4xl uppercase font-bold text-foreground">{user.displayName}</h1>
+          <div className="py-2 px-6 rounded-2xl flex items-center justify-center bg-primary font-bold uppercase tracking-widest text-primary-foreground">
             {user.email}
           </div>
           <div className="mt-4 max-w-[350px]">

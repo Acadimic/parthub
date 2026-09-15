@@ -96,9 +96,9 @@ export const SignIn = () => {
                   rightsection={
                     <div className="" onClick={togglePassword}>
                       {isShowPassword ? (
-                        <EyeSlashIcon weight="thin" className="text-[#929499]" />
+                        <EyeSlashIcon weight="thin" className="text-muted-foreground" />
                       ) : (
-                        <EyeIcon weight="thin" className="text-[#929499]" />
+                        <EyeIcon weight="thin" className="text-muted-foreground" />
                       )}
                     </div>
                   }

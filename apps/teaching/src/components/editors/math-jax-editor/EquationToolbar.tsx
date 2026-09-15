@@ -331,7 +331,7 @@ export const EquationToolbar = ({ handleChange, block, onClose }: IProps) => {
                 {groupedEquationToolbarItems.map((groupedItem) => (
                   <div key={groupedItem.group} className="mb-8">
                     <div className="font-medium text-base mb-4 pb-2 border-b border-border flex items-center gap-2">
-                      <DotsNineIcon weight="bold" className="w-4 h-4 text-primary" /> {groupedItem.group}
+                      <DotsNineIcon weight="bold" className="w-4 h-4 text-muted-foreground" /> {groupedItem.group}
                     </div>
                     <div className="flex flex-wrap gap-4">
                       {groupedItem.items.map((item) => (
@@ -360,7 +360,7 @@ export const EquationToolbar = ({ handleChange, block, onClose }: IProps) => {
             </div>
           )}
         >
-          <div className="flex items-center gap-2 px-0 py-1.5 rounded hover:bg-background-hover cursor-pointer">
+          <div className="flex items-center gap-2 px-0 py-1.5 rounded hover:bg-accent cursor-pointer">
             <FunctionIcon weight="bold" className="w-4 h-4" />
             <CaretDownIcon className="w-4 h-4" />
           </div>

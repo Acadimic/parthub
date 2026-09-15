@@ -201,7 +201,7 @@ const SelectElement = ({
           )}
           <div className="border border-border border-t rounded-t-sm bg-background">
             <div className="flex items-center px-3 py-1.5 border-b border-border">
-              <MagnifyingGlassIcon className="w-5 h-5 text-primary mr-2 flex-shrink-0" />
+              <MagnifyingGlassIcon className="w-5 h-5 text-muted-foreground mr-2 flex-shrink-0" />
               <input
                 type="text"
                 placeholder={label ? `Search ${label}` : 'Search'}
@@ -225,7 +225,7 @@ const SelectElement = ({
               Object.entries(groupedItems).map(([group, groupItems]) => (
                 <div key={group}>
                   <div className="flex items-center text-xs font-medium text-muted-foreground px-3 py-2 border-b border-x border-border bg-background capitalize space-x-2">
-                    <SquaresFourIcon className="text-primary h-4 w-4" />
+                    <SquaresFourIcon className="text-muted-foreground h-4 w-4" />
                     <div>{group}</div>
                   </div>
                   {groupItems.map(renderOption)}

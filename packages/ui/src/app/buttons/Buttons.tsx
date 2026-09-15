@@ -18,14 +18,16 @@ export interface IButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
 type ButtonVariant = Pick<IButtonProps, 'isRound' | 'isSecondary' | 'isSubtle' | 'isLoading' | 'isFull' | 'className'>;
 
 const getVariantClass = ({ isSecondary, isSubtle }: ButtonVariant) => {
-  if (isSecondary) return 'bg-background';
-  if (isSubtle) return 'bg-transparent';
-  return 'bg-primary border-primary text-primary-foreground';
+  if (isSecondary) return 'bg-background hover:bg-accent';
+  if (isSubtle) return 'bg-transparent hover:bg-accent';
+  return 'bg-primary border-primary text-primary-foreground hover:bg-primary/90 hover:border-primary/90';
 };
 
 const getButtonClass = (variant: ButtonVariant) =>
-  `${variant.className ?? 'px-3 md:px-4 py-1.5'} select-none text-sm font-semibold border hover:opacity-80
-        ${variant.isRound ? 'rounded-full' : 'rounded-none'}
+  `${variant.className ?? 'px-3 md:px-4 py-1.5'} select-none text-sm font-semibold border transition-colors
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
+        disabled:opacity-50 disabled:pointer-events-none
+        ${variant.isRound ? 'rounded-full' : 'rounded-md'}
         ${getVariantClass(variant)}
         ${variant.isLoading ? 'opacity-80' : ''}
         ${variant.isSubtle ? 'border-transparent' : 'border-border'}

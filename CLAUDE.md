@@ -92,7 +92,7 @@ pnpm --filter @repo/ui <script>
   108 `TS2564`) and none in app code. The declaration output is what lets shared keep those two
   exceptions to itself, which is why a stale `dist` shows up as a misleading type error in a
   consumer and why `build:shared` comes first. `declarationMap` and `sourceMap` are on, so go-to-definition and the debugger follow `dist` back to `src/*.ts` — you read and edit the source, while resolution still goes through the declaration output. Seven entry points: `@repo/shared` plus `/contracts`, `/enums`, `/interfaces`, `/responses`, `/utils` and `/validations`. **Import the subpath, never the root barrel** — the root is the union of the other six with no name in two of them, so the subpath is what says whether a name is a wire shape, an enum, a pure interface or a runtime helper. Source has zero root-barrel imports; `.` stays published only because `main`/`types` point at it. The validation DTOs are deliberately kept out of the root barrel so class-validator never reaches a browser bundle; `contracts/` re-exports their shapes as types only.
-- **`packages/ui` (`@repo/ui`)** — every shared React component, consumed as TS source via `transpilePackages` (no build): `ui/` shadcn primitives, `core/` wrappers over them, `app/` components composed from `core/`, plus `contexts/`, `hooks/`, `lib/` (cn, date-time, pure and browser helpers), `themes/` (light/dark used by every app's `tailwind.config.js`) and `types/` (React-aware item types such as `ISelectItem`, `IMenuItem`, `IColumnData`). Subpaths: `.`, `./core`, `./app`, `./ui/*`, `./contexts`, `./hooks`, `./lib`, `./themes`, `./types`. **`./app` is deliberately not in the root barrel**: fourteen names exist in both `core` and `app` with different APIs. See `packages/ui/README.md` for the layer rules and for which components stay in the apps and why.
+- **`packages/ui` (`@repo/ui`)** — every shared React component, consumed as TS source via `transpilePackages` (no build): `ui/` shadcn primitives, `core/` wrappers over them, `app/` components composed from `core/`, plus `contexts/`, `hooks/`, `lib/` (cn, date-time, pure and browser helpers), `themes/` (light/dark plus the shared `uiPreset` every app's `tailwind.config.js` spreads) and `types/` (React-aware item types such as `ISelectItem`, `IMenuItem`, `IColumnData`). Subpaths: `.`, `./core`, `./app`, `./ui/*`, `./contexts`, `./hooks`, `./lib`, `./themes`, `./types`. **`./app` is deliberately not in the root barrel**: fourteen names exist in both `core` and `app` with different APIs. See `packages/ui/README.md` for the layer rules and for which components stay in the apps and why.
 - **Components are imported straight from the package.** Feature code writes `from '@repo/ui/app'` or `from '@repo/ui/core'`; there are no pass-through component barrels. An app keeps an `index.ts` under `src/components` only where that folder still holds its own components, and it exports those alone.
 - **Non-component barrels remain**, because they mix shared and app-only values: `src/enums/index.ts` re-exports `@repo/shared/enums` plus app-only enums; `src/interfaces/index.ts` re-exports shared pure types and `@repo/ui/types` plus app-only interfaces; `src/themes`, `src/hooks/dimensions.hook.ts` and `src/utils/helpers/index.ts` re-export from `@repo/ui`. App `src/utils/helpers/util.ts` holds only helpers that depend on app stores/services.
 - **Enum values are canonical in `packages/shared`** (they match what the server validates). App code that needs a new value adds it there, never in a local copy. Tailwind `content` in each app includes `../../packages/ui/src/**`.
@@ -108,7 +108,7 @@ pnpm --filter @repo/ui <script>
   - **Before writing any UI in a feature, use the `/use-ui-component` skill.** It decides whether an existing app component or core wrapper already covers the need, and if not, has you create the core wrapper first via `/create-core-component` and compose from it. Never hand-roll a shared control or import a raw primitive.
 - **Auth:** Firebase Authentication (email/password + Google/Microsoft OAuth). Token management and refresh in `src/utils/firebase/`.
 - **HTTP:** Axios with separate auth/unauth callers in `src/services/http.service.ts`. Request interceptor adds Bearer token + permission headers.
-- **Styling:** TailwindCSS 3 + MUI 6 + Emotion CSS-in-JS. Light/dark theme via `tw-colors` plugin and `ColorModeContext`.
+- **Styling:** TailwindCSS 3 + MUI 6 + Emotion CSS-in-JS. Light/dark theme via shadcn tokens emitted as CSS variables from `@repo/ui` and `ColorModeContext`.
 - **Icons:** Phosphor Icons (`@phosphor-icons/react`).
 
 ### Teaching (`apps/teaching`) — Next.js 15 Pages Router
@@ -116,7 +116,7 @@ pnpm --filter @repo/ui <script>
 - **Purpose:** Teacher-facing app for managing courses, study materials, test papers, students, and sessions.
 - **State management:** Zustand (same pattern as Learning).
 - **Component layers:** Same three-layer system as Learning, imported directly from `@repo/ui/core` and `@repo/ui/app`.
-- **Styling:** TailwindCSS 3 + shadcn/ui + tw-colors. No MUI dependency.
+- **Styling:** TailwindCSS 3 + shadcn/ui, themed through the shared `uiPreset`. No MUI dependency.
 - **Icons:** Phosphor Icons (`@phosphor-icons/react`).
 - **Auth:** Firebase Authentication (same as Learning).
 
@@ -125,7 +125,7 @@ pnpm --filter @repo/ui <script>
 - **Purpose:** Platform support app for managing standards, subjects, and test papers across the platform.
 - **State management:** Zustand (same pattern as Learning): `standard`, `selector` and `toast` stores, no root store.
 - **Component layers:** Same three-layer system, imported directly from `@repo/ui/core` and `@repo/ui/app`.
-- **Styling:** TailwindCSS 3 + shadcn/ui + tw-colors. No MUI dependency.
+- **Styling:** TailwindCSS 3 + shadcn/ui, themed through the shared `uiPreset`. No MUI dependency.
 - **Icons:** Phosphor Icons (`@phosphor-icons/react`).
 - **Auth:** Firebase Authentication (same as Learning/Teaching).
 - **Pages:** Home, Standards, Subjects, Test Papers, Profile, Sign In.
@@ -174,8 +174,9 @@ Three dependencies are deliberately held back, each on someone else's release:
 - **TypeScript stays on 6**, because `@typescript-eslint@8.70` is the newest release and peers
   `typescript <6.1.0`. TypeScript 7 would break linting in all six workspaces.
 
-Tailwind 4 is the frontend's remaining pending major. Read the `upgrade-a-dependency` skill before
-touching any version.
+Tailwind 4 is the frontend's remaining pending major. `tw-colors` used to block it and has been
+removed — the palette is now emitted as CSS variables by `packages/ui/src/themes/preset.ts`. Read
+the `upgrade-a-dependency` skill before touching any version.
 
 ## Path Aliases
 
