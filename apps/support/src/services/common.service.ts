@@ -5,7 +5,7 @@ import { callAuthApi, callDefaultApi } from './http.service';
 
 class CommonService {
   getIntitalData = async () => {
-    const url = 'common/initial-data';
+    const url = 'common/private-initial-data';
     const resData = await callAuthApi<InitialDataResponse>(url, API.GET);
     return resData;
   };

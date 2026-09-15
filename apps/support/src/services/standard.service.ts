@@ -16,13 +16,13 @@ class StandardService {
   };
 
   getStandards = async () => {
-    const url = 'standard/all';
+    const url = 'standard/private-all';
     const resData = await callAuthApi<StandardDto[]>(url, API.GET);
     return resData;
   };
 
   getStandardSubjectMappings = async () => {
-    const url = 'standard/mapping/all';
+    const url = 'standard/private-mapping/all';
     const resData = await callAuthApi<StandardSubjectMappingDto[]>(url, API.GET);
     return resData;
   };

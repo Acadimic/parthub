@@ -10,7 +10,7 @@ class SubjectService {
   };
 
   getSubjects = async () => {
-    const url = 'subject/all';
+    const url = 'subject/private-all';
     const resData = await callAuthApi<SubjectDto[]>(url, API.GET);
     return resData;
   };

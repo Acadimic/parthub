@@ -12,6 +12,11 @@ const createAxiosInstance = (isUnAuth: boolean, url: string) => {
       'Content-Type': 'application/json',
       'timezone-offset': getTimezoneOffset(),
       timezone: getTimezone(),
+      // Sent on every request, not just authenticated ones: the server refuses an authenticated or
+      // private request that cannot say which app it came from, and @Subdomains routes read it to
+      // decide access. It used to be set inside the auth interceptor, so unauthenticated calls
+      // carried neither it nor a timezone.
+      app: Subdomain.TEACH,
     },
   });
 
@@ -23,9 +28,6 @@ const createAxiosInstance = (isUnAuth: boolean, url: string) => {
       const token = getToken();
       if (config.headers && token) {
         config.headers.Authorization = `Bearer ${token}`;
-        // The server restricts app-specific routes with @Subdomains and reads this header to
-        // decide. It used to look for a path segment no client ever sent, so those routes 403'd.
-        config.headers.app = Subdomain.TEACH;
         config.headers.organization = localStorage.getItem(StorageKey.ORGANIZATION);
       }
       return config;

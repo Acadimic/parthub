@@ -2,7 +2,7 @@ import { type SuccessResponse } from '@repo/shared/responses';
 import axios, { type AxiosError } from 'axios';
 import { API, StorageKey, Subdomain } from '../enums';
 import { generateAndSetNewToken } from '../utils/firebase';
-import { getToken, handleError } from '../utils/helpers';
+import { getTimezone, getTimezoneOffset, getToken, handleError } from '../utils/helpers';
 import { toPayload } from '@repo/ui/lib';
 
 export const callDefaultApi = () => axios.create();
@@ -12,6 +12,13 @@ const createAxiosInstance = (isUnAuth: boolean) => {
     baseURL: process.env.NEXT_PUBLIC_BASE_URL,
     headers: {
       'Content-Type': 'application/json',
+      // Sent on every request, not just authenticated ones: the server refuses an authenticated or
+      // private request that cannot say which app it came from, and @Subdomains routes read it to
+      // decide access. It used to be set inside the auth interceptor, so unauthenticated calls
+      // carried neither it nor a timezone.
+      app: Subdomain.LEARN,
+      timezone: getTimezone(),
+      'timezone-offset': getTimezoneOffset(),
     },
   });
 
@@ -23,9 +30,6 @@ const createAxiosInstance = (isUnAuth: boolean) => {
       const token = getToken();
       if (config.headers && token) {
         config.headers.Authorization = `Bearer ${token}`;
-        // The server restricts app-specific routes with @Subdomains and reads this header to
-        // decide. It used to look for a path segment no client ever sent, so those routes 403'd.
-        config.headers.app = Subdomain.LEARN;
         config.headers.organization = localStorage.getItem(StorageKey.ORGANIZATION);
       }
       return config;

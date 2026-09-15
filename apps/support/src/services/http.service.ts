@@ -2,7 +2,7 @@ import { type SuccessResponse } from '@repo/shared/responses';
 import axios, { type AxiosError } from 'axios';
 import { API, StorageKey, Subdomain } from '../enums';
 import { generateAndSetNewToken } from '../utils/firebase';
-import { getToken, getUtcOffset, handleError } from '../utils/helpers';
+import { getTimezone, getTimezoneOffset, getToken, handleError } from '../utils/helpers';
 import { toPayload } from '@repo/ui/lib';
 
 const createAxiosInstance = (isUnAuth: boolean, url: string) => {
@@ -10,7 +10,13 @@ const createAxiosInstance = (isUnAuth: boolean, url: string) => {
     baseURL: url,
     headers: {
       'Content-Type': 'application/json',
-      'timezone-offset': getUtcOffset(),
+      'timezone-offset': getTimezoneOffset(),
+      timezone: getTimezone(),
+      // Sent on every request, not just authenticated ones: the server refuses an authenticated or
+      // private request that cannot say which app it came from, and @Subdomains routes read it to
+      // decide access. It used to be set inside the auth interceptor, so unauthenticated calls
+      // carried neither it nor a timezone.
+      app: Subdomain.SUPPORT,
     },
   });
 
@@ -21,19 +27,18 @@ const createAxiosInstance = (isUnAuth: boolean, url: string) => {
     try {
       const token = getToken();
       if (config.headers && token) {
-        // Both credentials travel together, deliberately, while this app moves to private APIs.
+        // `api-key` is what @Private() routes check, and every endpoint this app calls is now one.
+        // It comes from a NEXT_PUBLIC_ variable, so it is inlined into the browser bundle and
+        // readable by anyone who opens this app — it is not a secret, and @Private() is not a
+        // security boundary while that is true.
         //
-        // `api-key` is what @Private() routes check. It comes from a NEXT_PUBLIC_ variable, so it
-        // is inlined into the browser bundle and readable by anyone who opens this app — it is not
-        // a secret, and @Private() is not a security boundary while that is true.
-        //
-        // The bearer token is still required, because four of the endpoints this app calls
-        // (common/initial-data, standard/all, standard/mapping/all, subject/all) are shared with
-        // teaching and learning and are therefore ordinary authenticated routes. They cannot
-        // become private without breaking those apps.
+        // The bearer token no longer gates any endpoint here: the four shared reads moved to
+        // private twins (`common/private-initial-data`, `standard/private-all`,
+        // `standard/private-mapping/all`, `subject/private-all`). It is still sent because the app
+        // signs users in with Firebase and the session is what decides whether the UI renders at
+        // all — dropping it is a separate change to `_app.tsx`, not to this header.
         config.headers['api-key'] = process.env.NEXT_PUBLIC_PRIVATE_API_KEY;
         config.headers.Authorization = `Bearer ${token}`;
-        config.headers.app = Subdomain.SUPPORT;
         config.headers.organization = localStorage.getItem(StorageKey.ORGANIZATION);
       }
       return config;

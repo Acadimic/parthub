@@ -1,4 +1,5 @@
 import { PermissionItem, Subdomain } from '@repo/shared/enums';
+import { Private } from '@decorators';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, ParseArrayPipe } from '@nestjs/common';
@@ -13,9 +14,11 @@ export class StandardController {
     private readonly standardSubjectMappingService: StandardSubjectMappingService,
   ) {}
 
+  // Private, not authenticated: the support dashboard is the only caller and reaches it
+  // machine-to-machine. Writes still stamp org/createdBy/updatedBy, because AuthGuard resolves a
+  // real service account for private routes — see `getPrivateIdentity`.
+  @Private()
   @Post('upsert')
-  @Subdomains(Subdomain.SUPPORT)
-  @Permissions(PermissionItem.MANAGE_STANDARD)
   async upsertStandard(@Body() payload: StandardDto) {
     const data = await this.standardService.upsert(payload);
     return data;
@@ -40,6 +43,14 @@ export class StandardController {
     return data;
   }
 
+  /** The support dashboard's machine-to-machine twin of `all`. */
+  @Private()
+  @Get('private-all')
+  async privateGetAllStandards() {
+    const data = await this.standardService.getAll();
+    return data;
+  }
+
   @Post('mapping/upsert')
   @Subdomains(Subdomain.SUPPORT)
   @Permissions(PermissionItem.MANAGE_STANDARD)
@@ -48,9 +59,8 @@ export class StandardController {
     return data;
   }
 
+  @Private()
   @Post('mapping/bulk-upsert')
-  @Subdomains(Subdomain.SUPPORT)
-  @Permissions(PermissionItem.MANAGE_STANDARD)
   async bulkUpsertMappings(
     @Body(new ParseArrayPipe({ items: StandardSubjectMappingDto, whitelist: true, forbidNonWhitelisted: true }))
     payloads: StandardSubjectMappingDto[],
@@ -63,6 +73,14 @@ export class StandardController {
   @Subdomains(Subdomain.SUPPORT, Subdomain.TEACH, Subdomain.LEARN)
   @Permissions()
   async getAllMappings() {
+    const data = await this.standardSubjectMappingService.getAll();
+    return data;
+  }
+
+  /** The support dashboard's machine-to-machine twin of `mapping/all`. */
+  @Private()
+  @Get('private-mapping/all')
+  async privateGetAllMappings() {
     const data = await this.standardSubjectMappingService.getAll();
     return data;
   }

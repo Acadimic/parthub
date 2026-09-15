@@ -13,6 +13,12 @@ export class SecretsValidator {
   @IsNotEmpty()
   DB_URL: string;
 
+  /** The account every @Private() route writes as. Optional so a deployment with no private
+   *  routes in use still boots; a private write fails loudly if it is missing. */
+  @IsString()
+  @IsOptional()
+  PRIVATE_API_EMAIL: string;
+
   @IsString()
   @IsOptional()
   AWS_ACCESS_KEY: string;

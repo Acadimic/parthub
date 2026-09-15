@@ -25,12 +25,40 @@ interface AuthRequest {
   user?: UserDto;
 }
 
+/**
+ * The context an authenticated or private request carries. Every field is required *and* holds a
+ * value — the three headers are read through `getApp` / `getRequiredHeader`, which throw rather
+ * than return undefined, so nothing here can be an empty string smuggled in from a missing header.
+ *
+ * That is safe because all three apps now send `app`, `timezone` and `timezone-offset` as base
+ * headers, on every request rather than only inside the auth interceptor.
+ */
 interface ContextPayload {
   apiRoute: string;
   accessType: AccessType;
-  subdomain?: Subdomain;
-  timezone?: string;
-  timezoneOffset?: string;
+  subdomain: Subdomain;
+  timezone: string;
+  timezoneOffset: string;
+}
+
+/**
+ * What `setMinimalRequestContext` takes — the public and private branches share it.
+ *
+ * The three headers widen back to `| undefined` here, and only here, because a `@Public()` route
+ * cannot require them: `/` and `/health` are called by load balancers and uptime checks that send
+ * no headers at all, and `common/public-data` is fetched by an anonymous visitor through
+ * `callUnAuthApi`. Requiring `app` on that path once rejected every public request. The private
+ * branch passes the strict values anyway.
+ *
+ * `userId`/`orgId` are stated by the caller rather than defaulted inside the function: the private
+ * branch resolves a real service account, the public branch passes empty strings to mean "nobody".
+ */
+interface MinimalContextPayload extends Omit<ContextPayload, 'subdomain' | 'timezone' | 'timezoneOffset'> {
+  userId: string;
+  orgId: string;
+  subdomain: Subdomain | undefined;
+  timezone: string | undefined;
+  timezoneOffset: string | undefined;
 }
 
 @Injectable()
@@ -73,6 +101,20 @@ export class AuthGuard implements CanActivate {
    * and an anonymous visitor calls them through `callUnAuthApi`, which sends no app header.
    * Requiring it there rejected every public request.
    */
+  /**
+   * A header the caller must send. Throws rather than returning undefined, so a missing value
+   * surfaces at the edge instead of becoming an empty string three layers down.
+   *
+   * Only used on the authenticated and private paths. `@Public()` routes stay tolerant on purpose:
+   * `/` and `/health` are hit by load balancers and uptime checks that send no headers at all, and
+   * `common/public-data` is fetched by an anonymous visitor.
+   */
+  getRequiredHeader(context: ExecutionContext, key: string): string {
+    const value = this.getHeaderValue(context, key) as string | undefined;
+    if (!value) throw new UnauthorizedException(`The ${key} header is required.`);
+    return value;
+  }
+
   readApp(context: ExecutionContext): Subdomain | undefined {
     const value = this.getHeaderValue(context, 'app') as string | undefined;
     if (!value) return undefined;
@@ -99,10 +141,38 @@ export class AuthGuard implements CanActivate {
     this.clsService.set('requestContext', requestContext);
   }
 
-  setMinimalRequestContext(otherPayload: ContextPayload) {
+  /**
+   * The account every `@Private()` route writes as, resolved once and cached.
+   *
+   * Without it a private write throws: `change-tracking.plugin` demands an org from the request
+   * context and the minimal context carries none, while `createdBy`/`updatedBy` would be skipped
+   * silently because the plugin only stamps them `if (user)`.
+   *
+   * Configured as an email rather than two ObjectIds because those are database ids and differ per
+   * environment — one setting that stays correct in dev and production beats two that must be
+   * looked up and kept in step.
+   *
+   * The account is expected to belong to exactly one organization; `getUsersByEmail` returns a row
+   * per org, and the first is taken.
+   */
+  private privateIdentity?: { userId: string; orgId: string };
+
+  private async getPrivateIdentity(): Promise<{ userId: string; orgId: string }> {
+    if (this.privateIdentity) return this.privateIdentity;
+
+    const email = this.secretsService.get(Secrets.PRIVATE_API_EMAIL) as string;
+    if (!email) throw new UnauthorizedException('Private API service account is not configured.');
+
+    const users = await this.userService.getUsersByEmail(email);
+    const user = users?.[0];
+    if (!user) throw new UnauthorizedException(`Private API service account ${email} was not found.`);
+
+    this.privateIdentity = { userId: String(user._id), orgId: String(user.org) };
+    return this.privateIdentity;
+  }
+
+  setMinimalRequestContext(otherPayload: MinimalContextPayload) {
     const requestContext: IRequestContext = {
-      userId: '',
-      orgId: '',
       permission: DefaultRole.ADMIN,
       ...otherPayload,
     };
@@ -124,8 +194,8 @@ export class AuthGuard implements CanActivate {
 
   async validateAndGetUser(context: ExecutionContext, accessType: AccessType): Promise<UserDto> {
     const request = this.getRequest(context);
-    const timezone = this.getHeaderValue(context, 'timezone') as string;
-    const timezoneOffset = this.getHeaderValue(context, 'timezone-offset') as string;
+    const timezone = this.getRequiredHeader(context, 'timezone');
+    const timezoneOffset = this.getRequiredHeader(context, 'timezone-offset');
     const { url } = request;
     const subdomain = this.getApp(context);
     const org = this.getHeaderValue(context, 'organization') as string;
@@ -176,7 +246,16 @@ export class AuthGuard implements CanActivate {
 
     if (isPublic) {
       accessType = AccessType.PUBLIC;
-      this.setMinimalRequestContext({ apiRoute, accessType, subdomain, timezone, timezoneOffset });
+      // No identity: a public route has no user and no organization.
+      this.setMinimalRequestContext({
+        apiRoute,
+        accessType,
+        subdomain,
+        timezone,
+        timezoneOffset,
+        userId: '',
+        orgId: '',
+      });
       return true;
     }
     if (isPrivate) {
@@ -189,7 +268,17 @@ export class AuthGuard implements CanActivate {
       if (!presented || !this.matchesApiKey(presented, expected)) {
         throw new UnauthorizedException('Invalid API key.');
       }
-      this.setMinimalRequestContext({ apiRoute, accessType, subdomain, timezone, timezoneOffset });
+      const identity = await this.getPrivateIdentity();
+      // Re-read strictly: a private caller is one of our apps, so it must identify itself the same
+      // way an authenticated one does. The tolerant values above exist for the public branch.
+      this.setMinimalRequestContext({
+        apiRoute,
+        accessType,
+        subdomain: this.getApp(context),
+        timezone: this.getRequiredHeader(context, 'timezone'),
+        timezoneOffset: this.getRequiredHeader(context, 'timezone-offset'),
+        ...identity,
+      });
       return true;
     }
 
@@ -197,7 +286,13 @@ export class AuthGuard implements CanActivate {
 
     if (!user) throw new UnauthorizedException('User not found!');
 
-    this.setRequestContext(user, { apiRoute, accessType, subdomain, timezone, timezoneOffset });
+    this.setRequestContext(user, {
+      apiRoute,
+      accessType,
+      subdomain: this.getApp(context),
+      timezone: this.getRequiredHeader(context, 'timezone'),
+      timezoneOffset: this.getRequiredHeader(context, 'timezone-offset'),
+    });
 
     request.user = user;
 
