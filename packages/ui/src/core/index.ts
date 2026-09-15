@@ -72,3 +72,9 @@ export type { IScrollAreaProps } from './ScrollArea';
 
 export { DateInput } from './DateInput';
 export type { IDateInputProps } from './DateInput';
+
+export { MathRender, renderLatex } from './MathRender';
+export type { IMathRenderProps } from './MathRender';
+
+export { MathField, configureMathLive } from './MathField';
+export type { IMathFieldProps, IMathFieldHandle, IMathLiveConfig } from './MathField';

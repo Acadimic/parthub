@@ -1,4 +1,5 @@
 import { ErrorBoundaryFallback, FullScreenLoader, InternetStatus } from '@repo/ui/app';
+import { configureMathLive } from '@repo/ui/core';
 import { ColorModeContext } from '@repo/ui/contexts';
 import { Layout, StorageKey, Theme } from '@enums';
 import { AuthLayout, SidebarLayout } from '@layouts';
@@ -6,6 +7,9 @@ import { ToastContainer } from '@modules/toasts';
 import { useUserLookups } from '@stores';
 import '@styles/calendar.scss';
 import '@styles/globals.scss';
+// Global CSS from node_modules can only be imported here: the Pages Router rejects it from any
+// other file. Next rewrites the font URLs inside it, so the woff2 files need no manual copy.
+import 'katex/dist/katex.min.css';
 import { loadFirebaseUser } from '@utils/firebase';
 import { getToken, IS_WINDOW_UNDEFINED } from '@utils/helpers';
 import { MathJaxContext } from 'better-react-mathjax';
@@ -36,6 +40,14 @@ const config = {
     ],
   },
 };
+
+/**
+ * MathLive resolves its font directory relative to the script URL, which under Next lands inside
+ * `/_next/static/chunks` where the fonts are not — and it fails silently, rendering in a fallback
+ * face rather than erroring. The files are copied to `public/mathlive/fonts`; keep the two in step
+ * when upgrading mathlive. Sounds are off: no screen in this product wants keypress audio.
+ */
+configureMathLive({ fontsDirectory: '/mathlive/fonts', soundsDirectory: null });
 
 type ThemeMode = 'light' | 'dark';
 
