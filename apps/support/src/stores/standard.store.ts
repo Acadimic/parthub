@@ -1,6 +1,5 @@
 import { type StandardDto, type StandardSubjectMappingDto, type SubjectDto } from '@repo/shared/contracts';
 import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
-import { type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { CommonService, StandardService, SubjectService } from '../services';
 import { STANDARD_GROUP_ORDER } from '../utils/constants';
@@ -27,10 +26,6 @@ export interface IStandardState extends IRequestSlice<StandardFetch> {
   getNextStandardGroupOrder: (standardId: string, group: string) => number;
   /** Every standard's subject names as one comma-separated label, keyed by standard id. */
   getSubjectNamesByStandard: () => Record<string, string>;
-  /** All subjects as select items. */
-  getSubjectItems: () => ISelectItem[];
-  /** Standards as grouped select items, without the one given — the reference-standards picker. */
-  getStandardItemsExcluding: (standardId: string) => ISelectItem[];
 
   addStandards: (standards: StandardDto[]) => void;
   addSubjects: (subjects: SubjectDto[]) => void;
@@ -125,17 +120,6 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
           .join(', ');
         return names;
       }, {}),
-
-  getSubjectItems: () =>
-    get()
-      .getSubjects()
-      .map((subject) => ({ label: subject.name, value: subject._id })),
-
-  getStandardItemsExcluding: (standardId) =>
-    get()
-      .getStandards()
-      .filter((standard) => standard._id !== standardId)
-      .map((standard) => ({ label: standard.name, value: standard._id, group: standard.group })),
 
   addStandards: (standards) => {
     set((state) => ({ standardMap: { ...state.standardMap, ...keyById(standards) } }));

@@ -1,4 +1,4 @@
-import { ChatsCircleIcon, GameControllerIcon, GrainsSlashIcon, HouseIcon, LifebuoyIcon } from '@phosphor-icons/react';
+import { GameControllerIcon, GrainsSlashIcon, HouseIcon, LifebuoyIcon } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 
 interface ISidebarMenu {
@@ -43,11 +43,8 @@ export const Routes: ISidebarRoute[] = [
   {
     type: 'General',
     menus: [
-      {
-        name: 'Community',
-        route: '/community',
-        icon: ChatsCircleIcon,
-      },
+      // A 'Community' entry sat here and routed to /community, which no app has ever had a page for
+      // — it fell through to the 404 screen. Restore it alongside the page, not before it.
       {
         name: 'Support',
         route: 'https://www.parthhub.com/contact-us',

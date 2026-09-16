@@ -7,7 +7,7 @@ import { type ISelectItem } from '@interfaces';
 import { StandardService } from '@services';
 import { useSelectedStandard, useSelectorStore, useStandardStore } from '@stores';
 import { successToast } from '@utils/helpers';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 interface IProps {
@@ -23,10 +23,21 @@ export const UpsertStandardModal = ({ isOpen, onClose }: IProps) => {
   const setReferenceStandards = useStandardStore((state) => state.setReferenceStandards);
   const createStandardSubjectMapping = useStandardStore((state) => state.createStandardSubjectMapping);
   const removeStandardSubjectMappings = useStandardStore((state) => state.removeStandardSubjectMappings);
-  // Each of these derives a new array per call, so every one needs a shallow compare.
-  const subjectItems = useStandardStore(useShallow((state) => state.getSubjectItems()));
-  const referenceStandardItems = useStandardStore(
-    useShallow((state) => state.getStandardItemsExcluding(selectedStandardId)),
+  // Select the stored rows, and build the select items here rather than in the store. `useShallow`
+  // compares an array element by element with `Object.is`, so a selector that maps rows to fresh
+  // `{ label, value }` objects never compares equal and re-renders this screen to death.
+  const subjects = useStandardStore(useShallow((state) => state.getSubjects()));
+  const standards = useStandardStore(useShallow((state) => state.getStandards()));
+  const subjectItems = useMemo(
+    () => subjects.map((subject) => ({ label: subject.name, value: subject._id })),
+    [subjects],
+  );
+  const referenceStandardItems = useMemo(
+    () =>
+      standards
+        .filter((standard) => standard._id !== selectedStandardId)
+        .map((standard) => ({ label: standard.name, value: standard._id, group: standard.group })),
+    [standards, selectedStandardId],
   );
   const subjectIds = useStandardStore(useShallow((state) => state.getStandardSubjectIds(selectedStandardId)));
   const referenceStandardIds = useStandardStore(

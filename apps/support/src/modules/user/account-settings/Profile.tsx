@@ -1,7 +1,10 @@
-import { Button, Spinner } from '@repo/ui/app';
+import { Button, Logo, Spinner } from '@repo/ui/app';
 import { getFirebaseUser } from '@utils/firebase';
 import { errorToast, splitCamelCase, successToast } from '@utils/helpers';
 import { useState } from 'react';
+
+/** Internal identifiers with nothing to show a user, plus the two that are secrets. */
+const HIDDEN_PROFILE_KEYS = ['_id', 'createdAt', 'updatedAt', 'createdBy', 'photoUrl', 'accessToken', 'refreshToken'];
 
 export const Profile = () => {
   const user = getFirebaseUser();
@@ -71,7 +74,7 @@ export const Profile = () => {
 
       <div className="flex justify-center items-center my-4">
         <div className="w-full md:w-[50%] border border-border rounded-sm shadow-lg flex flex-col gap-6 items-center p-8">
-          <img src="/images/logo-light.svg" alt="logo" />
+          <Logo className="h-[88px]" />
           <div className="w-[100px] h-[100px] rounded-full bg-accent flex items-center justify-center text-[50px] font-medium text-foreground">
             {user.displayName?.[0]}
           </div>
@@ -85,7 +88,10 @@ export const Profile = () => {
               .map((key) => {
                 const value = (user as unknown as Record<string, unknown>)[key] || getDefault(key);
                 if (typeof value === 'object') return null;
-                if (['_id', 'createdAt', 'updatedAt', 'createdBy', 'photoUrl'].includes(key)) return null;
+                // accessToken and refreshToken are live credentials on the Firebase user object
+                // and were being printed on the page in full; a screen share or screenshot of this
+                // profile handed over a usable session.
+                if (HIDDEN_PROFILE_KEYS.includes(key)) return null;
                 return (
                   <div key={key} className="flex gap-4">
                     <span className="capitalize font-bold text-sm">{splitCamelCase(key)}:</span>{' '}

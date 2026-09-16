@@ -13,21 +13,37 @@ interface IProps {
 }
 
 export const AppSidebar = ({ children }: IProps) => {
-  const [isLargeDevice, setIsLargeDevice] = useState(false);
+  const [open, setOpen] = useState(false);
 
+  /**
+   * Resolves the drawer state: a stored preference wins, and with none the viewport decides.
+   *
+   * It has to run in an effect. `useState` reads its argument on the first render only, where
+   * `isLargeDevice` was still false and `localStorage` is unreachable during SSR — so a desktop
+   * visitor was pinned to the 65px rail however wide the window was, and the group headings and
+   * wordmark were clipped against it. Re-reading the key on every resize rather than closing over
+   * it keeps a later toggle from being undone by the next resize.
+   *
+   * The key is named COLLAPSED but stores whether the drawer is *open*, which `handleDrawerClick`
+   * below writes the same way round.
+   */
   useEffect(() => {
-    const check = () => setIsLargeDevice(window.innerWidth >= 640);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    const apply = () => {
+      const collapsed = localStorage.getItem(StorageKey.COLLAPSED);
+      setOpen(collapsed ? collapsed === 'true' : window.innerWidth >= 640);
+    };
+    apply();
+    window.addEventListener('resize', apply);
+    return () => window.removeEventListener('resize', apply);
   }, []);
 
-  const collapsed = typeof window !== 'undefined' ? localStorage.getItem(StorageKey.COLLAPSED) : null;
-  const isOpen = collapsed ? collapsed === 'true' : isLargeDevice;
-  const [open, setOpen] = useState<boolean>(isOpen);
   const { route, push } = useRouter();
 
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
+  // The wordmark does not fit the 65px rail, so the square mark stands in for it when collapsed.
+  const wordmarkSrc = isDark ? '/images/acadimic-dark.svg' : '/images/acadimic-light.svg';
+  const markSrc = isDark ? '/images/logo-light.svg' : '/images/logo-dark.svg';
 
   const handleDrawerClick = () => {
     localStorage.setItem(StorageKey.COLLAPSED, open ? 'false' : 'true');
@@ -37,17 +53,21 @@ export const AppSidebar = ({ children }: IProps) => {
   const DrawerContent = () => (
     <div className="bg-background min-h-screen flex flex-col justify-between items-stretch border-r border-border">
       <div className="grow">
-        <div className="flex items-end w-full space-x-2 p-4 h-16">
+        <div className={`flex items-end w-full space-x-2 p-4 h-16 ${open ? '' : 'justify-center px-0'}`}>
           <div>
-            <img src={isDark ? '/images/acadimic-dark.svg' : '/images/acadimic-light.svg'} alt="logo" className="h-7" />
+            <img src={open ? wordmarkSrc : markSrc} alt="logo" className="h-7" />
           </div>
-          <div className="blue-gradient font-semibold text-xs">Support</div>
+          {open && <div className="blue-gradient font-semibold text-xs">Support</div>}
         </div>
         <hr className="border-border" />
         <nav>
           {Routes.map((item) => (
             <div key={item.type} className="py-3">
-              <div className="text-xs font-semibold my-3 mx-5 text-muted-foreground truncate">{item.type}</div>
+              {open ? (
+                <div className="text-xs font-semibold my-3 mx-5 text-muted-foreground truncate">{item.type}</div>
+              ) : (
+                <hr className="my-3 mx-4 border-border" />
+              )}
               <div>
                 {item.menus.map((menu) => (
                   <button
