@@ -49,10 +49,23 @@ export const RichTextEditor = ({ initialContent, onChange }: IProps) => {
     return () => dom.removeEventListener('keydown', handler);
   }, [editor]);
 
+  /**
+   * The editor owns its scrolling so the toolbar can stay put.
+   *
+   * With the surrounding card as the scroller, toolbar and document scrolled together and the
+   * controls left the screen as soon as the author moved down the page — exactly when a long
+   * document most needs them. Here the toolbar is a fixed-height row and only the content scrolls
+   * beneath it, which also keeps the toolbar opaque rather than relying on a sticky element
+   * floating over text.
+   */
   return (
-    <div className="flex flex-col border border-border bg-background">
-      <EditorToolbar editor={editor} />
-      <EditorContent editor={editor} />
+    <div className="flex h-full min-h-0 flex-col border border-border bg-background">
+      <div className="shrink-0">
+        <EditorToolbar editor={editor} />
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 };

@@ -1122,6 +1122,65 @@ MongoDB cannot usefully index a nested arbitrary document. Search and sort read
 QuestionSchema.index({ 'question.text': 'text' });
 ```
 
+### 8.4 Why not a more compact encoding
+
+`doc` is a **native subdocument**, not a string holding some denser notation. The question comes
+up because the editor's output panel shows the same document as TOON — Token-Oriented Object
+Notation, a format built to cut tokens in an LLM prompt — and it looks 43% smaller than the JSON
+beside it. That number does not survive contact with the database, and the reasoning is worth
+recording so the decision is not reopened on the strength of it.
+
+Measured on the four real sample documents, bytes per question:
+
+| Stored as | In BSON | After block compression | 100k questions |
+| --- | --- | --- | --- |
+| **native BSON subdocument** | 1766 | **656** | 66 MB |
+| compact JSON string | 1523 | 465 | 47 MB |
+| TOON string | 1805 | 487 | 49 MB |
+| gzip(compact JSON) as `Binary` | 480 | 480 | 48 MB |
+| gzip(TOON) as `Binary` | 502 | 502 | 50 MB |
+| brotli(TOON) as `Binary` | 463 | 463 | 46 MB |
+
+Three things follow.
+
+**The 43% was against pretty-printed JSON, which nothing stores.** MongoDB stores BSON, and BSON
+is already more compact than indented text. Uncompressed, TOON-in-BSON is *larger* than the native
+subdocument on the most typical document (3136 vs 2670 bytes).
+
+**TOON is not even the smallest option.** Once the storage engine compresses, plain compact JSON
+(465) beats TOON (487) and beats gzip(TOON) (502). That is not a fluke but the mechanism: TOON
+saves bytes by not repeating `type`, `attrs` and `content` on every node, and WiredTiger's block
+compressor removes exactly that repetition already, across the whole block. Encoding to TOON first
+is collecting the same saving twice, and the second collection costs a decode.
+
+**The whole spread is 20 MB per 100,000 questions.** That is not a storage problem, and it is the
+entire prize for giving up querying, indexing, partial updates, readability in Compass, and a read
+path measured at 17× slower — 0.0174 ms/doc for BSON against 0.2987 ms for a TOON decode, which is
+1 ms against 18 ms for a sixty-question paper.
+
+One earlier objection did **not** hold and should not be repeated: TOON round-trips losslessly.
+`decode(encode(doc))` is byte-identical on every sample document, multilingual and chemistry
+included. It was rejected on cost, not on fidelity.
+
+**If storage size ever does matter, change the compressor, not the format:**
+
+```ts
+db.createCollection('questions', {
+  storageEngine: { wiredTiger: { configString: 'block_compressor=zstd' } },
+});
+```
+
+zstd typically beats snappy by 20–40% on data of this shape, applies to every field in the
+collection rather than one, and costs nothing structurally.
+
+TOON keeps one legitimate use, at the other boundary: handing structure to a model, where tokens
+are the currency. Even there §7.1 prefers Markdown. The output panel's TOON tab is a measuring
+instrument, not a storage candidate.
+
+*(The compression column uses gzip as a stand-in for snappy, which is weaker — so the
+uncompressed rows would fare slightly worse in reality. It widens the gap a little and changes
+nothing, because the gap is 20 MB.)*
+
 ---
 
 ## 9. Multilingual and translation

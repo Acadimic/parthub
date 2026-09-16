@@ -13,9 +13,17 @@ interface ITabsProps {
   tabs: ITabItem[];
   value?: number;
   onChange?: (index: number) => void;
+  /**
+   * Classes for the root. Pass `flex h-full min-h-0 flex-col` to pin the tab strip and let the
+   * panel scroll under it — without a hook here the strip is part of the caller's scroll and
+   * disappears the moment the content is longer than the box.
+   */
+  className?: string;
+  /** Classes for each panel, typically `min-h-0 flex-1 overflow-auto` alongside a flex root. */
+  contentClassName?: string;
 }
 
-export const Tabs = ({ tabs, value, onChange }: ITabsProps) => {
+export const Tabs = ({ tabs, value, onChange, className, contentClassName }: ITabsProps) => {
   const [selectedTabIndex, setSelectedTabIndex] = React.useState(value || 0);
 
   const handleChange = (val: string) => {
@@ -29,8 +37,8 @@ export const Tabs = ({ tabs, value, onChange }: ITabsProps) => {
   }, [value]);
 
   return (
-    <ShadcnTabs value={String(selectedTabIndex)} onValueChange={handleChange}>
-      <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start h-auto p-0">
+    <ShadcnTabs value={String(selectedTabIndex)} onValueChange={handleChange} className={className}>
+      <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start h-auto p-0 shrink-0">
         {tabs.map((tab, index) => (
           <TabsTrigger
             key={index}
@@ -48,7 +56,7 @@ export const Tabs = ({ tabs, value, onChange }: ITabsProps) => {
         ))}
       </TabsList>
       {tabs.map((tab, index) => (
-        <TabsContent key={index} value={String(index)}>
+        <TabsContent key={index} value={String(index)} className={contentClassName}>
           {tab.component}
         </TabsContent>
       ))}

@@ -47,6 +47,7 @@
     "@tiptap/pm": "^3.31.3",
     "@tiptap/react": "^3.31.3",
     "@tiptap/starter-kit": "^3.31.3",
+    "@toon-format/toon": "^4.1.1",
     "axios": "^1.7.7",
     "better-react-mathjax": "^3.0.1",
     "bson-objectid": "^2.0.4",

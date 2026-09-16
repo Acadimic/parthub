@@ -104,14 +104,14 @@ export const Editor = () => {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <section className="flex min-w-0 flex-col">
           <PaneLabel icon={<PencilSimpleIcon className="h-3.5 w-3.5" />}>Author</PaneLabel>
-          <Card className="h-[min(58vh,40rem)] min-h-[20rem] overflow-auto border border-border p-0">
+          <Card className="h-[min(58vh,40rem)] min-h-[20rem] overflow-hidden border border-border p-0">
             <RichTextEditor key={`${presetKey}-${instance}`} initialContent={preset.doc} onChange={setDoc} />
           </Card>
         </section>
 
         <section className="flex min-w-0 flex-col">
           <PaneLabel icon={<SlidersHorizontalIcon className="h-3.5 w-3.5" />}>What the editor produced</PaneLabel>
-          <Card className="h-[min(58vh,40rem)] min-h-[20rem] overflow-auto border border-border p-0">
+          <Card className="h-[min(58vh,40rem)] min-h-[20rem] overflow-hidden border border-border p-0">
             <OutputPanel doc={doc} />
           </Card>
         </section>

@@ -1,4 +1,5 @@
 import { CheckCircleIcon, WarningCircleIcon } from '@phosphor-icons/react';
+import { encode as encodeToon } from '@toon-format/toon';
 import { MathRender, renderLatex, Tabs } from '@repo/ui/core';
 import { useMemo } from 'react';
 import { collectEquations, docToMarkdown, docToPlainText } from '../lib/markdown';
@@ -12,6 +13,27 @@ interface IProps {
 const Pre = ({ children }: { children: string }) => (
   <pre className="max-h-[32rem] overflow-auto bg-muted p-3 font-mono text-xs leading-5 text-foreground">{children}</pre>
 );
+
+/**
+ * TOON — Token-Oriented Object Notation: the same document, encoded for a language model rather
+ * than for a parser. Uniform arrays collapse to one header row plus values, which is where the
+ * saving comes from.
+ *
+ * It earns a panel because the plan turns on this number. Handing a model ProseMirror JSON costs
+ * four to six times the tokens of the equivalent Markdown, which is the argument for Markdown being
+ * the AI write path; TOON is what that gap looks like when the structure has to be preserved —
+ * worth seeing measured against a real document rather than assumed.
+ */
+const toToon = (doc: IDocNode | null): { text: string; saving: number | null } => {
+  if (!doc) return { text: '(empty)', saving: null };
+  try {
+    const text = encodeToon(doc);
+    const json = JSON.stringify(doc, null, 2);
+    return { text, saving: json.length ? Math.round((1 - text.length / json.length) * 100) : null };
+  } catch (error) {
+    return { text: error instanceof Error ? error.message : 'Could not encode', saving: null };
+  }
+};
 
 /**
  * The equation render check, run here against the document on screen.
@@ -70,10 +92,14 @@ const EquationCheck = ({ doc }: IProps) => {
 export const OutputPanel = ({ doc }: IProps) => {
   const markdown = useMemo(() => docToMarkdown(doc), [doc]);
   const json = useMemo(() => JSON.stringify(doc, null, 2), [doc]);
+  const toon = useMemo(() => toToon(doc), [doc]);
   const text = useMemo(() => docToPlainText(doc), [doc]);
 
   return (
     <Tabs
+      // Pins the tab strip and scrolls the panel beneath it, matching the editor's fixed toolbar.
+      className="flex h-full min-h-0 flex-col"
+      contentClassName="min-h-0 flex-1 overflow-auto"
       tabs={[
         {
           label: 'Reading',
@@ -85,6 +111,19 @@ export const OutputPanel = ({ doc }: IProps) => {
         },
         { label: 'Markdown', component: <Pre>{markdown || '(empty)'}</Pre> },
         { label: 'JSON', component: <Pre>{json}</Pre> },
+        {
+          label: 'TOON',
+          component: (
+            <div className="flex h-full flex-col">
+              <p className="shrink-0 border-b border-border bg-muted/40 px-3 py-1.5 text-xxs text-muted-foreground">
+                {toon.saving === null
+                  ? 'Token-oriented encoding of the stored document'
+                  : `${toon.text.length} characters — ${toon.saving}% smaller than the JSON beside it`}
+              </p>
+              <Pre>{toon.text}</Pre>
+            </div>
+          ),
+        },
         { label: 'Plain text', component: <Pre>{text || '(empty)'}</Pre> },
         { label: 'Equations', component: <EquationCheck doc={doc} /> },
       ]}
