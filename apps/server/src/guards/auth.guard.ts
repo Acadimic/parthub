@@ -14,7 +14,6 @@ import { INITIAL_LOGIN_DATA_URL } from '@utils/constants';
 import { getRegisterPayload } from '@utils/util';
 import { DecodedIdToken } from 'firebase-admin/auth';
 import { ClsService } from 'nestjs-cls';
-import { timingSafeEqual } from 'node:crypto';
 import { IRequestContext } from '../context/request-context.interface';
 
 /** The parts of the incoming request this guard reads. */
@@ -223,13 +222,6 @@ export class AuthGuard implements CanActivate {
     return this.userService.transformUser(user as UserDocument);
   }
 
-  /** Constant-time compare so a wrong key cannot be guessed byte by byte from response timing. */
-  matchesApiKey(presented: string, expected: string): boolean {
-    const a = new TextEncoder().encode(presented);
-    const b = new TextEncoder().encode(expected);
-    return a.length === b.length && timingSafeEqual(a, b);
-  }
-
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = this.getRequest(context);
     const { url } = request;
@@ -264,8 +256,9 @@ export class AuthGuard implements CanActivate {
       accessType = AccessType.PRIVATE;
       const presented = this.getHeaderValue(context, 'api-key') as string;
       const expected = this.secretsService.get(Secrets.PRIVATE_API_KEY) as string;
+      if (!presented) throw new UnauthorizedException('Private API key is required.');
       if (!expected) throw new UnauthorizedException('Private API key is not configured.');
-      if (!presented || !this.matchesApiKey(presented, expected)) {
+      if (expected !== presented) {
         throw new UnauthorizedException('Invalid API key.');
       }
       const identity = await this.getPrivateIdentity();
