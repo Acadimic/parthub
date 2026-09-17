@@ -1,9 +1,10 @@
+import { richTextFromText } from '@repo/shared/utils';
+import { QuestionService } from '@services';
 import { Select } from '@components/app/selects';
 import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
 import { ArticleIcon, EqualizerIcon } from '@phosphor-icons/react';
 import { LevelType, PositionType, QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
-import { TestPaperService } from '@services';
 import {
   useQuestionLookups,
   useSelectedTestPaper,
@@ -15,7 +16,6 @@ import { getGeneratedQuestionsPrompt } from '@utils/ai/prompts';
 import { errorToast, splitCamelCase, successToast } from '@utils/helpers';
 import { useSetState } from 'react-use';
 import { CopyUrl } from '@components/common';
-import { getTextAndEquationBlocksString } from '@components/editors/math-jax-editor/util';
 
 interface IProps {
   isOpen: boolean;
@@ -42,27 +42,14 @@ interface IQuestionObject {
 export const GenerateQuestionsModal = ({ isOpen, onClose }: IProps) => {
   const selectorStore = useSelectorLookups();
   const testPaperStore = useTestPaperLookups();
-  const { updateTotalQuestionsAndMarks } = testPaperStore;
   const { getTestPaperSubjectItems } = testPaperStore;
   const { getTestPaperStandardItems } = testPaperStore;
   const questionStore = useQuestionLookups();
   const { patchQuestion } = questionStore;
-  const { patchOption, patchSolution } = questionStore;
   const { removeSelectedQuestionId } = selectorStore;
   const selectedTestPaperSection = useSelectedTestPaperSection();
   const selectedTestPaper = useSelectedTestPaper();
-  const {
-    createQuestion,
-    getOptionsByIds,
-    upsertSolution,
-    getSolutionByQuestionId,
-    getNewQuestions,
-    getNewOptions,
-    getNewSolutions,
-    removeQuestionById,
-    removeOptionById,
-    removeSolutionById,
-  } = questionStore;
+  const { createQuestion, getNewQuestions, removeQuestionById } = questionStore;
   const [state, setState] = useSetState<IState>({
     totalQuestions: 20,
     questionsText: '',
@@ -115,42 +102,31 @@ export const GenerateQuestionsModal = ({ isOpen, onClose }: IProps) => {
           section: selectedTestPaperSection._id,
           markings: selectedTestPaperSection.defaultMarkings[questionType],
         });
-        patchQuestion(question._id, { question: getTextAndEquationBlocksString(questionObject.questionText) });
-        getOptionsByIds(question.options ?? []).forEach((option, index) => {
-          patchOption(option._id, { option: getTextAndEquationBlocksString(questionObject.options[index].optionText) });
-          patchOption(option._id, { isCorrect: questionObject.options[index].isCorrect || false });
+        // One patch rather than three per option: options and the solution are fields of the
+        // question now, so the whole generated question is assembled in a single update.
+        const solutionText = questionObject.solutionText || '';
+        patchQuestion(question._id, {
+          body: richTextFromText(questionObject.questionText),
+          options: (question.options ?? []).map((option, index) => ({
+            ...option,
+            body: richTextFromText(questionObject.options[index]?.optionText ?? ''),
+            isCorrect: questionObject.options[index]?.isCorrect || false,
+          })),
+          solution: solutionText ? { body: richTextFromText(solutionText) } : undefined,
         });
-        upsertSolution(question._id, getTextAndEquationBlocksString(questionObject.solutionText || ''));
         return question;
       });
-      await TestPaperService.upsertBulkTestPaperSectionQuestions({
-        testPaper: selectedTestPaper._id,
-        questions: questions.map((question) => {
-          const options = getOptionsByIds(question.options ?? []);
-          const solution = getSolutionByQuestionId(question._id);
-          return {
-            question,
-            options,
-            solution: solution?.solution ? solution : undefined,
-          };
-        }),
-      });
+      // Saved one at a time through the endpoint that exists. The bulk route the old code posted
+      // to was never implemented on the server.
+      const saved = getNewQuestions().filter((item) => item.section === selectedTestPaperSection._id);
+      await Promise.all(saved.map((item) => QuestionService.upsertQuestion(item)));
       successToast({ message: `${questions.length} questions generated successfully!` });
-      setTimeout(() => {
-        questions.forEach((question) => {
-          patchQuestion(question._id, { isNew: false });
-          getOptionsByIds(question.options ?? []).forEach((option) => patchOption(option._id, { isNew: false }));
-          const solution = getSolutionByQuestionId(question._id);
-          if (solution) patchSolution(solution._id, { isNew: false });
-        });
-        updateTotalQuestionsAndMarks(selectedTestPaper._id);
-        onClose();
-      }, 500);
+      saved.forEach((item) => patchQuestion(item._id, { isNew: false }));
+      onClose();
     } catch (error) {
       console.error(error);
       errorToast({ message: 'Invalid questions text.' });
-      getNewOptions().forEach((option) => removeOptionById(option._id));
-      getNewSolutions().forEach((solution) => removeSolutionById(solution._id));
+      // Options and the solution go with the question they belong to.
       getNewQuestions().forEach((question) => removeQuestionById(question._id));
     } finally {
       setState({ isLoading: false });

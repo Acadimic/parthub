@@ -2,7 +2,6 @@ export * from './BlankState';
 export * from './Confirm';
 export * from './Container';
 export * from './HorizontalLineWithText';
-export * from './Html';
 export * from './Policy';
 export * from './RenderEquation';
 export * from './Testimonials';

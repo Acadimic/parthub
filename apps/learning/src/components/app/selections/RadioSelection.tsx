@@ -1,4 +1,3 @@
-import { Html } from '@components/others';
 import { type ISelectItem } from '@interfaces';
 import * as React from 'react';
 import { Label } from '@repo/ui/app';
@@ -10,7 +9,6 @@ interface IProps {
   selectedValue?: string;
   required?: boolean;
   isDisabled?: boolean;
-  isHtml?: boolean;
   selectedClassName?: string;
 }
 
@@ -21,7 +19,6 @@ export const RadioSelection = ({
   handleClick,
   options,
   isDisabled,
-  isHtml,
   selectedClassName,
 }: IProps) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,9 +50,7 @@ export const RadioSelection = ({
                 isSelected(option) && selectedClassName ? selectedClassName : option.color || 'text-primary'
               }`}
             />
-            <span className="text-foreground text-sm font-medium">
-              {isHtml && typeof option.label === 'string' ? <Html html={option.label} /> : option.label}
-            </span>
+            <span className="text-foreground text-sm font-medium">{option.label}</span>
           </label>
         ))}
       </div>

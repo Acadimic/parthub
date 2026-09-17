@@ -2,7 +2,6 @@ import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common';
-import { toCourseDto } from './course.mapper';
 import { CourseService } from './course.service';
 import { RequestContextService } from '../../context/request-context.service';
 import { CourseDto } from '@repo/shared/validations';
@@ -19,7 +18,7 @@ export class CourseController {
   @Permissions(PermissionItem.CREATE_COURSE, PermissionItem.EDIT_COURSE)
   async upsertCourse(@Body() payload: CourseDto): Promise<CourseDto> {
     const org = this.requestContextService.getOrgId();
-    return toCourseDto(await this.courseService.upsert(org, payload));
+    return this.courseService.upsert(org, payload);
   }
 
   @Get('all')
@@ -27,7 +26,7 @@ export class CourseController {
   @Permissions(PermissionItem.VIEW_COURSE)
   async getOrgCourses(): Promise<CourseDto[]> {
     const courses = await this.courseService.getOrgCourses(this.requestContextService.getOrgId());
-    return courses.map(toCourseDto);
+    return courses;
   }
 
   @Get(':id')
@@ -36,6 +35,6 @@ export class CourseController {
   async getCourseById(@Param('id') id: string): Promise<CourseDto> {
     const course = await this.courseService.getOrgCourseById(this.requestContextService.getOrgId(), id);
     if (!course) throw new NotFoundException('Course not found.');
-    return toCourseDto(course);
+    return course;
   }
 }

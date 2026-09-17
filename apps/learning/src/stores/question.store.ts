@@ -1,12 +1,10 @@
-import { type QuestionDto } from '@repo/shared/contracts';
-import { type IOptionFields, type ISolutionFields, type MarkingType } from '@repo/shared/interfaces';
+import { type OptionDto, type QuestionDto } from '@repo/shared/contracts';
+import { type IRichText, type MarkingType } from '@repo/shared/interfaces';
 import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { QuestionType } from '../enums';
 import { QuestionService } from '../services';
-import { getObjectId } from '../utils/helpers';
 import { useSelectorStore } from './selector.store';
 
 /**
@@ -16,28 +14,22 @@ import { useSelectorStore } from './selector.store';
  * from every request by `CLIENT_ONLY_KEYS`.
  */
 export type IQuestion = QuestionDto & { markings: MarkingType; isBonus?: boolean; topic?: string | null };
-export type IOption = IOptionFields & { isNew?: boolean };
-export type ISolution = ISolutionFields & { isNew?: boolean };
+/** An option is an embedded field of its question now, not an entity of its own. */
+export type IOption = OptionDto;
 
 /** The fetches this store tracks. */
 type QuestionFetch = 'questions';
 
 export interface IQuestionState extends IRequestSlice<QuestionFetch> {
   questionMap: Record<string, IQuestion>;
-  optionMap: Record<string, IOption>;
-  solutionMap: Record<string, ISolution>;
 
   getQuestionById: (questionId: string) => IQuestion | undefined;
-  getOptionById: (optionId: string) => IOption | undefined;
-  getSolutionById: (solutionId: string) => ISolution | undefined;
   getQuestions: () => IQuestion[];
-  getOptions: () => IOption[];
-  getSolutions: () => ISolution[];
   getQuestionsByIds: (questionIds: string[]) => IQuestion[];
-  getOptionsByIds: (optionIds: string[]) => IOption[];
   getQuestionsBySectionId: (sectionId: string) => IQuestion[];
   getQuestionsBySectionIds: (sectionIds: string[]) => IQuestion[];
-  getSolutionByQuestionId: (questionId: string) => ISolution | undefined;
+  /** The question's solution body, or `undefined`. Embedded, so no lookup by id. */
+  getSolutionByQuestionId: (questionId: string) => IRichText | undefined;
   /** A question's options. Was the `optionObjects` view on the model. */
   getQuestionOptions: (questionId: string) => IOption[];
   /** The options marked correct. Was the `correctOptions` view on the model. */
@@ -48,16 +40,8 @@ export interface IQuestionState extends IRequestSlice<QuestionFetch> {
   getOptionItems: (questionId: string) => ISelectItem[];
 
   addQuestions: (questions: IQuestion[]) => void;
-  addOptions: (options: IOption[]) => void;
-  addSolutions: (solutions: ISolution[]) => void;
   patchQuestion: (questionId: string, fields: Partial<IQuestion>) => void;
-  patchOption: (optionId: string, fields: Partial<IOption>) => void;
   removeQuestionById: (questionId: string) => void;
-  removeOptionById: (optionId: string) => void;
-
-  createOption: (questionId: string, option?: string, isCorrect?: boolean) => IOption;
-  /** The starting options for a question type: two for boolean, four for choice, one otherwise. */
-  getNewOptions: (questionId: string, questionType: QuestionType) => IOption[];
 
   loadQuestions: () => Promise<void>;
   reset: () => void;
@@ -69,35 +53,17 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
     return map;
   }, {});
 
-/** How many options a single- or multiple-choice question starts with. */
-const CHOICE_OPTION_COUNT = 4;
-
 export const useQuestionStore = create<IQuestionState>()((set, get) => ({
   questionMap: {},
-  optionMap: {},
-  solutionMap: {},
   ...createRequestSlice(['questions'], set, get),
 
   getQuestionById: (questionId) => (questionId ? get().questionMap[questionId] : undefined),
 
-  getOptionById: (optionId) => (optionId ? get().optionMap[optionId] : undefined),
-
-  getSolutionById: (solutionId) => (solutionId ? get().solutionMap[solutionId] : undefined),
-
   getQuestions: () => Object.values(get().questionMap),
-
-  getOptions: () => Object.values(get().optionMap),
-
-  getSolutions: () => Object.values(get().solutionMap),
 
   getQuestionsByIds: (questionIds) => {
     const { questionMap } = get();
     return questionIds.map((id) => questionMap[id]).filter((row): row is IQuestion => !!row);
-  },
-
-  getOptionsByIds: (optionIds) => {
-    const { optionMap } = get();
-    return optionIds.map((id) => optionMap[id]).filter((row): row is IOption => !!row);
   },
 
   getQuestionsBySectionId: (sectionId) =>
@@ -114,17 +80,9 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
           .filter((question) => !!question.section && sectionIds.includes(question.section))
       : [],
 
-  getSolutionByQuestionId: (questionId) =>
-    questionId
-      ? get()
-          .getSolutions()
-          .find((solution) => solution.question === questionId)
-      : undefined,
+  getSolutionByQuestionId: (questionId) => get().getQuestionById(questionId)?.solution?.body,
 
-  getQuestionOptions: (questionId) => {
-    const question = get().getQuestionById(questionId);
-    return question ? get().getOptionsByIds(question.options ?? []) : [];
-  },
+  getQuestionOptions: (questionId) => get().getQuestionById(questionId)?.options ?? [],
 
   getCorrectOptions: (questionId) =>
     get()
@@ -142,18 +100,10 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
   getOptionItems: (questionId) =>
     get()
       .getQuestionOptions(questionId)
-      .map((option) => ({ label: option.option, value: option._id })),
+      .map((option) => ({ label: option.body.text, value: option._id })),
 
   addQuestions: (questions) => {
     set((state) => ({ questionMap: { ...state.questionMap, ...keyById(questions) } }));
-  },
-
-  addOptions: (options) => {
-    set((state) => ({ optionMap: { ...state.optionMap, ...keyById(options) } }));
-  },
-
-  addSolutions: (solutions) => {
-    set((state) => ({ solutionMap: { ...state.solutionMap, ...keyById(solutions) } }));
   },
 
   patchQuestion: (questionId, fields) => {
@@ -164,50 +114,11 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
     });
   },
 
-  patchOption: (optionId, fields) => {
-    set((state) => {
-      const option = state.optionMap[optionId];
-      if (!option) return state;
-      return { optionMap: { ...state.optionMap, [optionId]: { ...option, ...fields } } };
-    });
-  },
-
   removeQuestionById: (questionId) => {
     set((state) => {
       const { [questionId]: removed, ...questionMap } = state.questionMap;
       return removed ? { questionMap } : state;
     });
-  },
-
-  removeOptionById: (optionId) => {
-    set((state) => {
-      const { [optionId]: removed, ...optionMap } = state.optionMap;
-      return removed ? { optionMap } : state;
-    });
-  },
-
-  createOption: (questionId, option, isCorrect) => {
-    const row: IOption = {
-      _id: getObjectId(),
-      option: option ?? '',
-      question: questionId,
-      isCorrect: isCorrect ?? false,
-      isNew: true,
-    };
-    get().addOptions([row]);
-    return row;
-  },
-
-  getNewOptions: (questionId, questionType) => {
-    const { createOption } = get();
-    if (questionType === QuestionType.BOOLEAN) {
-      return [createOption(questionId, 'True'), createOption(questionId, 'False')];
-    }
-    if (questionType === QuestionType.SINGLE_CHOICE || questionType === QuestionType.MULTIPLE_CHOICE) {
-      return Array.from({ length: CHOICE_OPTION_COUNT }, () => createOption(questionId));
-    }
-    // Anything else is answered directly, so its single option is the correct one.
-    return [createOption(questionId, '', true)];
   },
 
   loadQuestions: () =>
@@ -217,7 +128,7 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
     }),
 
   reset: () => {
-    set({ questionMap: {}, optionMap: {}, solutionMap: {} });
+    set({ questionMap: {} });
     get().resetRequests();
   },
 }));

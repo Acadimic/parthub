@@ -2,7 +2,7 @@ import { KeyboardIcon } from '@phosphor-icons/react';
 import { Button, MathField, MathRender, Tooltip } from '@repo/ui/core';
 import type { IMathFieldHandle } from '@repo/ui/core';
 import { useRef, useState } from 'react';
-import { FORMULA_GALLERY } from '../lib/palette';
+import { FORMULA_GALLERY } from '@repo/ui/app';
 
 /**
  * The math field on its own, with no document around it.

@@ -1,4 +1,5 @@
 import { BaseSchema } from '@database/base.schema';
+import { RichText, RichTextSchemaDefinition } from '@database/rich-text.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { PaperCategoryType, PaperType } from '@repo/shared/enums';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
@@ -49,8 +50,8 @@ export class TestPaper extends BaseSchema {
   @Prop({ type: String, enum: PaperType })
   paperType: PaperType;
 
-  @Prop({ type: String })
-  instruction: string;
+  @Prop({ type: RichTextSchemaDefinition })
+  instruction: RichText;
 
   @Prop({ type: String, enum: PaperCategoryType })
   paperCategory: PaperCategoryType;
@@ -63,17 +64,11 @@ export class TestPaper extends BaseSchema {
 
   @Prop([{ type: MongooseSchema.Types.ObjectId, ref: 'TestPaper' }])
   mergedTestPapers: string[];
-
-  @Prop()
-  type: string;
-
-  @Prop({ type: Number, default: 0 })
-  totalMarks: number;
-
-  @Prop({ type: Number, default: 0 })
-  duration: number;
 }
 
 export const TestPaperSchema = SchemaFactory.createForClass(TestPaper);
 
 TestPaperSchema.index({ org: 1, _deleted: 1 });
+// "which papers reference this section?" — the fan-out for recomputing totals, and the reuse count
+// the authoring UI needs before letting someone edit a shared section.
+TestPaperSchema.index({ sections: 1 });

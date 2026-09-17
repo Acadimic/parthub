@@ -3,6 +3,7 @@ import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { QuestionService } from './question.service';
+import { TestPaperTotalsService } from '../test-paper/test-paper-totals.service';
 import { RequestContextService } from '../../context/request-context.service';
 import { QuestionDto } from '@repo/shared/validations';
 
@@ -10,6 +11,7 @@ import { QuestionDto } from '@repo/shared/validations';
 export class QuestionController {
   constructor(
     private readonly questionService: QuestionService,
+    private readonly testPaperTotalsService: TestPaperTotalsService,
     private readonly requestContextService: RequestContextService,
   ) {}
 
@@ -19,6 +21,8 @@ export class QuestionController {
   async upsertQuestion(@Body() payload: QuestionDto) {
     const org = this.requestContextService.getOrgId();
     const data = await this.questionService.upsert(org, payload);
+    // A question changes its section's totals — and a shared section changes several papers'.
+    await this.testPaperTotalsService.recalculateForSection(org, payload.section);
     return data;
   }
 
@@ -34,12 +38,5 @@ export class QuestionController {
   @Permissions(PermissionItem.VIEW_QUESTION)
   async findById(@Param('id') id: string) {
     return this.questionService.findById(this.requestContextService.getOrgId(), id);
-  }
-
-  @Get('test-paper/:testPaperId')
-  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
-  @Permissions(PermissionItem.VIEW_QUESTION)
-  async findByTestPaper(@Param('testPaperId') testPaperId: string) {
-    return this.questionService.findByTestPaper(this.requestContextService.getOrgId(), testPaperId);
   }
 }

@@ -1,4 +1,3 @@
-import { Html } from '@components/others';
 import { type ISelectItem } from '@interfaces';
 import { Label } from '@repo/ui/app';
 
@@ -9,7 +8,6 @@ interface IProps {
   selectedValues: string[];
   required?: boolean;
   isDisabled?: boolean;
-  isHtml?: boolean;
   selectedClassName?: string;
 }
 
@@ -20,7 +18,6 @@ export const CheckboxSelection = ({
   handleClick,
   options,
   isDisabled,
-  isHtml,
   selectedClassName,
 }: IProps) => {
   const handleChange = (option: ISelectItem) => {
@@ -52,9 +49,7 @@ export const CheckboxSelection = ({
                 isSelected(option) && selectedClassName ? selectedClassName : option.color || 'text-primary'
               }`}
             />
-            <span className="text-foreground text-sm font-medium">
-              {isHtml && typeof option.label === 'string' ? <Html html={option.label} /> : option.label}
-            </span>
+            <span className="text-foreground text-sm font-medium">{option.label}</span>
           </label>
         ))}
       </div>

@@ -1,3 +1,4 @@
+import { richTextFromText } from '@repo/shared/utils';
 import { UploadFiles } from '@components/app/attachments';
 import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
 import { PositionType } from '@enums';
@@ -9,7 +10,6 @@ import { errorToast, successToast } from '@utils/helpers';
 import { useEffect, useState } from 'react';
 import { useSetState } from 'react-use';
 import { CopyUrl } from '@components/common';
-import { getTextWithEquationBlocksString } from '@components/editors/math-jax-editor/util';
 
 interface IProps {
   isOpen: boolean;
@@ -81,10 +81,11 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
     if (!selectedMaterial) return;
     setState({ isLoading: true });
     try {
-      const text = state.materialText.replace(/\\/g, '\\\\');
-      const materialContent = getTextWithEquationBlocksString(JSON.parse(text || '[]'));
+      // The model now returns Markdown, so the text is the content — no JSON parse, and no
+      // backslash pre-escaping to survive one.
+      const materialContent = state.materialText;
       const videoLinks: IVideo[] = JSON.parse(state.youtubeVideos || '[]');
-      patchMaterial(selectedMaterial._id, { content: materialContent });
+      patchMaterial(selectedMaterial._id, { content: richTextFromText(materialContent) });
       // if (materialContent) return;
       const attachments = await uploadFilesToS3(selectedMaterial._id, selectedFiles);
       attachments?.forEach((attachment) => addAttachment(selectedMaterial._id, attachment));
@@ -92,7 +93,7 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
         const isValid = await isYouTubeVideoValid(item.url);
         if (!isValid) continue;
         const attachment = addLinkAttachment(selectedMaterial._id);
-        patchAttachment(selectedMaterial._id, attachment._id, { fileName: item.title, url: item.url });
+        patchAttachment(selectedMaterial._id, attachment.key, { fileName: item.title, url: item.url });
       }
       await MaterialService.upsertMaterial(selectedMaterial);
       setSelectedFiles([]);
@@ -160,7 +161,7 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
           <TextArea
             value={state.materialText}
             onChange={(e) => setState({ materialText: e.target.value })}
-            label="Materials"
+            label="Materials (Markdown)"
           />
           <TextArea
             value={state.youtubeVideos}

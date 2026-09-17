@@ -13,13 +13,13 @@ export const MaterialItem = ({ material }: IProps) => {
 
   useEffect(() => {
     const isMaterialAttachment = (material.attachments ?? []).some(
-      (attachment) => attachment._id === selectedAttachment?._id,
+      (attachment) => attachment.key === selectedAttachment?.key,
     );
     if (!isMaterialAttachment) {
-      setSelectedContent(material.content ?? '');
+      setSelectedContent(material.content ?? null);
       removeSelectedAttachment();
     }
-  }, [selectedAttachment?._id, material?._id]);
+  }, [selectedAttachment?.key, material?._id]);
 
   const getAttachmentItem = () => {
     if (selectedContent) return <ViewTextContent content={selectedContent} />;

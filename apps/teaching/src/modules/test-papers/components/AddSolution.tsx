@@ -1,9 +1,10 @@
 import { type QuestionDto } from '@repo/shared/contracts';
 import { type MarkingType } from '@repo/shared/interfaces';
+import { richTextFromText } from '@repo/shared/utils';
 import { CheckboxSelection, RadioSelection } from '@components/app/selections';
 import { Select } from '@components/app/selects';
-import { TextInput } from '@repo/ui/app';
-import { Html } from '@components/others';
+import { RichTextEditor, TextInput } from '@repo/ui/app';
+import { RichTextContent } from '@repo/ui/core';
 import { Marking, QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
@@ -11,15 +12,12 @@ import {
   useStandardLookups,
   useQuestionLookups,
   useSelectedQuestion,
-  useSelectedSolution,
   useSelectedTestPaper,
   useSelectedTestPaperSection,
 } from '@stores';
 import { defaultMarkings } from '@utils/constants';
 import { useEffect, useState } from 'react';
 import { SelectQuestionType } from './SelectQuestionType';
-import { type Block, MathEditor } from '@components/editors';
-import { getBlocks } from '@components/editors/math-jax-editor/util';
 
 const MARKING_FIELDS = [
   { name: Marking.CORRECT, label: 'Correct Marks', placeholder: 'Correct' },
@@ -123,44 +121,32 @@ const toSubjectItems = (
 
 export const AddSolution = () => {
   const questionStore = useQuestionLookups();
-  const { patchSolution } = questionStore;
-  const { getOptionItems } = questionStore;
-  const { patchQuestion } = questionStore;
-  const { patchOption } = questionStore;
+  const { patchQuestion, patchOption, setSolution } = questionStore;
   const selectedTestPaperSection = useSelectedTestPaperSection();
   const selectedTestPaper = useSelectedTestPaper();
-  const selectedSolution = useSelectedSolution();
   const selectedQuestion = useSelectedQuestion();
-  const { getOptionsByIds, upsertSolution } = questionStore;
   const { getStandardSubjectItems, getStandardItemsByIds, getChapterItems } = useStandardLookups();
   const [marks, setMarks] = useState<Record<string, number>>(defaultMarkings[QuestionType.SINGLE_CHOICE]);
 
   const handleCheckboxOptionClick = (optionId: string) => {
     if (!selectedQuestion) return;
-    const options = getOptionsByIds(selectedQuestion.options ?? []);
-    const option = options.find((item) => item._id === optionId);
+    const option = (selectedQuestion.options ?? []).find((item) => item._id === optionId);
     if (!option) return;
-    patchOption(option._id, { isCorrect: !option.isCorrect });
+    patchOption(selectedQuestion._id, optionId, { isCorrect: !option.isCorrect });
   };
 
+  /** Exactly one correct answer, so selecting one clears the rest. */
   const handleRadioOptionClick = (optionId: string) => {
     if (!selectedQuestion) return;
-    const options = getOptionsByIds(selectedQuestion.options ?? []);
-    const option = options.find((item) => item._id === optionId);
-    if (!option) return;
-    options.forEach((item) => patchOption(item._id, { isCorrect: false }));
-    patchOption(option._id, { isCorrect: true });
+    (selectedQuestion.options ?? []).forEach((item) =>
+      patchOption(selectedQuestion._id, item._id, { isCorrect: item._id === optionId }),
+    );
   };
 
   const handleStandardChange = (values: ISelectItem[]) => {
     if (!selectedQuestion) return;
     const value = values[0].value;
     patchQuestion(selectedQuestion._id, { standard: value });
-  };
-
-  const handleSolutionTextChange = (blocks: Block[]) => {
-    if (!selectedSolution) return;
-    patchSolution(selectedSolution._id, { solution: JSON.stringify(blocks) });
   };
 
   const handleChangeMarks = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -182,13 +168,15 @@ export const AddSolution = () => {
     if (selectedQuestion) setMarks({ ...selectedQuestion.markings });
   }, [selectedQuestion?._id]);
 
-  useEffect(() => {
-    if (selectedQuestion) upsertSolution(selectedQuestion._id);
-  }, [selectedQuestion?._id]);
-
   if (!selectedQuestion || !selectedTestPaper) return null;
 
-  const questionOptions = getOptionsByIds(selectedQuestion.options ?? []);
+  const questionOptions = selectedQuestion.options ?? [];
+  // Built here rather than in the store so an option keeps its equations in the picker: the label
+  // is a rendered node, which is what `ISelectItem.label` allows.
+  const optionItems: ISelectItem[] = questionOptions.map((option) => ({
+    label: <RichTextContent value={option.body} />,
+    value: option._id,
+  }));
   const isMultipleChoice = selectedQuestion.questionType === QuestionType.MULTIPLE_CHOICE;
   const isSingleOrBoolean =
     selectedQuestion.questionType === QuestionType.SINGLE_CHOICE ||
@@ -201,36 +189,42 @@ export const AddSolution = () => {
       </div>
       <div className="flex flex-col gap-12 w-full">
         <div className="">
-          <Html html={selectedQuestion.question} prefix="Question:" />
+          <div className="flex gap-2">
+            <span className="shrink-0 text-sm font-bold text-foreground">Question:</span>
+            <RichTextContent value={selectedQuestion.body} />
+          </div>
           <div>
             {isMultipleChoice && (
               <CheckboxSelection
                 selectedValues={questionOptions.filter((option) => option.isCorrect).map((option) => option._id)}
                 label="Select one or more options."
-                options={getOptionItems(selectedQuestion._id)}
+                options={optionItems}
                 handleClick={handleCheckboxOptionClick}
                 required
-                isHtml
               />
             )}
             {isSingleOrBoolean && (
               <RadioSelection
                 selectedValue={questionOptions.find((option) => option.isCorrect)?._id}
                 label="Select one option."
-                options={getOptionItems(selectedQuestion._id)}
+                options={optionItems}
                 handleClick={handleRadioOptionClick}
                 required
-                isHtml
               />
             )}
             {!isMultipleChoice && !isSingleOrBoolean && (
               <TextInput
                 placeholder="Enter Answer"
-                value={questionOptions[0].option}
+                value={questionOptions[0]?.body.text ?? ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  const value = e.target.value;
                   const [firstOption] = questionOptions;
-                  if (firstOption) patchOption(firstOption._id, { option: value });
+                  // A typed-in answer is plain by nature, so it round-trips through the plain-text
+                  // builder rather than opening a full editor for one number or word.
+                  if (firstOption) {
+                    patchOption(selectedQuestion._id, firstOption._id, {
+                      body: richTextFromText(e.target.value),
+                    });
+                  }
                 }}
               />
             )}
@@ -251,13 +245,12 @@ export const AddSolution = () => {
         </div>
         <div>
           <div>
-            {selectedSolution && (
-              <MathEditor
-                label="Add Solution"
-                handleChange={handleSolutionTextChange}
-                blocks={getBlocks(selectedSolution.solution)}
-              />
-            )}
+            <RichTextEditor
+              label="Add Solution"
+              value={selectedQuestion.solution?.body}
+              onChange={(body) => setSolution(selectedQuestion._id, body)}
+              editorClassName="min-h-[14rem]"
+            />
           </div>
         </div>
       </div>

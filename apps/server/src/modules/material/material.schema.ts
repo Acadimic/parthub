@@ -1,4 +1,5 @@
 import { BaseSchema } from '@database/base.schema';
+import { RichText, RichTextSchemaDefinition } from '@database/rich-text.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { DocumentType, FileExtension, LevelType, LinkType } from '@repo/shared/enums';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
@@ -7,6 +8,10 @@ export type AttachmentDocument = HydratedDocument<Attachment>;
 
 @Schema({ _id: false })
 export class Attachment {
+  /** Client-generated identity for the subdocument; see `AttachmentDto.key`. */
+  @Prop({ type: String })
+  key: string;
+
   @Prop({ type: String, trim: true })
   fileName: string;
 
@@ -47,8 +52,8 @@ export class Material extends BaseSchema {
   @Prop({ type: String, trim: true })
   slug: string;
 
-  @Prop({ type: String })
-  content: string;
+  @Prop({ type: RichTextSchemaDefinition })
+  content: RichText;
 
   @Prop({ type: Number })
   order: number;

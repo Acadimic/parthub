@@ -1,5 +1,5 @@
 import { type TestPaperSectionsResponse, type QuestionDto, type TestPaperDto } from '@repo/shared/contracts';
-import { type IMergeTestPapers, type IUpsertBulkSectionQuestions, type IUpsertSectionQuestion } from '@interfaces';
+import { type IMergeTestPapers } from '@interfaces';
 import { type ITestPaperSection } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
@@ -26,18 +26,6 @@ class TestPaperService {
 
   upsertTestPaperSection = async (payload: ITestPaperSection) => {
     const url = 'test-paper/section/upsert';
-    const resData = await callAuthApi(url, API.POST, payload);
-    return resData;
-  };
-
-  upsertTestPaperSectionQuestion = async (payload: IUpsertSectionQuestion) => {
-    const url = 'test-paper/section/upsert-question';
-    const resData = await callAuthApi(url, API.POST, payload);
-    return resData;
-  };
-
-  upsertBulkTestPaperSectionQuestions = async (payload: IUpsertBulkSectionQuestions) => {
-    const url = 'test-paper/section/upsert-bulk-questions';
     const resData = await callAuthApi(url, API.POST, payload);
     return resData;
   };

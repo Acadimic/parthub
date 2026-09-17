@@ -1,5 +1,6 @@
+import { defaultMarkings } from '@utils/constants';
 import { type QuestionDto } from '@repo/shared/contracts';
-import { Accordions, Card, Loader, Menu, Modal, ModalFooter, SplitButton, Tooltip } from '@repo/ui/app';
+import { Accordions, Button, Card, Loader, Menu, Modal, ModalFooter, SplitButton, Tooltip } from '@repo/ui/app';
 import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { PositionType, SectionCategoryType, SectionType } from '@enums';
@@ -13,8 +14,9 @@ import {
   useSelectedTestPaperSection,
   useSelectorLookups,
   useTestPaperLookups,
+  useTestPaperStore,
 } from '@stores';
-import { splitCamelCase } from '@utils/helpers';
+import { errorToast, splitCamelCase } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
@@ -59,7 +61,6 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     removeSelectedQuestionId,
     setSelectedQuestionId,
     setSelectedTestPaperId,
-    setSelectedSolutionId,
   } = selectorStore;
   const selectedTestPaperSection = useSelectedTestPaperSection();
   const selectedTestPaper = useSelectedTestPaper();
@@ -75,8 +76,7 @@ export const TestPaper = ({ testPaperId }: IProps) => {
   const isLoadedTestPapers = testPaperStore.isLoaded('testPapers');
   const isLoadingTestPaperSections = testPaperStore.isLoading('testPaperSections');
   const { loadOrgChapters } = useStandardLookups();
-  const { getOptionsByIds, createQuestion, removeOptionById, removeQuestionById, getSolutionByQuestionId } =
-    questionStore;
+  const { createQuestion, removeQuestionById } = questionStore;
   const { push } = useRouter();
   const [state, setState] = useSetState<IState>({
     isOpenUpsertQuestion: false,
@@ -98,12 +98,15 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     const section = getTestPaperSectionById(sectionId);
     if (!selectedTestPaper || !section) return;
     setSelectedTestPaperSectionId(sectionId);
-    createQuestion({
+    // Select it as well as create it: `AddQuestion` renders from `useSelectedQuestion()` and
+    // returns null without one, so the modal opened with an empty body — no editor, no options.
+    const question = createQuestion({
       standard: (selectedTestPaper.standards ?? [])[0],
       questionType: selectedQuestionType,
       section: sectionId,
       markings: section.defaultMarkings[selectedQuestionType],
     });
+    setSelectedQuestionId(question._id);
     setSelectedUpsertQuestionStep(0);
     setState({ isOpenUpsertQuestion: true });
   };
@@ -118,9 +121,16 @@ export const TestPaper = ({ testPaperId }: IProps) => {
   };
 
   const addNewSection = () => {
-    const section = selectedTestPaperSection ?? sections[0];
-    if (!section) return;
-    const newSection = createTestPaperSection(SectionType.SECTION, SectionCategoryType.CUSTOM, section.defaultMarkings);
+    // Falls back to the app defaults rather than bailing. It used to require an existing section to
+    // copy markings from, which made a paper with none unrecoverable: the only way to add a section
+    // was a menu item that did nothing, so neither sections nor questions could ever be created.
+    const source = selectedTestPaperSection ?? sections[0];
+    const newSection = createTestPaperSection(
+      SectionType.SECTION,
+      SectionCategoryType.CUSTOM,
+      source?.defaultMarkings ?? structuredClone(defaultMarkings),
+      `Section ${sections.length + 1}`,
+    );
     setState({ section: newSection, isOpenAddSection: true });
   };
 
@@ -133,23 +143,31 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     setSelectedTestPaperSectionId(sectionId);
     setSelectedQuestionId(questionId);
     setSelectedUpsertQuestionStep(0);
-    setSelectedSolutionId(getSolutionByQuestionId(questionId)?._id || '');
     setState({ isOpenUpsertQuestion: true });
   };
 
   const saveSection = async () => {
     if (!state.section || !selectedTestPaper) return;
+    if (!state.section.name?.trim()) {
+      errorToast({ message: 'Section name is required.' });
+      return;
+    }
     try {
       setState({ isLoading: true });
       const sectionIds = [...new Set([...(selectedTestPaper.sections ?? []), state.section._id])];
       if (state.section.isNew) patchTestPaper(selectedTestPaper._id, { sections: sectionIds });
+      // Re-read for the same reason as `CreateTestPaperModal`: `patchTestPaper` has just added the
+      // section id, and `selectedTestPaper` is the copy from before that patch.
+      const paperToSave = useTestPaperStore.getState().getTestPaperById(selectedTestPaper._id) ?? selectedTestPaper;
       await Promise.all([
-        state.section.isNew ? TestPaperService.upsertTestPaper(selectedTestPaper) : Promise.resolve(),
+        state.section.isNew ? TestPaperService.upsertTestPaper(paperToSave) : Promise.resolve(),
         TestPaperService.upsertTestPaperSection(state.section),
       ]);
       patchTestPaperSection(state.section._id, { isNew: false });
       setState({ isOpenAddSection: false, section: null });
-    } catch {
+    } catch (error) {
+      // Previously an empty `catch {}`: a rejected save left the drawer open with no explanation.
+      errorToast({ message: error instanceof Error ? error.message : 'Could not save the section.' });
     } finally {
       setState({ isLoading: false });
     }
@@ -157,7 +175,7 @@ export const TestPaper = ({ testPaperId }: IProps) => {
 
   const onCloseAddQuestionModal = () => {
     if (state.isLoading || !selectedTestPaperSection || !selectedQuestion) return;
-    getOptionsByIds(selectedQuestion.options ?? []).forEach((option) => option.isNew && removeOptionById(option._id));
+    // Options are embedded, so dropping the question drops them with it.
     if (selectedQuestion.isNew) removeQuestionById(selectedQuestion._id);
     removeSelectedQuestionId();
     setState({ isOpenUpsertQuestion: false });
@@ -322,7 +340,19 @@ export const TestPaper = ({ testPaperId }: IProps) => {
         />
       )}
       {!hasSections && isLoadingSections && <Loader isLoading={isLoadingSections} />}
-      {!hasSections && !isLoadingSections && <BlankState label="No sections found" />}
+      {!hasSections && !isLoadingSections && (
+        <BlankState
+          label="No sections found"
+          description="A paper needs at least one section before questions can be added."
+          action={
+            <Button
+              text="Add Section"
+              leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
+              onClick={addNewSection}
+            />
+          }
+        />
+      )}
       <Modal
         position={PositionType.RIGHT}
         className="min-w-full md:min-w-[60%] lg:min-w-[60%] md:max-w-[60%] lg:max-w-[60%]"

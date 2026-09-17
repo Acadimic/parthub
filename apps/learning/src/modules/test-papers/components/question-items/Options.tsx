@@ -1,6 +1,6 @@
 import { CheckboxSelection, RadioSelection } from '@components/app/selections';
 import { TextInput } from '@repo/ui/app';
-import { Html } from '@components/others';
+import { RichTextContent } from '@repo/ui/core';
 import { QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { type IQuestion, useQuestionLookups } from '@stores';
@@ -15,8 +15,8 @@ interface IProps {
 }
 
 export const Options = ({ question, handleResponses, selectedValues, isDisabled, answers }: IProps) => {
-  const { getOptionItems } = useQuestionLookups();
-  const optionsItems = getOptionItems(question._id);
+  const { getQuestionOptions } = useQuestionLookups();
+  const questionOptions = getQuestionOptions(question._id);
   const questionType = question.questionType;
   const getOptionColor = (value: string) => {
     if (!isDisabled) return 'text-foreground';
@@ -25,14 +25,14 @@ export const Options = ({ question, handleResponses, selectedValues, isDisabled,
     return 'text-foreground';
   };
 
-  const options: ISelectItem[] = optionsItems.map((option, index) => ({
+  const options: ISelectItem[] = questionOptions.map((option, index) => ({
     label: (
       <Option index={index}>
-        <Html html={option.label as string} />
+        <RichTextContent value={option.body} />
       </Option>
-    ) as unknown as string,
-    value: option.value,
-    color: getOptionColor(option.value),
+    ),
+    value: option._id,
+    color: getOptionColor(option._id),
   }));
 
   const handleClickRadioOption = (selectedValue: string) => {

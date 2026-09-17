@@ -18,7 +18,7 @@ export const UpsertAttachmentModal = ({ isOpen, onClose, selectedAttachment }: I
 
   const patchSelectedAttachment = (fields: Partial<IAttachment>) => {
     if (!selectedMaterial || !selectedAttachment) return;
-    patchAttachment(selectedMaterial._id, selectedAttachment._id, fields);
+    patchAttachment(selectedMaterial._id, selectedAttachment.key, fields);
   };
 
   const handleAdd = () => {

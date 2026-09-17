@@ -25,6 +25,7 @@ export const useAttachment = () => {
             _id: keys[index].key.split('/')[1],
             fileName: file.name,
             url: presignedUrls[index].split('?')[0],
+            key: getObjectId(),
             documentType: DocumentType.FILE,
             fileType: file.type,
             fileExtension: file.name.split('.').pop(),

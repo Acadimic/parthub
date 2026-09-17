@@ -1,13 +1,12 @@
 import { CheckCircleIcon, WarningCircleIcon } from '@phosphor-icons/react';
 import { encode as encodeToon } from '@toon-format/toon';
-import { MathRender, renderLatex, Tabs } from '@repo/ui/core';
+import { MathRender, renderLatex, RichTextContent, Tabs } from '@repo/ui/core';
 import { useMemo } from 'react';
-import { collectEquations, docToMarkdown, docToPlainText } from '../lib/markdown';
-import type { IDocNode } from '../lib/types';
-import { RichTextView } from './RichTextView';
+import { collectEquations, docToMarkdown, docToPlainText, toRichText } from '@repo/ui/app';
+import type { IRichTextDoc } from '@repo/shared/interfaces';
 
 interface IProps {
-  doc: IDocNode | null;
+  doc: IRichTextDoc | null;
 }
 
 const Pre = ({ children }: { children: string }) => (
@@ -24,7 +23,7 @@ const Pre = ({ children }: { children: string }) => (
  * the AI write path; TOON is what that gap looks like when the structure has to be preserved —
  * worth seeing measured against a real document rather than assumed.
  */
-const toToon = (doc: IDocNode | null): { text: string; saving: number | null } => {
+const toToon = (doc: IRichTextDoc | null): { text: string; saving: number | null } => {
   if (!doc) return { text: '(empty)', saving: null };
   try {
     const text = encodeToon(doc);
@@ -105,7 +104,7 @@ export const OutputPanel = ({ doc }: IProps) => {
           label: 'Reading',
           component: (
             <div className="p-4">
-              <RichTextView doc={doc} />
+              <RichTextContent value={doc ? toRichText(doc) : null} />
             </div>
           ),
         },

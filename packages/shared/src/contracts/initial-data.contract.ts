@@ -1,5 +1,10 @@
-import type { IOptionFields, ISolutionFields, ITestPaperSectionFields } from '../interfaces/entity.interface';
-import { type QuestionDto, type StandardDto, type StandardSubjectMappingDto, type SubjectDto } from './entity.contract';
+import {
+  type QuestionDto,
+  type StandardDto,
+  type StandardSubjectMappingDto,
+  type SubjectDto,
+  type TestPaperSectionDto,
+} from './entity.contract';
 
 /**
  * The `common/initial-data` response — the reference data every app loads once after sign-in.
@@ -25,17 +30,14 @@ export interface PublicDataResponse {
 }
 
 /**
- * The response the apps expect from `test-paper/sections-with-questions/:testPaperId`: a paper's
- * sections plus everything they contain, in one round trip.
+ * The response for `GET test-paper/sections-with-questions/:testPaperId`: a paper's sections plus
+ * their questions, in one round trip.
  *
- * **The server has no such route.** `TestPaperController` exposes only `GET test-paper/all` and
- * `GET test-paper/:id`, and `:id` matches a single segment so it cannot serve this path either — the
- * call 404s today. The shape is declared here because the client is written against it; either add
- * the route or change the client to compose the data from routes that exist.
+ * Two arrays rather than four. Options and solutions are embedded subdocuments of a question now,
+ * so they arrive inside `questions` and have no top-level array of their own. Questions carry
+ * `section` and `order`, so the client groups and sorts from those rather than from nesting.
  */
 export interface TestPaperSectionsResponse {
-  sections: ITestPaperSectionFields[];
+  sections: TestPaperSectionDto[];
   questions: QuestionDto[];
-  options: IOptionFields[];
-  solutions: ISolutionFields[];
 }

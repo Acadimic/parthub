@@ -1,6 +1,6 @@
 import { type QuestionDto } from '@repo/shared/contracts';
 import { type MarkingType } from '@repo/shared/interfaces';
-import { Html } from '@components/others';
+import { RichTextContent } from '@repo/ui/core';
 
 interface IProps {
   prefix?: string;
@@ -12,7 +12,7 @@ export const Question = ({ question, prefix, marks }: IProps) => {
   return (
     <div className="relative">
       <div className="mt-2">
-        <Html html={question.question} prefix={prefix} />
+        <RichTextContent value={question.body} prefix={prefix} />
       </div>
       {marks && (
         <div className="absolute -top-4 text-[10px] font-bold flex items-center space-x-1.5">

@@ -1,6 +1,6 @@
 import { type MarkingType } from '@repo/shared/interfaces';
 import { Bookmark } from '@components/common';
-import { Html } from '@components/others';
+import { RichTextContent } from '@repo/ui/core';
 import { CollectionType, Marking, QuestionType } from '@enums';
 import { CaretDownIcon } from '@phosphor-icons/react';
 import { useQuestionLookups, useSelectedQuestion, useTestPaperLookups } from '@stores';
@@ -54,7 +54,7 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
   const { getCorrectOptionIndexes } = questionStore;
   const { exam } = testPaperStore;
   const selectedQuestion = useSelectedQuestion();
-  const { getSolutionByQuestionId, getOptionsByIds } = questionStore;
+  const { getSolutionByQuestionId, getQuestionOptions } = questionStore;
   const [refresh, setRefresh] = useState(false);
 
   useEffect(() => {
@@ -140,7 +140,7 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
             <div className="grow py-0 h-0 w-full mt-2">
               <div className="box-shadow overflow-auto py-3 h-full px-4 md:px-12 bg-background">
                 <div className="">
-                  <Html html={selectedQuestion.question || ''} />
+                  <RichTextContent value={selectedQuestion.body} />
                 </div>
                 <div className="mt-4">
                   <Options
@@ -157,10 +157,10 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
                   {isSelectedQuestionCompleted() && selectedQuestion ? (
                     <Answer
                       correctOptionIndexes={getCorrectOptionIndexes(selectedQuestion._id)}
-                      solution={getSolutionByQuestionId(selectedQuestion._id)?.solution || ''}
-                      answers={getOptionsByIds(getAnswersByQuestionId(selectedQuestion._id)).map(
-                        (option) => option.option,
-                      )}
+                      solution={getSolutionByQuestionId(selectedQuestion._id)}
+                      answers={getQuestionOptions(selectedQuestion._id)
+                        .filter((option) => getAnswersByQuestionId(selectedQuestion._id).includes(option._id))
+                        .map((option) => option.body)}
                       isAnswer={
                         !selectedQuestion.questionType ||
                         ![QuestionType.BOOLEAN, QuestionType.SINGLE_CHOICE, QuestionType.MULTIPLE_CHOICE].includes(

@@ -1110,8 +1110,8 @@ never through raw traversal.
 `question.text` — that instinct in the current schema was right.
 
 Stored as a Mongoose subdocument with `_id: false`, mirroring `MarkingSchema` in
-`question.schema.ts`. Follow `add-server-module` and `query-with-mongoose` for the schema
-work.
+`question.schema.ts` — the schema itself is in §8.5. Follow `add-server-module` and
+`query-with-mongoose` for the schema work.
 
 ### 8.3 Indexing
 
@@ -1181,9 +1181,71 @@ instrument, not a storage candidate.
 uncompressed rows would fare slightly worse in reality. It widens the gap a little and changes
 nothing, because the gap is 20 MB.)*
 
+### 8.5 The Mongoose schema
+
+§8.4 is only a decision until the schema says so, and one line carries it: `doc` is
+`MongooseSchema.Types.Mixed`, which is what makes it a real subdocument of arbitrary shape rather
+than a string. Four collections need the same three fields, so it is declared once beside
+`base.schema.ts` rather than copied into each module:
+
+```ts
+// apps/server/src/database/rich-text.schema.ts
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Schema as MongooseSchema } from 'mongoose';
+
+@Schema({ _id: false })
+export class RichText {
+  /** Readers branch on this. Bumped only when a stored document needs migrating. */
+  @Prop({ type: String, required: true, default: 'doc/v1' })
+  format: string;
+
+  /**
+   * ProseMirror JSON, canonical. `Mixed` is the decision of §8.4 expressed in code: a native
+   * subdocument, so the content stays queryable, projectable and updatable in place.
+   */
+  @Prop({ type: MongooseSchema.Types.Mixed, required: true })
+  doc: Record<string, unknown>;
+
+  /** Plain-text projection. Denormalised on every write; §8.3 indexes this, never `doc`. */
+  @Prop({ type: String, required: true, default: '' })
+  text: string;
+}
+
+export const RichTextSchemaDefinition = SchemaFactory.createForClass(RichText);
+```
+
+It lands on each entity exactly as `MarkingSchema` already does in `question.schema.ts`:
+
+```ts
+@Prop({ type: RichTextSchemaDefinition, required: true })
+question: RichText;
+```
+
+**Two consequences of `Mixed` that the implementation has to know.**
+
+*Mongoose validates nothing inside it.* That is not a gap to plug here — a schema cannot express
+"a valid ProseMirror document" — but it is why the `Schema.nodeFromJSON()` check in §10.1 is
+load-bearing rather than belt-and-braces. Without it, `doc` is an unvalidated JSON hole in an
+otherwise validated API, reachable by anything that can write a question.
+
+*Mongoose cannot detect an in-place change to a `Mixed` path.* Mutating `question.doc.content` on
+a hydrated document and calling `save()` writes nothing; it needs `markModified('question.doc')`.
+This repo is mostly safe from it by habit — the services use `findOneAndUpdate` 27 times against
+4 uses of `save()`, and a direct update never consults change tracking. The four `save()` sites are
+where it would bite, so a write path that hydrates a document and edits its content in place should
+either add `markModified` or be moved to `findOneAndUpdate` along with the rest.
+
 ---
 
 ## 9. Multilingual and translation
+
+> **Superseded, 2026-09-16.** The platform structure settled on **a separate course per language**
+> rather than translations of one course — see `COURSE_PLATFORM_STRUCTURE.md` §4. A Hindi course is
+> its own course with its own modules, materials and questions, so the `ContentTranslation`
+> collection, `sourceVersion` staleness tracking and the translation status workflow below are not
+> being built. The section is kept because two things in it outlived the decision: the `\text{}`
+> extraction rule of §9.4, which still applies to any AI-assisted pass over a duplicated course,
+> and the RTL notes of §9.5, which apply to Arabic content however it is stored.
 
 Keeping the architecture document's model (§11–§20) with the four corrections below.
 
@@ -1322,6 +1384,15 @@ Two server-side rules that matter:
 ---
 
 ## 11. Migration — the part that will take the longest
+
+> **Superseded — this section does not apply.** The project is being treated as fresh, with no
+> backward compatibility to preserve (decided 2026-09-16; see
+> `COURSE_PLATFORM_STRUCTURE.md` §7 and §10). Every field named here is *declared* as `IRichText`
+> rather than expanded into it: no dual-write, no converter, no backfill, no contract step. The
+> section is kept because §11.1's account of what the two legacy formats actually look like is still
+> the reference for reading any content that predates the change — including
+> `Material.content`, which stores `JSON.stringify(blocks)` inside a `string` field and is
+> therefore parsed twice on every read.
 
 There is existing content, in two formats, and it must survive.
 

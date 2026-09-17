@@ -1,10 +1,11 @@
-import { Html } from '@components/others';
+import { type IRichText } from '@repo/shared/interfaces';
+import { RichTextContent } from '@repo/ui/core';
 import { getAlphabet } from '@utils/helpers';
 
 interface IProps {
   correctOptionIndexes: number[];
-  solution?: string;
-  answers: string[];
+  solution?: IRichText;
+  answers: IRichText[];
   isAnswer: boolean;
 }
 
@@ -16,7 +17,7 @@ export const Answer = ({ correctOptionIndexes, solution, answers, isAnswer }: IP
           <div className="text-gradient">{correctOptionIndexes.length > 1 ? 'Answers' : 'Answer'} : </div>
           <div className="flex">
             {isAnswer
-              ? `${answers.join(', ')}`
+              ? answers.map((answer) => answer.text).join(', ')
               : correctOptionIndexes.map((answerIndex: number, index: number) => {
                   const isLastIndex = index === correctOptionIndexes.length - 1;
                   return (
@@ -32,7 +33,7 @@ export const Answer = ({ correctOptionIndexes, solution, answers, isAnswer }: IP
           {solution ? (
             <div className="">
               {/* <LockOverlay isPaid={true}> */}
-              <Html html={`${solution}`} prefix="Solution: " />
+              <RichTextContent value={solution} prefix="Solution:" />
               {/* </LockOverlay> */}
             </div>
           ) : null}

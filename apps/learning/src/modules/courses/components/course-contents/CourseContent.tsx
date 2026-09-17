@@ -38,13 +38,13 @@ const getDurationMins = (material?: IMaterial, testPaper?: ITestPaper) =>
 const AttachmentsRow = ({
   material,
   hasSelectedContent,
-  selectedAttachmentId,
+  selectedAttachmentKey,
   onClickContent,
   onClickAttachment,
 }: {
   material?: IMaterial;
   hasSelectedContent: boolean;
-  selectedAttachmentId?: string;
+  selectedAttachmentKey?: string;
   onClickContent: () => void;
   onClickAttachment: (attachment: AttachmentDto) => void;
 }) => {
@@ -61,9 +61,9 @@ const AttachmentsRow = ({
           </div>
           {(material.attachments ?? []).map((attachment, index) => (
             <Button
-              key={attachment._id}
+              key={attachment.key}
               onClick={() => onClickAttachment(attachment)}
-              isSecondary={selectedAttachmentId !== attachment._id}
+              isSecondary={selectedAttachmentKey !== attachment.key}
               className="!px-0 !py-0"
               isRound
             >
@@ -145,7 +145,7 @@ export const CourseContent = () => {
   const { push } = useRouter();
 
   const handleClickContent = () => {
-    setSelectedContent(selectedMaterial?.content || '');
+    setSelectedContent(selectedMaterial?.content ?? null);
     removeSelectedAttachment();
   };
 
@@ -215,7 +215,7 @@ export const CourseContent = () => {
           <AttachmentsRow
             material={selectedMaterial}
             hasSelectedContent={Boolean(selectedContent)}
-            selectedAttachmentId={selectedAttachment?._id}
+            selectedAttachmentKey={selectedAttachment?.key}
             onClickContent={handleClickContent}
             onClickAttachment={handleClickAttachment}
           />

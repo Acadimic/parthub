@@ -1,68 +1,59 @@
-import { Button } from '@repo/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
-import { type IOption, useQuestionLookups, useSelectedQuestion } from '@stores';
+import { RichTextEditor } from '@repo/ui/app';
+import { Button } from '@repo/ui/app';
+import { useQuestionLookups, useSelectedQuestion } from '@stores';
 import { AddOption } from './AddOption';
 import { SelectQuestionType } from './SelectQuestionType';
-import { type Block, MathEditor } from '@components/editors';
-import { getBlocks } from '@components/editors/math-jax-editor/util';
+
+/** Question types whose answers are picked from a list, and so need option editors. */
+const CHOICE_TYPES: QuestionType[] = [QuestionType.SINGLE_CHOICE, QuestionType.MULTIPLE_CHOICE];
 
 export const AddQuestion = () => {
-  const questionStore = useQuestionLookups();
-  const { patchQuestion } = questionStore;
+  const { patchQuestion, addOption, removeOption } = useQuestionLookups();
   const selectedQuestion = useSelectedQuestion();
-  const { getOptionsByIds, createOption, removeOptionById } = questionStore;
-
-  const handleQuestionTextChange = (blocks: Block[]) => {
-    if (!selectedQuestion) return;
-    patchQuestion(selectedQuestion._id, { question: JSON.stringify(blocks) });
-  };
-
-  const handleAddOption = () => {
-    if (!selectedQuestion) return;
-    const newOption = createOption(selectedQuestion._id);
-    patchQuestion(selectedQuestion._id, { options: [...(selectedQuestion.options ?? []), newOption._id] });
-  };
-
-  const handleRemoveOption = (option: IOption) => {
-    if (!selectedQuestion || (selectedQuestion.options ?? []).length === 1) return;
-    patchQuestion(selectedQuestion._id, {
-      options: (selectedQuestion.options ?? []).filter((id) => id !== option._id),
-    });
-    removeOptionById(option._id);
-  };
 
   if (!selectedQuestion) return null;
 
+  const options = selectedQuestion.options ?? [];
+  const isChoiceQuestion = CHOICE_TYPES.includes(selectedQuestion.questionType as QuestionType);
+
   return (
-    <div className="flex flex-col justify-center items-center w-full">
-      <div className="flex justify-end w-full">
+    <div className="flex w-full flex-col items-center justify-center">
+      <div className="flex w-full justify-end">
         <SelectQuestionType />
       </div>
-      <div className="flex flex-col gap-4 w-full">
-        <div>
-          <MathEditor handleChange={handleQuestionTextChange} blocks={getBlocks(selectedQuestion.question)} autoFocus />
-        </div>
-        <div className="flex flex-col gap-3">
-          {selectedQuestion.questionType === QuestionType.SINGLE_CHOICE ||
-          selectedQuestion.questionType === QuestionType.MULTIPLE_CHOICE ? (
-            <>
-              {getOptionsByIds(selectedQuestion.options ?? []).map((option, index) => {
-                return (
-                  <AddOption key={option._id} option={option} index={index} handleRemoveOption={handleRemoveOption} />
-                );
-              })}
-              <div className="flex justify-end pt-2 pb-8">
-                <Button
-                  isSecondary
-                  text="Add Option"
-                  leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
-                  onClick={handleAddOption}
-                />
-              </div>
-            </>
-          ) : null}
-        </div>
+      <div className="flex w-full flex-col gap-4">
+        <RichTextEditor
+          label="Question"
+          required
+          value={selectedQuestion.body}
+          onChange={(body) => patchQuestion(selectedQuestion._id, { body })}
+          editorClassName="min-h-[11rem]"
+        />
+
+        {isChoiceQuestion ? (
+          <div className="flex flex-col gap-3">
+            {options.map((option, index) => (
+              <AddOption
+                key={option._id}
+                questionId={selectedQuestion._id}
+                option={option}
+                index={index}
+                onRemove={(optionId) => removeOption(selectedQuestion._id, optionId)}
+                canRemove={options.length > 1 && index !== 0}
+              />
+            ))}
+            <div className="flex justify-end pb-8 pt-2">
+              <Button
+                isSecondary
+                text="Add Option"
+                leftsection={<PlusIcon weight="bold" className="h-4 w-4" />}
+                onClick={() => addOption(selectedQuestion._id)}
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

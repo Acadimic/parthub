@@ -23,3 +23,11 @@ export * from './skeletons';
 export * from './tabs';
 export * from './tooltips';
 export * from './error';
+
+export { RichTextEditor } from './rich-text/RichTextEditor';
+export type { IRichTextEditorProps } from './rich-text/RichTextEditor';
+export { docToMarkdown, docToPlainText, collectEquations, toRichText } from './rich-text/markdown';
+export { FORMULA_GALLERY, PALETTE_GROUPS, parseChemistry, isBlankEquation } from './rich-text/palette';
+export type { IPaletteItem, IPaletteGroup } from './rich-text/palette';
+export { ToastStack } from './toasts/ToastStack';
+export type { IToastStackProps } from './toasts/ToastStack';

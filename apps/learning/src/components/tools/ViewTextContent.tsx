@@ -1,10 +1,11 @@
 import { FullScreenModal } from '@repo/ui/app';
-import { Html } from '@components/others';
+import { type IRichText } from '@repo/shared/interfaces';
+import { RichTextContent } from '@repo/ui/core';
 import { useMemo, useState } from 'react';
 import { ViewToolbar } from './ViewToolbar';
 
 interface IProps {
-  content: string;
+  content?: IRichText | null;
   className?: string;
   isStatic?: boolean;
 }
@@ -16,7 +17,7 @@ export const ViewTextContent = ({ content }: IProps) => {
     return (
       <>
         <div className="pt-6 pb-16 px-4">
-          <Html html={content || 'No content available. Please check next tab. '} />
+          <RichTextContent value={content} fallback="No content available. Please check next tab." />
         </div>
       </>
     );

@@ -1,5 +1,5 @@
 import { type AttachmentDto, type MaterialDto } from '@repo/shared/contracts';
-import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
+import { type IRequestSlice, createEmptyRichText, createRequestSlice } from '@repo/shared/utils';
 import { type IMaterialInfo, type IMaterialStat, type IStandardSubjectQuery } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -33,9 +33,11 @@ export interface IMaterialState extends IRequestSlice<MaterialFetch> {
   removeMaterialById: (materialId: string) => void;
   addAttachment: (materialId: string, attachment: IAttachment) => void;
   /** Patches one attachment inside its material — an attachment has no store of its own. */
-  patchAttachment: (materialId: string, attachmentId: string, fields: Partial<IAttachment>) => void;
-  removeAttachment: (materialId: string, attachmentId: string) => void;
+  /** Attachments are addressed by their `key` — see `AttachmentDto.key` for why. */
+  patchAttachment: (materialId: string, key: string, fields: Partial<IAttachment>) => void;
+  removeAttachment: (materialId: string, key: string) => void;
   /** Adds an empty link attachment to a material and returns it. */
+  /** Appends a blank link attachment and returns it, for the caller to select. */
   addLinkAttachment: (materialId: string) => IAttachment;
 
   /** Adds an unsaved material and returns it, for the caller to select. */
@@ -141,27 +143,25 @@ export const useMaterialStore = create<IMaterialState>()((set, get) => ({
     get().patchMaterial(materialId, { attachments: [...(material.attachments ?? []), attachment] });
   },
 
-  patchAttachment: (materialId, attachmentId, fields) => {
+  patchAttachment: (materialId, key, fields) => {
     const material = get().getMaterialById(materialId);
     if (!material) return;
     get().patchMaterial(materialId, {
-      attachments: (material.attachments ?? []).map((item) =>
-        item._id === attachmentId ? { ...item, ...fields } : item,
-      ),
+      attachments: (material.attachments ?? []).map((item) => (item.key === key ? { ...item, ...fields } : item)),
     });
   },
 
-  removeAttachment: (materialId, attachmentId) => {
+  removeAttachment: (materialId, key) => {
     const material = get().getMaterialById(materialId);
     if (!material) return;
     get().patchMaterial(materialId, {
-      attachments: (material.attachments ?? []).filter((item) => item._id !== attachmentId),
+      attachments: (material.attachments ?? []).filter((item) => item.key !== key),
     });
   },
 
   addLinkAttachment: (materialId) => {
     const attachment: IAttachment = {
-      _id: getObjectId(),
+      key: getObjectId(),
       fileName: '',
       url: '',
       documentType: DocumentType.LINK,
@@ -187,7 +187,7 @@ export const useMaterialStore = create<IMaterialState>()((set, get) => ({
       order: get().getStandardSubjectMaterials(standardId, subjectId).length,
       durationMins: DEFAULT_DURATION_MINS,
       level: LevelType.EASY,
-      content: '',
+      content: createEmptyRichText(),
       tag: '',
       attachments: [],
       isNew: true,

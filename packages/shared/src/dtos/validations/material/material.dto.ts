@@ -12,6 +12,7 @@ import { LevelType } from '../../../enums';
 import { Type } from 'class-transformer';
 import { AttachmentDto } from '../attachment.dto';
 import { BaseOwnedDto } from '../base-owned.dto';
+import { RichTextDto } from '../rich-text.dto';
 
 export class MaterialDto extends BaseOwnedDto {
   @IsNotEmpty()
@@ -26,8 +27,9 @@ export class MaterialDto extends BaseOwnedDto {
   slug?: string;
 
   @IsOptional()
-  @IsString()
-  content?: string;
+  @ValidateNested()
+  @Type(() => RichTextDto)
+  content?: RichTextDto;
 
   @IsOptional()
   @IsString()

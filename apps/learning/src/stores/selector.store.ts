@@ -1,3 +1,4 @@
+import { type IRichText } from '@repo/shared/interfaces';
 import { type AttachmentDto } from '@repo/shared/contracts';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -34,7 +35,7 @@ export interface ISelectorState {
   selectedCourseItem: CourseItemType;
   selectedUpsertQuestionStep: number;
   isCourseMenuOpen: boolean;
-  selectedContent: string;
+  selectedContent: IRichText | null;
   /** The attachment the learner is viewing. Held whole, not by id — it is a subdocument. */
   selectedAttachment: AttachmentDto | null;
   setSelectedOrgId: (value: string) => void;
@@ -55,7 +56,7 @@ export interface ISelectorState {
   setSelectedCourseItem: (value: CourseItemType) => void;
   setSelectedUpsertQuestionStep: (value: number) => void;
   setIsCourseMenuOpen: (value: boolean) => void;
-  setSelectedContent: (value: string) => void;
+  setSelectedContent: (value: IRichText | null) => void;
   setSelectedAttachment: (value: AttachmentDto | null) => void;
   removeSelectedTestPaperId: () => void;
   removeSelectedTestPaperSectionId: () => void;
@@ -95,7 +96,7 @@ const INITIAL = {
   selectedCourseItem: CourseItemType.COURSE_MATERIALS,
   selectedUpsertQuestionStep: 0,
   isCourseMenuOpen: true,
-  selectedContent: '',
+  selectedContent: null,
   selectedAttachment: null,
 };
 
@@ -199,7 +200,7 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
     set({ selectedBatchId: '' });
   },
   removeSelectedContent: () => {
-    set({ selectedContent: '' });
+    set({ selectedContent: null });
   },
   removeSelectedAttachment: () => {
     set({ selectedAttachment: null });

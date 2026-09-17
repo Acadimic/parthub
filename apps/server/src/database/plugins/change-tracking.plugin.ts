@@ -29,7 +29,27 @@ const preModelHook = <A extends unknown[]>(
 };
 
 /** Ownership fields that are stamped once, on insert, and must never be reassigned by an update. */
-const IMMUTABLE_FIELDS = ['org', 'createdBy'] as const;
+/**
+ * Set once, on insert, and never changed afterwards.
+ *
+ * Stripped from every caller-supplied update and restored on a document that reassigns one, so
+ * "who owns this, who made it and when" cannot be rewritten by anything that comes through the API.
+ * `createdAt` is here as well as being `immutable` in the schema: the schema flag governs document
+ * saves, while an update operation needs the field removed from the payload before it reaches
+ * Mongoose.
+ */
+const IMMUTABLE_FIELDS = ['org', 'createdBy', 'createdAt'] as const;
+
+/**
+ * The subset the plugin itself re-seeds through `$setOnInsert` on an upsert.
+ *
+ * Only these may be stripped from `$setOnInsert`. `createdAt` must not be: Mongoose's own
+ * `timestamps` hook is registered at schema construction and therefore runs *before* this plugin,
+ * so the `createdAt` sitting in `$setOnInsert` by the time we see it is Mongoose's, not a caller's.
+ * Deleting it inserted documents with no `createdAt` at all — `runValidators` does not catch it,
+ * because an update validator only checks the paths an update actually contains.
+ */
+const INSERT_SEEDED_FIELDS = ['org', 'createdBy'] as const;
 
 /**
  * Fills the `BaseSchema` ownership fields from the request context on every write:
@@ -99,6 +119,20 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
   };
 
   return function changeTrackingPlugin(schema: Schema): void {
+    /**
+     * Timestamps, stamped before validation rather than left to `timestamps: true`.
+     *
+     * On the `save()` path Mongoose applies its own timestamps *after* validation, so `required`
+     * on `createdAt`/`updatedAt` could never be satisfied there — the fields were still undefined
+     * when the check ran. Mongoose still overwrites both at write time with its own values; this
+     * only makes them present early enough for the constraint to hold.
+     */
+    schema.pre('validate', function (this: Document & BaseSchema) {
+      const now = new Date();
+      if (!this.createdAt) this.createdAt = now;
+      if (!this.updatedAt) this.updatedAt = now;
+    });
+
     schema.pre('save', function (this: Document & BaseSchema) {
       const user = userId();
 
@@ -139,6 +173,9 @@ export function createChangeTrackingPlugin(contextService: RequestContextService
       for (const field of IMMUTABLE_FIELDS) {
         delete update[field];
         if (update.$set) delete (update.$set as UpdateObject)[field];
+      }
+      // Only what this plugin re-seeds below; see INSERT_SEEDED_FIELDS.
+      for (const field of INSERT_SEEDED_FIELDS) {
         if (update.$setOnInsert) delete (update.$setOnInsert as UpdateObject)[field];
       }
 

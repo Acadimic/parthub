@@ -1,22 +1,22 @@
-import type { IDocNode } from './types';
+import type { IRichTextDoc, IRichTextNode } from '@repo/shared/interfaces';
 
-const paragraph = (content: IDocNode[]): IDocNode => ({ type: 'paragraph', content });
-const heading = (level: number, value: string): IDocNode => ({
+const paragraph = (content: IRichTextNode[]): IRichTextNode => ({ type: 'paragraph', content });
+const heading = (level: number, value: string): IRichTextNode => ({
   type: 'heading',
   attrs: { level },
   content: [{ type: 'text', text: value }],
 });
-const text = (value: string): IDocNode => ({ type: 'text', text: value });
-const code = (value: string): IDocNode => ({ type: 'text', text: value, marks: [{ type: 'code' }] });
-const inlineMath = (latex: string): IDocNode => ({ type: 'inlineMath', attrs: { latex } });
-const blockMath = (latex: string): IDocNode => ({ type: 'blockMath', attrs: { latex } });
-const bullets = (items: IDocNode[][]): IDocNode => ({
+const text = (value: string): IRichTextNode => ({ type: 'text', text: value });
+const code = (value: string): IRichTextNode => ({ type: 'text', text: value, marks: [{ type: 'code' }] });
+const inlineMath = (latex: string): IRichTextNode => ({ type: 'inlineMath', attrs: { latex } });
+const blockMath = (latex: string): IRichTextNode => ({ type: 'blockMath', attrs: { latex } });
+const bullets = (items: IRichTextNode[][]): IRichTextNode => ({
   type: 'bulletList',
   content: items.map((content) => ({ type: 'listItem', content: [paragraph(content)] })),
 });
 
 /** A question as it would actually be authored: prose with equations inside it. */
-export const QUESTION_DOC: IDocNode = {
+export const QUESTION_DOC: IRichTextDoc = {
   type: 'doc',
   content: [
     heading(1, 'Quadratic equations'),
@@ -66,7 +66,7 @@ export const QUESTION_DOC: IDocNode = {
  * must scroll rather than widen the page, and stacked limits. If KaTeX rejects anything the old
  * MathJax accepted, it shows up here first.
  */
-export const STRESS_DOC: IDocNode = {
+export const STRESS_DOC: IRichTextDoc = {
   type: 'doc',
   content: [
     heading(1, 'Rendering stress test'),
@@ -101,7 +101,7 @@ export const STRESS_DOC: IDocNode = {
  * fallback is wrong. Text outside an equation uses the app's own font stack and is fine; the two
  * cases are deliberately side by side here so the difference is visible.
  */
-export const MULTILINGUAL_DOC: IDocNode = {
+export const MULTILINGUAL_DOC: IRichTextDoc = {
   type: 'doc',
   content: [
     heading(1, 'Multilingual content'),
@@ -126,7 +126,7 @@ export const MULTILINGUAL_DOC: IDocNode = {
 };
 
 /** mhchem, which replaces the 317 hand-built lines of chemical-equation tables in the old editor. */
-export const CHEMISTRY_DOC: IDocNode = {
+export const CHEMISTRY_DOC: IRichTextDoc = {
   type: 'doc',
   content: [
     heading(1, 'Chemical equations'),
@@ -150,7 +150,7 @@ export const CHEMISTRY_DOC: IDocNode = {
   ],
 };
 
-export const EMPTY_DOC: IDocNode = {
+export const EMPTY_DOC: IRichTextDoc = {
   type: 'doc',
   content: [{ type: 'paragraph' }],
 };
@@ -159,7 +159,7 @@ export interface IPreset {
   key: string;
   label: string;
   description: string;
-  doc: IDocNode;
+  doc: IRichTextDoc;
 }
 
 /** What the demo page offers. Each one targets a different question the spike has to answer. */

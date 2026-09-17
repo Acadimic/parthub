@@ -1,0 +1,121 @@
+import type { IRichText, IRichTextMark, IRichTextNode, RichTextAttrValue } from '@repo/shared/interfaces';
+import { createElement, type ReactNode } from 'react';
+import { cn } from '../../lib/cn';
+import { MathRender } from '../MathRender';
+
+export interface IRichTextContentProps {
+  value?: IRichText | null;
+  /** Rendered when the value is empty. A dash reads better than a blank cell in a table. */
+  fallback?: ReactNode;
+  /** A bold lead-in on the first line — "Question:", "Ans:", "Solution:". */
+  prefix?: ReactNode;
+  className?: string;
+}
+
+const numberAttr = (attrs: Record<string, RichTextAttrValue> | undefined, key: string, fallback: number): number => {
+  const value = attrs?.[key];
+  return typeof value === 'number' ? value : fallback;
+};
+
+const stringAttr = (attrs: Record<string, RichTextAttrValue> | undefined, key: string): string => {
+  const value = attrs?.[key];
+  return typeof value === 'string' ? value : '';
+};
+
+/** Wraps a run of text in one mark. Unknown marks fall through, so text is never lost. */
+const MARK_WRAPPERS: Record<string, (children: ReactNode) => ReactNode> = {
+  bold: (children) => <strong className="font-semibold">{children}</strong>,
+  italic: (children) => <em className="italic">{children}</em>,
+  strike: (children) => <s className="line-through">{children}</s>,
+  underline: (children) => <u className="underline">{children}</u>,
+  code: (children) => <code className="bg-muted px-1 py-0.5 font-mono text-[0.9em]">{children}</code>,
+};
+
+const applyMarks = (text: string, marks: IRichTextMark[] | undefined): ReactNode =>
+  (marks ?? []).reduce<ReactNode>((node, mark) => MARK_WRAPPERS[mark.type]?.(node) ?? node, text);
+
+const HEADING_CLASSES: Record<number, string> = {
+  1: 'text-2xl font-semibold mt-6 mb-3',
+  2: 'text-xl font-semibold mt-5 mb-2.5',
+  3: 'text-lg font-semibold mt-4 mb-2',
+};
+
+/**
+ * Renders one node and its children.
+ *
+ * A lookup rather than a switch so a node type is one entry, and an unrecognised type falls through
+ * to its children — a document written by a newer editor degrades to readable text instead of
+ * rendering blank.
+ */
+const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, key: string) => ReactNode> = {
+  paragraph: (_node, children, key) => (
+    <p key={key} className="my-3">
+      {children}
+    </p>
+  ),
+  heading: (node, children, key) => {
+    const level = Math.min(Math.max(numberAttr(node.attrs, 'level', 1), 1), 3);
+    return createElement(`h${level}`, { key, className: HEADING_CLASSES[level] }, children);
+  },
+  bulletList: (_node, children, key) => (
+    <ul key={key} className="my-3 list-disc pl-6">
+      {children}
+    </ul>
+  ),
+  orderedList: (_node, children, key) => (
+    <ol key={key} className="my-3 list-decimal pl-6">
+      {children}
+    </ol>
+  ),
+  listItem: (_node, children, key) => <li key={key}>{children}</li>,
+  blockquote: (_node, children, key) => (
+    <blockquote key={key} className="border-l-2 border-border pl-4 text-muted-foreground">
+      {children}
+    </blockquote>
+  ),
+  codeBlock: (_node, children, key) => (
+    <pre key={key} className="my-3 overflow-x-auto bg-muted p-3 font-mono text-xs">
+      <code>{children}</code>
+    </pre>
+  ),
+  horizontalRule: (_node, _children, key) => <hr key={key} className="my-6 border-border" />,
+  hardBreak: (_node, _children, key) => <br key={key} />,
+  inlineMath: (node, _children, key) => <MathRender key={key} latex={stringAttr(node.attrs, 'latex')} />,
+  blockMath: (node, _children, key) => (
+    <div key={key} className="my-4 overflow-x-auto">
+      <MathRender latex={stringAttr(node.attrs, 'latex')} displayMode />
+    </div>
+  ),
+};
+
+const renderNode = (node: IRichTextNode, key: string): ReactNode => {
+  if (node.type === 'text') return <span key={key}>{applyMarks(node.text ?? '', node.marks)}</span>;
+
+  const children = (node.content ?? []).map((child, index) => renderNode(child, `${key}.${index}`));
+  const render = NODE_RENDERERS[node.type];
+  return render ? render(node, children, key) : <span key={key}>{children}</span>;
+};
+
+/**
+ * Renders authored content.
+ *
+ * Walks the stored ProseMirror document and builds React elements from it. Nothing is ever passed
+ * to `dangerouslySetInnerHTML`, which is the substantive difference from the `Html` component this
+ * replaces: stored content cannot inject markup, because it is never treated as markup.
+ */
+export const RichTextContent = ({ value, fallback = null, prefix, className }: IRichTextContentProps) => {
+  const nodes = value?.doc?.content ?? [];
+  if (!nodes.length && !prefix) return <>{fallback}</>;
+
+  const body = nodes.length ? nodes.map((node, index) => renderNode(node, String(index))) : fallback;
+  if (!prefix) return <div className={cn('text-sm leading-7 text-foreground', className)}>{body}</div>;
+
+  // The prefix sits beside the content rather than inside it, so a multi-paragraph value stays
+  // aligned under its own label instead of wrapping back under the lead-in.
+  return (
+    <div className={cn('flex gap-2 text-sm leading-7 text-foreground', className)}>
+      <span className="shrink-0 font-bold">{prefix}</span>
+      <div className="min-w-0 flex-1">{body}</div>
+    </div>
+  );
+};

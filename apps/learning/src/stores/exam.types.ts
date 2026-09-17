@@ -1,3 +1,4 @@
+import { type IRichText } from '@repo/shared/interfaces';
 import { type Marking, type PaperCategoryType, type PaperType } from '../enums';
 
 /** Seconds spent, per question id. */
@@ -30,7 +31,7 @@ export interface IExam {
   _id: string;
   testPaper: string;
   title: string;
-  instruction: string;
+  instruction: IRichText;
   questionWiseSpendTime: IQuestionWiseTimeTakenMap;
   questionWiseReplyTime: IQuestionWiseTimeTakenMap;
   totalSpendTime: number;

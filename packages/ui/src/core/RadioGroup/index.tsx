@@ -11,19 +11,9 @@ interface IRadioGroupProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
-  isHtml?: boolean;
 }
 
-export const RadioGroup = ({
-  options,
-  value,
-  onChange,
-  label,
-  required,
-  disabled,
-  className,
-  isHtml,
-}: IRadioGroupProps) => {
+export const RadioGroup = ({ options, value, onChange, label, required, disabled, className }: IRadioGroupProps) => {
   return (
     <div className={className}>
       {label && <Label label={label} required={required} />}
@@ -39,7 +29,7 @@ export const RadioGroup = ({
               htmlFor={`radio-${option.value}`}
               className={cn('text-sm font-medium cursor-pointer', value === option.value && 'text-primary')}
             >
-              {isHtml ? <span dangerouslySetInnerHTML={{ __html: option.label as string }} /> : option.label}
+              {option.label}
             </label>
           </div>
         ))}

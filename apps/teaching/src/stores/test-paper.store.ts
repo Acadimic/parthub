@@ -1,6 +1,6 @@
-import { type TestPaperDto, type QuestionDto } from '@repo/shared/contracts';
-import { type DefaultMarkingType, type ITestPaperSectionFields } from '@repo/shared/interfaces';
-import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
+import { type QuestionDto, type TestPaperDto, type TestPaperSectionDto } from '@repo/shared/contracts';
+import { type DefaultMarkingType } from '@repo/shared/interfaces';
+import { type IRequestSlice, createEmptyRichText, createRequestSlice } from '@repo/shared/utils';
 import { type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -15,8 +15,8 @@ import { useSelectorStore } from './selector.store';
  * A section in the store. `defaultMarkings` and `sectionCategory` are required here because the
  * model declared them so and every screen reads them, so each read narrows before use.
  */
-export type ITestPaperSection = ITestPaperSectionFields &
-  Required<Pick<ITestPaperSectionFields, 'defaultMarkings' | 'sectionCategory'>> & { isNew?: boolean };
+export type ITestPaperSection = TestPaperSectionDto &
+  Required<Pick<TestPaperSectionDto, 'defaultMarkings' | 'sectionCategory'>>;
 
 /** The fetches this store tracks. */
 type TestPaperFetch = 'testPapers' | 'testPaperSections';
@@ -38,8 +38,6 @@ export interface ITestPaperState extends IRequestSlice<TestPaperFetch> {
   getTestPaperSubjectItems: (testPaperId: string) => ISelectItem[];
   /** A paper's standards as select items. Was a view on the model. */
   getTestPaperStandardItems: (testPaperId: string) => ISelectItem[];
-  /** Recomputes a paper's question count and max marks from its sections' questions. */
-  updateTotalQuestionsAndMarks: (testPaperId: string) => void;
 
   addTestPapers: (testPapers: TestPaperDto[]) => void;
   addTestPaperSections: (sections: ITestPaperSection[]) => void;
@@ -55,6 +53,8 @@ export interface ITestPaperState extends IRequestSlice<TestPaperFetch> {
     sectionType: SectionType,
     sectionCategory: SectionCategoryType,
     defaultMarkings: DefaultMarkingType,
+    /** Required by the server, so it is set at creation rather than patched in afterwards. */
+    name: string,
   ) => ITestPaperSection;
 
   loadTestPapers: () => Promise<void>;
@@ -114,14 +114,6 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
     return useStandardStore.getState().getStandardItemsByIds(testPaper.standards ?? []);
   },
 
-  updateTotalQuestionsAndMarks: (testPaperId) => {
-    const testPaper = get().getTestPaperById(testPaperId);
-    if (!testPaper) return;
-    const questions = useQuestionStore.getState().getQuestionsBySectionIds(testPaper.sections ?? []);
-    const maxMarks = questions.reduce((total, question) => total + (question.markings?.correct ?? 0), 0);
-    get().patchTestPaper(testPaperId, { totalQuestions: questions.length, maxMarks });
-  },
-
   addTestPapers: (testPapers) => {
     set((state) => ({ testPaperMap: { ...state.testPaperMap, ...keyById(testPapers) } }));
   },
@@ -173,7 +165,7 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
       durationMins: 60,
       year: new Date().getFullYear(),
       maxMarks: 0,
-      instruction: '',
+      instruction: createEmptyRichText(),
       paperCategory: PaperCategoryType.CUSTOM,
       isPublished: false,
       webLink: '',
@@ -184,10 +176,10 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
     return testPaper;
   },
 
-  createTestPaperSection: (sectionType, sectionCategory, defaultMarkings) => {
+  createTestPaperSection: (sectionType, sectionCategory, defaultMarkings, name) => {
     const section: ITestPaperSection = {
       _id: getObjectId(),
-      name: '',
+      name,
       sectionType,
       sectionCategory,
       defaultMarkings,
@@ -207,14 +199,14 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
     get().run('testPaperSections', async () => {
       const result = await TestPaperService.getTestPaperSectionsWithQuestions(testPaperId);
       if (!result?.data) return;
-      const { sections, questions, options, solutions } = result.data;
+      const { sections, questions } = result.data;
       get().addTestPaperSections(sections);
       // The questions come back with the sections, so this store fills the question store. A
       // one-way write between stores, which needs no subscription.
       const questionStore = useQuestionStore.getState();
+      // Options and the solution arrive embedded in each question, so there is nothing else to
+      // distribute — two arrays where there used to be four.
       questionStore.addQuestions(questions);
-      questionStore.addOptions(options);
-      questionStore.addSolutions(solutions);
     }),
 
   reset: () => {

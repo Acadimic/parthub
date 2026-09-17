@@ -75,6 +75,10 @@ export type { IDateInputProps } from './DateInput';
 
 export { MathRender, renderLatex } from './MathRender';
 export type { IMathRenderProps } from './MathRender';
+export { Toast } from './Toast';
+export type { IToastProps } from './Toast';
+export { RichTextContent } from './RichTextContent';
+export type { IRichTextContentProps } from './RichTextContent';
 
 export { MathField, configureMathLive } from './MathField';
 export type { IMathFieldProps, IMathFieldHandle, IMathLiveConfig } from './MathField';

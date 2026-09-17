@@ -44,13 +44,15 @@ export class MaterialController {
   @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
   @Permissions(PermissionItem.VIEW_MATERIAL)
   async findById(@Param('id') id: string) {
-    return this.materialService.findById(this.requestContextService.getOrgId(), id);
+    const data = await this.materialService.findById(this.requestContextService.getOrgId(), id);
+    return data;
   }
 
   @Get('course/:courseId')
   @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
   @Permissions(PermissionItem.VIEW_MATERIAL)
   async findByCourse(@Param('courseId') courseId: string) {
-    return this.materialService.findByCourse(this.requestContextService.getOrgId(), courseId);
+    const data = await this.materialService.findByCourse(this.requestContextService.getOrgId(), courseId);
+    return data;
   }
 }

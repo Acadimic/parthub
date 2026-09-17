@@ -27,9 +27,7 @@ export const SimpleAccordions = ({ items, openIndexes, isIconLast }: IProps) => 
             aria-controls={`${index}-content`}
             aria-expanded={opens[index]}
           >
-            <div className={`font-medium capitalize w-full text-left ${isIconLast ? 'mr-2' : 'ml-2'}`}>
-              {item.title}
-            </div>
+            <div className={`font-medium w-full text-left ${isIconLast ? 'mr-2' : 'ml-2'}`}>{item.title}</div>
             <CaretRightIcon
               weight="bold"
               className={`w-4 h-4 text-foreground transition-transform duration-200 flex-shrink-0 ${opens[index] ? 'rotate-90' : ''}`}

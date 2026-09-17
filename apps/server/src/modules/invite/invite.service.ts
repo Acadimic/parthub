@@ -1,4 +1,5 @@
 import { UserDocument } from '@modules/user/user.schema';
+import { getTransformedBaseFields } from '@database/base.transform';
 import { UserService } from '@modules/user/user.service';
 import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -18,9 +19,13 @@ export class InviteService {
   ) {}
 
   getTransformedInvite(invite: InviteDocument): InviteDto {
+    // Cast only to make the delete legal: `HydratedDocument` types `__v` as required. Dropping it
+    // matters because a client that posts a loaded row back is rejected by the global
+    // `forbidNonWhitelisted` with "property __v should not exist".
+    delete (invite as { __v?: number }).__v;
     return {
       ...invite,
-      _id: invite._id.toString(),
+      ...getTransformedBaseFields(invite),
       permission: invite.permission,
       invitedBy: invite.invitedBy.toString(),
       acceptedDate: invite.acceptedDate?.toISOString(),

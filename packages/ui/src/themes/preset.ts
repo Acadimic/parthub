@@ -132,11 +132,23 @@ export const uiPreset = {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' },
         },
+        // Drives a toast's remaining-time bar. Declared here rather than inline so the duration
+        // stays the component's to set and `animation-play-state` can freeze it on hover.
+        'toast-countdown': {
+          from: { transform: 'scaleX(1)' },
+          to: { transform: 'scaleX(0)' },
+        },
       },
 
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        // Duration and play-state come through custom properties rather than being set inline.
+        // `important: true` makes this shorthand `!important`, which beats a plain inline
+        // `animation-duration` — the bar then inherited the shorthand's implicit `0s`, completed
+        // instantly and rendered at zero width. A variable is read by the !important rule instead
+        // of fighting it.
+        'toast-countdown': 'toast-countdown var(--toast-duration, 5000ms) linear forwards var(--toast-play, running)',
       },
     },
   },

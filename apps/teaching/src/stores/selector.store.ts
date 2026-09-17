@@ -32,7 +32,6 @@ export interface ISelectorState {
   selectedBatchId: string;
   selectedMeetId: string;
   selectedCalenderDate: number;
-  selectedSolutionId: string;
   selectedQuestionType: QuestionType;
   selectedCalenderType: CalendarType;
   selectedCalenderEvent: IFullCalendarEvent | null;
@@ -53,7 +52,6 @@ export interface ISelectorState {
   setSelectedBatchId: (value: string) => void;
   setSelectedMeetId: (value: string) => void;
   setSelectedCalenderDate: (value: number) => void;
-  setSelectedSolutionId: (value: string) => void;
   setSelectedQuestionType: (value: QuestionType) => void;
   setSelectedCalenderType: (value: CalendarType) => void;
   setSelectedCalenderEvent: (value: IFullCalendarEvent) => void;
@@ -73,7 +71,6 @@ export interface ISelectorState {
   removeSelectedCalenderDate: () => void;
   removeSelectedCalenderType: () => void;
   removeSelectedCalenderEvent: () => void;
-  removeSelectedSolutionId: () => void;
   /** Selects a user and the org they lead. Takes fields, not a user, so this store stays dependency-free. */
   selectUserAndOrg: (userId: string, org: string) => void;
   reset: () => void;
@@ -97,7 +94,6 @@ const INITIAL = {
   selectedBatchId: '',
   selectedMeetId: '',
   selectedCalenderDate: Date.now(),
-  selectedSolutionId: '',
   selectedQuestionType: QuestionType.SINGLE_CHOICE,
   selectedCalenderType: CalendarType.DAY,
   selectedCalenderEvent: null,
@@ -157,9 +153,6 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
   setSelectedCalenderDate: (value) => {
     set({ selectedCalenderDate: value });
   },
-  setSelectedSolutionId: (value) => {
-    set({ selectedSolutionId: value });
-  },
   setSelectedQuestionType: (value) => {
     set({ selectedQuestionType: value });
   },
@@ -216,9 +209,6 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
   },
   removeSelectedCalenderEvent: () => {
     set({ selectedCalenderEvent: null });
-  },
-  removeSelectedSolutionId: () => {
-    set({ selectedSolutionId: '' });
   },
   selectUserAndOrg: (userId, org) => {
     set({ selectedUserId: userId, selectedOrgId: org });

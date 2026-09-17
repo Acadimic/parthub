@@ -29,7 +29,7 @@ export const useAttachment = () => {
       const attachments: AttachmentDto[] = selectedFiles.map(
         (file: File, index: number) =>
           ({
-            _id: keys[index].key.split('/')[1],
+            key: keys[index].key.split('/')[1],
             fileName: file.name,
             url: presignedUrls[index].split('?')[0],
             documentType: DocumentType.FILE,
@@ -73,7 +73,7 @@ export const useAttachment = () => {
   const handleClickAttachment = async (attachment: AttachmentDto) => {
     if (!attachment) return;
     setSelectedAttachment(attachment);
-    setSelectedContent('');
+    setSelectedContent(null);
   };
 
   return {

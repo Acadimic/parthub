@@ -1,12 +1,12 @@
 import { ArrowCounterClockwiseIcon, PencilSimpleIcon, SlidersHorizontalIcon } from '@phosphor-icons/react';
+import { RichTextEditor, toRichText } from '@repo/ui/app';
 import { Badge, Card, Tooltip } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
 import { useState } from 'react';
 import { MathFieldPlayground } from './components/MathFieldPlayground';
 import { OutputPanel } from './components/OutputPanel';
-import { RichTextEditor } from './components/RichTextEditor';
 import { PRESETS } from './lib/sample';
-import type { IDocNode } from './lib/types';
+import type { IRichText } from '@repo/shared/interfaces';
 
 /** A caption above a pane, so each half of the split says what it is without a heading's weight. */
 const PaneLabel = ({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) => (
@@ -28,7 +28,7 @@ const PaneLabel = ({ icon, children }: { icon: React.ReactNode; children: React.
  */
 export const Editor = () => {
   const [presetKey, setPresetKey] = useState(PRESETS[0].key);
-  const [doc, setDoc] = useState<IDocNode | null>(PRESETS[0].doc);
+  const [doc, setDoc] = useState<IRichText | null>(toRichText(PRESETS[0].doc));
   /**
    * Bumped on every preset change and remount of the editor. Tiptap takes `content` once, at
    * construction, so swapping the prop alone would leave the previous document on screen — the key
@@ -41,7 +41,7 @@ export const Editor = () => {
   const loadPreset = (key: string) => {
     const next = PRESETS.find((item) => item.key === key) ?? PRESETS[0];
     setPresetKey(next.key);
-    setDoc(next.doc);
+    setDoc(toRichText(next.doc));
     setInstance((value) => value + 1);
   };
 
@@ -105,14 +105,14 @@ export const Editor = () => {
         <section className="flex min-w-0 flex-col">
           <PaneLabel icon={<PencilSimpleIcon className="h-3.5 w-3.5" />}>Author</PaneLabel>
           <Card className="h-[min(58vh,40rem)] min-h-[20rem] overflow-hidden border border-border p-0">
-            <RichTextEditor key={`${presetKey}-${instance}`} initialContent={preset.doc} onChange={setDoc} />
+            <RichTextEditor key={`${presetKey}-${instance}`} value={toRichText(preset.doc)} onChange={setDoc} />
           </Card>
         </section>
 
         <section className="flex min-w-0 flex-col">
           <PaneLabel icon={<SlidersHorizontalIcon className="h-3.5 w-3.5" />}>What the editor produced</PaneLabel>
           <Card className="h-[min(58vh,40rem)] min-h-[20rem] overflow-hidden border border-border p-0">
-            <OutputPanel doc={doc} />
+            <OutputPanel doc={doc?.doc ?? null} />
           </Card>
         </section>
       </div>

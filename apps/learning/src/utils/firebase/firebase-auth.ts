@@ -101,7 +101,9 @@ export const loadFirebaseUser = async () => {
     });
     await generateAndSetNewToken();
   } catch (err) {
-    console.error(err);
+    // Expected on every public page: there is simply nobody signed in yet. Warn rather than error
+    // so it does not register as a failure in the dev overlay's error count.
+    console.warn('Firebase token refresh skipped:', String(err));
   }
 };
 
@@ -157,7 +159,13 @@ const ERROR_MESSAGE_BY_CODE: Record<string, string> = {
 };
 
 export const getFirebaseErrorMessage = (e: FirebaseError) => {
-  console.error('Firebase Error: ', e);
+  // Logged as plain values and at warn level, never as the Error instance. Next's dev overlay
+  // intercepts console.error and, when handed an Error, renders it as a full-page
+  // "Runtime FirebaseError" dialog built from that error's own stack — which points at `signIn`,
+  // where the error was constructed, and so reads exactly like an uncaught crash. It is not one:
+  // every caller reaches this function from its own catch block, and the return value is the
+  // message they toast. The code is the part worth grepping for anyway.
+  console.warn(`Firebase auth error: ${e?.code ?? 'unknown'} — ${e?.message ?? ''}`);
   const known = e?.code ? ERROR_MESSAGE_BY_CODE[e.code] : undefined;
   return known ?? e?.message ?? 'Something went wrong. Please try again.';
 };

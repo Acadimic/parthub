@@ -12,3 +12,4 @@ export * from './stat.interface';
 export * from './toast.interface';
 export * from './request.interface';
 export * from './entity.interface';
+export * from './rich-text.interface';

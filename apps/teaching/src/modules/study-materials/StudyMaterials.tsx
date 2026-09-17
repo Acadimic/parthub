@@ -122,7 +122,7 @@ export const StudyMaterials = () => {
           <div className="flex justify-between items-center">
             <div className="">
               <TextInput
-                placeholder="Search Test Paper"
+                placeholder="Search Study Materials"
                 leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
               />
             </div>

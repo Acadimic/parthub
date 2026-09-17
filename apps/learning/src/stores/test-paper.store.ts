@@ -1,6 +1,6 @@
-import { type TestPaperDto } from '@repo/shared/contracts';
-import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
-import { type ISubjectGraphData, type ITestPaperSectionFields } from '@repo/shared/interfaces';
+import { type TestPaperDto, type TestPaperSectionDto } from '@repo/shared/contracts';
+import { type IRequestSlice, createEmptyRichText, createRequestSlice } from '@repo/shared/utils';
+import { type ISubjectGraphData } from '@repo/shared/interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { Marking } from '../enums';
@@ -20,8 +20,8 @@ export type ITestPaper = TestPaperDto & {
   isLoadingReactionsCount?: boolean;
 };
 
-export type ITestPaperSection = ITestPaperSectionFields &
-  Required<Pick<ITestPaperSectionFields, 'defaultMarkings' | 'sectionCategory'>> & { isNew?: boolean };
+export type ITestPaperSection = TestPaperSectionDto &
+  Required<Pick<TestPaperSectionDto, 'defaultMarkings' | 'sectionCategory'>> & { isNew?: boolean };
 
 export * from './exam.types';
 import {
@@ -215,14 +215,12 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
     get().run('testPaperSections', async () => {
       const result = await TestPaperService.getTestPaperSectionsWithQuestions(testPaperId);
       if (!result?.data) return;
-      const { sections, questions, options, solutions } = result.data;
+      const { sections, questions } = result.data;
       get().addTestPaperSections(sections);
       // The questions arrive with the sections, so this store fills the question store — a one-way
       // write between stores, which needs no subscription.
       const questionStore = useQuestionStore.getState();
       questionStore.addQuestions(questions);
-      questionStore.addOptions(options);
-      questionStore.addSolutions(solutions);
     }),
 
   loadAndSetExam: (testPaperId, isPractice) =>
@@ -256,7 +254,7 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
           _id: getObjectId(),
           testPaper: testPaperId,
           title: testPaper.name,
-          instruction: testPaper.instruction ?? '',
+          instruction: testPaper.instruction ?? createEmptyRichText(),
           questionWiseSpendTime: zeroTimes,
           questionWiseReplyTime: { ...zeroTimes },
           totalSpendTime: 0,
@@ -568,7 +566,7 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
  */
 export const useTestPaperLookups = (): ITestPaperState => {
   useSelectorStore(useShallow((state) => state.selectedQuestionId));
-  useQuestionStore(useShallow((state) => [state.questionMap, state.optionMap]));
+  useQuestionStore(useShallow((state) => state.questionMap));
   return useTestPaperStore(useShallow((state) => state));
 };
 

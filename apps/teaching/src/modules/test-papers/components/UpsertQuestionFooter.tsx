@@ -1,15 +1,9 @@
+import { type QuestionDto } from '@repo/shared/contracts';
+import { isRichTextEmpty } from '@repo/shared/utils';
 import { ModalFooter } from '@repo/ui/app';
 import { QuestionType } from '@enums';
-import { TestPaperService } from '@services';
-import {
-  useQuestionLookups,
-  useSelectedQuestion,
-  useSelectedSolution,
-  useSelectedTestPaper,
-  useSelectedTestPaperSection,
-  useSelectorLookups,
-  useTestPaperLookups,
-} from '@stores';
+import { QuestionService } from '@services';
+import { useQuestionLookups, useSelectedQuestion, useSelectedTestPaperSection, useSelectorLookups } from '@stores';
 import { errorToast, successToast } from '@utils/helpers';
 
 interface IProps {
@@ -18,94 +12,68 @@ interface IProps {
   isLoading: boolean;
 }
 
+/** Question types whose answers are picked from a list, and so must have option text. */
+const CHOICE_TYPES: QuestionType[] = [QuestionType.SINGLE_CHOICE, QuestionType.MULTIPLE_CHOICE];
+
+/** Returns the first problem with the question, or `null` when it is ready for the next step. */
+const findContentProblem = (question: QuestionDto): string | null => {
+  if (isRichTextEmpty(question.body)) return 'Question is required!';
+  if (!CHOICE_TYPES.includes(question.questionType as QuestionType)) return null;
+  const blankIndex = (question.options ?? []).findIndex((option) => isRichTextEmpty(option.body));
+  return blankIndex === -1 ? null : `Option ${blankIndex + 1} is required!`;
+};
+
 export const UpsertQuestionFooter = ({ onClose, setLoading, isLoading }: IProps) => {
-  const selectorStore = useSelectorLookups();
-  const testPaperStore = useTestPaperLookups();
-  const { updateTotalQuestionsAndMarks } = testPaperStore;
-  const questionStore = useQuestionLookups();
-  const { patchSolution } = questionStore;
-  const { patchQuestion } = questionStore;
-  const { patchOption } = questionStore;
-  const { selectedUpsertQuestionStep, setSelectedUpsertQuestionStep, removeSelectedSolutionId } = selectorStore;
+  const { patchQuestion } = useQuestionLookups();
+  const { selectedUpsertQuestionStep, setSelectedUpsertQuestionStep } = useSelectorLookups();
   const selectedTestPaperSection = useSelectedTestPaperSection();
-  const selectedTestPaper = useSelectedTestPaper();
-  const selectedSolution = useSelectedSolution();
   const selectedQuestion = useSelectedQuestion();
-  const { getOptionsByIds } = questionStore;
 
   const handleNext = () => {
     if (!selectedTestPaperSection || !selectedQuestion) return;
-    if (!selectedQuestion.question?.trim()) {
-      errorToast({ message: 'Question is required!' });
+    const problem = findContentProblem(selectedQuestion);
+    if (problem) {
+      errorToast({ message: problem });
       return;
-    }
-    if (
-      selectedQuestion.questionType === QuestionType.SINGLE_CHOICE ||
-      selectedQuestion.questionType === QuestionType.MULTIPLE_CHOICE
-    ) {
-      const options = getOptionsByIds(selectedQuestion.options ?? []);
-      for (let i = 0; i < options.length; i++) {
-        const option = options[i];
-        if (!option.option?.trim()) {
-          errorToast({ message: `Option ${i + 1} is required!` });
-          return;
-        }
-      }
     }
     setSelectedUpsertQuestionStep(1);
   };
 
   const handleSaveQuestion = async () => {
-    if (!selectedTestPaperSection || !selectedQuestion || !selectedTestPaperSection || !selectedTestPaper) return;
+    if (!selectedQuestion) return;
+    if (!(selectedQuestion.options ?? []).some((option) => option.isCorrect)) {
+      errorToast({ message: 'Please add at least one correct option.' });
+      return;
+    }
+    setLoading(true);
     try {
-      const options = getOptionsByIds(selectedQuestion.options ?? []);
-      const correctCount = options.filter((option) => option.isCorrect).length;
-      if (correctCount === 0) {
-        errorToast({ message: 'Please add at least one correct option.' });
-        return;
-      }
-      setLoading(true);
-      await TestPaperService.upsertTestPaperSectionQuestion({
-        testPaper: selectedTestPaper._id,
-        question: selectedQuestion,
-        options,
-        solution: selectedSolution?.isNew && !selectedSolution?.solution ? undefined : selectedSolution,
-      });
-      successToast({ message: 'Question added successfully!' });
-      setTimeout(() => {
-        if (selectedQuestion.isNew) {
-          patchQuestion(selectedQuestion._id, { isNew: false });
-          options.forEach((option) => patchOption(option._id, { isNew: false }));
-        }
-        if (selectedSolution?.isNew) {
-          patchSolution(selectedSolution._id, { isNew: false });
-        }
-        updateTotalQuestionsAndMarks(selectedTestPaper._id);
-        removeSelectedSolutionId();
-        onClose();
-      }, 500);
-    } catch {
+      // Options and the solution travel inside the question, so this is the whole save. The
+      // server recomputes the paper's totals from the section — the client cannot, because a
+      // section may belong to papers it has never loaded.
+      await QuestionService.upsertQuestion(selectedQuestion);
+      patchQuestion(selectedQuestion._id, { isNew: false });
+      successToast({ message: 'Question saved successfully!' });
+      onClose();
+    } catch (error) {
+      // Previously an empty `catch {}`, which swallowed the failure whole: no toast, no message,
+      // and a modal that simply sat there.
+      errorToast({ message: error instanceof Error ? error.message : 'Could not save the question.' });
     } finally {
       setLoading(false);
     }
   };
 
   const onSave = async () => {
-    if (selectedUpsertQuestionStep === 0) {
-      handleNext();
-    } else if (selectedUpsertQuestionStep === 1) {
-      await handleSaveQuestion();
-    }
+    if (selectedUpsertQuestionStep === 0) handleNext();
+    else await handleSaveQuestion();
   };
 
   const onCancel = () => {
-    if (selectedUpsertQuestionStep === 1) {
-      setSelectedUpsertQuestionStep(0);
-    }
+    if (selectedUpsertQuestionStep === 1) setSelectedUpsertQuestionStep(0);
   };
 
   return (
-    <div className="w-full flex justify-center items-center">
+    <div className="flex w-full items-center justify-center">
       <div className="w-full">
         <ModalFooter
           cancelText="Prev"

@@ -1,18 +1,15 @@
 import { type QuestionDto } from '@repo/shared/contracts';
-import { Html } from '@components/others';
-import { useQuestionLookups } from '@stores';
+import { RichTextContent } from '@repo/ui/core';
 
 interface IProps {
   prefix?: string;
   question: QuestionDto;
 }
 
-export const Solution = ({ question, prefix }: IProps) => {
-  const questionStore = useQuestionLookups();
-  const { getSolutionByQuestionId } = questionStore;
-  const solution = getSolutionByQuestionId(question._id);
-
-  const emptyText = '<span class="text-muted-foreground">No solution added</span>';
-
-  return <Html html={solution?.solution || emptyText} prefix={prefix} />;
-};
+export const Solution = ({ question, prefix }: IProps) => (
+  <RichTextContent
+    value={question.solution?.body}
+    prefix={prefix}
+    fallback={<span className="text-muted-foreground">No solution added</span>}
+  />
+);

@@ -1,4 +1,3 @@
-import { Html } from '@components/others';
 import { useTestPaperLookups } from '@stores';
 
 export const Instruction = () => {
@@ -7,14 +6,22 @@ export const Instruction = () => {
   if (!exam) return null;
   const { maxMarks, durationMins, numberOfQuestions, sections, title } = exam;
 
-  const getInstructions = () => {
-    return [
-      `There are <b>${numberOfQuestions} questions</b> in the test paper.`,
-      `Total duration of the test is <b>${durationMins} minutes</b>.`,
-      `Maximum marks is <b>${maxMarks}</b>.`,
-      `Number of section(s) <b>${sections.length}</b>.`,
-    ];
-  };
+  // Written as nodes rather than HTML strings. These were never stored content — they are literals
+  // built here — so the only thing the old `<Html>` added was a parse of markup we wrote ourselves.
+  const getInstructions = (): React.ReactNode[] => [
+    <>
+      There are <b>{numberOfQuestions} questions</b> in the test paper.
+    </>,
+    <>
+      Total duration of the test is <b>{durationMins} minutes</b>.
+    </>,
+    <>
+      Maximum marks is <b>{maxMarks}</b>.
+    </>,
+    <>
+      Number of section(s) <b>{sections.length}</b>.
+    </>,
+  ];
 
   return (
     <>
@@ -23,13 +30,9 @@ export const Instruction = () => {
           <div className="flex font-semibold text-sm md:text-base justify-center py-4">{title}</div>
           <div className="py-2">
             <ul className="list-disc">
-              {getInstructions().map((instruction: string, index: number) => {
-                return (
-                  <li key={index}>
-                    <Html html={instruction} />
-                  </li>
-                );
-              })}
+              {getInstructions().map((instruction, index) => (
+                <li key={index}>{instruction}</li>
+              ))}
             </ul>
           </div>
         </div>

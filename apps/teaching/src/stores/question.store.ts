@@ -1,6 +1,6 @@
-import { type QuestionDto } from '@repo/shared/contracts';
-import { type IOptionFields, type ISolutionFields } from '@repo/shared/interfaces';
-import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
+import { type OptionDto, type QuestionDto } from '@repo/shared/contracts';
+import { type IRichText } from '@repo/shared/interfaces';
+import { type IRequestSlice, createEmptyRichText, createRequestSlice } from '@repo/shared/utils';
 import { type ICreateQuestion, type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -9,52 +9,53 @@ import { QuestionService } from '../services';
 import { getObjectId } from '../utils/helpers';
 import { useSelectorStore } from './selector.store';
 
-export type IOption = IOptionFields & { isNew?: boolean };
-export type ISolution = ISolutionFields & { isNew?: boolean };
-
 /** The fetches this store tracks. */
 type QuestionFetch = 'questions';
 
+/**
+ * Questions, and only questions.
+ *
+ * Options and the solution used to be entities here, in two parallel keyed maps with their own
+ * create, patch, remove and "unsaved rows" getters — roughly half this file — because the server
+ * stored them in their own collections and the client had to reassemble them. They are embedded
+ * fields of a question now, so they are edited through `patchQuestion` like any other field and the
+ * maps are gone.
+ */
 export interface IQuestionState extends IRequestSlice<QuestionFetch> {
   questionMap: Record<string, QuestionDto>;
-  optionMap: Record<string, IOption>;
-  solutionMap: Record<string, ISolution>;
 
   getQuestionById: (questionId: string) => QuestionDto | undefined;
-  getOptionById: (optionId: string) => IOption | undefined;
-  getSolutionById: (solutionId: string) => ISolution | undefined;
   getQuestions: () => QuestionDto[];
-  getOptions: () => IOption[];
-  getSolutions: () => ISolution[];
   getQuestionsByIds: (questionIds: string[]) => QuestionDto[];
-  getOptionsByIds: (optionIds: string[]) => IOption[];
   getQuestionsBySectionId: (sectionId: string) => QuestionDto[];
   getQuestionsBySectionIds: (sectionIds: string[]) => QuestionDto[];
-  getSolutionByQuestionId: (questionId: string) => ISolution | undefined;
-  /** A question's options as select items. Was the `optionItems` view on the model. */
+  /** A question's options as select items. */
   getOptionItems: (questionId: string) => ISelectItem[];
   /** Rows the user has created and not yet saved — what an upsert posts. */
   getNewQuestions: () => QuestionDto[];
-  getNewOptions: () => IOption[];
-  getNewSolutions: () => ISolution[];
 
   addQuestions: (questions: QuestionDto[]) => void;
-  addOptions: (options: IOption[]) => void;
-  addSolutions: (solutions: ISolution[]) => void;
   patchQuestion: (questionId: string, fields: Partial<QuestionDto>) => void;
-  patchOption: (optionId: string, fields: Partial<IOption>) => void;
-  patchSolution: (solutionId: string, fields: Partial<ISolution>) => void;
   removeQuestionById: (questionId: string) => void;
-  removeOptionById: (optionId: string) => void;
-  removeSolutionById: (solutionId: string) => void;
 
-  createOption: (questionId: string, option?: string, isCorrect?: boolean) => IOption;
-  /** The starting options for a question type: two for boolean, four for choice, one otherwise. */
-  createOptionsForQuestionType: (questionId: string, questionType: QuestionType) => IOption[];
-  /** Adds an unsaved question with its options and returns it, for the caller to select. */
+  /** Edits one embedded option in place. */
+  patchOption: (questionId: string, optionId: string, fields: Partial<OptionDto>) => void;
+  addOption: (questionId: string) => void;
+  removeOption: (questionId: string, optionId: string) => void;
+  setSolution: (questionId: string, body: IRichText) => void;
+  /**
+   * Changes a question's type, rebuilding its options when the answer *shape* changes.
+   *
+   * The rule lives here rather than in the picker because it is about what a question is, not about
+   * the control: single- and multiple-choice share a shape, so switching between them keeps the
+   * options the author has already written; anything else starts again.
+   */
+  setQuestionType: (questionId: string, questionType: QuestionType) => void;
+
+  /** The next free position in a section, or in a subsection when one is given. */
+  getNextOrder: (section: string, subsection?: string) => number;
+  /** Adds an unsaved question with its starting options and returns it, for the caller to select. */
   createQuestion: (payload: ICreateQuestion) => QuestionDto;
-  /** Returns the question's solution, creating an empty one first if it has none. */
-  upsertSolution: (questionId: string, solution?: string) => ISolution;
 
   loadQuestions: () => Promise<void>;
   reset: () => void;
@@ -69,88 +70,59 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
 /** How many options a single- or multiple-choice question starts with. */
 const CHOICE_OPTION_COUNT = 4;
 
+const createOption = (body?: IRichText, isCorrect = false): OptionDto => ({
+  _id: getObjectId(),
+  body: body ?? createEmptyRichText(),
+  isCorrect,
+});
+
+/** The starting options for a question type: two for boolean, four for choice, one otherwise. */
+const createOptionsForQuestionType = (questionType: QuestionType): OptionDto[] => {
+  if (questionType === QuestionType.BOOLEAN) return [createOption(), createOption()];
+  if (questionType === QuestionType.SINGLE_CHOICE || questionType === QuestionType.MULTIPLE_CHOICE) {
+    return Array.from({ length: CHOICE_OPTION_COUNT }, () => createOption());
+  }
+  // Anything else is answered directly, so its single option is the correct one.
+  return [createOption(undefined, true)];
+};
+
 export const useQuestionStore = create<IQuestionState>()((set, get) => ({
   questionMap: {},
-  optionMap: {},
-  solutionMap: {},
   ...createRequestSlice(['questions'], set, get),
 
   getQuestionById: (questionId) => (questionId ? get().questionMap[questionId] : undefined),
 
-  getOptionById: (optionId) => (optionId ? get().optionMap[optionId] : undefined),
-
-  getSolutionById: (solutionId) => (solutionId ? get().solutionMap[solutionId] : undefined),
-
   getQuestions: () => Object.values(get().questionMap),
-
-  getOptions: () => Object.values(get().optionMap),
-
-  getSolutions: () => Object.values(get().solutionMap),
 
   getQuestionsByIds: (questionIds) => {
     const { questionMap } = get();
     return questionIds.map((id) => questionMap[id]).filter((row): row is QuestionDto => !!row);
   },
 
-  getOptionsByIds: (optionIds) => {
-    const { optionMap } = get();
-    return optionIds.map((id) => optionMap[id]).filter((row): row is IOption => !!row);
-  },
-
-  getQuestionsBySectionId: (sectionId) =>
-    sectionId
-      ? get()
-          .getQuestions()
-          .filter((question) => question.section === sectionId)
-      : [],
+  getQuestionsBySectionId: (sectionId) => (sectionId ? get().getQuestionsBySectionIds([sectionId]) : []),
 
   getQuestionsBySectionIds: (sectionIds) =>
     sectionIds.length
       ? get()
           .getQuestions()
           .filter((question) => question.section && sectionIds.includes(question.section))
+          // `order` is the authority, not insertion order — the server sorts by it too.
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       : [],
 
-  getSolutionByQuestionId: (questionId) =>
-    questionId
-      ? get()
-          .getSolutions()
-          .find((solution) => solution.question === questionId)
-      : undefined,
-
-  getOptionItems: (questionId) => {
-    const question = get().getQuestionById(questionId);
-    if (!question) return [];
-    return get()
-      .getOptionsByIds(question.options ?? [])
-      .map((option) => ({ label: option.option, value: option._id }));
-  },
+  getOptionItems: (questionId) =>
+    (get().getQuestionById(questionId)?.options ?? []).map((option) => ({
+      label: option.body.text,
+      value: option._id,
+    })),
 
   getNewQuestions: () =>
     get()
       .getQuestions()
       .filter((question) => question.isNew),
 
-  getNewOptions: () =>
-    get()
-      .getOptions()
-      .filter((option) => option.isNew),
-
-  getNewSolutions: () =>
-    get()
-      .getSolutions()
-      .filter((solution) => solution.isNew),
-
   addQuestions: (questions) => {
     set((state) => ({ questionMap: { ...state.questionMap, ...keyById(questions) } }));
-  },
-
-  addOptions: (options) => {
-    set((state) => ({ optionMap: { ...state.optionMap, ...keyById(options) } }));
-  },
-
-  addSolutions: (solutions) => {
-    set((state) => ({ solutionMap: { ...state.solutionMap, ...keyById(solutions) } }));
   },
 
   patchQuestion: (questionId, fields) => {
@@ -161,22 +133,6 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
     });
   },
 
-  patchOption: (optionId, fields) => {
-    set((state) => {
-      const option = state.optionMap[optionId];
-      if (!option) return state;
-      return { optionMap: { ...state.optionMap, [optionId]: { ...option, ...fields } } };
-    });
-  },
-
-  patchSolution: (solutionId, fields) => {
-    set((state) => {
-      const solution = state.solutionMap[solutionId];
-      if (!solution) return state;
-      return { solutionMap: { ...state.solutionMap, [solutionId]: { ...solution, ...fields } } };
-    });
-  },
-
   removeQuestionById: (questionId) => {
     set((state) => {
       const { [questionId]: removed, ...questionMap } = state.questionMap;
@@ -184,65 +140,66 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
     });
   },
 
-  removeOptionById: (optionId) => {
-    set((state) => {
-      const { [optionId]: removed, ...optionMap } = state.optionMap;
-      return removed ? { optionMap } : state;
+  patchOption: (questionId, optionId, fields) => {
+    const question = get().getQuestionById(questionId);
+    if (!question) return;
+    get().patchQuestion(questionId, {
+      options: (question.options ?? []).map((option) => (option._id === optionId ? { ...option, ...fields } : option)),
     });
   },
 
-  removeSolutionById: (solutionId) => {
-    set((state) => {
-      const { [solutionId]: removed, ...solutionMap } = state.solutionMap;
-      return removed ? { solutionMap } : state;
+  addOption: (questionId) => {
+    const question = get().getQuestionById(questionId);
+    if (!question) return;
+    get().patchQuestion(questionId, { options: [...(question.options ?? []), createOption()] });
+  },
+
+  removeOption: (questionId, optionId) => {
+    const question = get().getQuestionById(questionId);
+    if (!question) return;
+    get().patchQuestion(questionId, {
+      options: (question.options ?? []).filter((option) => option._id !== optionId),
     });
   },
 
-  createOption: (questionId, option, isCorrect) => {
-    const row: IOption = {
-      _id: getObjectId(),
-      option: option ?? '',
-      question: questionId,
-      isCorrect: isCorrect ?? false,
-      isNew: true,
-    };
-    get().addOptions([row]);
-    return row;
+  setSolution: (questionId, body) => get().patchQuestion(questionId, { solution: { body } }),
+
+  setQuestionType: (questionId, questionType) => {
+    const question = get().getQuestionById(questionId);
+    if (!question) return;
+    const isChoice = (type?: QuestionType) =>
+      type === QuestionType.SINGLE_CHOICE || type === QuestionType.MULTIPLE_CHOICE;
+    const keepsOptions = isChoice(questionType) && isChoice(question.questionType);
+    get().patchQuestion(questionId, {
+      questionType,
+      options: keepsOptions
+        ? (question.options ?? []).map((option) => ({ ...option, isCorrect: false }))
+        : createOptionsForQuestionType(questionType),
+    });
   },
 
-  createOptionsForQuestionType: (questionId, questionType) => {
-    const { createOption } = get();
-    if (questionType === QuestionType.BOOLEAN) {
-      return [createOption(questionId, 'True'), createOption(questionId, 'False')];
-    }
-    if (questionType === QuestionType.SINGLE_CHOICE || questionType === QuestionType.MULTIPLE_CHOICE) {
-      return Array.from({ length: CHOICE_OPTION_COUNT }, () => createOption(questionId));
-    }
-    // Anything else is answered directly, so its single option is the correct one.
-    return [createOption(questionId, '', true)];
+  getNextOrder: (section, subsection) => {
+    // Position is within the subsection when there is one, otherwise within the section — the same
+    // rule the server's `{ section: 1, order: 1 }` index sorts by.
+    const siblings = get()
+      .getQuestionsBySectionIds([section])
+      .filter((question) => (question.subsection ?? undefined) === (subsection ?? undefined));
+    return siblings.reduce((highest, question) => Math.max(highest, question.order ?? 0), -1) + 1;
   },
 
   createQuestion: (payload) => {
-    const questionId = getObjectId();
-    const options = get().createOptionsForQuestionType(questionId, payload.questionType);
     const question: QuestionDto = {
-      _id: questionId,
-      question: '',
-      options: options.map((option) => option._id),
+      _id: getObjectId(),
+      body: createEmptyRichText(),
+      options: createOptionsForQuestionType(payload.questionType),
       year: new Date().getFullYear(),
       isNew: true,
       ...payload,
+      // After the spread: the caller supplies where the question goes, never its position.
+      order: get().getNextOrder(payload.section, payload.subsection),
     };
     get().addQuestions([question]);
     return question;
-  },
-
-  upsertSolution: (questionId, solution) => {
-    const existing = get().getSolutionByQuestionId(questionId);
-    if (existing) return existing;
-    const row: ISolution = { _id: getObjectId(), solution: solution ?? '', question: questionId, isNew: true };
-    get().addSolutions([row]);
-    return row;
   },
 
   loadQuestions: () =>
@@ -252,7 +209,7 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
     }),
 
   reset: () => {
-    set({ questionMap: {}, optionMap: {}, solutionMap: {} });
+    set({ questionMap: {} });
     get().resetRequests();
   },
 }));
@@ -260,14 +217,8 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
 /** The store's lookups, subscribed to its state. */
 export const useQuestionLookups = (): IQuestionState => useQuestionStore(useShallow((state) => state));
 
-/** The selected question, or `undefined`. Replaces `selectorStore.selectedQuestion`. */
+/** The selected question, or `undefined`. */
 export const useSelectedQuestion = (): QuestionDto | undefined => {
   const selectedQuestionId = useSelectorStore((state) => state.selectedQuestionId);
   return useQuestionStore((state) => (selectedQuestionId ? state.questionMap[selectedQuestionId] : undefined));
-};
-
-/** The selected solution, or `undefined`. Replaces `selectorStore.selectedSolution`. */
-export const useSelectedSolution = (): ISolution | undefined => {
-  const selectedSolutionId = useSelectorStore((state) => state.selectedSolutionId);
-  return useQuestionStore((state) => (selectedSolutionId ? state.solutionMap[selectedSolutionId] : undefined));
 };

@@ -9,8 +9,12 @@ export type { ReactionDto } from '../dtos/validations/reaction/reaction.dto';
 export type { ChapterDto } from '../dtos/validations/chapter/chapter.dto';
 export type { MaterialDto } from '../dtos/validations/material/material.dto';
 export type { QuestionDto } from '../dtos/validations/question/question.dto';
+export type { OptionDto } from '../dtos/validations/question/question.dto';
+export type { SolutionDto } from '../dtos/validations/question/question.dto';
+export type { MarkingsDto } from '../dtos/validations/question/question.dto';
 export type { SubjectDto } from '../dtos/validations/subject/subject.dto';
 export type { TestPaperDto } from '../dtos/validations/test-paper/test-paper.dto';
+export type { TestPaperSectionDto } from '../dtos/validations/test-paper/test-paper-section.dto';
 export type { MeetDto } from '../dtos/validations/meet/meet.dto';
 export type { PlanDto } from '../dtos/validations/plan/plan.dto';
 export type { StandardDto } from '../dtos/validations/standard/standard.dto';
@@ -21,6 +25,7 @@ export type { UserStudentMappingDto } from '../dtos/validations/mappings/user-st
 export type { CourseDto } from '../dtos/validations/course/course.dto';
 export type { CourseStatsDto } from '../dtos/validations/course/course.dto';
 export type { AttachmentDto } from '../dtos/validations/attachment.dto';
+export type { RichTextDto } from '../dtos/validations/rich-text.dto';
 
 // These five declare their own complete field lists rather than extending BaseOwnedDto, so they
 // are re-exported as-is. Wrapping them in ResponseOf would add org, createdBy, updatedBy,

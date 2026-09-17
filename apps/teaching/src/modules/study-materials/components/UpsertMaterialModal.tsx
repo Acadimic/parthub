@@ -1,25 +1,17 @@
 import { Attachments, UploadFiles } from '@components/app/attachments';
 import { Select } from '@components/app/selects';
-import { Button, Label, Modal, ModalFooter, SimpleAccordions, TextInput } from '@repo/ui/app';
+import { Button, Label, Modal, ModalFooter, SimpleAccordions, TextInput, RichTextEditor } from '@repo/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
 import { type FileExtension, PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
 import { MaterialService } from '@services';
-import {
-  type IAttachment,
-  useStandardLookups,
-  useMaterialLookups,
-  useSelectedMaterial,
-  useSelectorLookups,
-} from '@stores';
+import { useStandardLookups, useMaterialLookups, useSelectedMaterial, useSelectorLookups } from '@stores';
 import { successToast } from '@utils/helpers';
 import { useState } from 'react';
 import { StudyMaterialView } from './StudyMaterialView';
 import { UpsertAttachmentModal } from './UpsertAttachment';
-import { type Block, MathEditor } from '@components/editors';
-import { getBlocks } from '@components/editors/math-jax-editor/util';
 
 interface IProps {
   isOpen: boolean;
@@ -41,23 +33,27 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const chapters = getStandardSubjectChapters(selectedStandardId, selectedSubjectId);
   const { uploadFilesToS3 } = useAttachment();
-  const [selectedAttachment, setSelectedAttachment] = useState<IAttachment | null>(null);
+  // The key of the attachment being edited, not a copy of it: a copy goes stale the moment it is
+  // patched, so the row is read back out of the material on every render.
+  const [selectedAttachmentKey, setSelectedAttachmentKey] = useState<string | null>(null);
+  const selectedAttachment =
+    (selectedMaterial?.attachments ?? []).find((attachment) => attachment.key === selectedAttachmentKey) ?? null;
 
   const onAddLinkAttachment = () => {
     if (!selectedMaterial) return;
-    setSelectedAttachment(addLinkAttachment(selectedMaterial._id));
+    setSelectedAttachmentKey(addLinkAttachment(selectedMaterial._id).key);
   };
 
-  const onEditAttachment = (attachment: IAttachment) => {
-    setSelectedAttachment(attachment);
+  const onEditAttachment = (key: string) => {
+    setSelectedAttachmentKey(key);
   };
 
   const onCloseAttachmentModal = () => {
     // A draft link the user abandoned without filling in is not worth keeping.
-    if (selectedMaterial && selectedAttachment?.isNew && (!selectedAttachment.fileName || !selectedAttachment.url)) {
-      removeAttachment(selectedMaterial._id, selectedAttachment._id);
+    if (selectedMaterial && selectedAttachment && (!selectedAttachment.fileName || !selectedAttachment.url)) {
+      removeAttachment(selectedMaterial._id, selectedAttachment.key);
     }
-    setSelectedAttachment(null);
+    setSelectedAttachmentKey(null);
   };
 
   const handleClose = () => {
@@ -75,11 +71,6 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
   const handleChapterChange = (values: ISelectItem[]) => {
     if (!values.length || !selectedMaterial) return;
     patchMaterial(selectedMaterial._id, { chapter: values[0].value });
-  };
-
-  const handleContentTextChange = (blocks: Block[]) => {
-    if (!selectedMaterial) return;
-    patchMaterial(selectedMaterial._id, { content: JSON.stringify(blocks) });
   };
 
   // Upload files to S3 bucket
@@ -121,10 +112,11 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                 />
                 <div>
                   <div className="max-w-full">
-                    <MathEditor
+                    <RichTextEditor
                       label="Content"
-                      handleChange={handleContentTextChange}
-                      blocks={getBlocks(selectedMaterial.content ?? '')}
+                      value={selectedMaterial.content}
+                      onChange={(content) => patchMaterial(selectedMaterial._id, { content })}
+                      editorClassName="min-h-[18rem]"
                     />
                   </div>
                 </div>
@@ -155,8 +147,8 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                         fileName: attachment.fileName,
                         extension: attachment.fileExtension,
                         index,
-                        onRemove: () => removeAttachment(selectedMaterial._id, attachment._id),
-                        onEdit: () => onEditAttachment(attachment),
+                        onRemove: () => removeAttachment(selectedMaterial._id, attachment.key),
+                        onEdit: () => onEditAttachment(attachment.key),
                         url: attachment.url,
                         isStatic: attachment.isUploaded ? false : true,
                       }))}

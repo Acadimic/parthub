@@ -7,9 +7,12 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PaperCategoryType, PaperType } from '../../../enums';
 import { BaseOwnedDto } from '../base-owned.dto';
+import { RichTextDto } from '../rich-text.dto';
 
 export class TestPaperDto extends BaseOwnedDto {
   @IsNotEmpty()
@@ -32,12 +35,9 @@ export class TestPaperDto extends BaseOwnedDto {
   appLink?: string;
 
   @IsOptional()
-  @IsString()
-  instruction?: string;
-
-  @IsOptional()
-  @IsString()
-  type?: string;
+  @ValidateNested()
+  @Type(() => RichTextDto)
+  instruction?: RichTextDto;
 
   @IsOptional()
   @IsMongoId({ each: true })
@@ -86,14 +86,6 @@ export class TestPaperDto extends BaseOwnedDto {
   @IsOptional()
   @IsNumber()
   maxMarks?: number;
-
-  @IsOptional()
-  @IsNumber()
-  totalMarks?: number;
-
-  @IsOptional()
-  @IsNumber()
-  duration?: number;
 
   @IsOptional()
   @IsEnum(PaperType)

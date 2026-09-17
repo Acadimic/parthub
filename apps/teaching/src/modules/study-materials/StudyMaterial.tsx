@@ -38,7 +38,11 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
   });
 
   const onOpenAddModal = () => {
-    createMaterial(standardId, subjectId);
+    // The new row has to be selected as well as created: the modal renders its body from
+    // `useSelectedMaterial()`, so without this it opened empty — no title field, no editor, just
+    // the footer. That is why `createMaterial` returns the row.
+    const material = createMaterial(standardId, subjectId);
+    setSelectedMaterialId(material._id);
     setState({ isOpenUpsertModal: true });
   };
 

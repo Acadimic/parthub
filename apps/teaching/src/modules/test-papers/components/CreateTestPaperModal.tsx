@@ -10,9 +10,10 @@ import {
   useSelectedTestPaper,
   useSelectorLookups,
   useTestPaperLookups,
+  useTestPaperStore,
 } from '@stores';
 import { ALL, defaultMarkings } from '@utils/constants';
-import { getYears, successToast } from '@utils/helpers';
+import { errorToast, getYears, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { DefaultMarkingsModal } from './DefaultMarkingsModal';
@@ -76,21 +77,40 @@ export const CreateTestPaperModal = ({ isOpen, onClose }: IProps) => {
       if (selectedTestPaper.isNew) {
         const isSubject = (selectedTestPaper.subjects ?? []).length > 0;
         const ids = isSubject ? (selectedTestPaper.subjects ?? []) : (selectedTestPaper.standards ?? []);
-        testPaperSections = ids.map((id) => {
-          const section = createTestPaperSection(SectionType.SECTION, SectionCategoryType.CUSTOM, markings);
-          const obj = isSubject ? getSubjectById(id) : getStandardById(id);
-          obj && patchTestPaperSection(section._id, { name: obj.name });
-          return section;
+        // A paper must never be saved with no sections. One per subject (or per standard) is the
+        // useful default, but if neither is set that yields none — and a section-less paper is a
+        // dead end in the UI: the page renders "No sections found" with no way to add one, so
+        // neither sections nor questions can ever be created. `[undefined]` makes the map below run
+        // exactly once and fall through to its `Section 1` fallback name.
+        const sectionSources: (string | undefined)[] = ids.length ? ids : [undefined];
+        testPaperSections = sectionSources.map((id, index) => {
+          // The name goes in at creation. Patching it afterwards updated the store but left this
+          // local `section` on the pre-patch copy — rows are immutable — so the post below sent
+          // `name: ''` and the server rejected it with "name should not be empty".
+          const lookup = isSubject ? getSubjectById : getStandardById;
+          const obj = id ? lookup(id) : undefined;
+          return createTestPaperSection(
+            SectionType.SECTION,
+            SectionCategoryType.CUSTOM,
+            markings,
+            obj?.name || `Section ${index + 1}`,
+          );
         });
         const sectionIds = testPaperSections.map((section) => section._id);
         patchTestPaper(selectedTestPaper._id, { sections: sectionIds });
         await Promise.all(testPaperSections.map((section) => TestPaperService.upsertTestPaperSection(section)));
         testPaperSections.forEach((section) => patchTestPaperSection(section._id, { isNew: false }));
       }
-      const result = await TestPaperService.upsertTestPaper(selectedTestPaper);
+      // Re-read before posting. `patchTestPaper` above wrote the section ids into the store, but
+      // rows are immutable — `selectedTestPaper` is still the pre-patch copy, so posting it sent
+      // `sections: []` and the paper came back with none of the sections it had just created.
+      const paperToSave = useTestPaperStore.getState().getTestPaperById(selectedTestPaper._id) ?? selectedTestPaper;
+      const result = await TestPaperService.upsertTestPaper(paperToSave);
       if (result.data) addTestPapers([result.data]);
       patchTestPaper(selectedTestPaper._id, { isNew: false });
-      setSelectedTestPaperSectionId(testPaperSections[0]._id);
+      // Guarded: editing a paper that somehow has no sections used to throw here, and the empty
+      // `catch` below swallowed it — the drawer just sat there.
+      if (testPaperSections[0]) setSelectedTestPaperSectionId(testPaperSections[0]._id);
       successToast({ message: 'Test paper created successfully.' });
       setTimeout(() => {
         push(
@@ -100,7 +120,8 @@ export const CreateTestPaperModal = ({ isOpen, onClose }: IProps) => {
       }, 500);
       setMarkings(structuredClone(defaultMarkings));
       onClose();
-    } catch {
+    } catch (error) {
+      errorToast({ message: error instanceof Error ? error.message : 'Could not save the test paper.' });
     } finally {
       setIsLoading(false);
     }
