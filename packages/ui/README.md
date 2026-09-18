@@ -38,6 +38,8 @@ package imports an app.
 | `@repo/ui/contexts` | `ColorModeContext`                                              |
 | `@repo/ui/hooks`    | `useWindowDimensions`                                           |
 | `@repo/ui/themes`   | `light`, `dark`, `getTheme`                                     |
+| `@repo/ui/content`  | `RichTextView`, `MathRender` — what a student downloads         |
+| `@repo/ui/editor`   | `RichTextEditor`, the equation editor and its data              |
 
 **`core` and `app` are separate subpaths on purpose.** Fourteen names exist in
 both with a different API: `Breadcrumb`, `Button`, `Card`, `Checkbox`,

@@ -1,8 +1,9 @@
+import { MathRender } from '@repo/ui/content';
+import { FORMULAS } from '@repo/ui/editor';
 import { KeyboardIcon } from '@phosphor-icons/react';
-import { Button, MathField, MathRender, Tooltip } from '@repo/ui/core';
+import { Button, MathField, Tooltip } from '@repo/ui/core';
 import type { IMathFieldHandle } from '@repo/ui/core';
 import { useRef, useState } from 'react';
-import { FORMULA_GALLERY } from '@repo/ui/app';
 
 /**
  * The math field on its own, with no document around it.
@@ -56,7 +57,7 @@ export const MathFieldPlayground = () => {
       />
 
       <div className="flex flex-wrap gap-1">
-        {FORMULA_GALLERY.slice(0, 6).map((item) => (
+        {FORMULAS.slice(0, 6).map((item) => (
           <Button key={item.label} isSecondary className="px-2 py-1 text-xs" onClick={() => insert(item.latex)}>
             {item.label}
           </Button>

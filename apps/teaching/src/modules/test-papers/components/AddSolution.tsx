@@ -1,10 +1,11 @@
+import { RichTextView } from '@repo/ui/content';
+import { RichTextEditor } from '@repo/ui/editor';
 import { type OptionDto, type QuestionDto } from '@repo/shared/contracts';
 import { type MarkingType } from '@repo/shared/interfaces';
-import { richTextFromText } from '@repo/shared/utils';
+import { richTextFromMarkdown } from '@repo/shared/utils';
 import { CheckboxSelection, RadioSelection } from '@components/app/selections';
 import { Select } from '@components/app/selects';
-import { RichTextEditor, TextInput } from '@repo/ui/app';
-import { RichTextContent } from '@repo/ui/core';
+import { TextInput } from '@repo/ui/app';
 import { Marking, QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
@@ -202,7 +203,7 @@ export const AddSolution = () => {
   // Built here rather than in the store so an option keeps its equations in the picker: the label
   // is a rendered node, which is what `ISelectItem.label` allows.
   const optionItems: ISelectItem[] = questionOptions.map((option) => ({
-    label: <RichTextContent value={option.body} />,
+    label: <RichTextView value={option.body} />,
     value: option._id,
   }));
   const isMultipleChoice = selectedQuestion.questionType === QuestionType.MULTIPLE_CHOICE;
@@ -219,7 +220,7 @@ export const AddSolution = () => {
         <div className="">
           <div className="flex gap-2">
             <span className="shrink-0 text-sm font-bold text-foreground">Question:</span>
-            <RichTextContent value={selectedQuestion.body} />
+            <RichTextView value={selectedQuestion.body} />
           </div>
           <div>
             {isMultipleChoice && (
@@ -250,7 +251,7 @@ export const AddSolution = () => {
                   // builder rather than opening a full editor for one number or word.
                   if (firstOption) {
                     patchOption(selectedQuestion._id, firstOption._id, {
-                      body: richTextFromText(e.target.value),
+                      body: richTextFromMarkdown(e.target.value),
                     });
                   }
                 }}

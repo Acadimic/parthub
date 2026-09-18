@@ -1,5 +1,7 @@
 // App-level components composed from the core wrappers. Exposed on its own subpath because several
 // names (Spinner, Modal, Label, TextInput, Tooltip, Checkbox) also exist in core with a different API.
+// Authored content is not here: the editor is `@repo/ui/editor` and the reading view `@repo/ui/content`,
+// kept apart so a student never downloads MathLive and ProseMirror.
 export * from './accordions';
 export * from './breadcrumbs';
 export * from './buttons';
@@ -24,10 +26,5 @@ export * from './tabs';
 export * from './tooltips';
 export * from './error';
 
-export { RichTextEditor } from './rich-text/RichTextEditor';
-export type { IRichTextEditorProps } from './rich-text/RichTextEditor';
-export { docToMarkdown, docToPlainText, collectEquations, toRichText } from './rich-text/markdown';
-export { FORMULA_GALLERY, PALETTE_GROUPS, parseChemistry, isBlankEquation } from './rich-text/palette';
-export type { IPaletteItem, IPaletteGroup } from './rich-text/palette';
 export { ToastStack } from './toasts/ToastStack';
 export type { IToastStackProps } from './toasts/ToastStack';

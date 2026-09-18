@@ -1,6 +1,6 @@
+import { RichTextView } from '@repo/ui/content';
 import { CheckboxSelection, RadioSelection } from '@components/app/selections';
 import { TextInput } from '@repo/ui/app';
-import { RichTextContent } from '@repo/ui/core';
 import { QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { type IQuestion, useQuestionLookups } from '@stores';
@@ -28,7 +28,7 @@ export const Options = ({ question, handleResponses, selectedValues, isDisabled,
   const options: ISelectItem[] = questionOptions.map((option, index) => ({
     label: (
       <Option index={index}>
-        <RichTextContent value={option.body} />
+        <RichTextView value={option.body} />
       </Option>
     ),
     value: option._id,

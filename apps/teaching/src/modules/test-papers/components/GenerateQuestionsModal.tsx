@@ -1,4 +1,4 @@
-import { richTextFromText } from '@repo/shared/utils';
+import { richTextFromMarkdown } from '@repo/shared/utils';
 import { QuestionService } from '@services';
 import { Select } from '@components/app/selects';
 import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
@@ -106,13 +106,13 @@ export const GenerateQuestionsModal = ({ isOpen, onClose }: IProps) => {
         // question now, so the whole generated question is assembled in a single update.
         const solutionText = questionObject.solutionText || '';
         patchQuestion(question._id, {
-          body: richTextFromText(questionObject.questionText),
+          body: richTextFromMarkdown(questionObject.questionText),
           options: (question.options ?? []).map((option, index) => ({
             ...option,
-            body: richTextFromText(questionObject.options[index]?.optionText ?? ''),
+            body: richTextFromMarkdown(questionObject.options[index]?.optionText ?? ''),
             isCorrect: questionObject.options[index]?.isCorrect || false,
           })),
-          solution: solutionText ? { body: richTextFromText(solutionText) } : undefined,
+          solution: solutionText ? { body: richTextFromMarkdown(solutionText) } : undefined,
         });
         return question;
       });

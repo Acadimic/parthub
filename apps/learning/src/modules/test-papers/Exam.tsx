@@ -1,6 +1,6 @@
+import { RichTextView } from '@repo/ui/content';
 import { type MarkingType } from '@repo/shared/interfaces';
 import { Bookmark } from '@components/common';
-import { RichTextContent } from '@repo/ui/core';
 import { CollectionType, Marking, QuestionType } from '@enums';
 import { CaretDownIcon } from '@phosphor-icons/react';
 import { useQuestionLookups, useSelectedQuestion, useTestPaperLookups } from '@stores';
@@ -140,7 +140,7 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
             <div className="grow py-0 h-0 w-full mt-2">
               <div className="box-shadow overflow-auto py-3 h-full px-4 md:px-12 bg-background">
                 <div className="">
-                  <RichTextContent value={selectedQuestion.body} />
+                  <RichTextView value={selectedQuestion.body} />
                 </div>
                 <div className="mt-4">
                   <Options

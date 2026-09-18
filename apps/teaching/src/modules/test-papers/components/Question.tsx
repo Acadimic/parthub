@@ -1,6 +1,7 @@
+import { RichTextView } from '@repo/ui/content';
 import { type QuestionDto } from '@repo/shared/contracts';
 import { type MarkingType } from '@repo/shared/interfaces';
-import { Badge, RichTextContent } from '@repo/ui/core';
+import { Badge } from '@repo/ui/core';
 
 interface IProps {
   prefix?: string;
@@ -20,7 +21,7 @@ export const Question = ({ question, prefix, marks }: IProps) => {
   return (
     <div className="relative">
       <div className="mt-2">
-        <RichTextContent value={question.body} prefix={prefix} />
+        <RichTextView value={question.body} prefix={prefix} />
       </div>
       {marks && (
         <div

@@ -26,6 +26,9 @@ export const configureMathLive = (config: Partial<IMathLiveConfig>) => {
   mathLiveConfig = { ...mathLiveConfig, ...config };
 };
 
+/** True on a phone or tablet, where a finger is the pointer and there is no physical keyboard. */
+const hasCoarsePointer = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 /** The imperative handle a toolbar or palette needs to write into a focused field. */
 export interface IMathFieldHandle {
   /** Inserts at the caret. `#?` in the LaTeX becomes a tab-stop placeholder. */
@@ -115,9 +118,9 @@ export const MathField = ({
 
       field = new mathlive.MathfieldElement();
       field.value = initialValue.current;
-      // 'manual' so the on-screen keyboard is ours to toggle. Left on 'auto' it appears whenever
-      // the field takes focus, including on desktop where a physical keyboard is already there.
-      field.mathVirtualKeyboardPolicy = 'manual';
+      // On a touch device the on-screen keyboard is the keyboard, so it appears with focus. With a
+      // pointer it is ours to toggle: left on 'auto' it would pop up on every desktop focus too.
+      field.mathVirtualKeyboardPolicy = hasCoarsePointer() ? 'auto' : 'manual';
       /**
        * Off, deliberately, and it is the inline shortcuts that depend on it.
        *

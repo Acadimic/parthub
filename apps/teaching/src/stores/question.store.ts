@@ -1,6 +1,6 @@
 import { type OptionDto, type QuestionDto } from '@repo/shared/contracts';
 import { type IRichText } from '@repo/shared/interfaces';
-import { type IRequestSlice, createEmptyRichText, createRequestSlice, richTextFromText } from '@repo/shared/utils';
+import { type IRequestSlice, createEmptyRichText, createRequestSlice, richTextFromMarkdown } from '@repo/shared/utils';
 import { type ICreateQuestion, type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -88,7 +88,7 @@ const BOOLEAN_OPTION_LABELS = ['True', 'False'];
 /** The starting options for a question type: two for boolean, four for choice, one otherwise. */
 const createOptionsForQuestionType = (questionType: QuestionType): OptionDto[] => {
   if (questionType === QuestionType.BOOLEAN) {
-    return BOOLEAN_OPTION_LABELS.map((label) => createOption(richTextFromText(label)));
+    return BOOLEAN_OPTION_LABELS.map((label) => createOption(richTextFromMarkdown(label)));
   }
   if (questionType === QuestionType.SINGLE_CHOICE || questionType === QuestionType.MULTIPLE_CHOICE) {
     return Array.from({ length: CHOICE_OPTION_COUNT }, () => createOption());

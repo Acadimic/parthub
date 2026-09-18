@@ -1,9 +1,9 @@
 import type { IRichText, IRichTextMark, IRichTextNode, RichTextAttrValue } from '@repo/shared/interfaces';
 import { createElement, type ReactNode } from 'react';
-import { cn } from '../../lib/cn';
-import { MathRender } from '../MathRender';
+import { cn } from '../lib/cn';
+import { MathRender } from './MathRender';
 
-export interface IRichTextContentProps {
+export interface IRichTextViewProps {
   value?: IRichText | null;
   /** Rendered when the value is empty. A dash reads better than a blank cell in a table. */
   fallback?: ReactNode;
@@ -22,17 +22,31 @@ const stringAttr = (attrs: Record<string, RichTextAttrValue> | undefined, key: s
   return typeof value === 'string' ? value : '';
 };
 
+/** Only these schemes may leave the page from authored content; anything else renders as text. */
+const SAFE_LINK = /^(https?:|mailto:|tel:)/i;
+
 /** Wraps a run of text in one mark. Unknown marks fall through, so text is never lost. */
-const MARK_WRAPPERS: Record<string, (children: ReactNode) => ReactNode> = {
+const MARK_WRAPPERS: Record<string, (children: ReactNode, mark: IRichTextMark) => ReactNode> = {
   bold: (children) => <strong className="font-semibold">{children}</strong>,
   italic: (children) => <em className="italic">{children}</em>,
   strike: (children) => <s className="line-through">{children}</s>,
   underline: (children) => <u className="underline">{children}</u>,
   code: (children) => <code className="bg-muted px-1 py-0.5 font-mono text-[0.9em]">{children}</code>,
+  link: (children, mark) => {
+    const href = stringAttr(mark.attrs, 'href');
+    // The global stylesheet resets `a` to inherit colour with no underline, so a link has to opt
+    // back in here or a reader cannot tell it from the prose around it.
+    if (!SAFE_LINK.test(href)) return children;
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">
+        {children}
+      </a>
+    );
+  },
 };
 
 const applyMarks = (text: string, marks: IRichTextMark[] | undefined): ReactNode =>
-  (marks ?? []).reduce<ReactNode>((node, mark) => MARK_WRAPPERS[mark.type]?.(node) ?? node, text);
+  (marks ?? []).reduce<ReactNode>((node, mark) => MARK_WRAPPERS[mark.type]?.(node, mark) ?? node, text);
 
 const HEADING_CLASSES: Record<number, string> = {
   1: 'text-2xl font-semibold mt-6 mb-3',
@@ -97,13 +111,14 @@ const renderNode = (node: IRichTextNode, key: string): ReactNode => {
 };
 
 /**
- * Renders authored content.
+ * The reading view of authored content — what a student sees.
  *
  * Walks the stored ProseMirror document and builds React elements from it. Nothing is ever passed
  * to `dangerouslySetInnerHTML`, which is the substantive difference from the `Html` component this
- * replaces: stored content cannot inject markup, because it is never treated as markup.
+ * replaces: stored content cannot inject markup, because it is never treated as markup. Pairs with
+ * `RichTextEditor` in `@repo/ui/editor`; this side depends on KaTeX alone.
  */
-export const RichTextContent = ({ value, fallback = null, prefix, className }: IRichTextContentProps) => {
+export const RichTextView = ({ value, fallback = null, prefix, className }: IRichTextViewProps) => {
   const nodes = value?.doc?.content ?? [];
   if (!nodes.length && !prefix) return <>{fallback}</>;
 

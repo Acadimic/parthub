@@ -1,5 +1,5 @@
+import { RichTextView } from '@repo/ui/content';
 import { type IRichText } from '@repo/shared/interfaces';
-import { RichTextContent } from '@repo/ui/core';
 import { getAlphabet } from '@utils/helpers';
 
 interface IProps {
@@ -33,7 +33,7 @@ export const Answer = ({ correctOptionIndexes, solution, answers, isAnswer }: IP
           {solution ? (
             <div className="">
               {/* <LockOverlay isPaid={true}> */}
-              <RichTextContent value={solution} prefix="Solution:" />
+              <RichTextView value={solution} prefix="Solution:" />
               {/* </LockOverlay> */}
             </div>
           ) : null}

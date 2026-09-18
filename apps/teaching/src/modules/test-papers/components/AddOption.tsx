@@ -1,6 +1,6 @@
+import { RichTextEditor } from '@repo/ui/editor';
 import { XIcon } from '@phosphor-icons/react';
 import { type OptionDto } from '@repo/shared/contracts';
-import { RichTextEditor } from '@repo/ui/app';
 import { Tooltip } from '@repo/ui/core';
 import { useQuestionLookups } from '@stores';
 

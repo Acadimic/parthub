@@ -1,6 +1,5 @@
-import { RichTextFormat } from '@repo/shared/enums';
-import { docToPlainText } from '@repo/shared/utils';
-import type { IRichText, IRichTextDoc, IRichTextNode } from '@repo/shared/interfaces';
+import type { IRichTextNode } from '@repo/shared/interfaces';
+import { BLOCK_MATH_NAME, INLINE_MATH_NAME } from '../extensions/math-names';
 
 /**
  * ProseMirror document → Markdown.
@@ -17,11 +16,15 @@ import type { IRichText, IRichTextDoc, IRichTextNode } from '@repo/shared/interf
 const MARK_WRAPPERS: Record<string, string> = {
   bold: '**',
   italic: '_',
+  // Markdown has no underline; the HTML tag is what CommonMark renderers pass through.
+  underline: '<u>',
   strike: '~~',
   code: '`',
 };
 
-const MARK_ORDER = ['bold', 'italic', 'strike', 'code'];
+const MARK_ORDER = ['bold', 'italic', 'underline', 'strike', 'code'];
+
+const closeWrapper = (wrapper: string) => (wrapper === '<u>' ? '</u>' : wrapper);
 
 /**
  * A bare `$` in prose would be read as the start of an equation on re-import — "the pen costs $3
@@ -42,8 +45,8 @@ const applyMarks = (text: string, node: IRichTextNode): string => {
     const wrapper = MARK_WRAPPERS[type];
     // `code` is literal: Markdown does not interpret anything inside a code span, so an escape
     // added for prose would be rendered verbatim as a backslash.
-    if (type === 'code') result = `${wrapper}${result.replace(/\\\$/g, '$')}${wrapper}`;
-    else result = `${wrapper}${result}${wrapper}`;
+    if (type === 'code') result = `${wrapper}${result.replace(/\\\$/g, '$')}${closeWrapper(wrapper)}`;
+    else result = `${wrapper}${result}${closeWrapper(wrapper)}`;
   });
 
   if (link) result = `[${result}](${String(link.attrs?.href ?? '')})`;
@@ -54,7 +57,7 @@ const serializeInline = (nodes: IRichTextNode[] = []): string =>
   nodes
     .map((node) => {
       if (node.type === 'text') return applyMarks(escapeText(node.text ?? ''), node);
-      if (node.type === 'inlineMath') return `$${String(node.attrs?.latex ?? '')}$`;
+      if (node.type === INLINE_MATH_NAME) return `$${String(node.attrs?.latex ?? '')}$`;
       if (node.type === 'hardBreak') return '\\\n';
       return '';
     })
@@ -96,7 +99,7 @@ const serializeHeading = (node: IRichTextNode): string => {
 const SIMPLE_BLOCKS: Record<string, (node: IRichTextNode) => string> = {
   paragraph: (node) => serializeInline(node.content),
   heading: serializeHeading,
-  blockMath: (node) => `$$\n${String(node.attrs?.latex ?? '')}\n$$`,
+  [BLOCK_MATH_NAME]: (node) => `$$\n${String(node.attrs?.latex ?? '')}\n$$`,
   bulletList: (node) => serializeListItems(node, false),
   orderedList: (node) => serializeListItems(node, true),
   blockquote: serializeQuote,
@@ -119,38 +122,3 @@ export const docToMarkdown = (doc: IRichTextNode | null): string => {
     .filter((block) => block.trim().length > 0)
     .join('\n\n');
 };
-
-/**
- * The plain-text projection stored alongside the document as `IRichText.text`: what search, list
- * previews and CSV export read, so that nothing has to walk the document for them. Equations
- * reduce to their LaTeX, which is imperfect for search but is at least stable and greppable.
- */
-
-/** Every distinct equation in the document, for the render check the plan puts on every write. */
-export const collectEquations = (doc: IRichTextNode | null): string[] => {
-  const found: string[] = [];
-  const walk = (node: IRichTextNode) => {
-    if (node.type === 'inlineMath' || node.type === 'blockMath') {
-      const latex = String(node.attrs?.latex ?? '');
-      if (latex && !found.includes(latex)) found.push(latex);
-    }
-    (node.content ?? []).forEach(walk);
-  };
-  if (doc) walk(doc);
-  return found;
-};
-
-/**
- * Wraps a bare ProseMirror document as a stored value, computing the projection.
- *
- * For the callers that start from a document rather than from the editor — seed content, an
- * import, a generated question. `RichTextEditor` does the same thing on every keystroke; this is
- * the one other way a value should ever be built, so the projection is never hand-written.
- */
-export { docToPlainText };
-
-export const toRichText = (doc: IRichTextDoc): IRichText => ({
-  format: RichTextFormat.DOC_V1,
-  doc,
-  text: docToPlainText(doc),
-});

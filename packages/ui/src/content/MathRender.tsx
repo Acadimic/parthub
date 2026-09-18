@@ -3,7 +3,7 @@ import katex from 'katex';
 // only — it mutates the katex singleton rather than exporting anything.
 import 'katex/contrib/mhchem';
 import { useMemo } from 'react';
-import { cn } from '../../lib/cn';
+import { cn } from '../lib/cn';
 
 export interface IMathRenderProps {
   /** The LaTeX source. Rendered as-is; never pre-escape it. */
@@ -71,8 +71,8 @@ export const renderLatex = (latex: string, displayMode: boolean): IRenderResult 
 /**
  * Renders one LaTeX expression with KaTeX.
  *
- * Read-only, and deliberately free of the editor: this is what the student-facing app imports, so
- * it must not pull in MathLive or ProseMirror.
+ * Read-only, and deliberately free of the editor: this is what the student-facing app imports
+ * through `@repo/ui/content`, so it must not pull in MathLive or ProseMirror.
  */
 export const MathRender = ({ latex, displayMode = false, className }: IMathRenderProps) => {
   const { html, error } = useMemo(() => renderLatex(latex, displayMode), [latex, displayMode]);

@@ -1,5 +1,5 @@
+import { RichTextEditor, toRichText } from '@repo/ui/editor';
 import { ArrowCounterClockwiseIcon, PencilSimpleIcon, SlidersHorizontalIcon } from '@phosphor-icons/react';
-import { RichTextEditor, toRichText } from '@repo/ui/app';
 import { Badge, Card, Tooltip } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
 import { useState } from 'react';
@@ -23,8 +23,8 @@ const PaneLabel = ({ icon, children }: { icon: React.ReactNode; children: React.
  * `.claude/plans/CONTENT_EDITOR_AND_EQUATIONS.md` with something running — does the math field
  * behave under React 19 and the Pages Router, does Devanagari survive, does every equation render
  * through KaTeX, does an Indic IME work inside `contenteditable` — before any of this is wired to
- * a store or a real entity. Once those answers are in, the editor moves to `packages/ui/src/editor`
- * and this screen goes away.
+ * a store or a real entity. The editor itself now lives in `@repo/ui/editor` (see
+ * `packages/ui/src/editor/README.md`); this screen stays as the place to try it against a document.
  */
 export const Editor = () => {
   const [presetKey, setPresetKey] = useState(PRESETS[0].key);

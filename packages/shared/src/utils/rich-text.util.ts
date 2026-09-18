@@ -40,7 +40,7 @@ export const docToPlainText = (doc: IRichTextNode | null): string => {
 export const isRichTextEmpty = (value?: IRichText | null): boolean => !value?.text?.trim();
 
 // ---------------------------------------------------------------------------
-// Markdown → document. The inverse of `docToMarkdown`, and the AI/import write path.
+// Markdown → document. The inverse of `docToMarkdown` in @repo/ui/editor, and the AI/import write path.
 // ---------------------------------------------------------------------------
 
 /** `$$…$$` before `$…$`, and a backslash-escaped `\$` is prose rather than a delimiter. */
@@ -230,7 +230,7 @@ const parseBlocks = (markdown: string): IRichTextNode[] => {
  * content is editable on arrival instead of arriving as source the author has to retype — which is
  * the whole reason the AI prompts ask for Markdown rather than a bespoke block schema.
  */
-export const richTextFromText = (markdown: string): IRichText => {
+export const richTextFromMarkdown = (markdown: string): IRichText => {
   const content = parseBlocks(markdown ?? '');
   if (!content.length) return createEmptyRichText();
   const doc: IRichTextDoc = { type: 'doc', content };

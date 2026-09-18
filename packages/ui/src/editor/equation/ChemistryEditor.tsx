@@ -1,13 +1,23 @@
 import { CaretDownIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { MathRender } from '../../core/MathRender';
+import { useRef, useState } from 'react';
+import { MathRender } from '../../content/MathRender';
 import { Popover } from '../../core/Popover';
 import { TextInput } from '../../core/TextInput';
 import { Tooltip } from '../../core/Tooltip';
 import { cn } from '../../lib/cn';
-import { useState } from 'react';
-import { ARROW_DIRECTIONS, arrowLabel, buildArrow, joinChain, parseArrow, splitChain } from './palette';
+import {
+  ARROW_CONDITIONS,
+  ARROW_DIRECTIONS,
+  buildArrow,
+  CHEMISTRY_INSERTS,
+  describeArrow,
+  joinReaction,
+  parseArrow,
+  splitReaction,
+} from './chemistry';
+import { InsertChip } from './panel-controls';
 
-interface IProps {
+export interface IChemistryEditorProps {
   /** The inside of `\ce{…}` — the reaction itself, without the wrapper. */
   body: string;
   onChange: (body: string) => void;
@@ -28,11 +38,9 @@ interface IConnectorProps {
 /**
  * The arrow between two species, as a row of its own.
  *
- * Delete sits at the right-hand end of that row, inside the connector's own border. Two earlier
- * placements were each wrong in one way: a bare `×` floating between two controls said nothing
- * about what it would remove, and burying it in the popover made it so hard to find that the first
- * question asked of the design was "how do I delete a step?". Inside the row it is visible without
- * a click, and the border says what it belongs to.
+ * Delete sits at the right-hand end of that row, inside the connector's own border, so it is
+ * visible without a click and the border says what it belongs to. The popover offers the direction
+ * and the condition above the arrow, with the conditions written often enough to be one click.
  */
 const Connector = ({ token, onChange, onRemove }: IConnectorProps) => {
   const arrow = parseArrow(token);
@@ -42,15 +50,15 @@ const Connector = ({ token, onChange, onRemove }: IConnectorProps) => {
     <div className="flex h-9 items-stretch border border-border bg-muted/40">
       <Popover
         triggerClassName="min-w-0 flex-1"
-        className="w-64 p-3"
+        className="w-72 p-3"
         trigger={
           <button
             type="button"
-            aria-label={`Arrow: ${arrowLabel(token)}`}
+            aria-label={`Arrow: ${describeArrow(token)}`}
             className="flex h-full w-full items-center gap-2.5 px-2.5 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
           >
             <MathRender latex={`\\ce{${token}}`} />
-            <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{arrowLabel(token)}</span>
+            <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{describeArrow(token)}</span>
             <CaretDownIcon className="h-3 w-3 shrink-0 text-muted-foreground" weight="bold" />
           </button>
         }
@@ -88,6 +96,15 @@ const Connector = ({ token, onChange, onRemove }: IConnectorProps) => {
               inputClassName="font-mono text-sm"
               aria-label="Condition above the arrow"
             />
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {ARROW_CONDITIONS.map((condition) => (
+                <InsertChip
+                  key={condition.value}
+                  label={condition.label}
+                  onClick={() => set({ condition: condition.value })}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </Popover>
@@ -98,10 +115,8 @@ const Connector = ({ token, onChange, onRemove }: IConnectorProps) => {
             type="button"
             onClick={onRemove}
             aria-label="Remove this step"
-            // `h-full` is what centres the icon. `Tooltip` puts a wrapper span between this button
-            // and the flex row, so `items-stretch` stretches the span rather than the button — with
-            // no height of its own the button collapsed to the 14px icon and sat against the top of
-            // a 36px row.
+            // `h-full` is what centres the icon: `Tooltip` puts a wrapper span between this button
+            // and the flex row, so `items-stretch` stretches the span rather than the button.
             className="flex h-full w-9 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
           >
             <TrashIcon className="h-3.5 w-3.5" />
@@ -116,24 +131,25 @@ const Connector = ({ token, onChange, onRemove }: IConnectorProps) => {
  * The editor for a chemical equation.
  *
  * Modelled on what a reaction is — an alternating chain of species and arrows — rather than on the
- * notation that encodes it. Nothing on screen is mhchem: formulas go in as `CaCO3` and `CaO + CO2`,
- * exactly as they would be written on a board, and the parts that are not guessable (the arrow and
- * its condition) are controls rather than punctuation.
+ * notation that encodes it. Formulas go in as `CaCO3` and `CaO + CO2`, exactly as they would be
+ * written on a board; the arrow and its condition are controls rather than punctuation; and the
+ * notation a keyboard does not offer — state symbols, charges, an evolved gas — is a row of chips
+ * that insert at the caret of the species last typed into.
  *
- * Laid out as a stack rather than a row. Side by side, a third species left each field about two
- * characters wide in a 540px panel and wrapped "Products" onto a second line — which breaks the one
- * thing the ordering carries, that the reaction runs in sequence. Stacked, the chain always reads
- * in order and a fourth step costs a row rather than the layout.
+ * Stacked rather than side by side, so the chain always reads in order and a fourth step costs a
+ * row rather than the layout.
  */
-export const ChemistryEditor = ({ body, onChange, onSubmit, onCancel }: IProps) => {
-  const chain = splitChain(body);
-  const update = (next: typeof chain) => onChange(joinChain(next));
+export const ChemistryEditor = ({ body, onChange, onSubmit, onCancel }: IChemistryEditorProps) => {
+  const chain = splitReaction(body);
+  const update = (next: typeof chain) => onChange(joinReaction(next));
   /**
    * Which slot should take the caret when it mounts. Adding a step appends a field below the fold
-   * of a scrolling chain, so without this the author presses "Add step", sees nothing move, and has
-   * to scroll down to find the empty box they just asked for. Focusing it also scrolls it into view.
+   * of a scrolling chain; focusing the new one also scrolls it into view.
    */
   const [focusIndex, setFocusIndex] = useState(0);
+  /** The species the chips insert into: the one last focused, defaulting to the first. */
+  const [activeIndex, setActiveIndex] = useState(0);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const onKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter') {
@@ -152,18 +168,34 @@ export const ChemistryEditor = ({ body, onChange, onSubmit, onCancel }: IProps) 
     update({ ...chain, species });
   };
 
+  /** Inserts at the caret of the active species, then puts the caret after what was inserted. */
+  const insertToken = (token: string) => {
+    const index = Math.min(activeIndex, chain.species.length - 1);
+    const input = inputRefs.current[index];
+    const current = chain.species[index] ?? '';
+    const start = input?.selectionStart ?? current.length;
+    const end = input?.selectionEnd ?? current.length;
+    setSpecies(index, `${current.slice(0, start)}${token}${current.slice(end)}`);
+    // The value lands on the next render; the caret is set once the input has it.
+    requestAnimationFrame(() => {
+      input?.focus();
+      input?.setSelectionRange(start + token.length, start + token.length);
+    });
+  };
+
   const setArrow = (index: number, token: string) => {
     const arrows = [...chain.arrows];
     arrows[index] = token;
     update({ ...chain, arrows });
   };
 
-  /** Seeds the space before the new arrow here, since `joinChain` deliberately adds nothing. */
+  /** Seeds the space before the new arrow here, since `joinReaction` deliberately adds nothing. */
   const addStep = () => {
     const species = [...chain.species];
     const last = species.length - 1;
     if (species[last] && !/\s$/.test(species[last])) species[last] = `${species[last]} `;
     setFocusIndex(species.length);
+    setActiveIndex(species.length);
     update({ species: [...species, ''], arrows: [...chain.arrows, '->'] });
   };
 
@@ -177,8 +209,7 @@ export const ChemistryEditor = ({ body, onChange, onSubmit, onCancel }: IProps) 
 
   /**
    * Chemistry's own words, not the data structure's. A lone species is a formula; a reaction starts
-   * with reactants and ends with products, and only the slots in between are numbered steps —
-   * calling the right-hand side of `A -> B` "Step 1" would be the chain model leaking out.
+   * with reactants and ends with products, and only the slots in between are numbered steps.
    */
   const slotLabel = (index: number) => {
     if (!isChain) return 'Formula';
@@ -189,21 +220,22 @@ export const ChemistryEditor = ({ body, onChange, onSubmit, onCancel }: IProps) 
 
   return (
     <div className="flex flex-col gap-2">
-      {/* The chain scrolls; the preview and "Add step" below it do not. A four-step reaction makes
-          this panel taller than the pane it opens in, and the first thing to be pushed off the
-          bottom was the rendered result — the one part that tells the author whether any of it is
-          right. Growth is absorbed here instead. */}
+      {/* The chain scrolls; the chips, preview and "Add step" below it do not, so the rendered
+          result — the one part that says whether any of it is right — is never pushed off screen. */}
       <div className="flex max-h-[13rem] flex-col gap-2 overflow-y-auto">
         {chain.species.map((value, index) => (
-          // Index is the identity here: these are positions in a sequence, not entities, and a
-          // reordered chain is a different chain rather than the same rows moved about.
+          // Index is the identity here: these are positions in a sequence, not entities.
           <div key={index} className="flex flex-col gap-2">
             <div>
               <FieldLabel>{slotLabel(index)}</FieldLabel>
               <TextInput
+                ref={(element) => {
+                  inputRefs.current[index] = element;
+                }}
                 value={value}
                 onChange={(event) => setSpecies(index, event.target.value)}
                 onKeyDown={onKeyDown}
+                onFocus={() => setActiveIndex(index)}
                 autoFocus={index === focusIndex}
                 placeholder={index === 0 ? 'CaCO3' : 'CaO + CO2'}
                 inputClassName="font-mono text-sm"
@@ -219,6 +251,14 @@ export const ChemistryEditor = ({ body, onChange, onSubmit, onCancel }: IProps) 
               />
             ) : null}
           </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-1" role="group" aria-label="Insert notation">
+        {CHEMISTRY_INSERTS.map((item) => (
+          <InsertChip key={item.label} label={item.label} onClick={() => insertToken(item.insert)}>
+            <MathRender latex={item.preview} />
+          </InsertChip>
         ))}
       </div>
 

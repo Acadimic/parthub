@@ -1,6 +1,6 @@
+import { RichTextEditor } from '@repo/ui/editor';
 import { PlusIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
-import { RichTextEditor } from '@repo/ui/app';
 import { Button } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
 import { useQuestionLookups, useSelectedQuestion } from '@stores';

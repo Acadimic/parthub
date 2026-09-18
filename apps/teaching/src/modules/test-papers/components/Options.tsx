@@ -1,5 +1,5 @@
+import { RichTextView } from '@repo/ui/content';
 import { type QuestionDto } from '@repo/shared/contracts';
-import { RichTextContent } from '@repo/ui/core';
 import { type ISelectItem } from '@repo/ui/types';
 import { CheckboxSelection, RadioSelection } from '@components/app/selections';
 import { QuestionType } from '@enums';
@@ -16,7 +16,7 @@ export const Options = ({ question }: IProps) => {
 
   // A rendered node rather than a string, so an option keeps its equations in the list.
   const optionItems: ISelectItem[] = options.map((option) => ({
-    label: <RichTextContent value={option.body} />,
+    label: <RichTextView value={option.body} />,
     value: option._id,
   }));
 
@@ -46,7 +46,7 @@ export const Options = ({ question }: IProps) => {
 
   return (
     <div className="py-2 text-sm font-medium">
-      <RichTextContent value={options[0]?.body} prefix="Ans:" />
+      <RichTextView value={options[0]?.body} prefix="Ans:" />
     </div>
   );
 };

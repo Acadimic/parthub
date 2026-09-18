@@ -1,8 +1,10 @@
+import { MathRender, RichTextView, renderLatex } from '@repo/ui/content';
+import { collectEquations, docToMarkdown, toRichText } from '@repo/ui/editor';
+import { docToPlainText } from '@repo/shared/utils';
 import { CheckCircleIcon, WarningCircleIcon } from '@phosphor-icons/react';
 import { encode as encodeToon } from '@toon-format/toon';
-import { MathRender, renderLatex, RichTextContent, Tabs } from '@repo/ui/core';
+import { Tabs } from '@repo/ui/core';
 import { useMemo } from 'react';
-import { collectEquations, docToMarkdown, docToPlainText, toRichText } from '@repo/ui/app';
 import type { IRichTextDoc } from '@repo/shared/interfaces';
 
 interface IProps {
@@ -104,7 +106,7 @@ export const OutputPanel = ({ doc }: IProps) => {
           label: 'Reading',
           component: (
             <div className="p-4">
-              <RichTextContent value={doc ? toRichText(doc) : null} />
+              <RichTextView value={doc ? toRichText(doc) : null} />
             </div>
           ),
         },

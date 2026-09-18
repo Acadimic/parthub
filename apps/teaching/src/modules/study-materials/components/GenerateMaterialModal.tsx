@@ -1,4 +1,4 @@
-import { richTextFromText } from '@repo/shared/utils';
+import { richTextFromMarkdown } from '@repo/shared/utils';
 import { UploadFiles } from '@components/app/attachments';
 import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
 import { PositionType } from '@enums';
@@ -110,7 +110,7 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
     try {
       // The model now returns Markdown, so the text is the content — no JSON parse, and no
       // backslash pre-escaping to survive one.
-      patchMaterial(selectedMaterial._id, { content: richTextFromText(state.materialText) });
+      patchMaterial(selectedMaterial._id, { content: richTextFromMarkdown(state.materialText) });
       const attachments = (await uploadFilesToS3(selectedMaterial._id, selectedFiles)) ?? [];
       attachments.forEach((attachment) => addAttachment(selectedMaterial._id, attachment));
       for (const item of videoLinks) {
