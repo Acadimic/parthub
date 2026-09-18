@@ -36,6 +36,19 @@ class TestPaperService {
     return resData;
   };
 
+  /**
+   * One paper, with the totals the server owns.
+   *
+   * `totalQuestions` and `maxMarks` are recomputed server-side on every question write and the
+   * upsert ignores whatever a client sends for them, so re-reading the paper is the only way the
+   * detail screen learns its own totals after a question is saved or deleted.
+   */
+  getTestPaperById = async (testPaperId: string) => {
+    const url = `test-paper/${testPaperId}`;
+    const resData = await callAuthApi<TestPaperDto>(url, API.GET);
+    return resData;
+  };
+
   getTestPaperSectionsWithQuestions = async (testPaperId: string) => {
     const url = `test-paper/sections-with-questions/${testPaperId}`;
     const resData = await callAuthApi<ITestPaperSectionsResponse>(url, API.GET);

@@ -68,7 +68,7 @@ export const UpsertStandardModal = ({ isOpen, onClose }: IProps) => {
       setIsLoading(true);
       if (selectedFile) {
         const attachments = await uploadFilesToS3(standardId, [selectedFile]);
-        if (attachments) patchStandard(standardId, { logo: attachments[0].url });
+        if (attachments.length) patchStandard(standardId, { logo: attachments[0].url });
       }
       // Read the rows back rather than posting `selectedStandard`: the store holds immutable rows,
       // so the copy captured during render does not carry the logo patch above.

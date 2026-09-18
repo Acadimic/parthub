@@ -1,5 +1,5 @@
-import { type InitialDataResponse } from '@repo/shared/contracts';
-import { type IPresignedPutUrlsRequest } from '@interfaces';
+import { type InitialDataResponse, type IPresignedUrl } from '@repo/shared/contracts';
+import { type IPresignedGetUrlsRequest, type IPresignedPutUrlsRequest } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi, callDefaultApi } from './http.service';
 
@@ -12,13 +12,13 @@ class CommonService {
 
   getPreSignedPUTUrls = async (payload: IPresignedPutUrlsRequest) => {
     const url = 'common/private-presigned-PUT-urls';
-    const resData = await callAuthApi<string[]>(url, API.POST, payload);
+    const resData = await callAuthApi<IPresignedUrl[]>(url, API.POST, payload);
     return resData;
   };
 
-  getPreSignedGETUrls = async (fileUrls: string[]) => {
+  getPreSignedGETUrls = async (payload: IPresignedGetUrlsRequest) => {
     const url = 'common/private-presigned-GET-urls';
-    const resData = await callAuthApi<string[]>(url, API.POST, fileUrls);
+    const resData = await callAuthApi<IPresignedUrl[]>(url, API.POST, payload);
     return resData;
   };
 

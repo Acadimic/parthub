@@ -19,11 +19,14 @@ export type { MeetDto } from '../dtos/validations/meet/meet.dto';
 export type { PlanDto } from '../dtos/validations/plan/plan.dto';
 export type { StandardDto } from '../dtos/validations/standard/standard.dto';
 export type { StandardSubjectMappingDto } from '../dtos/validations/standard/standard-subject-mapping.dto';
+export type { StandardIdsQueryDto } from '../dtos/validations/standard/standard-ids-query.dto';
 export type { StudentStandardMappingDto } from '../dtos/validations/mappings/student-standard-mapping.dto';
 export type { UserBatchMappingDto } from '../dtos/validations/mappings/user-batch-mapping.dto';
 export type { UserStudentMappingDto } from '../dtos/validations/mappings/user-student-mapping.dto';
 export type { CourseDto } from '../dtos/validations/course/course.dto';
 export type { CourseStatsDto } from '../dtos/validations/course/course.dto';
+export type { CourseWithPlansDto } from '../dtos/validations/course/course.dto';
+export type { CourseModuleDto } from '../dtos/validations/course/course-module.dto';
 export type { AttachmentDto } from '../dtos/validations/attachment.dto';
 export type { RichTextDto } from '../dtos/validations/rich-text.dto';
 

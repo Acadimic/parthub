@@ -15,6 +15,11 @@ export class Marking {
 
   @Prop({ type: Number, required: true })
   unattempted: number;
+
+  // Optional because only some question types award it, and documents written before the field
+  // existed have no value. Without the @Prop, strict mode drops the key the DTO now accepts.
+  @Prop({ type: Number })
+  partiallyCorrect?: number;
 }
 
 export const MarkingSchemaDefinition = SchemaFactory.createForClass(Marking);

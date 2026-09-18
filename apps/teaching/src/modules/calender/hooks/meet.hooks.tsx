@@ -36,7 +36,9 @@ export const useMeetHooks = () => {
   };
 
   const handleCreateMeet = (date: Date) => {
-    createMeet(date);
+    // Select the draft the store just made: without this the dialog opens on nothing and the blank
+    // session is left behind on the calendar.
+    setSelectedMeetId(createMeet(date)._id);
     openUpsertMeetingModal();
   };
 

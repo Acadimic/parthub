@@ -1,10 +1,21 @@
 import { defaultMarkings } from '@utils/constants';
 import { type QuestionDto } from '@repo/shared/contracts';
-import { Accordions, Button, Card, Loader, Menu, Modal, ModalFooter, SplitButton, Tooltip } from '@repo/ui/app';
+import {
+  Accordions,
+  Button,
+  Card,
+  Loader,
+  Menu,
+  Modal,
+  ModalFooter,
+  SoftConfirmModal,
+  SplitButton,
+} from '@repo/ui/app';
 import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { PositionType, SectionCategoryType, SectionType } from '@enums';
-import { TestPaperService } from '@services';
+import { type IMenuItem } from '@interfaces';
+import { QuestionService, TestPaperService } from '@services';
 import {
   type ITestPaperSection,
   useStandardLookups,
@@ -16,12 +27,13 @@ import {
   useTestPaperLookups,
   useTestPaperStore,
 } from '@stores';
-import { errorToast, splitCamelCase } from '@utils/helpers';
+import { errorToast, reportError, splitCamelCase, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
 import { ChapterName } from '@components/common/ChapterName';
 import {
+  CreateTestPaperModal,
   GenerateQuestionsModal,
   Options,
   Question,
@@ -39,10 +51,14 @@ interface IProps {
 interface IState {
   isOpenUpsertQuestion: boolean;
   isOpenGenerateQuestions: boolean;
+  isOpenEditPaper: boolean;
   isLoading: boolean;
-  question: QuestionDto | null;
   section: ITestPaperSection | null;
   isOpenAddSection: boolean;
+  /** The section the delete confirm is asking about, or `null` while it is closed. */
+  sectionToDelete: ITestPaperSection | null;
+  questionToDelete: QuestionDto | null;
+  isDeleting: boolean;
 }
 
 /** The title an upsert modal shows, which depends only on whether the row is still a draft. */
@@ -50,7 +66,7 @@ const getUpsertTitle = (isNew: boolean | undefined, noun: string) => `${isNew ? 
 
 export const TestPaper = ({ testPaperId }: IProps) => {
   const testPaperStore = useTestPaperLookups();
-  const { getSectionQuestions, patchTestPaperSection } = testPaperStore;
+  const { getSectionQuestions, patchTestPaperSection, removeTestPaperSection, reloadTestPaper } = testPaperStore;
   const { patchTestPaper } = testPaperStore;
   const selectorStore = useSelectorLookups();
   const questionStore = useQuestionLookups();
@@ -73,7 +89,6 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     loadTestPapers,
   } = testPaperStore;
   const isLoadingTestPapers = testPaperStore.isLoading('testPapers');
-  const isLoadedTestPapers = testPaperStore.isLoaded('testPapers');
   const isLoadingTestPaperSections = testPaperStore.isLoading('testPaperSections');
   const { loadOrgChapters } = useStandardLookups();
   const { createQuestion, removeQuestionById } = questionStore;
@@ -81,10 +96,13 @@ export const TestPaper = ({ testPaperId }: IProps) => {
   const [state, setState] = useSetState<IState>({
     isOpenUpsertQuestion: false,
     isOpenGenerateQuestions: false,
+    isOpenEditPaper: false,
     isLoading: false,
-    question: null,
     section: null,
     isOpenAddSection: false,
+    sectionToDelete: null,
+    questionToDelete: null,
+    isDeleting: false,
   });
   const sections = selectedTestPaper ? getTestPaperSectionsByIds(selectedTestPaper.sections ?? []) : [];
   const hasSections = sections.length !== 0;
@@ -146,6 +164,20 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     setState({ isOpenUpsertQuestion: true });
   };
 
+  /**
+   * A section is only removable once it is empty.
+   *
+   * Deleting it with questions still pointing at it would orphan them: `QuestionDto.section` is how
+   * a paper finds its questions, so they would stay in the collection and be reachable from nothing.
+   */
+  const requestDeleteSection = (section: ITestPaperSection) => {
+    if (getSectionQuestions(section._id).length) {
+      errorToast({ message: 'Delete or move its questions first.' });
+      return;
+    }
+    setState({ sectionToDelete: section });
+  };
+
   const saveSection = async () => {
     if (!state.section || !selectedTestPaper) return;
     if (!state.section.name?.trim()) {
@@ -167,9 +199,53 @@ export const TestPaper = ({ testPaperId }: IProps) => {
       setState({ isOpenAddSection: false, section: null });
     } catch (error) {
       // Previously an empty `catch {}`: a rejected save left the drawer open with no explanation.
-      errorToast({ message: error instanceof Error ? error.message : 'Could not save the section.' });
+      reportError(error, 'Could not save the section.');
     } finally {
       setState({ isLoading: false });
+    }
+  };
+
+  const deleteSection = async () => {
+    const section = state.sectionToDelete;
+    if (!section || !selectedTestPaper) return;
+    try {
+      setState({ isDeleting: true });
+      await TestPaperService.upsertTestPaperSection({ ...section, _deleted: true });
+      // The paper owns the ordering, so dropping the id from `sections` is a second write — the
+      // section's own soft delete does not reach the papers referencing it.
+      patchTestPaper(selectedTestPaper._id, {
+        sections: (selectedTestPaper.sections ?? []).filter((id) => id !== section._id),
+      });
+      const paperToSave = useTestPaperStore.getState().getTestPaperById(selectedTestPaper._id) ?? selectedTestPaper;
+      await TestPaperService.upsertTestPaper(paperToSave);
+      removeTestPaperSection(section._id);
+      successToast({ message: 'Section deleted successfully.' });
+      setState({ sectionToDelete: null });
+      // After the delete has been reported: a failed refresh is not a failed delete.
+      await reloadTestPaper(selectedTestPaper._id);
+    } catch (error) {
+      reportError(error, 'Could not delete the section.');
+    } finally {
+      setState({ isDeleting: false });
+    }
+  };
+
+  const deleteQuestion = async () => {
+    const question = state.questionToDelete;
+    if (!question) return;
+    try {
+      setState({ isDeleting: true });
+      await QuestionService.upsertQuestion({ ...question, _deleted: true });
+      removeQuestionById(question._id);
+      successToast({ message: 'Question deleted successfully.' });
+      setState({ questionToDelete: null });
+      // The server recalculated the section and paper totals as part of the delete, so the paper is
+      // re-read — last, because a failed refresh is not a failed delete.
+      await reloadTestPaper(testPaperId);
+    } catch (error) {
+      reportError(error, 'Could not delete the question.');
+    } finally {
+      setState({ isDeleting: false });
     }
   };
 
@@ -186,6 +262,105 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     setState({ isOpenAddSection: false });
   };
 
+  const getAddQuestionItems = (sectionId: string): IMenuItem[] => [
+    {
+      label: 'Add Question',
+      onClick: () => onOpenAddQuestionModal(sectionId),
+      icon: <PlusIcon weight="bold" className="w-4 h-4" />,
+    },
+    {
+      label: 'Generate Questions',
+      onClick: () => onOpenGenerateQuestionsModal(sectionId),
+      icon: <UploadSimpleIcon weight="bold" className="w-4 h-4" />,
+    },
+  ];
+
+  const getSectionMenuItems = (section: ITestPaperSection): IMenuItem[] => [
+    {
+      label: 'Edit Section',
+      onClick: () => editSection(section),
+      icon: <PencilIcon weight="bold" className="w-4 h-4" />,
+    },
+    {
+      label: 'Add New Section',
+      onClick: () => addNewSection(),
+      icon: <PlusIcon weight="bold" className="w-4 h-4" />,
+    },
+    {
+      // Was `onClick: () => {}` — the item deleted nothing.
+      label: 'Delete Section',
+      onClick: () => requestDeleteSection(section),
+      icon: <TrashIcon weight="bold" className="w-4 h-4" />,
+    },
+  ];
+
+  const renderQuestion = (question: QuestionDto, sectionId: string) => (
+    <div className="w-full">
+      <div className="flex justify-between items-center">
+        <div className="text-xs font-semibold capitalize">{splitCamelCase(question.questionType)}</div>
+        <div className="-mr-3">
+          <Menu
+            menuItems={[
+              {
+                label: 'Edit Question',
+                onClick: () => editQuestion(question._id, sectionId),
+                icon: <PencilIcon weight="bold" className="w-4 h-4" />,
+              },
+              {
+                label: 'Delete Question',
+                onClick: () => setState({ questionToDelete: question }),
+                icon: <TrashIcon weight="bold" className="w-4 h-4" />,
+              },
+            ]}
+            className=""
+          />
+        </div>
+      </div>
+      <div>
+        <Options question={question} />
+      </div>
+      <div className="py-2">
+        <Solution question={question} prefix={`Solution:`} />
+        <ChapterName chapterId={question.chapter} />
+      </div>
+    </div>
+  );
+
+  const renderSection = (section: ITestPaperSection) => {
+    const questions = getSectionQuestions(section._id);
+    return (
+      <div className="min-h-[100px]">
+        {/* The section's menu lives here rather than in the accordion title, which is a `<button>`:
+            a menu trigger nested inside it was a button inside a button. */}
+        <div className="flex justify-end items-center gap-2">
+          <SplitButton
+            menuItems={getAddQuestionItems(section._id)}
+            text="Add Question"
+            onClick={() => onOpenAddQuestionModal(section._id)}
+          />
+          <Menu menuItems={getSectionMenuItems(section)} className="" />
+        </div>
+        <div className="py-3">
+          {questions.length ? (
+            <Accordions
+              isIconLast={true}
+              key={section._id}
+              items={questions.map((question, index) => ({
+                title: <Question question={question} prefix={`Q${index + 1}.`} marks={question.markings} />,
+                component: renderQuestion(question, section._id),
+              }))}
+            />
+          ) : (
+            <BlankState
+              label="No questions yet"
+              description="Add one question at a time, or generate a batch from a document."
+            />
+          )}
+        </div>
+      </div>
+    );
+  };
+
   useEffect(() => {
     if (!testPaperId) push('/test-papers');
     else {
@@ -196,7 +371,9 @@ export const TestPaper = ({ testPaperId }: IProps) => {
   }, [testPaperId]);
 
   useEffect(() => {
-    if (!isLoadedTestPapers) loadTestPapers();
+    // `shouldLoad` rather than `!isLoaded`: the old guard re-fired the fetch on every mount while
+    // one was already in flight, and never retried after a failure.
+    if (useTestPaperStore.getState().shouldLoad('testPapers')) loadTestPapers();
   }, []);
 
   if (!selectedTestPaper) return null;
@@ -204,138 +381,27 @@ export const TestPaper = ({ testPaperId }: IProps) => {
   return (
     <div className="flex flex-col gap-3">
       <Card>
-        <TestPaperDetails testPaper={selectedTestPaper} addNewSection={addNewSection} />
+        <TestPaperDetails
+          testPaper={selectedTestPaper}
+          addNewSection={addNewSection}
+          onEditPaper={() => setState({ isOpenEditPaper: true })}
+        />
       </Card>
       {hasSections && (
         <Accordions
           openIndexes={[0]}
           items={sections.map((section) => ({
+            // Text only: everything interactive moved into the panel below.
             title: (
-              <div className="flex justify-between w-full items-center relative">
-                <div className="text-sm font-bold text-foreground">
-                  {section.name}{' '}
-                  <Tooltip
-                    title={`${getSectionQuestions(section._id).length} Question${getSectionQuestions(section._id).length > 1 ? 's' : ''}`}
-                  >
-                    <span>({getSectionQuestions(section._id).length})</span>
-                  </Tooltip>
-                </div>
-                <div className="absolute -right-4">
-                  <Menu
-                    menuItems={[
-                      {
-                        label: 'Edit Section',
-                        onClick: () => editSection(section),
-                        icon: <PencilIcon weight="bold" className="w-4 h-4" />,
-                      },
-                      {
-                        label: 'Add New Section',
-                        onClick: () => addNewSection(),
-                        icon: <PlusIcon weight="bold" className="w-4 h-4" />,
-                      },
-                      {
-                        label: 'Delete Section',
-                        onClick: () => {},
-                        icon: <TrashIcon weight="bold" className="w-4 h-4" />,
-                      },
-                    ]}
-                    className=""
-                  />
-                </div>
+              <div className="text-sm font-bold text-foreground">
+                {section.name}{' '}
+                <span className="font-normal text-muted-foreground">
+                  ({getSectionQuestions(section._id).length}{' '}
+                  {getSectionQuestions(section._id).length === 1 ? 'question' : 'questions'})
+                </span>
               </div>
             ),
-            component: (
-              <div className="min-h-[100px]">
-                <div className="flex justify-end">
-                  <div>
-                    {getSectionQuestions(section._id).length ? (
-                      <SplitButton
-                        menuItems={[
-                          {
-                            label: 'Add Question',
-                            onClick: () => onOpenAddQuestionModal(section._id),
-                            icon: <PlusIcon weight="bold" className="w-4 h-4" />,
-                          },
-                          {
-                            label: 'Generate Questions',
-                            onClick: () => onOpenGenerateQuestionsModal(section._id),
-                            icon: <UploadSimpleIcon weight="bold" className="w-4 h-4" />,
-                          },
-                        ]}
-                        text="Add Question"
-                        onClick={() => onOpenAddQuestionModal(section._id)}
-                      />
-                    ) : null}
-                  </div>
-                </div>
-                <div className="py-3">
-                  {getSectionQuestions(section._id).length ? (
-                    <Accordions
-                      isIconLast={true}
-                      key={section._id}
-                      items={getSectionQuestions(section._id).map((question, index) => {
-                        return {
-                          title: <Question question={question} prefix={`Q${index + 1}.`} marks={question.markings} />,
-                          component: (
-                            <div className="w-full">
-                              <div className="flex justify-between items-center">
-                                <div className="text-xs font-semibold capitalize">
-                                  {splitCamelCase(question.questionType)}
-                                </div>
-                                <div className="-mr-3">
-                                  <Menu
-                                    menuItems={[
-                                      {
-                                        label: 'Edit Question',
-                                        onClick: () => editQuestion(question._id, section._id),
-                                        icon: <PencilIcon weight="bold" className="w-4 h-4" />,
-                                      },
-                                      {
-                                        label: 'Delete Question',
-                                        onClick: () => {},
-                                        icon: <TrashIcon weight="bold" className="w-4 h-4" />,
-                                      },
-                                    ]}
-                                    className=""
-                                  />
-                                </div>
-                              </div>
-                              <div>
-                                <Options question={question} />
-                              </div>
-                              <div className="py-2">
-                                <Solution question={question} prefix={`Solution:`} />
-                                <ChapterName chapterId={question.chapter} />
-                              </div>
-                            </div>
-                          ),
-                        };
-                      })}
-                    />
-                  ) : (
-                    <div className="flex flex-col justify-center items-center gap-3 min-h-[100px]">
-                      <BlankState label="No questions found" />
-                      <SplitButton
-                        menuItems={[
-                          {
-                            label: 'Add Question',
-                            onClick: () => onOpenAddQuestionModal(section._id),
-                            icon: <PlusIcon weight="bold" className="w-4 h-4" />,
-                          },
-                          {
-                            label: 'Generate Questions',
-                            onClick: () => onOpenGenerateQuestionsModal(section._id),
-                            icon: <UploadSimpleIcon weight="bold" className="w-4 h-4" />,
-                          },
-                        ]}
-                        text="Add Question"
-                        onClick={() => onOpenAddQuestionModal(section._id)}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ),
+            component: renderSection(section),
           }))}
         />
       )}
@@ -372,6 +438,33 @@ export const TestPaper = ({ testPaperId }: IProps) => {
         footer={<ModalFooter onCancel={onCloseAddSectionModal} onSave={saveSection} isLoading={state.isLoading} />}
       />
       <GenerateQuestionsModal isOpen={state.isOpenGenerateQuestions} onClose={onCloseGenerateQuestionsModal} />
+      {/* Mounted only while open, so its auto-name effect cannot reach the selected paper otherwise. */}
+      {state.isOpenEditPaper && <CreateTestPaperModal isOpen onClose={() => setState({ isOpenEditPaper: false })} />}
+      <SoftConfirmModal
+        title="Delete Section"
+        description={
+          <div>
+            Delete <strong>{state.sectionToDelete?.name}</strong>? It is removed from this paper and from anything else
+            referencing it.
+          </div>
+        }
+        isOpen={!!state.sectionToDelete}
+        isLoading={state.isDeleting}
+        isDestructive
+        confirmText="Delete"
+        onCancel={() => !state.isDeleting && setState({ sectionToDelete: null })}
+        onConfirm={deleteSection}
+      />
+      <SoftConfirmModal
+        title="Delete Question"
+        description="Delete this question? Its options and solution go with it, and the paper's totals are recalculated."
+        isOpen={!!state.questionToDelete}
+        isLoading={state.isDeleting}
+        isDestructive
+        confirmText="Delete"
+        onCancel={() => !state.isDeleting && setState({ questionToDelete: null })}
+        onConfirm={deleteQuestion}
+      />
     </div>
   );
 };

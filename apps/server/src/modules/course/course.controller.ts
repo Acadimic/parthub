@@ -4,7 +4,7 @@ import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { RequestContextService } from '../../context/request-context.service';
-import { CourseDto } from '@repo/shared/validations';
+import { CourseDto, CourseModuleDto, CourseWithPlansDto, PlanDto } from '@repo/shared/validations';
 
 @Controller('course')
 export class CourseController {
@@ -29,6 +29,31 @@ export class CourseController {
     return courses;
   }
 
+  @Post('upsert/course/plans')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.CREATE_COURSE, PermissionItem.EDIT_COURSE)
+  async upsertCourseAndPlans(@Body() payload: CourseWithPlansDto): Promise<{ course: CourseDto; plans: PlanDto[] }> {
+    const org = this.requestContextService.getOrgId();
+    return this.courseService.upsertCourseAndPlans(org, payload);
+  }
+
+  @Post('upsert/course/module')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.CREATE_COURSE, PermissionItem.EDIT_COURSE)
+  async upsertCourseModule(@Body() payload: CourseModuleDto): Promise<CourseModuleDto> {
+    const org = this.requestContextService.getOrgId();
+    return this.courseService.upsertCourseModule(org, payload);
+  }
+
+  @Get('course/modules/:courseId')
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_COURSE)
+  async getCourseModules(@Param('courseId') courseId: string): Promise<CourseModuleDto[]> {
+    return this.courseService.getOrgCourseModules(this.requestContextService.getOrgId(), courseId);
+  }
+
+  // Declared after the routes above so the literal paths read together; `:id` is one segment and
+  // they are three or four, so the order does not affect matching.
   @Get(':id')
   @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
   @Permissions(PermissionItem.VIEW_COURSE)

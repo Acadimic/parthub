@@ -1,5 +1,4 @@
 import { type MaterialDto } from '@repo/shared/contracts';
-import { type IMaterialStat } from '@interfaces';
 import { type IStandardSubjectQuery } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
@@ -7,13 +6,14 @@ import { callAuthApi } from './http.service';
 class MaterialService {
   upsertMaterial = async (payload: MaterialDto) => {
     const url = 'material/upsert';
-    const resData = await callAuthApi(url, API.POST, payload);
+    const resData = await callAuthApi<MaterialDto>(url, API.POST, payload);
     return resData;
   };
 
+  /** Every material the org owns, as rows — the list screen rolls them up itself. */
   getMaterials = async () => {
     const url = 'material/all';
-    const resData = await callAuthApi<IMaterialStat[]>(url, API.GET);
+    const resData = await callAuthApi<MaterialDto[]>(url, API.GET);
     return resData;
   };
 
@@ -23,9 +23,11 @@ class MaterialService {
     return resData;
   };
 
-  getStandardsMaterials = async (standards: string[]) => {
+  getStandardsMaterials = async (standardIds: string[]) => {
     const url = 'material/standards/all';
-    const resData = await callAuthApi<MaterialDto[]>(url, API.POST, standards);
+    // Wrapped in an object because the route validates `StandardIdsQueryDto`; Nest skips validation
+    // on a bare array body entirely, so posting the ids on their own silently matched nothing.
+    const resData = await callAuthApi<MaterialDto[]>(url, API.POST, { standards: standardIds });
     return resData;
   };
 }

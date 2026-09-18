@@ -14,7 +14,7 @@
  * - **Form state.** `isNew` marks a record the user is still creating. It exists on nineteen
  *   models across the three apps.
  * - **Request state.** `isLoading*` and `isLoaded*` track a fetch in progress on the instance.
- * - **Fields the server never stored.** `topic`, `isBonus`, `contentType` and `links` appear on
+ * - **Fields the server never stored.** `topic`, `isBonus` and `links` appear on
  *   client models but in no schema and no DTO, and `reactionsCount`, `followersCount` and
  *   `photoUrl` are either derived counts or a name the API does not use (it expects `avatar`).
  *   If any of these should be persisted, add it to the schema and the entity's DTO and remove it
@@ -33,7 +33,6 @@ export const CLIENT_ONLY_KEYS = [
   'photoUrl',
   'topic',
   'isBonus',
-  'contentType',
   'links',
 ] as const;
 

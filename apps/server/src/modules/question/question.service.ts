@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { getTransformedBaseFields } from '@database/base.transform';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -57,7 +57,12 @@ export class QuestionService {
         { returnDocument: 'after', upsert: true, runValidators: true },
       )
       .lean<QuestionDocument>()
-      .then((question) => this.getTransformedQuestion(question));
+      .then((question) => {
+        // `lean<T>()` states the element type and drops the `| null` an upsert can still return, so
+        // the miss has to be checked rather than trusted.
+        if (!question) throw new InternalServerErrorException('Question was not saved.');
+        return this.getTransformedQuestion(question);
+      });
   }
 
   async getQuestionsByIds(org: Types.ObjectId, ids: string[]): Promise<QuestionDocument[]> {
@@ -82,11 +87,17 @@ export class QuestionService {
       .then((questions) => this.getTransformedQuestions(questions));
   }
 
-  async findAll(org: Types.ObjectId) {
-    return this.questionModel.find({ org, _deleted: { $ne: true } }).lean<QuestionDocument[]>();
+  async findAll(org: Types.ObjectId): Promise<QuestionDto[]> {
+    return this.questionModel
+      .find({ org, _deleted: { $ne: true } })
+      .lean<QuestionDocument[]>()
+      .then((questions) => this.getTransformedQuestions(questions));
   }
 
-  async findById(org: Types.ObjectId, id: string) {
-    return this.questionModel.findOne({ _id: id, org, _deleted: { $ne: true } }).lean<QuestionDocument>();
+  async findById(org: Types.ObjectId, id: string): Promise<QuestionDto | null> {
+    return this.questionModel
+      .findOne({ _id: id, org, _deleted: { $ne: true } })
+      .lean<QuestionDocument>()
+      .then((question) => (question ? this.getTransformedQuestion(question) : null));
   }
 }

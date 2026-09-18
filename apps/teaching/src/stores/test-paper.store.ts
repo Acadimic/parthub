@@ -60,6 +60,16 @@ export interface ITestPaperState extends IRequestSlice<TestPaperFetch> {
   loadTestPapers: () => Promise<void>;
   /** Loads a paper's sections and, with them, the questions/options/solutions they contain. */
   loadTestPaperSectionsWithQuestions: (testPaperId: string) => Promise<void>;
+  /**
+   * Re-reads one paper, for the totals the server recomputed.
+   *
+   * Deliberately outside `run`: the `testPapers` request is the list screen's own fetch state, and
+   * flipping it to `loading` after a question save would blank the detail screen it was called
+   * from. Nothing renders a spinner for this — the totals simply arrive.
+   */
+  reloadTestPaper: (testPaperId: string) => Promise<void>;
+  /** Soft-deletes a paper on the server, then drops it from the store. */
+  deleteTestPaper: (testPaperId: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -208,6 +218,23 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
       // distribute — two arrays where there used to be four.
       questionStore.addQuestions(questions);
     }),
+
+  reloadTestPaper: async (testPaperId) => {
+    if (!testPaperId) return;
+    const result = await TestPaperService.getTestPaperById(testPaperId);
+    // `callAuthApi` resolves with `{ data: undefined }` when the caller opted out of the throw, so
+    // the guard is what keeps an undefined row out of the keyed map.
+    if (result?.data) get().addTestPapers([result.data]);
+  },
+
+  deleteTestPaper: async (testPaperId) => {
+    const testPaper = get().getTestPaperById(testPaperId);
+    if (!testPaper) return;
+    // A draft has never reached the server, so there is nothing to soft-delete — dropping the local
+    // row is the whole operation.
+    if (!testPaper.isNew) await TestPaperService.upsertTestPaper({ ...testPaper, _deleted: true });
+    get().removeTestPaper(testPaperId);
+  },
 
   reset: () => {
     set({ testPaperMap: {}, testPaperSectionMap: {} });

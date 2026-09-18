@@ -1,26 +1,34 @@
 import { type CourseDto, type PlanDto } from '@repo/shared/contracts';
 import { UploadFiles } from '@components/app/attachments';
 import { Select } from '@components/app/selects';
-import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
-import { PositionType } from '@enums';
+import { Button, Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
+import { PlusIcon, TrashIcon } from '@phosphor-icons/react';
+import { PeriodType, PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { type ISelectItem } from '@interfaces';
 import { CourseService } from '@services';
 import {
-  useStandardLookups,
   useCourseLookups,
+  useCourseStore,
   useSelectedCourse,
   useSelectedCoursePlans,
   useSelectorLookups,
+  useStandardLookups,
 } from '@stores';
 import { ALL } from '@utils/constants';
-import { errorToast, successToast } from '@utils/helpers';
+import { errorToast, reportError, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface IProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+/** What the drawer restores when an edit is cancelled. */
+interface ISnapshot {
+  course: CourseDto;
+  plans: PlanDto[];
 }
 
 /**
@@ -31,36 +39,61 @@ const getValidationError = (course: CourseDto, plans: PlanDto[], hasNewFiles: bo
   if (course.name.trim() === '') return 'Please enter a valid course name.';
   if ((course.standards ?? []).length === 0) return 'Please select at least one standard.';
   if ((course.attachments ?? []).length === 0 && !hasNewFiles) return 'Please add at least one course image.';
+  if (plans.length === 0) return 'Please add at least one plan.';
   for (const plan of plans) {
+    if (plan.name.trim() === '') return 'Please enter a valid plan name.';
     if (plan.amount === 0 || plan.realAmount === 0) return 'Please enter valid amount for each plan.';
     if (plan.amount > (plan.realAmount ?? 0)) return 'Real amount should be greater than or equal to amount.';
-    if (plan.name.trim() === '') return 'Please enter a valid plan name.';
   }
-  if (plans.length === 0) return 'Please add at least one plan.';
   return undefined;
+};
+
+/** An amount input's value, floored at zero and keeping the decimals `parseInt` used to drop. */
+const toAmount = (value: string): number => {
+  const amount = Number(value);
+  return isNaN(amount) ? 0 : Math.max(0, amount);
 };
 
 export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
   const { push } = useRouter();
-  const selectorStore = useSelectorLookups();
   const courseStore = useCourseLookups();
-  const { patchPlan, getCourseSubjectItems } = courseStore;
-  const { patchCourse } = courseStore;
-  const { selectedCourseId, removeSelectedCourseId } = selectorStore;
+  const { patchCourse, patchPlan, getCourseSubjectItems, createPlan, removePlanById } = courseStore;
+  const { addCourses, addPlans, removeCourseById, loadCoursePlans, calculateAndSetCourseStatsByCourseId } = courseStore;
+  const { selectedCourseId, removeSelectedCourseId } = useSelectorLookups();
   const selectedCoursePlans = useSelectedCoursePlans();
   const selectedCourse = useSelectedCourse();
   const { getStandardItems } = useStandardLookups();
-  const { removeCourseById, loadCoursePlans, calculateAndSetCourseStatsByCourseId } = courseStore;
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [removedPlanIds, setRemovedPlanIds] = useState<string[]>([]);
+  // The saved course and plans as they were when the drawer opened. Editing patches the store as
+  // the user types, so cancelling has to have something to put back.
+  const snapshotRef = useRef<ISnapshot | undefined>(undefined);
   const { uploadFilesToS3 } = useAttachment();
 
-  const closeModal = async () => {
-    if (!selectedCourse) return;
-    if (selectedCourse.isNew) removeCourseById(selectedCourse._id);
-    removeSelectedCourseId();
+  const isNewCourse = !!selectedCourse?.isNew;
+  const visiblePlans = selectedCoursePlans.filter((plan) => !removedPlanIds.includes(plan._id));
+
+  const resetAndClose = () => {
+    snapshotRef.current = undefined;
+    setRemovedPlanIds([]);
     setSelectedFiles([]);
+    removeSelectedCourseId();
     onClose();
+  };
+
+  const closeModal = () => {
+    if (isLoading) return;
+    const course = selectedCourse;
+    if (course?.isNew) {
+      // The draft and the two plans created with it exist only here; nothing has seen them.
+      removeCourseById(course._id);
+      selectedCoursePlans.forEach((plan) => removePlanById(plan._id));
+    } else if (snapshotRef.current) {
+      addCourses([snapshotRef.current.course]);
+      addPlans(snapshotRef.current.plans);
+    }
+    resetAndClose();
   };
 
   const handleStandardsChange = (values: ISelectItem[]) => {
@@ -73,31 +106,70 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
     patchCourse(selectedCourse._id, { subjects: values.map((value) => value.value) });
   };
 
-  const saveCourse = async () => {
+  const addPlan = () => {
     if (!selectedCourse) return;
+    createPlan(selectedCourse._id, selectedCoursePlans.length, PeriodType.MONTHLY);
+  };
+
+  const removePlan = (plan: PlanDto) => {
+    // An unsaved plan can just go; a saved one has to be soft-deleted, which happens on save so the
+    // course and its plans stay consistent even if the user cancels.
+    if (plan.isNew) removePlanById(plan._id);
+    else setRemovedPlanIds((planIds) => [...planIds, plan._id]);
+  };
+
+  const saveCourse = async () => {
+    const courseId = selectedCourse?._id;
+    if (!courseId) return;
+    const store = useCourseStore.getState();
+    const currentCourse = store.getCourseById(courseId);
+    if (!currentCourse) return;
+    const validationError = getValidationError(currentCourse, visiblePlans, selectedFiles.length > 0);
+    if (validationError) {
+      errorToast({ message: validationError });
+      return;
+    }
+    const isCreating = !!currentCourse.isNew;
     try {
-      const validationError = getValidationError(selectedCourse, selectedCoursePlans, selectedFiles.length > 0);
-      if (validationError) {
-        errorToast({ message: validationError });
-        return;
-      }
       setIsLoading(true);
-      const attachments = await uploadFilesToS3(selectedCourse._id, selectedFiles);
-      attachments && patchCourse(selectedCourse._id, { attachments });
-      calculateAndSetCourseStatsByCourseId(selectedCourse._id);
-      await CourseService.upsertCourseAndPlans({ course: selectedCourse, plans: selectedCoursePlans });
-      patchCourse(selectedCourse._id, { isNew: false });
-      selectedCoursePlans.forEach((plan) => patchPlan(plan._id, { isNew: false }));
-      successToast({ message: 'Course and plans created successfully.' });
-      setTimeout(() => {
-        push(
-          { pathname: `/courses/${selectedCourse._id}`, query: { name: selectedCourse.name } },
-          `/courses/${selectedCourse._id}`,
-        );
-      }, 500);
-      setSelectedFiles([]);
-      onClose();
-    } catch {
+      if (selectedFiles.length) {
+        const attachments = await uploadFilesToS3(courseId, selectedFiles);
+        // The hook has already said what went wrong; saving without the image would lose it.
+        if (!attachments.length) return;
+        patchCourse(courseId, { attachments: [...(currentCourse.attachments ?? []), ...attachments] });
+      }
+      calculateAndSetCourseStatsByCourseId(courseId);
+      // Read the rows back rather than posting `selectedCourse`: the store holds immutable rows, so
+      // the copy captured during render carries neither the upload above nor the fresh stats.
+      const fresh = useCourseStore.getState();
+      const course = fresh.getCourseById(courseId);
+      if (!course) return;
+      const plans: PlanDto[] = [
+        ...fresh.getPlansByCourseId(courseId).filter((plan) => !removedPlanIds.includes(plan._id)),
+        ...removedPlanIds
+          .map((planId) => fresh.getPlanById(planId))
+          .filter((plan): plan is PlanDto => !!plan)
+          .map((plan) => ({ ...plan, _deleted: true })),
+      ];
+      const result = await CourseService.upsertCourseAndPlans({
+        // Picking the "All" item clears the selection, but a row saved before that did could still
+        // carry the sentinel, and the server validates every id as a MongoId.
+        course: { ...course, subjects: (course.subjects ?? []).filter((subjectId) => subjectId !== ALL) },
+        plans,
+      });
+      if (result?.data) {
+        // The saved rows replace the drafts outright, which is what clears `isNew` and brings the
+        // server's own fields (org, timestamps) into the store.
+        addCourses([result.data.course]);
+        addPlans(result.data.plans);
+      }
+      removedPlanIds.forEach((planId) => removePlanById(planId));
+      successToast({ message: isCreating ? 'Course created.' : 'Course updated.' });
+      resetAndClose();
+      // A new course opens on its detail page, which is where its modules are added.
+      if (isCreating) push(`/courses/${courseId}`);
+    } catch (error) {
+      reportError(error, 'Could not save the course.');
     } finally {
       setIsLoading(false);
     }
@@ -110,136 +182,172 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
   };
 
   useEffect(() => {
-    if (selectedCourse && !selectedCourse.isNew) loadCoursePlans(selectedCourse._id);
+    const loadAndSnapshot = async () => {
+      const course = useCourseStore.getState().getCourseById(selectedCourseId);
+      if (!course || course.isNew) {
+        snapshotRef.current = undefined;
+        return;
+      }
+      // Snapshot after the plans land, or cancelling would restore an empty plan list.
+      await loadCoursePlans(course._id);
+      const store = useCourseStore.getState();
+      snapshotRef.current = structuredClone({
+        course: store.getCourseById(course._id) ?? course,
+        plans: store.getPlansByCourseId(course._id),
+      });
+    };
+    loadAndSnapshot();
   }, [selectedCourseId]);
 
   return (
-    <>
-      <Modal
-        position={PositionType.RIGHT}
-        title="Create Course"
-        isOpen={isOpen}
-        isLoading={isLoading}
-        onClose={closeModal}
-        component={
-          selectedCourse && (
-            <div className="min-h-[60vh] pb-4">
-              <div className="flex flex-col space-y-3">
-                <TextInput
-                  label="Course Name"
-                  value={selectedCourse.name}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    patchCourse(selectedCourse._id, { name: e.target.value })
-                  }
-                  required
-                />
-                <TextArea
-                  label="Course Description"
-                  value={selectedCourse.description || ''}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    patchCourse(selectedCourse._id, { description: e.target.value })
-                  }
-                />
-                <Select
-                  label="Standards"
-                  items={getStandardItems()}
-                  required
-                  isGrouped
-                  values={selectedCourse.standards ?? []}
-                  onChange={handleStandardsChange}
-                  isCloseOnSelect={true}
-                />
-                <Select
-                  label="Subjects"
-                  items={[...getCourseSubjectItems(selectedCourse._id), { label: 'All', value: ALL }]}
-                  values={
-                    (selectedCourse.subjects ?? []).length || selectedCourse.isNew
-                      ? (selectedCourse.subjects ?? [])
-                      : [ALL]
-                  }
-                  onChange={handleSubjectsChange}
-                />
-                <div>
-                  <Label label="Course Image" required />
-                  <div className="flex justify-center mt-1 w-full">
-                    <div className="w-full border border-dotted border-border py-2 px-2">
-                      <UploadFiles
-                        selectedFiles={selectedFiles}
-                        setSelectedFiles={setSelectedFiles}
-                        removeFile={removeFile}
-                        isImage
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div>
-                    <Label label="Plans" required />
-                  </div>
-                  <div className="flex flex-col gap-2.5">
-                    {selectedCoursePlans.map((plan) => {
-                      return (
-                        <div key={plan._id} className="">
-                          <div className="flex flex-col md:flex-row gap-2.5">
-                            <div className="w-full md:w-[33.33%]">
-                              <TextInput
-                                label="Plan Name"
-                                value={plan.name}
-                                className="w-32"
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                  patchPlan(plan._id, { name: e.target.value })
-                                }
-                                required
-                              />
-                            </div>
-                            <div className="w-full md:w-[33.33%]">
-                              <TextInput
-                                type="number"
-                                label="Amount"
-                                value={plan.amount === 0 ? '' : plan.amount}
-                                className="w-32"
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                  const intValue = parseInt(e.target.value);
-                                  if (!isNaN(intValue)) patchPlan(plan._id, { amount: Math.abs(intValue) });
-                                  else patchPlan(plan._id, { amount: 0 });
-                                }}
-                                required
-                              />
-                            </div>
-                            <div className="w-full md:w-[33.33%]">
-                              <TextInput
-                                type="number"
-                                label="Real Amount"
-                                className="w-32"
-                                value={plan.realAmount === 0 ? '' : plan.realAmount}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                  const intValue = parseInt(e.target.value);
-                                  if (!isNaN(intValue)) patchPlan(plan._id, { realAmount: Math.abs(intValue) });
-                                  else patchPlan(plan._id, { realAmount: 0 });
-                                }}
-                                required
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+    <Modal
+      position={PositionType.RIGHT}
+      title={isNewCourse ? 'Create Course' : 'Edit Course'}
+      description="A course groups modules of study material, test papers and live sessions."
+      isOpen={isOpen}
+      isLoading={isLoading}
+      onClose={closeModal}
+      component={
+        selectedCourse && (
+          <div className="min-h-[60vh] pb-4">
+            <div className="flex flex-col space-y-3">
+              <TextInput
+                label="Course Name"
+                value={selectedCourse.name}
+                disabled={isLoading}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  patchCourse(selectedCourse._id, { name: e.target.value })
+                }
+                required
+              />
+              <TextArea
+                label="Course Description"
+                value={selectedCourse.description || ''}
+                disabled={isLoading}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  patchCourse(selectedCourse._id, { description: e.target.value })
+                }
+              />
+              <Select
+                label="Standards"
+                items={getStandardItems()}
+                required
+                isGrouped
+                isDisabled={isLoading}
+                values={selectedCourse.standards ?? []}
+                onChange={handleStandardsChange}
+                isCloseOnSelect={true}
+              />
+              <Select
+                label="Subjects"
+                items={[...getCourseSubjectItems(selectedCourse._id), { label: 'All', value: ALL }]}
+                isDisabled={isLoading}
+                values={
+                  (selectedCourse.subjects ?? []).length || selectedCourse.isNew
+                    ? (selectedCourse.subjects ?? [])
+                    : [ALL]
+                }
+                onChange={handleSubjectsChange}
+              />
+              <div>
+                <Label label="Course Image" required />
+                <div className="flex justify-center mt-1 w-full">
+                  <div className="w-full border border-dotted border-border py-2 px-2">
+                    <UploadFiles
+                      selectedFiles={selectedFiles}
+                      setSelectedFiles={setSelectedFiles}
+                      removeFile={removeFile}
+                      isImage
+                    />
                   </div>
                 </div>
               </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label label="Plans" required />
+                  <Button
+                    isSubtle
+                    className="px-2 py-1"
+                    disabled={isLoading}
+                    leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
+                    onClick={addPlan}
+                  >
+                    Add plan
+                  </Button>
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  {visiblePlans.map((plan) => {
+                    return (
+                      <div key={plan._id} className="flex items-end gap-2">
+                        <div className="flex flex-1 flex-col md:flex-row gap-2.5">
+                          <div className="w-full md:w-[33.33%]">
+                            <TextInput
+                              label="Plan Name"
+                              value={plan.name}
+                              className="w-32"
+                              disabled={isLoading}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                patchPlan(plan._id, { name: e.target.value })
+                              }
+                              required
+                            />
+                          </div>
+                          <div className="w-full md:w-[33.33%]">
+                            <TextInput
+                              type="number"
+                              min={0}
+                              label="Amount"
+                              value={plan.amount === 0 ? '' : plan.amount}
+                              className="w-32"
+                              disabled={isLoading}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                patchPlan(plan._id, { amount: toAmount(e.target.value) })
+                              }
+                              required
+                            />
+                          </div>
+                          <div className="w-full md:w-[33.33%]">
+                            <TextInput
+                              type="number"
+                              min={0}
+                              label="Real Amount"
+                              className="w-32"
+                              value={plan.realAmount === 0 ? '' : plan.realAmount}
+                              disabled={isLoading}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                patchPlan(plan._id, { realAmount: toAmount(e.target.value) })
+                              }
+                              required
+                            />
+                          </div>
+                        </div>
+                        <Button
+                          isSubtle
+                          className="px-2 py-2"
+                          title={`Remove ${plan.name || 'plan'}`}
+                          disabled={isLoading}
+                          onClick={() => removePlan(plan)}
+                        >
+                          <TrashIcon weight="bold" className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          )
-        }
-        footer={
-          <ModalFooter
-            saveText="Save"
-            cancelText="Cancel"
-            onSave={saveCourse}
-            onCancel={closeModal}
-            isLoading={isLoading}
-          />
-        }
-      />
-    </>
+          </div>
+        )
+      }
+      footer={
+        <ModalFooter
+          saveText={isNewCourse ? 'Create Course' : 'Save Changes'}
+          cancelText="Cancel"
+          onSave={saveCourse}
+          onCancel={closeModal}
+          isLoading={isLoading}
+        />
+      }
+    />
   );
 };

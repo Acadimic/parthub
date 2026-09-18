@@ -3,9 +3,9 @@ import { Modal, ModalFooter } from '@repo/ui/app';
 import { HorizontalLineWithText } from '@components/others';
 import { type ISelectItem } from '@interfaces';
 import { CourseService } from '@services';
-import { useCourseLookups, useMeetLookups, useSelectedCourse } from '@stores';
-import { getFrequencyText, successToast } from '@utils/helpers';
-import { useState } from 'react';
+import { useCourseLookups, useCourseStore, useMeetLookups, useSelectedCourse } from '@stores';
+import { getFrequencyText, reportError, successToast } from '@utils/helpers';
+import { useEffect, useRef, useState } from 'react';
 import { SessionsView } from './SessionsView';
 
 interface IProps {
@@ -15,14 +15,21 @@ interface IProps {
 
 export const UpsertSessionsModal = ({ isOpen, onClose }: IProps) => {
   const courseStore = useCourseLookups();
-  const { patchCourse } = courseStore;
+  const { patchCourse, addCourses } = courseStore;
   const meetStore = useMeetLookups();
   const selectedCourse = useSelectedCourse();
   const { calculateAndSetCourseStatsByCourseId } = courseStore;
   const meets = meetStore.getMeets();
   const [isLoading, setIsLoading] = useState(false);
+  // The course's sessions as they were when the dialog opened. Picking one patches the store
+  // immediately, so cancelling has to have something to put back.
+  const selectedMeetsRef = useRef<string[] | undefined>(undefined);
 
   const closeModal = () => {
+    if (isLoading) return;
+    const courseId = selectedCourse?._id;
+    if (courseId && selectedMeetsRef.current) patchCourse(courseId, { meets: selectedMeetsRef.current });
+    selectedMeetsRef.current = undefined;
     onClose();
   };
 
@@ -31,25 +38,39 @@ export const UpsertSessionsModal = ({ isOpen, onClose }: IProps) => {
     patchCourse(selectedCourse._id, { meets: values.map((value) => value.value) });
   };
 
-  const saveCourseModule = async () => {
-    if (!selectedCourse) return;
+  const saveSessions = async () => {
+    const courseId = selectedCourse?._id;
+    if (!courseId) return;
     try {
       setIsLoading(true);
-      calculateAndSetCourseStatsByCourseId(selectedCourse._id);
-      await CourseService.upsertCourse(selectedCourse);
+      calculateAndSetCourseStatsByCourseId(courseId);
+      // Read the row back rather than posting `selectedCourse`: the store holds immutable rows, so
+      // the copy captured during render carries neither the last pick nor the fresh stats.
+      const course = useCourseStore.getState().getCourseById(courseId);
+      if (!course) return;
+      const result = await CourseService.upsertCourse(course);
+      if (result?.data) addCourses([result.data]);
       successToast({ message: 'Sessions added successfully.' });
+      // Saved, so there is nothing to revert to.
+      selectedMeetsRef.current = undefined;
       onClose();
-    } catch {
+    } catch (error) {
+      reportError(error, 'Could not save the sessions.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    selectedMeetsRef.current = [...(useCourseStore.getState().getCourseById(selectedCourse?._id ?? '')?.meets ?? [])];
+  }, [isOpen, selectedCourse?._id]);
+
   return (
     <>
       <Modal
-        // position={PositionType.RIGHT}
         title={`Add Sessions`}
+        description="Sessions are the live meetings a learner joins as part of this course."
         isOpen={isOpen}
         isLoading={isLoading}
         onClose={closeModal}
@@ -66,6 +87,7 @@ export const UpsertSessionsModal = ({ isOpen, onClose }: IProps) => {
                     description: meet.description,
                   }))}
                   required
+                  isDisabled={isLoading}
                   values={selectedCourse.meets ?? []}
                   onChange={handleMeetsChange}
                   isGrouped
@@ -86,7 +108,7 @@ export const UpsertSessionsModal = ({ isOpen, onClose }: IProps) => {
           <ModalFooter
             saveText="Save"
             cancelText="Cancel"
-            onSave={saveCourseModule}
+            onSave={saveSessions}
             onCancel={closeModal}
             isLoading={isLoading}
           />

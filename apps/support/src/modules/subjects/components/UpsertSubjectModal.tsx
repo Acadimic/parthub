@@ -39,7 +39,7 @@ export const UpsertSubjectModal = ({ isOpen, onClose }: IProps) => {
       setIsLoading(true);
       if (selectedFile) {
         const attachments = await uploadFilesToS3(subjectId, [selectedFile]);
-        if (attachments) patchSubject(subjectId, { logo: attachments[0].url });
+        if (attachments.length) patchSubject(subjectId, { logo: attachments[0].url });
       }
       // Read the row back rather than posting `selectedSubject`: the store holds immutable rows, so
       // the copy captured during render does not carry the logo patch above.

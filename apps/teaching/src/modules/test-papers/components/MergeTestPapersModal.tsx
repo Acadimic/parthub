@@ -4,7 +4,7 @@ import { Modal, ModalFooter, SoftConfirmModal, TextInput } from '@repo/ui/app';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { TestPaperService } from '@services';
 import { useTestPaperLookups } from '@stores';
-import { errorToast } from '@utils/helpers';
+import { errorToast, reportError } from '@utils/helpers';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
 
@@ -59,10 +59,15 @@ export const MergeTestPapersModal = ({ isOpen, onClose, primaryTestPaperId }: IP
       setState({ isLoading: true });
       onCloseConfirmModal();
       const result = await TestPaperService.mergeTestPapers({ primaryTestPaperId, secondaryTestPaperId });
-      result && addTestPapers([result.data]);
+      // `callAuthApi` resolves with `{ data: undefined }` when the caller opted out of the throw, so
+      // the guard is on `data` rather than on the envelope — the old check passed and pushed
+      // `undefined` into the keyed map.
+      if (result?.data) addTestPapers([result.data]);
       await loadTestPaperSectionsWithQuestions(primaryTestPaperId);
       setTimeout(() => closeModal(), 1000);
-    } catch {
+    } catch (error) {
+      // This used to be an empty `catch {}`, so a failed merge vanished entirely.
+      reportError(error, 'Could not merge the test papers.');
     } finally {
       setState({ isLoading: false });
     }

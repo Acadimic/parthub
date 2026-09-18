@@ -1,6 +1,6 @@
 import { type DefaultMarkingType } from '@repo/shared/interfaces';
 import { Modal, ModalFooter, TextInput } from '@repo/ui/app';
-import { Marking, QuestionType } from '@enums';
+import { Marking, type QuestionType } from '@enums';
 
 import { splitCamelCase } from '@utils/helpers';
 import { useEffect, useState } from 'react';
@@ -14,118 +14,125 @@ interface IProps {
   isDisabled?: boolean;
 }
 
+/** The key an input carries in its `name`, and the key its text is held under. */
+const markingKey = (questionType: QuestionType, marking: Marking) => `${questionType}-${marking}`;
+
+/**
+ * What the table's inputs hold: text, not numbers.
+ *
+ * A negative mark passes through "-" on its way to "-1", and a cleared field through "", neither of
+ * which is a number. The previous version deleted the key for an unparseable field and refilled it
+ * with 0 on close, which made a negative default impossible to type.
+ */
+type IMarkingInputs = Record<string, string>;
+
+const toMarkingInputs = (markings: DefaultMarkingType): IMarkingInputs => {
+  const inputs: IMarkingInputs = {};
+  (Object.keys(markings) as QuestionType[]).forEach((questionType) => {
+    Object.values(Marking).forEach((marking) => {
+      const value = markings[questionType]?.[marking];
+      inputs[markingKey(questionType, marking)] = value === undefined ? '' : String(value);
+    });
+  });
+  return inputs;
+};
+
+/** The table to save. Every key is written, an unparseable field as 0; none is ever dropped. */
+const toDefaultMarkings = (inputs: IMarkingInputs, source: DefaultMarkingType): DefaultMarkingType => {
+  const markings = structuredClone(source);
+  (Object.keys(markings) as QuestionType[]).forEach((questionType) => {
+    Object.values(Marking).forEach((marking) => {
+      const parsed = parseFloat(inputs[markingKey(questionType, marking)] ?? '');
+      markings[questionType][marking] = Number.isFinite(parsed) ? parsed : 0;
+    });
+  });
+  return markings;
+};
+
+const MARKING_COLUMNS = [
+  { marking: Marking.CORRECT, label: 'Correct' },
+  { marking: Marking.INCORRECT, label: 'Incorrect' },
+  { marking: Marking.UNATTEMPTED, label: 'Unattempted' },
+];
+
+/** Matches the header row `DataTable` draws, so the two tables read as one component. */
+const HEADER_CELL = 'text-left py-2.5 px-4 text-xxs font-semibold uppercase tracking-caps text-muted-foreground';
+
 export const DefaultMarkingsModal = ({ defaultMarkings, onSave, isOpen, isLoading, onClose, isDisabled }: IProps) => {
-  const [markings, setMarkings] = useState<DefaultMarkingType>(structuredClone(defaultMarkings));
+  const [inputs, setInputs] = useState<IMarkingInputs>(() => toMarkingInputs(defaultMarkings));
 
   const handleChangeMarkings = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const keys = name.split('-');
-    const questionType = keys[0] as QuestionType;
-    const marking = keys[1] as Marking;
-    const newMarkings = structuredClone(markings);
-    const numberValue = parseFloat(value);
-    if (Number.isNaN(numberValue)) delete newMarkings[questionType][marking];
-    else newMarkings[questionType][marking] = numberValue;
-    setMarkings(newMarkings);
+    setInputs((current) => ({ ...current, [name]: value }));
   };
 
   const closeMarkingsModal = () => {
-    const newMarkings = structuredClone(defaultMarkings);
-    Object.values(QuestionType).forEach((qType: QuestionType) => {
-      Object.values(Marking).forEach((markingType: Marking) => {
-        const value = markings[qType][markingType];
-        if (!value) newMarkings[qType][markingType] = 0;
-        else newMarkings[qType][markingType] = value;
-      });
-    });
-    setMarkings(newMarkings);
-    onSave({ ...newMarkings });
+    onSave(toDefaultMarkings(inputs, defaultMarkings));
     onClose();
   };
 
+  // The modal stays mounted between opens, so it re-seeds whenever the caller hands over a
+  // different table rather than only on first mount.
   useEffect(() => {
-    if (defaultMarkings) setMarkings(structuredClone(defaultMarkings));
-  }, []);
+    setInputs(toMarkingInputs(defaultMarkings));
+  }, [defaultMarkings]);
 
   return (
-    <>
-      <Modal
-        title="Modify Default Markings"
-        isOpen={isOpen}
-        isLoading={isLoading}
-        onClose={closeMarkingsModal}
-        component={
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Type</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Correct</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Incorrect</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Unattempted</th>
+    <Modal
+      title="Modify Default Markings"
+      description="Marks a question of each type is worth unless it overrides them."
+      isOpen={isOpen}
+      isLoading={isLoading}
+      onClose={closeMarkingsModal}
+      component={
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/40">
+                <th className={HEADER_CELL}>Type</th>
+                {MARKING_COLUMNS.map(({ marking, label }) => (
+                  <th key={marking} className={HEADER_CELL}>
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(Object.keys(defaultMarkings) as QuestionType[]).map((questionType) => (
+                <tr key={questionType} className="border-b border-border">
+                  <td className="py-2.5 px-4 text-sm capitalize font-medium">{splitCamelCase(questionType)}</td>
+                  {MARKING_COLUMNS.map(({ marking, label }) => (
+                    <td key={marking} className="py-2.5 px-4">
+                      <div className="w-20">
+                        <TextInput
+                          name={markingKey(questionType, marking)}
+                          value={inputs[markingKey(questionType, marking)] ?? ''}
+                          type="number"
+                          className="text-right font-mono"
+                          onChange={handleChangeMarkings}
+                          placeholder={label}
+                          disabled={isDisabled}
+                        />
+                      </div>
+                    </td>
+                  ))}
                 </tr>
-              </thead>
-              <tbody>
-                {(Object.keys(markings) as QuestionType[]).map((queType: QuestionType) => {
-                  const marks = markings[queType];
-                  return (
-                    <tr key={queType} className="border-b border-border">
-                      <td className="py-3 px-4 text-sm capitalize font-medium">{splitCamelCase(queType)}</td>
-                      <td className="py-3 px-4">
-                        <div className="w-28">
-                          <TextInput
-                            name={`${queType}-${Marking.CORRECT}`}
-                            value={marks.correct ?? ''}
-                            type="number"
-                            onChange={handleChangeMarkings}
-                            placeholder={Marking.CORRECT}
-                            disabled={isDisabled}
-                          />
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="w-28">
-                          <TextInput
-                            name={`${queType}-${Marking.INCORRECT}`}
-                            value={marks.incorrect ?? ''}
-                            type="number"
-                            onChange={handleChangeMarkings}
-                            placeholder={Marking.INCORRECT}
-                            disabled={isDisabled}
-                          />
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="w-28">
-                          <TextInput
-                            name={`${queType}-${Marking.UNATTEMPTED}`}
-                            value={marks.unattempted ?? ''}
-                            type="number"
-                            onChange={handleChangeMarkings}
-                            placeholder={Marking.UNATTEMPTED}
-                            disabled={isDisabled}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        }
-        footer={
-          isDisabled ? null : (
-            <ModalFooter
-              saveText="Done"
-              cancelText="Close"
-              onSave={closeMarkingsModal}
-              onCancel={closeMarkingsModal}
-              isLoading={isLoading}
-            />
-          )
-        }
-      />
-    </>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      }
+      footer={
+        isDisabled ? null : (
+          <ModalFooter
+            saveText="Done"
+            cancelText="Close"
+            onSave={closeMarkingsModal}
+            onCancel={closeMarkingsModal}
+            isLoading={isLoading}
+          />
+        )
+      }
+    />
   );
 };

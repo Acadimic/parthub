@@ -17,6 +17,12 @@ export class S3Service {
 
     this.s3Client = new S3Client({
       region,
+      // Since SDK 3.729 the client computes a CRC32 for every PutObject by default — including one
+      // it only presigns, where the body is empty. The signed URL then carries
+      // `x-amz-checksum-crc32=AAAAAA==`, and the browser's real upload fails with a digest mismatch.
+      // WHEN_REQUIRED restores the pre-3.729 behaviour: no checksum unless the operation demands one.
+      requestChecksumCalculation: 'WHEN_REQUIRED',
+      responseChecksumValidation: 'WHEN_REQUIRED',
       credentials: {
         accessKeyId: this.secretsService.get<string>(Secrets.AWS_ACCESS_KEY) || '',
         secretAccessKey: this.secretsService.get<string>(Secrets.AWS_SECRET_KEY) || '',

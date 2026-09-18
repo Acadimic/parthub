@@ -6,6 +6,8 @@ export interface IButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
   isRound?: boolean;
   isSecondary?: boolean;
   isSubtle?: boolean;
+  /** The red variant, for an action that deletes or cannot be undone. */
+  isDestructive?: boolean;
   isLoading?: boolean;
   disabled?: boolean;
   hideLoadingIcon?: boolean;
@@ -15,15 +17,26 @@ export interface IButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
   isFull?: boolean;
 }
 
-type ButtonVariant = Pick<IButtonProps, 'isRound' | 'isSecondary' | 'isSubtle' | 'isLoading' | 'isFull' | 'className'>;
+export type ButtonVariant = Pick<
+  IButtonProps,
+  'isRound' | 'isSecondary' | 'isSubtle' | 'isDestructive' | 'isLoading' | 'isFull' | 'className'
+>;
 
-const getVariantClass = ({ isSecondary, isSubtle }: ButtonVariant) => {
+const getVariantClass = ({ isSecondary, isSubtle, isDestructive }: ButtonVariant) => {
+  if (isDestructive) {
+    return 'bg-destructive border-destructive text-destructive-foreground hover:bg-destructive/90 hover:border-destructive/90';
+  }
   if (isSecondary) return 'bg-background hover:bg-accent';
   if (isSubtle) return 'bg-transparent hover:bg-accent';
   return 'bg-primary border-primary text-primary-foreground hover:bg-primary/90 hover:border-primary/90';
 };
 
-const getButtonClass = (variant: ButtonVariant) =>
+/**
+ * The classes that make an element look like a `Button`. Exported for `Link`, which is an anchor
+ * dressed as a button: a real `<button>` nested inside `<a>` is invalid HTML, and Next's link
+ * handler ignores clicks that land on the nested button, so the browser does a full page load.
+ */
+export const getButtonClass = (variant: ButtonVariant) =>
   `${variant.className ?? 'px-3 md:px-4 py-1.5'} select-none text-sm font-semibold border transition-colors
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
         disabled:opacity-50 disabled:pointer-events-none
@@ -34,7 +47,7 @@ const getButtonClass = (variant: ButtonVariant) =>
         ${variant.isFull ? 'w-full text-center' : ''}
       `;
 
-const getSectionPadding = (leftsection?: React.ReactNode, rightsection?: React.ReactNode) => {
+export const getSectionPadding = (leftsection?: React.ReactNode, rightsection?: React.ReactNode) => {
   if (leftsection) return 'pr-1.5';
   if (rightsection) return 'pl-1.5';
   return '';
@@ -71,10 +84,11 @@ export const Button = ({
   rightsection,
   className,
   isFull,
+  isDestructive,
 }: IButtonProps) => {
   return (
     <button
-      className={getButtonClass({ isRound, isSecondary, isSubtle, isLoading, isFull, className })}
+      className={getButtonClass({ isRound, isSecondary, isSubtle, isDestructive, isLoading, isFull, className })}
       type="button"
       onClick={onClick}
       disabled={disabled || isLoading}

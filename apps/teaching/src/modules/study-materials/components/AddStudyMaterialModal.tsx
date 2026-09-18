@@ -3,6 +3,7 @@ import { Modal, ModalFooter } from '@repo/ui/app';
 import { PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { useStandardLookups, useSelectorLookups } from '@stores';
+import { errorToast } from '@utils/helpers';
 import { useState } from 'react';
 
 interface IProps {
@@ -41,17 +42,22 @@ export const AddStudyMaterialModal = ({ isOpen, onClose, handleSelect }: IProps)
   };
 
   const handleSubmit = async () => {
-    if (!selectedStandardId || !selectedSubjectId) return;
+    // The Select button is disabled until both are chosen, so this only fires if that guard is ever
+    // removed — saying why nothing happened beats returning in silence.
+    if (!selectedStandardId || !selectedSubjectId) {
+      errorToast({ message: 'Select a standard and a subject.' });
+      return;
+    }
     setIsLoading(true);
     handleSelect(selectedStandardId, selectedSubjectId);
-    setTimeout(() => setIsLoading(false), 2000);
   };
 
   return (
     <>
       <Modal
         position={PositionType.RIGHT}
-        title="Select Study Material Details"
+        title="Add Study Material"
+        description="Content is organised by standard and subject."
         isOpen={isOpen}
         isLoading={isLoading}
         onClose={closeModal}
@@ -85,6 +91,7 @@ export const AddStudyMaterialModal = ({ isOpen, onClose, handleSelect }: IProps)
             onSave={handleSubmit}
             onCancel={closeModal}
             isLoading={isLoading}
+            isSaveDisabled={!selectedStandardId || !selectedSubjectId}
           />
         }
       />

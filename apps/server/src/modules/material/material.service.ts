@@ -66,6 +66,15 @@ export class MaterialService {
       .then((materials) => this.getTransformedMaterials(materials));
   }
 
+  /** The materials for a set of standards — what a teacher's standard filter asks for in one call. */
+  async getMaterialsByStandardIds(org: Types.ObjectId, standardIds: string[]): Promise<MaterialDto[]> {
+    return this.materialModel
+      .find({ org, standard: { $in: standardIds }, _deleted: { $ne: true } })
+      .sort({ order: 1 })
+      .lean<MaterialDocument[]>()
+      .then((materials) => this.getTransformedMaterials(materials));
+  }
+
   async findAll(org: string) {
     return this.materialModel
       .find({ org, _deleted: { $ne: true } })

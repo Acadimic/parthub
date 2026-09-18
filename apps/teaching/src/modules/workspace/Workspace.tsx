@@ -30,7 +30,8 @@ export const Workspace = () => {
 
   const courses = courseStore.getCourses();
   const testPapers = testPaperStore.getTestPapers();
-  const { materialStats } = materialStore;
+  // Derived from the materials the store holds — `material/all` returns rows, not roll-ups.
+  const materialStats = materialStore.getMaterialStats();
   const todaysSessions = meetStore.getTodaysScheduledMeets();
 
   // The root store's `loadHomePageData` fanned out to these four. With the root store gone the

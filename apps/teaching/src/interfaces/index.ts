@@ -4,6 +4,7 @@ export type {
   ILoginUser,
   IPresignedPutUrlRequest,
   IPresignedPutUrlsRequest,
+  IPresignedGetUrlsRequest,
   IStandardSubjectQuery,
   IScoreRating,
   ISubjectGraphData,

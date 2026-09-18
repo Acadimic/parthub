@@ -13,6 +13,7 @@ import {
 } from 'class-validator';
 import { AttachmentDto } from '../attachment.dto';
 import { BaseOwnedDto } from '../base-owned.dto';
+import { PlanDto } from '../plan/plan.dto';
 
 /** Rolled-up counts the apps show on a course card. Server-computed. */
 export class CourseStatsDto {
@@ -100,4 +101,24 @@ export class CourseDto extends BaseOwnedDto {
   @ValidateNested()
   @Type(() => CourseStatsDto)
   stats?: CourseStatsDto;
+}
+
+/**
+ * A course and its plans, saved in one request.
+ *
+ * The teaching app edits the two together, and a course with no plan is not sellable — so the pair
+ * travels as one body rather than two calls the client would have to sequence and unwind on a
+ * partial failure. The server has no transactions, so the write is still two upserts; both are
+ * idempotent on their client-minted `_id`, which is what makes a retry safe.
+ */
+export class CourseWithPlansDto {
+  @IsObject()
+  @ValidateNested()
+  @Type(() => CourseDto)
+  course: CourseDto;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PlanDto)
+  plans: PlanDto[];
 }

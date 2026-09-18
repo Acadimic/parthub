@@ -1,30 +1,58 @@
 import { type TestPaperDto } from '@repo/shared/contracts';
-import { Button, Menu } from '@repo/ui/app';
+import { Button, Menu, SoftConfirmModal } from '@repo/ui/app';
 import { CheckIcon, CopyIcon, GitMergeIcon, PencilIcon, PlusIcon, ShareIcon, WarningIcon } from '@phosphor-icons/react';
-import { useStandardLookups } from '@stores';
+import { TestPaperService } from '@services';
+import { useStandardLookups, useTestPaperStore } from '@stores';
+import { reportError, successToast } from '@utils/helpers';
 import { useSetState } from 'react-use';
 import { MergeTestPapersModal } from './MergeTestPapersModal';
 
 interface IProps {
   testPaper: TestPaperDto;
   addNewSection: () => void;
+  /** Opens the paper's own edit dialog, which the detail screen owns. */
+  onEditPaper: () => void;
 }
 
 interface IState {
   isOpenMergeTestPapersModal: boolean;
+  isOpenPublishConfirm: boolean;
+  isPublishing: boolean;
 }
 
-export const TestPaperDetails = ({ testPaper, addNewSection }: IProps) => {
+export const TestPaperDetails = ({ testPaper, addNewSection, onEditPaper }: IProps) => {
   const { isPublished, standards = [] } = testPaper;
   const { getStandardNamesText } = useStandardLookups();
+  const addTestPapers = useTestPaperStore((state) => state.addTestPapers);
   const [state, setState] = useSetState<IState>({
     isOpenMergeTestPapersModal: false,
+    isOpenPublishConfirm: false,
+    isPublishing: false,
   });
+
   const openMergeTestPapersModal = () => {
     setState({ isOpenMergeTestPapersModal: true });
   };
   const onCloseMergeTestPapersModal = () => {
     setState({ isOpenMergeTestPapersModal: false });
+  };
+
+  const openPublishConfirm = () => {
+    setState({ isOpenPublishConfirm: true });
+  };
+
+  const togglePublished = async () => {
+    try {
+      setState({ isPublishing: true });
+      const result = await TestPaperService.upsertTestPaper({ ...testPaper, isPublished: !isPublished });
+      if (result?.data) addTestPapers([result.data]);
+      successToast({ message: `Test paper ${isPublished ? 'unpublished' : 'published'} successfully.` });
+      setState({ isOpenPublishConfirm: false });
+    } catch (error) {
+      reportError(error, 'Could not change the published state.');
+    } finally {
+      setState({ isPublishing: false });
+    }
   };
 
   return (
@@ -44,7 +72,7 @@ export const TestPaperDetails = ({ testPaper, addNewSection }: IProps) => {
         </div>
         <div className="w-[200px] flex space-x-2">
           <div>{testPaper.totalQuestions}</div>
-          <div>questions</div>
+          <div>{testPaper.totalQuestions === 1 ? 'question' : 'questions'}</div>
         </div>
         <div className="w-[200px] flex space-x-2">
           <div>{testPaper.maxMarks}</div>
@@ -66,19 +94,21 @@ export const TestPaperDetails = ({ testPaper, addNewSection }: IProps) => {
                 )
               }
               isSecondary={isPublished}
+              onClick={openPublishConfirm}
             />
           </div>
           <div className="-mr-4">
             <Menu
               menuItems={[
                 {
+                  // Both of these were `onClick: () => {}` — the items opened nothing.
                   label: 'Edit Paper',
-                  onClick: () => {},
+                  onClick: onEditPaper,
                   icon: <PencilIcon weight="bold" className="w-4 h-4" />,
                 },
                 {
-                  label: 'Publish Paper',
-                  onClick: () => {},
+                  label: isPublished ? 'Unpublish Paper' : 'Publish Paper',
+                  onClick: openPublishConfirm,
                   icon: <ShareIcon weight="bold" className="w-4 h-4" />,
                 },
                 {
@@ -101,6 +131,19 @@ export const TestPaperDetails = ({ testPaper, addNewSection }: IProps) => {
         primaryTestPaperId={testPaper._id}
         isOpen={state.isOpenMergeTestPapersModal}
         onClose={onCloseMergeTestPapersModal}
+      />
+      <SoftConfirmModal
+        title={isPublished ? 'Unpublish Test Paper' : 'Publish Test Paper'}
+        description={
+          isPublished
+            ? 'Unpublish this paper? Learners will no longer be able to see it.'
+            : 'Publish this paper? Learners will be able to see it.'
+        }
+        isOpen={state.isOpenPublishConfirm}
+        isLoading={state.isPublishing}
+        confirmText={isPublished ? 'Unpublish' : 'Publish'}
+        onCancel={() => !state.isPublishing && setState({ isOpenPublishConfirm: false })}
+        onConfirm={togglePublished}
       />
     </div>
   );

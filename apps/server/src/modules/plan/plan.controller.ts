@@ -31,6 +31,14 @@ export class PlanController {
     return data;
   }
 
+  @Get('course/:courseId')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.VIEW_PLAN)
+  async getPlansByCourseId(@Param('courseId') courseId: string) {
+    const org = this.requestContextService.getOrgId();
+    return this.planService.getPlansByCourseId(org, courseId);
+  }
+
   @Get(':id')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.VIEW_PLAN)

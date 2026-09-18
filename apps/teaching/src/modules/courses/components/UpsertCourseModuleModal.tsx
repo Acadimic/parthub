@@ -5,8 +5,10 @@ import { PositionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { CourseService } from '@services';
 import {
+  type ICourseModule,
   useStandardLookups,
   useCourseLookups,
+  useCourseStore,
   useMaterialLookups,
   useMeetLookups,
   useSelectedCourse,
@@ -14,7 +16,7 @@ import {
   useSelectorLookups,
   useTestPaperLookups,
 } from '@stores';
-import { getFrequencyText, successToast } from '@utils/helpers';
+import { getFrequencyText, reportError, successToast } from '@utils/helpers';
 import { useState } from 'react';
 import { CourseModuleView } from './CourseModuleView';
 import { SessionsView } from './SessionsView';
@@ -23,6 +25,10 @@ interface IProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+/** "Add Module 3" while the module is still a draft, "Edit Module 3" once the server has it. */
+const getTitle = (courseModule?: ICourseModule): string =>
+  `${courseModule?.isNew ? 'Add' : 'Edit'} Module ${courseModule?.day ?? ''}`.trim();
 
 export const UpsertCourseModuleModal = ({ isOpen, onClose }: IProps) => {
   const selectorStore = useSelectorLookups();
@@ -38,7 +44,7 @@ export const UpsertCourseModuleModal = ({ isOpen, onClose }: IProps) => {
   const selectedCourse = useSelectedCourse();
   const { getTestPapersByStandardIds } = testPaperStore;
   const { getSubjectById } = useStandardLookups();
-  const { removeCourseModuleById, calculateAndSetCourseStatsByCourseId } = courseStore;
+  const { removeCourseModuleById, calculateAndSetCourseStatsByCourseId, addCourseModules, addCourses } = courseStore;
   const { getMaterialsByStandardIds } = materialStore;
   const meets = meetStore.getMeets();
   const [isLoading, setIsLoading] = useState(false);
@@ -65,17 +71,30 @@ export const UpsertCourseModuleModal = ({ isOpen, onClose }: IProps) => {
   };
 
   const saveCourseModule = async () => {
-    if (!selectedCourseModule || !selectedCourse) return;
+    const courseModuleId = selectedCourseModule?._id;
+    const courseId = selectedCourse?._id;
+    if (!courseModuleId || !courseId) return;
+    const isCreating = !!selectedCourseModule?.isNew;
     try {
       setIsLoading(true);
-      calculateAndSetCourseStatsByCourseId(selectedCourse._id);
-      await CourseService.upsertCourseModule(selectedCourseModule);
-      await CourseService.upsertCourse(selectedCourse);
-      patchCourseModule(selectedCourseModule._id, { isNew: false });
+      calculateAndSetCourseStatsByCourseId(courseId);
+      // Read both rows back rather than posting the copies captured during render: the store holds
+      // immutable rows, so neither the last keystroke nor the stats just computed are on them.
+      const store = useCourseStore.getState();
+      const courseModule = store.getCourseModuleById(courseModuleId);
+      const course = store.getCourseById(courseId);
+      if (!courseModule || !course) return;
+      const moduleResult = await CourseService.upsertCourseModule(courseModule);
+      const courseResult = await CourseService.upsertCourse(course);
+      // The saved rows replace the drafts, which is what clears `isNew` and brings the server's own
+      // fields into the store.
+      if (moduleResult?.data) addCourseModules([moduleResult.data]);
+      if (courseResult?.data) addCourses([courseResult.data]);
       removeSelectedCourseModuleId();
-      successToast({ message: 'Module added successfully.' });
+      successToast({ message: isCreating ? 'Module added.' : 'Module updated.' });
       onClose();
-    } catch {
+    } catch (error) {
+      reportError(error, 'Could not save the module.');
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +104,7 @@ export const UpsertCourseModuleModal = ({ isOpen, onClose }: IProps) => {
     <>
       <Modal
         position={PositionType.RIGHT}
-        title={`Add Module ${selectedCourseModule?.day}`}
+        title={getTitle(selectedCourseModule)}
         isOpen={isOpen}
         isLoading={isLoading}
         onClose={closeModal}
@@ -144,7 +163,7 @@ export const UpsertCourseModuleModal = ({ isOpen, onClose }: IProps) => {
                 {(selectedCourseModule.materials ?? []).length || (selectedCourseModule.testPapers ?? []).length ? (
                   <div className="">
                     <div className="border border-border mt-8 pt-4 pb-8 px-4">
-                      <Label label="Course Preview" required />
+                      <Label label="Course Preview" />
                       <div>
                         <CourseModuleView courseModule={selectedCourseModule} />
                       </div>

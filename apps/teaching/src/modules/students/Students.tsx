@@ -40,7 +40,9 @@ export const Students = () => {
   };
 
   const openUpsertStudentModal = () => {
-    createStudent();
+    // Select the draft the store just made: without this the drawer opens on nothing and the blank
+    // row is left behind in the table.
+    setSelectedStudentId(createStudent()._id);
     setState({ isOpenUpsertStudentModal: true });
     closeAddStudentsModal();
   };

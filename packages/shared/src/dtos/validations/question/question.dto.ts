@@ -22,6 +22,13 @@ export class MarkingsDto {
 
   @IsNumber()
   unattempted: number;
+
+  // The apps' default marking tables carry this key for every question type, and the global
+  // `forbidNonWhitelisted` pipe was rejecting every question save with
+  // "markings.property partiallyCorrect should not exist".
+  @IsOptional()
+  @IsNumber()
+  partiallyCorrect?: number;
 }
 
 /**

@@ -40,7 +40,9 @@ export const Collaborators = () => {
   };
 
   const openUpsertCollaboratorModal = () => {
-    createCollaborator(DefaultRole.TEACHER);
+    // Select the draft the store just made: without this the drawer opens on nothing and the blank
+    // row is left behind in the table.
+    setSelectedCollaboratorId(createCollaborator(DefaultRole.TEACHER)._id);
     setState({ isOpenUpsertCollaboratorModal: true });
     closeAddCollaboratorsModal();
   };

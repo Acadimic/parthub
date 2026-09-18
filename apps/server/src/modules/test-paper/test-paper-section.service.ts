@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { getTransformedBaseFields } from '@database/base.transform';
 import { InjectModel } from '@nestjs/mongoose';
 import { TestPaperSectionDto } from '@repo/shared/validations';
@@ -45,7 +45,12 @@ export class TestPaperSectionService {
         { returnDocument: 'after', upsert: true, runValidators: true },
       )
       .lean<TestPaperSectionDocument>()
-      .then((section) => this.getTransformedTestPaperSection(section));
+      .then((section) => {
+        // `lean<T>()` states the element type and drops the `| null` an upsert can still return, so
+        // the miss has to be checked rather than trusted.
+        if (!section) throw new InternalServerErrorException('Test paper section was not saved.');
+        return this.getTransformedTestPaperSection(section);
+      });
   }
 
   async getByIds(org: Types.ObjectId, ids: string[]): Promise<TestPaperSectionDto[]> {

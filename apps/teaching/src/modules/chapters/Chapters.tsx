@@ -2,7 +2,7 @@ import { Button } from '@repo/ui/app';
 import { PencilIcon, PlusIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { ChapterService } from '@services';
-import { useStandardLookups, useSelectorLookups } from '@stores';
+import { useStandardLookups, useSelectorLookups, useStandardStore, useSelectorStore } from '@stores';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
 import { UpsertChapterModal } from './components';
@@ -18,18 +18,8 @@ interface IState {
 
 export const Chapters = ({ standard, subject }: IProps) => {
   const selectorStore = useSelectorLookups();
-  const { setSelectedChapterId, selectedChapterId } = selectorStore;
-  const {
-    getStandardSubjectChapters,
-    createChapter,
-    removeChapterById,
-    getStandardById,
-    getSubjectById,
-    getChapterById,
-  } = useStandardLookups();
-  // `selectedChapter` was an MST view over the standard store. The id still comes
-  // from MST (tracked by `observer`); the row now comes from the Zustand store.
-  const selectedChapter = getChapterById(selectedChapterId);
+  const { setSelectedChapterId } = selectorStore;
+  const { getStandardSubjectChapters, createChapter, getStandardById, getSubjectById } = useStandardLookups();
   const chapters = getStandardSubjectChapters(standard, subject);
   const [state, setState] = useSetState<IState>({
     isOpenChapterModal: false,
@@ -48,7 +38,12 @@ export const Chapters = ({ standard, subject }: IProps) => {
 
   const onCloseChapterModal = () => {
     setState({ isOpenChapterModal: false });
-    if (selectedChapter?.isNew) removeChapterById(selectedChapter._id);
+    // Read the draft at call time, not from the render closure: the save marks the chapter as no
+    // longer new and then calls this, and the closure's copy still said `isNew` — so the chapter
+    // the user had just created was removed from the store on the way out.
+    const store = useStandardStore.getState();
+    const chapter = store.getChapterById(useSelectorStore.getState().selectedChapterId);
+    if (chapter?.isNew) store.removeChapterById(chapter._id);
   };
 
   useEffect(() => {

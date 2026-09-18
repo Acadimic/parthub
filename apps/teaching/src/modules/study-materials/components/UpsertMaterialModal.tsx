@@ -7,8 +7,14 @@ import { useAttachment } from '@hooks/attachment.hook';
 import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
 import { MaterialService } from '@services';
-import { useStandardLookups, useMaterialLookups, useSelectedMaterial, useSelectorLookups } from '@stores';
-import { successToast } from '@utils/helpers';
+import {
+  useStandardLookups,
+  useMaterialLookups,
+  useMaterialStore,
+  useSelectedMaterial,
+  useSelectorLookups,
+} from '@stores';
+import { errorToast, successToast, validateFieldValues } from '@utils/helpers';
 import { useState } from 'react';
 import { StudyMaterialView } from './StudyMaterialView';
 import { UpsertAttachmentModal } from './UpsertAttachment';
@@ -27,7 +33,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
   const { addAttachment } = materialStore;
   const { selectedStandardId, selectedSubjectId } = selectorStore;
   const selectedMaterial = useSelectedMaterial();
-  const { addLinkAttachment } = materialStore;
+  const { addLinkAttachment, addMaterials } = materialStore;
   const { getStandardSubjectChapters } = useStandardLookups();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -73,21 +79,36 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
     patchMaterial(selectedMaterial._id, { chapter: values[0].value });
   };
 
-  // Upload files to S3 bucket
-
   const saveMaterial = async () => {
     if (!selectedMaterial) return;
+    // The title is trimmed for the check so a row of spaces does not count as a name; the stored
+    // value is left as typed, because renaming happens as the user types.
+    const errors = validateFieldValues(
+      { title: selectedMaterial.name.trim(), chapter: selectedMaterial.chapter ?? '' },
+      ['title', 'chapter'],
+    );
+    if (errors.length) return;
     try {
       setIsLoading(true);
-      const attachments = await uploadFilesToS3(selectedMaterial._id, selectedFiles);
-      attachments?.forEach((attachment) => addAttachment(selectedMaterial._id, attachment));
-      await MaterialService.upsertMaterial(selectedMaterial);
+      const attachments = (await uploadFilesToS3(selectedMaterial._id, selectedFiles)) ?? [];
+      attachments.forEach((attachment) => addAttachment(selectedMaterial._id, attachment));
+      // Read the row back rather than posting `selectedMaterial`: the store holds immutable rows, so
+      // the copy captured during render carries neither the uploads just added nor an edit made
+      // after it.
+      const material = useMaterialStore.getState().getMaterialById(selectedMaterial._id);
+      if (!material) return;
+      const result = await MaterialService.upsertMaterial(material);
       setSelectedFiles([]);
-      patchMaterial(selectedMaterial._id, { isNew: false });
+      // The server's row, not a patched local one: it carries the timestamps and ownership fields
+      // the list rolls up, and replacing the draft is what clears `isNew`.
+      if (result?.data) addMaterials([result.data]);
+      else patchMaterial(material._id, { isNew: false });
       successToast({ message: 'Content saved successfully!' });
       onClose();
     } catch (error) {
-      console.error(error);
+      // `callAuthApi` has already toasted an HTTP failure, so toasting here would show it twice.
+      // Anything thrown that is not an `Error` carries no message of its own.
+      if (!(error instanceof Error)) errorToast({ message: 'Could not save the content.' });
     } finally {
       setIsLoading(false);
     }
@@ -98,6 +119,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
       <Modal
         position={PositionType.RIGHT}
         title={`${selectedMaterial?.isNew ? 'Add' : 'Update'} Material`}
+        description="Title, content and attachments the learner will see."
         isOpen={isOpen}
         onClose={handleClose}
         component={
@@ -113,6 +135,9 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                 <div>
                   <div className="max-w-full">
                     <RichTextEditor
+                      // Keyed by the row: without it the editor keeps its own document across a
+                      // switch of material, and the next one opens showing the previous one's text.
+                      key={selectedMaterial._id}
                       label="Content"
                       value={selectedMaterial.content}
                       onChange={(content) => patchMaterial(selectedMaterial._id, { content })}
@@ -121,7 +146,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                   </div>
                 </div>
                 <div className="flex flex-col gap-3">
-                  <Label label="Attachments" required />
+                  <Label label="Attachments" />
                   <div className="flex justify-center border border-border py-2.5 px-3">
                     <div className="w-full cursor-pointer">
                       <UploadFiles
@@ -164,7 +189,11 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                       onChange={handleChapterChange}
                       isSingleSelect
                       required
-                      notFoundComponent={<AddChapterButton standard={selectedStandardId} subject={selectedSubjectId} />}
+                      notFoundComponent={
+                        <div className="px-3 py-2 text-xs text-muted-foreground">
+                          No chapters yet — add one with the button beside this field.
+                        </div>
+                      }
                     />
                   </div>
                   <div className="pb-[1px]">
@@ -176,7 +205,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                     <SimpleAccordions
                       items={[
                         {
-                          title: <Label label="Content Preview" required />,
+                          title: <Label label="Content Preview" />,
                           component: (
                             <div className="w-full">
                               <div className="border border-border py-2 px-2 w-full flex flex-col gap-2">

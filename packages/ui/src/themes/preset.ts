@@ -138,11 +138,39 @@ export const uiPreset = {
           from: { transform: 'scaleX(1)' },
           to: { transform: 'scaleX(0)' },
         },
+        // The overlay surfaces: a backdrop fades, a centred dialog settles in, a drawer slides in
+        // from its edge. Tailwind 3 ships no enter animations, so these are the four the Modal uses.
+        'fade-in': {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        'zoom-in': {
+          from: { opacity: '0', transform: 'scale(0.96)' },
+          to: { opacity: '1', transform: 'scale(1)' },
+        },
+        'slide-in-right': {
+          from: { transform: 'translateX(100%)' },
+          to: { transform: 'translateX(0)' },
+        },
+        'slide-in-left': {
+          from: { transform: 'translateX(-100%)' },
+          to: { transform: 'translateX(0)' },
+        },
+        'slide-in-bottom': {
+          from: { transform: 'translateY(100%)' },
+          to: { transform: 'translateY(0)' },
+        },
       },
 
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'fade-in': 'fade-in 0.2s ease-out both',
+        'zoom-in': 'zoom-in 0.2s ease-out both',
+        // The drawer easing is the iOS sheet curve: fast out of the edge, soft at rest.
+        'slide-in-right': 'slide-in-right 0.3s cubic-bezier(0.32, 0.72, 0, 1) both',
+        'slide-in-left': 'slide-in-left 0.3s cubic-bezier(0.32, 0.72, 0, 1) both',
+        'slide-in-bottom': 'slide-in-bottom 0.3s cubic-bezier(0.32, 0.72, 0, 1) both',
         // Duration and play-state come through custom properties rather than being set inline.
         // `important: true` makes this shorthand `!important`, which beats a plain inline
         // `animation-duration` — the bar then inherited the shorthand's implicit `0s`, completed

@@ -1,7 +1,7 @@
 import { Button, Modal, SplitButton } from '@repo/ui/app';
 import { GearIcon, PlusIcon } from '@phosphor-icons/react';
 import { PositionType } from '@enums';
-import { useStandardLookups, useSelectorLookups } from '@stores';
+import { useStandardLookups, useSelectorLookups, useStandardStore, useSelectorStore } from '@stores';
 import { useSetState } from 'react-use';
 import { Chapters } from '../Chapters';
 import { UpsertChapterModal } from './UpsertChapterModal';
@@ -19,11 +19,8 @@ interface IState {
 
 export const AddChapterButton = ({ standard, subject, isSecondary }: IProps) => {
   const selectorStore = useSelectorLookups();
-  const { selectedChapterId, setSelectedChapterId } = selectorStore;
-  const { createChapter, removeChapterById, getStandardById, getSubjectById, getChapterById } = useStandardLookups();
-  // `selectedChapter` was an MST view over the standard store. The id still comes
-  // from MST (tracked by `observer`); the row now comes from the Zustand store.
-  const selectedChapter = getChapterById(selectedChapterId);
+  const { setSelectedChapterId } = selectorStore;
+  const { createChapter, getStandardById, getSubjectById } = useStandardLookups();
   const [state, setState] = useSetState<IState>({
     isOpenChapterModal: false,
     isOpenManageChaptersModal: false,
@@ -41,7 +38,12 @@ export const AddChapterButton = ({ standard, subject, isSecondary }: IProps) => 
 
   const onCloseChapterModal = () => {
     setState({ isOpenChapterModal: false });
-    if (selectedChapter?.isNew) removeChapterById(selectedChapter._id);
+    // Read the draft at call time, not from the render closure: the save marks the chapter as no
+    // longer new and then calls this, and the closure's copy still said `isNew` — so the chapter
+    // the user had just created was removed from the store on the way out.
+    const store = useStandardStore.getState();
+    const chapter = store.getChapterById(useSelectorStore.getState().selectedChapterId);
+    if (chapter?.isNew) store.removeChapterById(chapter._id);
   };
 
   const onCloseManageChaptersModal = () => {

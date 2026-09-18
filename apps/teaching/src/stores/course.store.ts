@@ -1,5 +1,4 @@
-import { type CourseDto, type CourseStatsDto, type PlanDto } from '@repo/shared/contracts';
-import { type ICourseModuleFields } from '@repo/shared/interfaces';
+import { type CourseDto, type CourseModuleDto, type CourseStatsDto, type PlanDto } from '@repo/shared/contracts';
 import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -12,10 +11,16 @@ import { useSelectorStore } from './selector.store';
 import { useStandardStore } from './standard.store';
 import { useTestPaperStore } from './test-paper.store';
 
-export type ICourseModule = ICourseModuleFields & { isNew?: boolean };
+/**
+ * A course module, as the server sends and accepts it.
+ *
+ * The name is the app's; the collection is `CourseContent`. `isNew` comes from `BaseOwnedDto` and
+ * is stripped from every request body, so a draft module is typed exactly like a saved one.
+ */
+export type ICourseModule = CourseModuleDto;
 
-/** The fetches this store tracks. */
-type CourseFetch = 'courses' | 'plans' | 'courseModules';
+/** The fetches this store tracks. `course` is the single-row read a deep link needs. */
+type CourseFetch = 'courses' | 'course' | 'plans' | 'courseModules';
 
 export interface ICourseState extends IRequestSlice<CourseFetch> {
   courseMap: Record<string, CourseDto>;
@@ -23,6 +28,7 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   courseModuleMap: Record<string, ICourseModule>;
 
   getCourseById: (courseId: string) => CourseDto | undefined;
+  getPlanById: (planId: string) => PlanDto | undefined;
   getCourseModuleById: (courseModuleId: string) => ICourseModule | undefined;
   getCourses: () => CourseDto[];
   getPlans: () => PlanDto[];
@@ -41,6 +47,7 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   /** Renames a course module and keeps its slug in step. */
   renameCourseModule: (courseModuleId: string, name: string) => void;
   removeCourseById: (courseId: string) => void;
+  removePlanById: (planId: string) => void;
   removeCourseModuleById: (courseModuleId: string) => void;
 
   /** Adds an unsaved course with its monthly and yearly plans; returns it for the caller to select. */
@@ -51,7 +58,14 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   /** Recomputes a course's roll-ups from its modules and stores them on the course. */
   calculateAndSetCourseStatsByCourseId: (courseId: string) => CourseStatsDto | undefined;
 
+  /** Soft-deletes a course on the server, then drops it from the store. */
+  deleteCourse: (courseId: string) => Promise<void>;
+  /** Soft-deletes a module on the server, then drops it from the store. */
+  deleteCourseModule: (courseModuleId: string) => Promise<void>;
+
   loadCourses: () => Promise<void>;
+  /** One course by id, for a deep link or a refresh that lands with an empty store. */
+  loadCourse: (courseId: string) => Promise<void>;
   loadCoursePlans: (courseId: string) => Promise<void>;
   loadCourseModules: (courseId: string) => Promise<void>;
   reset: () => void;
@@ -67,9 +81,11 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   courseMap: {},
   planMap: {},
   courseModuleMap: {},
-  ...createRequestSlice(['courses', 'plans', 'courseModules'], set, get),
+  ...createRequestSlice(['courses', 'course', 'plans', 'courseModules'], set, get),
 
   getCourseById: (courseId) => (courseId ? get().courseMap[courseId] : undefined),
+
+  getPlanById: (planId) => (planId ? get().planMap[planId] : undefined),
 
   getCourseModuleById: (courseModuleId) => (courseModuleId ? get().courseModuleMap[courseModuleId] : undefined),
 
@@ -147,6 +163,13 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
     set((state) => {
       const { [courseId]: removed, ...courseMap } = state.courseMap;
       return removed ? { courseMap } : state;
+    });
+  },
+
+  removePlanById: (planId) => {
+    set((state) => {
+      const { [planId]: removed, ...planMap } = state.planMap;
+      return removed ? { planMap } : state;
     });
   },
 
@@ -253,10 +276,32 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
     return stats;
   },
 
+  deleteCourse: async (courseId) => {
+    const course = get().getCourseById(courseId);
+    if (!course) return;
+    // Soft delete: the row stays for auditing and every read filters it out, so the store drops it
+    // rather than waiting for a refetch.
+    await CourseService.upsertCourse({ ...course, _deleted: true });
+    get().removeCourseById(courseId);
+  },
+
+  deleteCourseModule: async (courseModuleId) => {
+    const courseModule = get().getCourseModuleById(courseModuleId);
+    if (!courseModule) return;
+    await CourseService.upsertCourseModule({ ...courseModule, _deleted: true });
+    get().removeCourseModuleById(courseModuleId);
+  },
+
   loadCourses: () =>
     get().run('courses', async () => {
       const result = await CourseService.getCourses();
       if (result?.data) get().addCourses(result.data);
+    }),
+
+  loadCourse: (courseId) =>
+    get().run('course', async () => {
+      const result = await CourseService.getCourseById(courseId);
+      if (result?.data) get().addCourses([result.data]);
     }),
 
   loadCoursePlans: (courseId) =>

@@ -1,4 +1,4 @@
-import { type QuestionDto } from '@repo/shared/contracts';
+import { type OptionDto, type QuestionDto } from '@repo/shared/contracts';
 import { type MarkingType } from '@repo/shared/interfaces';
 import { richTextFromText } from '@repo/shared/utils';
 import { CheckboxSelection, RadioSelection } from '@components/app/selections';
@@ -8,14 +8,7 @@ import { RichTextContent } from '@repo/ui/core';
 import { Marking, QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
-import {
-  useStandardLookups,
-  useQuestionLookups,
-  useSelectedQuestion,
-  useSelectedTestPaper,
-  useSelectedTestPaperSection,
-} from '@stores';
-import { defaultMarkings } from '@utils/constants';
+import { useStandardLookups, useQuestionLookups, useSelectedQuestion, useSelectedTestPaper } from '@stores';
 import { useEffect, useState } from 'react';
 import { SelectQuestionType } from './SelectQuestionType';
 
@@ -25,12 +18,50 @@ const MARKING_FIELDS = [
   { name: Marking.UNATTEMPTED, label: 'Unattempted Marks', placeholder: 'Unattempted' },
 ];
 
+/**
+ * What the marks inputs hold: text, not numbers.
+ *
+ * A negative mark passes through "-" on its way to "-1", and a cleared field through "", neither of
+ * which is a number. Keeping the raw text here is what lets the author type one — the store is
+ * patched from it separately, so a half-typed value never has to round-trip through `Number`.
+ */
+type IMarkInputs = Record<Marking, string>;
+
+const toMarkInputs = (markings?: MarkingType): IMarkInputs => {
+  const inputs = {} as IMarkInputs;
+  Object.values(Marking).forEach((marking) => {
+    const value = markings?.[marking];
+    inputs[marking] = value === undefined ? '' : String(value);
+  });
+  return inputs;
+};
+
+/**
+ * The marks to store for a set of inputs.
+ *
+ * Every key is written on every change, an unparseable field as 0. The previous version deleted the
+ * key instead and refilled it afterwards, so the store never saw `-` and a negative mark could not
+ * be typed at all; `MarkingsDto` requires all three, so a missing one also failed validation.
+ */
+const toMarkings = (inputs: IMarkInputs): MarkingType => {
+  const parse = (value: string) => {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  return {
+    [Marking.CORRECT]: parse(inputs[Marking.CORRECT]),
+    [Marking.INCORRECT]: parse(inputs[Marking.INCORRECT]),
+    [Marking.UNATTEMPTED]: parse(inputs[Marking.UNATTEMPTED]),
+    [Marking.PARTIALLY_CORRECT]: parse(inputs[Marking.PARTIALLY_CORRECT]),
+  };
+};
+
 /** The three marks-per-outcome inputs, which differ only in name and label. */
 const MarkingInputs = ({
   marks,
   onChange,
 }: {
-  marks: Record<string, number>;
+  marks: IMarkInputs;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }) => (
   <div className="flex flex-col md:flex-row gap-2.5">
@@ -41,7 +72,7 @@ const MarkingInputs = ({
           type="number"
           label={label}
           placeholder={placeholder}
-          className="w-32"
+          className="w-32 font-mono"
           required
           value={marks[name] ?? ''}
           onChange={onChange}
@@ -119,14 +150,16 @@ const toSubjectItems = (
   getItems: (standardId: string) => ISelectItem[],
 ): ISelectItem[] => (standard ? getItems(standard) : []);
 
+/** The typed-in answer for a question that has no options list, as text the input can hold. */
+const toAnswerText = (options: OptionDto[]): string => options[0]?.body.text ?? '';
+
 export const AddSolution = () => {
   const questionStore = useQuestionLookups();
   const { patchQuestion, patchOption, setSolution } = questionStore;
-  const selectedTestPaperSection = useSelectedTestPaperSection();
   const selectedTestPaper = useSelectedTestPaper();
   const selectedQuestion = useSelectedQuestion();
   const { getStandardSubjectItems, getStandardItemsByIds, getChapterItems } = useStandardLookups();
-  const [marks, setMarks] = useState<Record<string, number>>(defaultMarkings[QuestionType.SINGLE_CHOICE]);
+  const [marks, setMarks] = useState<IMarkInputs>(() => toMarkInputs(selectedQuestion?.markings));
 
   const handleCheckboxOptionClick = (optionId: string) => {
     if (!selectedQuestion) return;
@@ -150,23 +183,18 @@ export const AddSolution = () => {
   };
 
   const handleChangeMarks = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!selectedQuestion || !selectedTestPaperSection) return;
+    if (!selectedQuestion) return;
     const { name, value } = e.target;
-    const numberValue = parseFloat(value);
-    const newMarks = { ...marks };
-    if (Number.isNaN(numberValue)) delete newMarks[name as Marking];
-    else newMarks[name as Marking] = numberValue;
+    const newMarks: IMarkInputs = { ...marks, [name as Marking]: value };
     setMarks(newMarks);
-    const saveMarks = { ...newMarks };
-    Object.values(Marking).forEach((marking) => {
-      if (!saveMarks[marking]) saveMarks[marking] = 0;
-    });
-    patchQuestion(selectedQuestion._id, { markings: saveMarks as MarkingType });
+    patchQuestion(selectedQuestion._id, { markings: toMarkings(newMarks) });
   };
 
+  // Keyed on the type as well as the id: changing a question's type replaces its marks with the
+  // section's defaults for the new type, and the inputs have to follow.
   useEffect(() => {
-    if (selectedQuestion) setMarks({ ...selectedQuestion.markings });
-  }, [selectedQuestion?._id]);
+    setMarks(toMarkInputs(selectedQuestion?.markings));
+  }, [selectedQuestion?._id, selectedQuestion?.questionType]);
 
   if (!selectedQuestion || !selectedTestPaper) return null;
 
@@ -215,7 +243,7 @@ export const AddSolution = () => {
             {!isMultipleChoice && !isSingleOrBoolean && (
               <TextInput
                 placeholder="Enter Answer"
-                value={questionOptions[0]?.body.text ?? ''}
+                value={toAnswerText(questionOptions)}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   const [firstOption] = questionOptions;
                   // A typed-in answer is plain by nature, so it round-trips through the plain-text

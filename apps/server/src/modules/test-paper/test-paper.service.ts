@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { getTransformedBaseFields } from '@database/base.transform';
 import { InjectModel } from '@nestjs/mongoose';
 import { TestPaperSectionsResponse } from '@repo/shared/contracts';
@@ -50,16 +50,25 @@ export class TestPaperService {
   }
 
   async upsert(org: Types.ObjectId, payload: TestPaperDto): Promise<TestPaperDto> {
-    const { _id } = payload;
+    // `totalQuestions` and `maxMarks` are derived and owned by `TestPaperTotalsService`; the client
+    // sends them back only because it is posting a row it loaded, so they are dropped rather than
+    // written, which would let a stale copy overwrite a freshly recalculated total.
+    const { totalQuestions, maxMarks, ...fields } = payload;
+    const { _id } = fields;
     return this.testPaperModel
       .findOneAndUpdate(
         // org in the filter so an upsert cannot reach another organization's document
         { _id, org },
-        { ...payload },
+        { ...fields },
         { returnDocument: 'after', upsert: true, runValidators: true },
       )
       .lean<TestPaperDocument>()
-      .then((testPaper) => this.getTransformedTestPaper(testPaper));
+      .then((testPaper) => {
+        // `lean<T>()` states the element type and drops the `| null` an upsert can still return, so
+        // the miss has to be checked rather than trusted.
+        if (!testPaper) throw new InternalServerErrorException('Test paper was not saved.');
+        return this.getTransformedTestPaper(testPaper);
+      });
   }
 
   async getOrgTestPapers(org: Types.ObjectId): Promise<TestPaperDto[]> {
