@@ -94,6 +94,32 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
   ),
   horizontalRule: (_node, _children, key) => <hr key={key} className="my-6 border-border" />,
   hardBreak: (_node, _children, key) => <br key={key} />,
+  // A table scrolls inside its own container rather than widening the page. `bordered: false` is
+  // a layout grid — the cells keep their padding and lose their lines.
+  table: (node, children, key) => (
+    <div key={key} className="my-4 overflow-x-auto">
+      <table
+        className={cn(
+          'w-full table-fixed border-collapse text-sm',
+          node.attrs?.bordered === false ? '[&_td]:border-0 [&_th]:border-0' : '[&_td]:border [&_th]:border',
+          '[&_td]:border-border [&_th]:border-border [&_td]:p-2 [&_th]:p-2 [&_th]:bg-muted/40 [&_th]:text-left [&_th]:font-semibold [&_td>p]:my-0 [&_th>p]:my-0',
+        )}
+      >
+        <tbody>{children}</tbody>
+      </table>
+    </div>
+  ),
+  tableRow: (_node, children, key) => <tr key={key}>{children}</tr>,
+  tableHeader: (node, children, key) => (
+    <th key={key} colSpan={numberAttr(node.attrs, 'colspan', 1)} rowSpan={numberAttr(node.attrs, 'rowspan', 1)}>
+      {children}
+    </th>
+  ),
+  tableCell: (node, children, key) => (
+    <td key={key} colSpan={numberAttr(node.attrs, 'colspan', 1)} rowSpan={numberAttr(node.attrs, 'rowspan', 1)}>
+      {children}
+    </td>
+  ),
   inlineMath: (node, _children, key) => <MathRender key={key} latex={stringAttr(node.attrs, 'latex')} />,
   blockMath: (node, _children, key) => (
     <div key={key} className="my-4 overflow-x-auto">

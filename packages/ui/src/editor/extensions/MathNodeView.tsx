@@ -115,16 +115,22 @@ export const MathNodeView = ({ node, updateAttributes, deleteNode, editor, getPo
   commitRef.current = stopEditing;
 
   /**
-   * Clicking away commits, the way every other field on these screens behaves. Two exclusions,
-   * both portalled outside this subtree and neither of them "away": the palette and formula
-   * gallery popovers, and MathLive's virtual keyboard.
+   * Clicking away commits, the way every other field on these screens behaves. Three exclusions,
+   * all portalled outside this subtree and none of them "away": the palette and formula gallery
+   * popovers, MathLive's virtual keyboard, and the button that hides that keyboard.
    */
   useEffect(() => {
     if (!isEditing) return undefined;
     const onPointerDown = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target || editorRef.current?.contains(target)) return;
-      if (target.closest('[data-radix-popper-content-wrapper]') || target.closest('.ML__keyboard')) return;
+      if (
+        target.closest('[data-radix-popper-content-wrapper]') ||
+        target.closest('.ML__keyboard') ||
+        target.closest('[data-virtual-keyboard-dismiss]')
+      ) {
+        return;
+      }
       commitRef.current();
     };
     document.addEventListener('mousedown', onPointerDown);

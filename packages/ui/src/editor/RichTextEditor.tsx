@@ -7,6 +7,7 @@ import { docToPlainText } from '@repo/shared/utils';
 import { Label } from '../core/Label';
 import { cn } from '../lib/cn';
 import { MathExtensions } from './extensions/math-nodes';
+import { TableExtensions } from './extensions/table';
 import { EditorToolbar } from './toolbar/EditorToolbar';
 
 export interface IRichTextEditorProps {
@@ -51,6 +52,14 @@ const DOCUMENT_CLASS = [
   '[&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.9em]',
   '[&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2',
   '[&_hr]:my-6 [&_hr]:border-border',
+  // Tables match the reading view's cell padding and header ground. A borderless table keeps a
+  // faint dashed guide while editing — the author still has to find the cells — that the reading
+  // view does not draw.
+  '[&_table]:my-4 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_table]:text-sm',
+  '[&_td]:border [&_th]:border [&_td]:border-border [&_th]:border-border [&_td]:p-2 [&_th]:p-2 [&_td]:align-top [&_th]:align-top',
+  '[&_th]:bg-muted/40 [&_th]:text-left [&_th]:font-semibold [&_td>p]:my-0 [&_th>p]:my-0',
+  '[&_table[data-bordered=false]_td]:border-dashed [&_table[data-bordered=false]_th]:border-dashed [&_table[data-bordered=false]_td]:border-border/50 [&_table[data-bordered=false]_th]:border-border/50',
+  '[&_.selectedCell]:bg-primary/10',
   // The placeholder is Tiptap's `data-placeholder` on the first empty paragraph, drawn as a
   // floated pseudo-element so it takes no space and the caret sits on top of it.
   '[&_p.is-editor-empty:first-child]:before:content-[attr(data-placeholder)] [&_p.is-editor-empty:first-child]:before:float-left [&_p.is-editor-empty:first-child]:before:h-0 [&_p.is-editor-empty:first-child]:before:pointer-events-none [&_p.is-editor-empty:first-child]:before:text-muted-foreground',
@@ -85,6 +94,7 @@ export const RichTextEditor = ({
       }),
       Placeholder.configure({ placeholder }),
       ...MathExtensions,
+      ...TableExtensions,
     ],
     content: value?.doc ?? null,
     // Required under the Pages Router: Tiptap renders to the DOM, so letting it render during SSR
@@ -101,15 +111,20 @@ export const RichTextEditor = ({
    * The editor owns its scrolling so the toolbar can stay put: the toolbar is a fixed-height row
    * and only the content scrolls beneath it, which also keeps the toolbar opaque rather than
    * relying on a sticky element floating over text.
+   *
+   * For that the frame needs a bound. `h-full` on the root fills a parent that has a height (the
+   * lab's card); `max-h-[60vh]` caps the frame where the parent has none (a form in a drawer), so a
+   * long document scrolls inside the editor instead of stretching the form by its whole length.
+   * Without either, the content grew past the card and its `overflow-hidden` clipped the rest —
+   * the editor looked unscrollable. Both are overridable through `editorClassName`.
    */
   return (
-    <div className={cn('flex min-h-0 flex-col', className)}>
+    <div className={cn('flex h-full min-h-0 flex-col', className)}>
       {label ? <Label label={label} required={required} /> : null}
       <div
         className={cn(
-          // A default height, overridable per caller through `editorClassName`.
           'flex min-h-0 flex-1 flex-col border bg-background',
-          'min-h-[9rem]',
+          'min-h-[9rem] max-h-[60vh]',
           error ? 'border-destructive' : 'border-border',
           editorClassName,
         )}

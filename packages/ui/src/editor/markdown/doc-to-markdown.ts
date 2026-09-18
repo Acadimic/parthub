@@ -95,8 +95,35 @@ const serializeHeading = (node: IRichTextNode): string => {
   return `${'#'.repeat(level)} ${serializeInline(node.content)}`;
 };
 
+/** A cell's text on one line; a pipe inside would end the cell, so it is escaped. */
+const serializeCell = (cell: IRichTextNode): string =>
+  (cell.content ?? [])
+    .map((block) => serializeBlock(block))
+    .join(' ')
+    .replace(/\|/g, '\\|')
+    .replace(/\n/g, ' ')
+    .trim();
+
+/**
+ * Table → GFM pipe table.
+ *
+ * GFM requires a header row, so a table whose first row holds plain cells still has that row
+ * written as the header — the shape survives, the header styling does not. Borders have no
+ * Markdown spelling either; the flag comes back as `true` on import. Both are the lossy edges of
+ * "reads like Markdown", and both are recorded here rather than discovered.
+ */
+const serializeTable = (node: IRichTextNode): string => {
+  const rows = (node.content ?? []).map((row) => (row.content ?? []).map(serializeCell));
+  if (!rows.length) return '';
+  const width = Math.max(...rows.map((row) => row.length));
+  const line = (cells: string[]) => `| ${Array.from({ length: width }, (_, i) => cells[i] ?? '').join(' | ')} |`;
+  const [header, ...body] = rows;
+  return [line(header), `| ${Array.from({ length: width }, () => '---').join(' | ')} |`, ...body.map(line)].join('\n');
+};
+
 /** The blocks with no attributes to read and no nesting to flatten. */
 const SIMPLE_BLOCKS: Record<string, (node: IRichTextNode) => string> = {
+  table: serializeTable,
   paragraph: (node) => serializeInline(node.content),
   heading: serializeHeading,
   [BLOCK_MATH_NAME]: (node) => `$$\n${String(node.attrs?.latex ?? '')}\n$$`,

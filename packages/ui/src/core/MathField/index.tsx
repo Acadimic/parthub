@@ -2,6 +2,7 @@ import type { MathfieldElement } from 'mathlive';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '../../lib/cn';
 import { Label } from '../Label';
+import { MATHLIVE_READY_EVENT, hideVirtualKeyboard } from './virtual-keyboard';
 
 export interface IMathLiveConfig {
   /**
@@ -115,6 +116,11 @@ export const MathField = ({
 
       mathlive.MathfieldElement.fontsDirectory = mathLiveConfig.fontsDirectory;
       mathlive.MathfieldElement.soundsDirectory = mathLiveConfig.soundsDirectory;
+      // The keyboard's own layer defaults to 105, well under the drawer (1300) and its popovers
+      // (1400), so inside a drawer most of the keys were painted over. 1450 puts it above both and
+      // below the floating "Hide keyboard" control (1600). MathLive reads the variable from the
+      // element the keyboard is mounted in, which is the body.
+      document.body.style.setProperty('--keyboard-zindex', '1450');
 
       field = new mathlive.MathfieldElement();
       field.value = initialValue.current;
@@ -191,6 +197,8 @@ export const MathField = ({
       host.appendChild(field);
       fieldRef.current = field;
       setIsReady(true);
+      // The keyboard global exists from here on; anything watching it can subscribe now.
+      window.dispatchEvent(new Event(MATHLIVE_READY_EVENT));
 
       onReady?.({
         insert: (latex: string) => field?.insert(latex, { focus: true }),
@@ -222,6 +230,9 @@ export const MathField = ({
       isCancelled = true;
       field?.remove();
       fieldRef.current = null;
+      // The keyboard is a window singleton and does not follow its field; left up after the field
+      // is gone it covers the page with nothing to type into.
+      hideVirtualKeyboard();
     };
   }, []);
 

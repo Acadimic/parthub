@@ -9,16 +9,22 @@ import { cn } from '../../lib/cn';
  */
 export const keepSelection = (event: React.MouseEvent) => event.preventDefault();
 
+/** The one set of classes every control in a group shares, so a group reads as a unit. */
+export const CONTROL_CLASS =
+  'flex h-7 items-center justify-center rounded text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-40 disabled:pointer-events-none';
+
 export interface IToolbarButtonProps {
   label: string;
   icon: React.ReactNode;
   onClick: () => void;
   isActive?: boolean;
   isDisabled?: boolean;
+  /** For an action that removes something: red on hover. */
+  isDanger?: boolean;
 }
 
 /** A square icon control. `label` is the tooltip and the accessible name. */
-export const ToolbarButton = ({ label, icon, isActive, isDisabled, onClick }: IToolbarButtonProps) => (
+export const ToolbarButton = ({ label, icon, isActive, isDisabled, isDanger, onClick }: IToolbarButtonProps) => (
   <Tooltip title={label}>
     <button
       type="button"
@@ -26,11 +32,13 @@ export const ToolbarButton = ({ label, icon, isActive, isDisabled, onClick }: IT
       onClick={onClick}
       disabled={isDisabled}
       aria-label={label}
-      aria-pressed={Boolean(isActive)}
+      aria-pressed={isDanger ? undefined : Boolean(isActive)}
       className={cn(
-        'flex h-8 w-8 items-center justify-center transition-colors',
-        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-40',
-        isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+        CONTROL_CLASS,
+        'w-7',
+        isDanger && 'text-muted-foreground hover:bg-destructive/10 hover:text-destructive',
+        !isDanger && isActive && 'bg-primary/10 text-primary',
+        !isDanger && !isActive && 'text-muted-foreground hover:bg-accent hover:text-foreground',
       )}
     >
       {icon}
@@ -51,12 +59,7 @@ export const ToolbarAction = ({
       type="button"
       onMouseDown={keepSelection}
       onClick={onClick}
-      className={cn(
-        'flex h-8 items-center gap-1.5 border border-border bg-background px-2.5 text-xs font-semibold text-foreground transition-colors',
-        'hover:border-primary hover:bg-primary/10 hover:text-primary',
-        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-        className,
-      )}
+      className={cn(CONTROL_CLASS, 'gap-1.5 px-2 text-foreground hover:bg-primary/10 hover:text-primary', className)}
     >
       {icon}
       {label}
@@ -65,9 +68,25 @@ export const ToolbarAction = ({
 );
 
 /**
- * Groups are separated by space and a hairline, not by space alone — at this density the eye needs
- * the rule to find the boundary.
+ * A segment: the controls of one intent on a shared ground with a shared border, so the eye reads
+ * five marks as one thing and two list buttons as another. Groups sit apart by a gap rather than
+ * by hairline rules, which at this density blurred into the buttons.
  */
-export const ToolbarGroup = ({ children, isLast }: { children: React.ReactNode; isLast?: boolean }) => (
-  <div className={cn('flex items-center gap-0.5 px-1', !isLast && 'border-r border-border')}>{children}</div>
+export const ToolbarGroup = ({
+  children,
+  className,
+  label,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  /** Names the group for assistive technology; sighted users get the grouping from the border. */
+  label?: string;
+}) => (
+  <div
+    role="group"
+    aria-label={label}
+    className={cn('inline-flex items-center gap-0.5 rounded-md border border-border bg-background p-0.5', className)}
+  >
+    {children}
+  </div>
 );

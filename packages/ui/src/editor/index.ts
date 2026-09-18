@@ -9,6 +9,8 @@ export { docToMarkdown } from './markdown/doc-to-markdown';
 
 export { InlineMath, BlockMath, MathExtensions } from './extensions/math-nodes';
 export { INLINE_MATH_NAME, BLOCK_MATH_NAME } from './extensions/math-names';
+export { BorderedTable, FlatTableCell, FlatTableHeader, TableExtensions, TABLE_NAME } from './extensions/table';
+export type { ITableInsertOptions } from './extensions/table';
 
 export { EquationEditor } from './equation/EquationEditor';
 export type { IEquationEditorProps } from './equation/EquationEditor';

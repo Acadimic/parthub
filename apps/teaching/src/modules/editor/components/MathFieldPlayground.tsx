@@ -1,7 +1,7 @@
 import { MathRender } from '@repo/ui/content';
 import { FORMULAS } from '@repo/ui/editor';
 import { KeyboardIcon } from '@phosphor-icons/react';
-import { Button, MathField, Tooltip } from '@repo/ui/core';
+import { Button, MathField, Tooltip, VirtualKeyboardDismiss, toggleVirtualKeyboard } from '@repo/ui/core';
 import type { IMathFieldHandle } from '@repo/ui/core';
 import { useRef, useState } from 'react';
 
@@ -21,11 +21,6 @@ export const MathFieldPlayground = () => {
     setLatex(handleRef.current?.getValue() ?? latex);
   };
 
-  const toggleKeyboard = () => {
-    const keyboard = (window as unknown as { mathVirtualKeyboard?: { visible: boolean } }).mathVirtualKeyboard;
-    if (keyboard) keyboard.visible = !keyboard.visible;
-  };
-
   return (
     <div className="flex flex-col gap-3 p-4">
       <div className="flex items-start justify-between gap-3">
@@ -42,7 +37,7 @@ export const MathFieldPlayground = () => {
           </p>
         </div>
         <Tooltip title="On-screen maths keyboard">
-          <Button isSecondary className="shrink-0 px-2 py-1.5" onClick={toggleKeyboard}>
+          <Button isSecondary className="shrink-0 px-2 py-1.5" onClick={toggleVirtualKeyboard}>
             <KeyboardIcon className="h-4 w-4" />
           </Button>
         </Tooltip>
@@ -55,6 +50,7 @@ export const MathFieldPlayground = () => {
           handleRef.current = handle;
         }}
       />
+      <VirtualKeyboardDismiss />
 
       <div className="flex flex-wrap gap-1">
         {FORMULAS.slice(0, 6).map((item) => (

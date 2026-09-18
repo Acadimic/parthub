@@ -14,6 +14,8 @@ import {
 } from '@phosphor-icons/react';
 import { useRef, useState } from 'react';
 import { type IMathFieldHandle, MathField } from '../../core/MathField';
+import { toggleVirtualKeyboard, useVirtualKeyboard } from '../../core/MathField/virtual-keyboard';
+import { VirtualKeyboardDismiss } from '../../core/MathField/VirtualKeyboardDismiss';
 import { TextInput } from '../../core/TextInput';
 import { Tooltip } from '../../core/Tooltip';
 import { cn } from '../../lib/cn';
@@ -39,10 +41,106 @@ export interface IEquationEditorProps {
 
 const ICON = 'h-4 w-4';
 
-/** The on-screen keyboard is a MathLive global, present once a field has loaded. */
-const toggleVirtualKeyboard = () => {
-  const keyboard = (window as unknown as { mathVirtualKeyboard?: { visible: boolean } }).mathVirtualKeyboard;
-  if (keyboard) keyboard.visible = !keyboard.visible;
+interface IHeaderProps {
+  icon: typeof FunctionIcon;
+  label: string;
+  isChemistry: boolean;
+  displayMode: boolean;
+  isShowingSource: boolean;
+  onToggleSource: () => void;
+  isCopied: boolean;
+  onCopy: () => void;
+  onToggleDisplayMode?: () => void;
+  onDuplicate?: () => void;
+  onDelete: () => void;
+  onCancel: () => void;
+  onDone: () => void;
+}
+
+/**
+ * The panel's header strip: what you are editing on the left, what you can do to it on the right,
+ * with the destructive action held apart from the two that close the panel.
+ */
+const EquationHeader = ({
+  icon: HeaderIcon,
+  label,
+  isChemistry,
+  displayMode,
+  isShowingSource,
+  onToggleSource,
+  isCopied,
+  onCopy,
+  onToggleDisplayMode,
+  onDuplicate,
+  onDelete,
+  onCancel,
+  onDone,
+}: IHeaderProps) => {
+  const { isVisible: isKeyboardVisible } = useVirtualKeyboard();
+  return (
+    <div className="flex items-center gap-1 border-b border-border bg-muted/50 py-1 pl-2.5 pr-1.5">
+      <HeaderIcon className={cn(ICON, 'text-primary')} />
+      <span className="flex-1 pl-1 text-xxs font-semibold uppercase tracking-caps text-muted-foreground">{label}</span>
+
+      {onToggleDisplayMode ? (
+        <PanelButton
+          label={displayMode ? 'Show inline, within the text' : 'Show on its own line'}
+          onClick={onToggleDisplayMode}
+        >
+          {displayMode ? (
+            <ArrowsInLineHorizontalIcon className={ICON} />
+          ) : (
+            <ArrowsOutLineHorizontalIcon className={ICON} />
+          )}
+        </PanelButton>
+      ) : null}
+      {onDuplicate ? (
+        <PanelButton label="Duplicate equation" onClick={onDuplicate}>
+          <CopyIcon className={ICON} />
+        </PanelButton>
+      ) : null}
+      <PanelButton label={isCopied ? 'Copied' : 'Copy source'} onClick={onCopy} isActive={isCopied}>
+        {isCopied ? <CheckIcon className={ICON} /> : <ClipboardTextIcon className={ICON} />}
+      </PanelButton>
+      <PanelButton
+        label={isShowingSource ? 'Hide source' : 'Show source'}
+        onClick={onToggleSource}
+        isActive={isShowingSource}
+      >
+        <CodeIcon className={ICON} />
+      </PanelButton>
+      {/* The on-screen keyboard belongs to the math field; a chemical equation is typed as text. */}
+      {isChemistry ? null : (
+        <PanelButton
+          label={isKeyboardVisible ? 'Hide on-screen keyboard' : 'Show on-screen keyboard'}
+          onClick={toggleVirtualKeyboard}
+          isActive={isKeyboardVisible}
+        >
+          <KeyboardIcon className={ICON} />
+        </PanelButton>
+      )}
+
+      <span className="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
+
+      <PanelButton label="Delete equation" onClick={onDelete} isDanger>
+        <TrashIcon className={ICON} />
+      </PanelButton>
+      <PanelButton label="Cancel — Esc" onClick={onCancel}>
+        <XIcon className={ICON} />
+      </PanelButton>
+      <Tooltip title="Done — Enter">
+        <button
+          type="button"
+          onClick={onDone}
+          aria-label="Done"
+          className="flex h-7 items-center gap-1 bg-primary px-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <CheckIcon className="h-3.5 w-3.5" weight="bold" />
+          Done
+        </button>
+      </Tooltip>
+    </div>
+  );
 };
 
 /**
@@ -105,68 +203,21 @@ export const EquationEditor = ({
       className="flex select-text flex-col border border-primary bg-card shadow-md"
       onKeyDown={(event) => event.stopPropagation()}
     >
-      {/* Header: what you are editing on the left, what you can do to it on the right — with the
-          destructive action held apart from the two that close the panel. */}
-      <div className="flex items-center gap-1 border-b border-border bg-muted/50 py-1 pl-2.5 pr-1.5">
-        <HeaderIcon className={cn(ICON, 'text-primary')} />
-        <span className="flex-1 pl-1 text-xxs font-semibold uppercase tracking-caps text-muted-foreground">
-          {headerLabel}
-        </span>
-
-        {onToggleDisplayMode ? (
-          <PanelButton
-            label={displayMode ? 'Show inline, within the text' : 'Show on its own line'}
-            onClick={onToggleDisplayMode}
-          >
-            {displayMode ? (
-              <ArrowsInLineHorizontalIcon className={ICON} />
-            ) : (
-              <ArrowsOutLineHorizontalIcon className={ICON} />
-            )}
-          </PanelButton>
-        ) : null}
-        {onDuplicate ? (
-          <PanelButton label="Duplicate equation" onClick={onDuplicate}>
-            <CopyIcon className={ICON} />
-          </PanelButton>
-        ) : null}
-        <PanelButton label={isCopied ? 'Copied' : 'Copy source'} onClick={copySource} isActive={isCopied}>
-          {isCopied ? <CheckIcon className={ICON} /> : <ClipboardTextIcon className={ICON} />}
-        </PanelButton>
-        <PanelButton
-          label={isShowingSource ? 'Hide source' : 'Show source'}
-          onClick={() => setIsShowingSource(!isShowingSource)}
-          isActive={isShowingSource}
-        >
-          <CodeIcon className={ICON} />
-        </PanelButton>
-        {/* The on-screen keyboard belongs to the math field; a chemical equation is typed as text. */}
-        {chemistry.isChemistry ? null : (
-          <PanelButton label="On-screen maths keyboard" onClick={toggleVirtualKeyboard}>
-            <KeyboardIcon className={ICON} />
-          </PanelButton>
-        )}
-
-        <span className="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
-
-        <PanelButton label="Delete equation" onClick={onDelete} isDanger>
-          <TrashIcon className={ICON} />
-        </PanelButton>
-        <PanelButton label="Cancel — Esc" onClick={onCancel}>
-          <XIcon className={ICON} />
-        </PanelButton>
-        <Tooltip title="Done — Enter">
-          <button
-            type="button"
-            onClick={onDone}
-            aria-label="Done"
-            className="flex h-7 items-center gap-1 bg-primary px-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <CheckIcon className="h-3.5 w-3.5" weight="bold" />
-            Done
-          </button>
-        </Tooltip>
-      </div>
+      <EquationHeader
+        icon={HeaderIcon}
+        label={headerLabel}
+        isChemistry={chemistry.isChemistry}
+        displayMode={displayMode}
+        isShowingSource={isShowingSource}
+        onToggleSource={() => setIsShowingSource(!isShowingSource)}
+        isCopied={isCopied}
+        onCopy={copySource}
+        onToggleDisplayMode={onToggleDisplayMode}
+        onDuplicate={onDuplicate}
+        onDelete={onDelete}
+        onCancel={onCancel}
+        onDone={onDone}
+      />
 
       <div className="flex flex-col gap-2 p-2">
         {chemistry.isChemistry ? (
@@ -215,6 +266,7 @@ export const EquationEditor = ({
           />
         ) : null}
       </div>
+      <VirtualKeyboardDismiss />
     </div>
   );
 };

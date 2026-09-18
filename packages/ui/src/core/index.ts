@@ -78,3 +78,13 @@ export type { IToastProps } from './Toast';
 
 export { MathField, configureMathLive } from './MathField';
 export type { IMathFieldProps, IMathFieldHandle, IMathLiveConfig } from './MathField';
+export {
+  getVirtualKeyboard,
+  hideVirtualKeyboard,
+  showVirtualKeyboard,
+  toggleVirtualKeyboard,
+  isVirtualKeyboardVisible,
+  useVirtualKeyboard,
+} from './MathField/virtual-keyboard';
+export type { IVirtualKeyboard } from './MathField/virtual-keyboard';
+export { VirtualKeyboardDismiss } from './MathField/VirtualKeyboardDismiss';

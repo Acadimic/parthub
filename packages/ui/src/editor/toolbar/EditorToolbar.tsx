@@ -24,7 +24,9 @@ import { type Editor, useEditorState } from '@tiptap/react';
 import { useLayoutEffect, useState } from 'react';
 import { type IMenuItem, Menu } from '../../core/Menu';
 import { cn } from '../../lib/cn';
-import { keepSelection, ToolbarAction, ToolbarButton, ToolbarGroup } from './ToolbarButton';
+import { TableInsertMenu } from './TableInsertMenu';
+import { TableToolbar } from './TableToolbar';
+import { CONTROL_CLASS, keepSelection, ToolbarAction, ToolbarButton, ToolbarGroup } from './ToolbarButton';
 
 interface IProps {
   editor: Editor | null;
@@ -111,6 +113,9 @@ interface IToolbarState {
   orderedList: boolean;
   canUndo: boolean;
   canRedo: boolean;
+  /** The caret is inside a table, so the table row is shown. */
+  inTable: boolean;
+  tableBordered: boolean;
 }
 
 /**
@@ -125,6 +130,8 @@ const INITIAL_STATE: IToolbarState = {
   orderedList: false,
   canUndo: false,
   canRedo: false,
+  inTable: false,
+  tableBordered: true,
 };
 
 /**
@@ -172,6 +179,8 @@ export const EditorToolbar = ({ editor }: IProps) => {
           orderedList: instance.isActive('orderedList'),
           canUndo: instance.can().undo(),
           canRedo: instance.can().redo(),
+          inTable: instance.isActive('table'),
+          tableBordered: instance.getAttributes('table').bordered !== false,
         };
       },
     }) ?? INITIAL_STATE;
@@ -206,111 +215,127 @@ export const EditorToolbar = ({ editor }: IProps) => {
   ];
 
   return (
-    <div
-      ref={ref}
-      className="flex items-center border-b border-border bg-muted/40 px-1.5 py-1.5"
-      role="toolbar"
-      aria-label="Formatting"
-    >
-      {!isCompact && (
-        <ToolbarGroup>
-          <ToolbarButton
-            label="Undo — Ctrl/⌘ + Z"
-            icon={<ArrowUUpLeftIcon className={ICON} />}
-            isDisabled={!state.canUndo}
-            onClick={() => editor.chain().focus().undo().run()}
-          />
-          <ToolbarButton
-            label="Redo — Ctrl/⌘ + Shift + Z"
-            icon={<ArrowUUpRightIcon className={ICON} />}
-            isDisabled={!state.canRedo}
-            onClick={() => editor.chain().focus().redo().run()}
+    <div ref={ref} className="flex flex-col">
+      {/* Left to right, in the order an author works: fix a mistake, choose the block, style the
+          text, shape the paragraph, insert an object — and the equation last and alone, because it
+          is the one thing this editor exists for. */}
+      <div
+        className="flex items-center gap-1.5 border-b border-border bg-muted/40 px-2 py-1.5"
+        role="toolbar"
+        aria-label="Formatting"
+      >
+        {!isCompact && (
+          <ToolbarGroup label="History">
+            <ToolbarButton
+              label="Undo — Ctrl/⌘ + Z"
+              icon={<ArrowUUpLeftIcon className={ICON} />}
+              isDisabled={!state.canUndo}
+              onClick={() => editor.chain().focus().undo().run()}
+            />
+            <ToolbarButton
+              label="Redo — Ctrl/⌘ + Shift + Z"
+              icon={<ArrowUUpRightIcon className={ICON} />}
+              isDisabled={!state.canRedo}
+              onClick={() => editor.chain().focus().redo().run()}
+            />
+          </ToolbarGroup>
+        )}
+
+        {/* The block type is one choice out of six, so it is one control rather than six. */}
+        <ToolbarGroup label="Block type">
+          <Menu
+            items={blockItems}
+            className="inline-flex"
+            trigger={
+              <button
+                type="button"
+                onMouseDown={keepSelection}
+                aria-label={`Block type: ${current.label}`}
+                className={cn(
+                  CONTROL_CLASS,
+                  'gap-1.5 px-1.5 text-foreground hover:bg-accent',
+                  isCompact ? '' : 'min-w-[7rem]',
+                )}
+              >
+                <CurrentIcon className={ICON} />
+                {!isCompact && <span className="flex-1 truncate text-left">{current.label}</span>}
+                <CaretDownIcon className="h-3 w-3 text-muted-foreground" weight="bold" />
+              </button>
+            }
           />
         </ToolbarGroup>
-      )}
 
-      {/* The block type is one choice out of six, so it is one control rather than six. */}
-      <ToolbarGroup>
-        <Menu
-          items={blockItems}
-          className="inline-flex"
-          trigger={
-            <button
-              type="button"
-              onMouseDown={keepSelection}
-              aria-label={`Block type: ${current.label}`}
-              className={cn(
-                'flex h-8 items-center gap-1.5 border border-border bg-background px-2 text-xs font-semibold text-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-                isCompact ? 'w-8 justify-center px-0' : 'min-w-[7.25rem]',
-              )}
-            >
-              <CurrentIcon className={ICON} />
-              {!isCompact && <span className="flex-1 truncate text-left">{current.label}</span>}
-              {!isCompact && <CaretDownIcon className="h-3 w-3 text-muted-foreground" weight="bold" />}
-            </button>
-          }
-        />
-      </ToolbarGroup>
+        <ToolbarGroup label="Text style">
+          {MARKS.map((mark) => (
+            <ToolbarButton
+              key={mark.name}
+              label={mark.label}
+              icon={mark.icon}
+              isActive={state.marks[mark.name]}
+              onClick={() => mark.toggle(editor.chain().focus()).run()}
+            />
+          ))}
+        </ToolbarGroup>
 
-      <ToolbarGroup>
-        {MARKS.map((mark) => (
+        <ToolbarGroup label="Lists">
           <ToolbarButton
-            key={mark.name}
-            label={mark.label}
-            icon={mark.icon}
-            isActive={state.marks[mark.name]}
-            onClick={() => mark.toggle(editor.chain().focus()).run()}
+            label="Bulleted list"
+            icon={<ListBulletsIcon className={ICON} />}
+            isActive={state.bulletList}
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
           />
-        ))}
-      </ToolbarGroup>
-
-      <ToolbarGroup isLast>
-        <ToolbarButton
-          label="Bulleted list"
-          icon={<ListBulletsIcon className={ICON} />}
-          isActive={state.bulletList}
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-        />
-        <ToolbarButton
-          label="Numbered list"
-          icon={<ListNumbersIcon className={ICON} />}
-          isActive={state.orderedList}
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        />
-        {!isCompact && (
           <ToolbarButton
-            label="Divider"
-            icon={<MinusIcon className={ICON} />}
-            onClick={() => editor.chain().focus().setHorizontalRule().run()}
+            label="Numbered list"
+            icon={<ListNumbersIcon className={ICON} />}
+            isActive={state.orderedList}
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
           />
-        )}
-      </ToolbarGroup>
+        </ToolbarGroup>
 
-      {/* On the right, on its own: the one control this editor exists for, as a split button —
-          press it for an inline equation, open the caret for display or chemistry. */}
-      <div className="ml-auto flex items-center pl-1">
-        <ToolbarAction
-          label="Equation"
-          title="Inline equation — Ctrl/⌘ + E. With text selected, converts the selection."
-          icon={<FunctionIcon className={ICON} />}
-          onClick={() => editor.chain().focus().insertInlineMath().run()}
-          className="border-r-0"
-        />
-        <Menu
-          items={equationItems}
-          className="inline-flex"
-          trigger={
-            <button
-              type="button"
-              onMouseDown={keepSelection}
-              aria-label="More equation types"
-              className="flex h-8 w-7 items-center justify-center border border-border bg-background text-foreground transition-colors hover:border-primary hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              <CaretDownIcon className="h-3 w-3" weight="bold" />
-            </button>
-          }
-        />
+        <ToolbarGroup label="Insert">
+          <TableInsertMenu
+            isDisabled={state.inTable}
+            onInsert={(options) => editor.chain().focus().insertBorderedTable(options).run()}
+          />
+          {!isCompact && (
+            <ToolbarButton
+              label="Divider"
+              icon={<MinusIcon className={ICON} />}
+              onClick={() => editor.chain().focus().setHorizontalRule().run()}
+            />
+          )}
+        </ToolbarGroup>
+
+        {/* A split button: press it for an inline equation, open the caret for display or
+            chemistry. One bordered unit, so it reads as a single control with a menu. */}
+        <ToolbarGroup label="Equation" className="ml-auto gap-0 p-0 overflow-hidden">
+          <ToolbarAction
+            label="Equation"
+            title="Inline equation — Ctrl/⌘ + E. With text selected, converts the selection."
+            icon={<FunctionIcon className={ICON} />}
+            onClick={() => editor.chain().focus().insertInlineMath().run()}
+            className="rounded-none px-2.5"
+          />
+          <Menu
+            items={equationItems}
+            className="inline-flex"
+            trigger={
+              <button
+                type="button"
+                onMouseDown={keepSelection}
+                aria-label="More equation types"
+                className={cn(
+                  CONTROL_CLASS,
+                  'w-6 rounded-none border-l border-border text-foreground hover:bg-primary/10 hover:text-primary',
+                )}
+              >
+                <CaretDownIcon className="h-3 w-3" weight="bold" />
+              </button>
+            }
+          />
+        </ToolbarGroup>
       </div>
+      {state.inTable ? <TableToolbar editor={editor} bordered={state.tableBordered} /> : null}
     </div>
   );
 };

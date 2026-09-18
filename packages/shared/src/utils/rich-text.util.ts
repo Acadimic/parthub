@@ -29,6 +29,8 @@ export const docToPlainText = (doc: IRichTextNode | null): string => {
   const walk = (node: IRichTextNode): string => {
     if (node.type === 'text') return node.text ?? '';
     if (node.type === 'inlineMath' || node.type === 'blockMath') return String(node.attrs?.latex ?? '');
+    // A row reads across, so its cells sit on one line; the table's rows then stack as usual.
+    if (node.type === 'tableRow') return (node.content ?? []).map(walk).join('\t');
     return (node.content ?? []).map(walk).join(INLINE_CONTAINERS.has(node.type) ? '' : '\n');
   };
   return walk(doc)
@@ -177,9 +179,40 @@ const readQuote: BlockReader = (lines, index) => {
   };
 };
 
+const TABLE_ROW = /^\|(.*)\|\s*$/;
+const TABLE_SEPARATOR = /^\|(\s*:?-{3,}:?\s*\|)+\s*$/;
+
+/** Splits a pipe row into cells, honouring `\|` as a literal pipe inside a cell. */
+const splitTableRow = (line: string): string[] =>
+  (TABLE_ROW.exec(line.trim())?.[1] ?? '').split(/(?<!\\)\|/).map((cell) => cell.replace(/\\\|/g, '|').trim());
+
+const tableCell = (type: 'tableHeader' | 'tableCell', text: string): IRichTextNode => ({
+  type,
+  content: [{ type: 'paragraph', content: parseInline(text) }],
+});
+
+/**
+ * A GFM pipe table: a header row, a separator row, then body rows. The first row becomes header
+ * cells, because that is what the separator declares it to be. Borders are not expressible in
+ * Markdown, so an imported table draws them.
+ */
+const readTable: BlockReader = (lines, index) => {
+  if (!TABLE_ROW.test(lines[index].trim()) || !TABLE_SEPARATOR.test((lines[index + 1] ?? '').trim())) return null;
+  const rows: IRichTextNode[] = [
+    { type: 'tableRow', content: splitTableRow(lines[index]).map((text) => tableCell('tableHeader', text)) },
+  ];
+  let cursor = index + 2;
+  while (cursor < lines.length && TABLE_ROW.test(lines[cursor].trim())) {
+    rows.push({ type: 'tableRow', content: splitTableRow(lines[cursor]).map((text) => tableCell('tableCell', text)) });
+    cursor += 1;
+  }
+  return { node: { type: 'table', attrs: { bordered: true }, content: rows }, next: cursor };
+};
+
 /** Order matters: a fence swallows its body, so it is tried before anything inside it can match. */
 const BLOCK_READERS: BlockReader[] = [
   readFence,
+  readTable,
   readRule,
   readDisplayMath,
   readHeading,
@@ -192,8 +225,8 @@ const BLOCK_READERS: BlockReader[] = [
  * Markdown → ProseMirror document.
  *
  * Deliberately narrow: it understands exactly what `docToMarkdown` emits and what the editor can
- * represent — headings 1-3, bullet and ordered lists, blockquotes, fenced code, rules, the four
- * inline marks, and `$…$` / `$$…$$` equations. That is the round trip worth having; a general
+ * represent — headings 1-3, bullet and ordered lists, blockquotes, fenced code, rules, pipe tables,
+ * the four inline marks, and `$…$` / `$$…$$` equations. That is the round trip worth having; a general
  * CommonMark parser would accept constructs the editor cannot store and would lose them on the
  * first save, which is worse than not accepting them.
  *
