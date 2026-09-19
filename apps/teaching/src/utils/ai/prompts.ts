@@ -1,6 +1,4 @@
-import { QuestionType } from '@enums';
-import { type IGeneratedMaterialPrompt, type IGeneratedQuestionsPrompt } from '@interfaces';
-import { splitCamelCase } from '@utils/helpers';
+import { type IGeneratedMaterialPrompt } from '@interfaces';
 
 /**
  * The Markdown the editor understands, stated for the model.
@@ -24,67 +22,6 @@ const markdownRules = `
   Do not use HTML tags, tables, images or footnotes — the editor cannot store them.
   A literal dollar sign in prose must be escaped as \$ so it is not read as maths.
 `;
-
-export const getGeneratedQuestionsPrompt = ({
-  numberOfQuestions,
-  questionType,
-  standardNames,
-  subjectNames,
-  levels,
-  prompt,
-}: IGeneratedQuestionsPrompt): string => {
-  let optionCount = '1';
-  if ([QuestionType.MULTIPLE_CHOICE, QuestionType.SINGLE_CHOICE].includes(questionType)) optionCount = '4';
-  else if (questionType === QuestionType.BOOLEAN) optionCount = '2';
-
-  return `Generate ${numberOfQuestions} ${splitCamelCase(questionType)} questions along with 
-  ${optionCount} 
-  options & solution (if applicable) per question in the following structured JSON format:
-
-  interface Question {
-    "questionText": "<string>",
-    "options": [
-      {
-        "optionText": "<string>",
-        "isCorrect": <boolean>
-      },
-      {
-        "optionText": "<string>",
-        "isCorrect": <boolean>
-      },
-      {
-        "optionText": "<string>",
-        "isCorrect": <boolean>
-      },
-      {
-        "optionText": "<string>",
-        "isCorrect": <boolean>
-      }
-    ],
-    "standard": "<Grade>",
-    "subject": "<Subject>",
-    "level": "<Level>",
-    "solutionText": "<string>"
-  }
-
-  Select random standards (grades) from this list: ${JSON.stringify(standardNames)}
-
-  Select random subjects from this list: ${JSON.stringify(subjectNames)}
-
-  Select the Question level from this list: ${JSON.stringify(levels)}
-
-  Ensure that at least one option is marked with "isCorrect": true and others are false or omitted.
-
-  Question, option and solution text is Markdown. Inline maths is $...$ and display maths is $$...$$, both in LaTeX. Escape a literal dollar sign as \\$.
-
-  Provide output as a JSON array of Question objects.
-
-  Example of standards: ${JSON.stringify(standardNames)}
-  Example of subjects: ${JSON.stringify(subjectNames)}
-
-  Make sure the questions are unique, clear, educational, and relevant to the chosen standard and subject. Write all these questions in a JSON file using the above format.
-  ${prompt ? `Additional usage instructions: ${prompt}` : ''}`;
-};
 
 export const getGeneratedMaterialPrompt = ({
   topic,

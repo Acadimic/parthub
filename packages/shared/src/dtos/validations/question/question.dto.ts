@@ -1,5 +1,8 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
   IsBoolean,
   IsEnum,
   IsMongoId,
@@ -128,4 +131,17 @@ export class QuestionDto extends BaseOwnedDto {
   @IsOptional()
   @IsNumber()
   year?: number;
+}
+
+/**
+ * Many questions in one request, for an import. Capped so a runaway file cannot hold the
+ * connection while hundreds of documents are written one by one.
+ */
+export class BulkUpsertQuestionsDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(200)
+  @ValidateNested({ each: true })
+  @Type(() => QuestionDto)
+  questions: QuestionDto[];
 }

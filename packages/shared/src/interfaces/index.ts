@@ -13,3 +13,4 @@ export * from './toast.interface';
 export * from './request.interface';
 export * from './entity.interface';
 export * from './rich-text.interface';
+export * from './ai-test-paper.interface';

@@ -6,7 +6,14 @@ import { Button, Link, SoftConfirmModal, TextInput } from '@repo/ui/app';
 import { useLoadOnce } from '@repo/ui/hooks';
 import { PaperType } from '@enums';
 import { type IColumnData, type ISelectItem } from '@interfaces';
-import { ArrowSquareOutIcon, MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
+import {
+  ArrowSquareOutIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  SparkleIcon,
+  TrashIcon,
+} from '@phosphor-icons/react';
 import { useSelectorStore, useStandardLookups, useTestPaperStore } from '@stores';
 import { ACTIONS, ALL } from '@utils/constants';
 import { reportError, successToast, capitalizeFirstWord } from '@utils/helpers';
@@ -14,10 +21,11 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo } from 'react';
 import { useSetState } from 'react-use';
 import { useShallow } from 'zustand/react/shallow';
-import { CreateTestPaperModal } from './components';
+import { AiWholePaperDrawer, CreateTestPaperModal } from './components';
 
 interface IState {
   isOpenCreateModal: boolean;
+  isOpenAi: boolean;
   search: string;
   /** The paper the delete confirm is asking about, or `null` while it is closed. */
   paperToDelete: TestPaperDto | null;
@@ -66,6 +74,7 @@ export const TestPapers = () => {
   const { getStandardNamesText, getSubjectNamesText } = standardStore;
   const [state, setState] = useSetState<IState>({
     isOpenCreateModal: false,
+    isOpenAi: false,
     search: '',
     paperToDelete: null,
     isDeleting: false,
@@ -302,11 +311,20 @@ export const TestPapers = () => {
     ) : (
       <BlankState
         label="No test papers yet"
-        description="Create your first test paper, then add its sections and questions."
+        description="Create your first test paper by hand, or let a model draft a whole paper from a standard."
         action={
-          <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={onOpenCreateModal}>
-            Create test paper
-          </Button>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={onOpenCreateModal}>
+              Create test paper
+            </Button>
+            <Button
+              isSecondary
+              leftsection={<SparkleIcon weight="bold" className="w-4 h-4" />}
+              onClick={() => setState({ isOpenAi: true })}
+            >
+              Generate with AI
+            </Button>
+          </div>
         }
       />
     );
@@ -331,7 +349,14 @@ export const TestPapers = () => {
               · Filter by standard, type, year or status from the column headers.
             </span>
           </p>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              isSecondary
+              leftsection={<SparkleIcon weight="fill" className="h-4 w-4 text-primary" />}
+              onClick={() => setState({ isOpenAi: true })}
+            >
+              Generate <span className="hidden sm:inline">with AI</span>
+            </Button>
             <Button leftsection={<PlusIcon weight="bold" className="h-4 w-4" />} onClick={onOpenCreateModal}>
               Create <span className="hidden sm:inline">test paper</span>
             </Button>
@@ -358,6 +383,7 @@ export const TestPapers = () => {
       {/* Mounted only while the dialog is open. It used to be mounted whenever *any* paper was
           selected, so its auto-name effect renamed whichever paper had last been clicked. */}
       {state.isOpenCreateModal && <CreateTestPaperModal isOpen onClose={onCloseCreateModal} />}
+      <AiWholePaperDrawer isOpen={state.isOpenAi} onClose={() => setState({ isOpenAi: false })} />
 
       <SoftConfirmModal
         title="Delete Test Paper"

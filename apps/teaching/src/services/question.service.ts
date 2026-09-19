@@ -9,6 +9,13 @@ class QuestionService {
     return resData;
   };
 
+  /** `POST question/bulk-upsert` — an import's questions in one request. */
+  bulkUpsertQuestions = async (questions: QuestionDto[]) => {
+    const url = 'question/bulk-upsert';
+    const resData = await callAuthApi<QuestionDto[]>(url, API.POST, { questions });
+    return resData;
+  };
+
   getQuestions = async () => {
     const url = 'question/all';
     const resData = await callAuthApi<QuestionDto[]>(url, API.GET);

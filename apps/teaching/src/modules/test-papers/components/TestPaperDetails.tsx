@@ -10,6 +10,7 @@ import {
   MedalIcon,
   PencilSimpleIcon,
   PlusIcon,
+  SparkleIcon,
   StackIcon,
 } from '@phosphor-icons/react';
 import { TestPaperService } from '@services';
@@ -30,6 +31,8 @@ interface IProps {
   addNewSection: () => void;
   /** Opens the paper's own edit dialog, which the detail screen owns. */
   onEditPaper: () => void;
+  /** Opens the AI generator for the whole paper. */
+  onGenerate: () => void;
 }
 
 interface IState {
@@ -84,7 +87,7 @@ const PaperStats = ({ testPaper, sectionCount }: { testPaper: TestPaperDto; sect
  * stats in the order someone sizing up a paper asks them: how many sections, how many questions,
  * for how many marks, in how long.
  */
-export const TestPaperDetails = ({ testPaper, sectionCount, addNewSection, onEditPaper }: IProps) => {
+export const TestPaperDetails = ({ testPaper, sectionCount, addNewSection, onEditPaper, onGenerate }: IProps) => {
   const { isPublished } = testPaper;
   const addTestPapers = useTestPaperStore((state) => state.addTestPapers);
   const [state, setState] = useSetState<IState>({
@@ -120,7 +123,13 @@ export const TestPaperDetails = ({ testPaper, sectionCount, addNewSection, onEdi
           </div>
           <PaperMeta testPaper={testPaper} />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            isSecondary
+            text="Generate with AI"
+            leftsection={<SparkleIcon className="h-4 w-4 text-primary" weight="fill" />}
+            onClick={onGenerate}
+          />
           <Button
             isSecondary
             text="Edit"

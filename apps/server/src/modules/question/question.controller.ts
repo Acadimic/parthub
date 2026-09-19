@@ -5,7 +5,7 @@ import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { QuestionService } from './question.service';
 import { TestPaperTotalsService } from '../test-paper/test-paper-totals.service';
 import { RequestContextService } from '../../context/request-context.service';
-import { QuestionDto } from '@repo/shared/validations';
+import { BulkUpsertQuestionsDto, QuestionDto } from '@repo/shared/validations';
 
 @Controller('question')
 export class QuestionController {
@@ -23,6 +23,20 @@ export class QuestionController {
     const data = await this.questionService.upsert(org, payload);
     // A question changes its section's totals — and a shared section changes several papers'.
     await this.testPaperTotalsService.recalculateForSection(org, payload.section);
+    return data;
+  }
+
+  /** An import's questions in one request; totals are recomputed once per section touched. */
+  @Post('bulk-upsert')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_QUESTION)
+  async bulkUpsertQuestions(@Body() payload: BulkUpsertQuestionsDto) {
+    const org = this.requestContextService.getOrgId();
+    const data = await this.questionService.bulkUpsert(org, payload.questions);
+    const sectionIds = [...new Set(payload.questions.map((question) => question.section))];
+    for (const sectionId of sectionIds) {
+      await this.testPaperTotalsService.recalculateForSection(org, sectionId);
+    }
     return data;
   }
 

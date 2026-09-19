@@ -1,7 +1,7 @@
 import { defaultMarkings } from '@utils/constants';
 import { type QuestionDto, type TestPaperDto } from '@repo/shared/contracts';
 import { Button, Card, Modal, ModalFooter, SoftConfirmModal } from '@repo/ui/app';
-import { PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
+import { PencilIcon, PlusIcon, SparkleIcon, TrashIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { PositionType, SectionCategoryType, SectionType } from '@enums';
 import { type IMenuItem } from '@interfaces';
@@ -23,7 +23,7 @@ import { useEffect } from 'react';
 import { useSetState } from 'react-use';
 import {
   CreateTestPaperModal,
-  GenerateQuestionsModal,
+  AiTestPaperDrawer,
   QuestionSteps,
   SectionCard,
   TestPaperDetails,
@@ -38,7 +38,9 @@ interface IProps {
 
 interface IState {
   isOpenUpsertQuestion: boolean;
-  isOpenGenerateQuestions: boolean;
+  isOpenAi: boolean;
+  /** The section whose Generate opened the AI drawer, or null for the whole paper. */
+  aiSectionId: string | null;
   isOpenEditPaper: boolean;
   isLoading: boolean;
   /**
@@ -154,7 +156,8 @@ export const TestPaper = ({ testPaperId }: IProps) => {
   const { push } = useRouter();
   const [state, setState] = useSetState<IState>({
     isOpenUpsertQuestion: false,
-    isOpenGenerateQuestions: false,
+    isOpenAi: false,
+    aiSectionId: null,
     isOpenEditPaper: false,
     isLoading: false,
     sectionId: null,
@@ -190,13 +193,9 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     setState({ isOpenUpsertQuestion: true });
   };
 
-  const onOpenGenerateQuestionsModal = (sectionId: string) => {
-    setSelectedTestPaperSectionId(sectionId);
-    setState({ isOpenGenerateQuestions: true });
-  };
-
-  const onCloseGenerateQuestionsModal = () => {
-    setState({ isOpenGenerateQuestions: false });
+  const onOpenAi = (sectionId: string | null) => {
+    if (sectionId) setSelectedTestPaperSectionId(sectionId);
+    setState({ isOpenAi: true, aiSectionId: sectionId });
   };
 
   const addNewSection = () => {
@@ -392,7 +391,7 @@ export const TestPaper = ({ testPaperId }: IProps) => {
           section={section}
           questions={getSectionQuestions(section._id)}
           onAddQuestion={() => onOpenAddQuestionModal(section._id)}
-          onGenerateQuestions={() => onOpenGenerateQuestionsModal(section._id)}
+          onGenerateQuestions={() => onOpenAi(section._id)}
           sectionMenuItems={getSectionMenuItems(section)}
           onEditQuestion={(question) => editQuestion(question._id, section._id)}
           onDeleteQuestion={(question) => setState({ questionToDelete: question })}
@@ -416,11 +415,19 @@ export const TestPaper = ({ testPaperId }: IProps) => {
         description="A paper is organised in sections — Physics, Chemistry, or Section A and B. Add the first one to start writing questions."
         className="py-12"
         action={
-          <Button
-            text="Add section"
-            leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
-            onClick={addNewSection}
-          />
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button
+              text="Add section"
+              leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
+              onClick={addNewSection}
+            />
+            <Button
+              isSecondary
+              text="Generate with AI"
+              leftsection={<SparkleIcon weight="bold" className="w-4 h-4" />}
+              onClick={() => onOpenAi(null)}
+            />
+          </div>
         }
       />
     );
@@ -434,6 +441,7 @@ export const TestPaper = ({ testPaperId }: IProps) => {
           sectionCount={countSections(selectedTestPaper, sections.length, isLoadingSections)}
           addNewSection={addNewSection}
           onEditPaper={() => setState({ isOpenEditPaper: true })}
+          onGenerate={() => onOpenAi(null)}
         />
       </Card>
       {renderSections()}
@@ -456,7 +464,13 @@ export const TestPaper = ({ testPaperId }: IProps) => {
         onClose={onCloseAddSectionModal}
         onSave={saveSection}
       />
-      <GenerateQuestionsModal isOpen={state.isOpenGenerateQuestions} onClose={onCloseGenerateQuestionsModal} />
+      <AiTestPaperDrawer
+        isOpen={state.isOpenAi}
+        onClose={() => setState({ isOpenAi: false })}
+        testPaper={selectedTestPaper}
+        sections={sections}
+        initialSectionId={state.aiSectionId ?? undefined}
+      />
       {/* Mounted only while open, so its auto-name effect cannot reach the selected paper otherwise. */}
       {state.isOpenEditPaper && <CreateTestPaperModal isOpen onClose={() => setState({ isOpenEditPaper: false })} />}
       <SoftConfirmModal

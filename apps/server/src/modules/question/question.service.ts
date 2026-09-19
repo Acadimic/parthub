@@ -65,6 +65,19 @@ export class QuestionService {
       });
   }
 
+  /**
+   * One upsert per question rather than a `bulkWrite`, so every row goes through the same path —
+   * and the same middleware — as a question saved from the editor. An import is tens of rows, not
+   * thousands, and consistency is worth more here than the round trips.
+   */
+  async bulkUpsert(org: Types.ObjectId, questions: QuestionDto[]): Promise<QuestionDto[]> {
+    const saved: QuestionDto[] = [];
+    for (const question of questions) {
+      saved.push(await this.upsert(org, question));
+    }
+    return saved;
+  }
+
   async getQuestionsByIds(org: Types.ObjectId, ids: string[]): Promise<QuestionDocument[]> {
     if (!ids.length) return [];
     return this.questionModel.find({ _id: { $in: ids }, org, _deleted: { $ne: true } }).lean<QuestionDocument[]>();

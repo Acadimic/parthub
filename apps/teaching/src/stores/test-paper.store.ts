@@ -73,6 +73,9 @@ export interface ITestPaperState extends IRequestSlice<TestPaperFetch> {
   reset: () => void;
 }
 
+/** What a new paper starts as: a 30-minute quiz, which is the shortest kind a teacher sets up. */
+const DEFAULT_PAPER_DURATION_MINS = 30;
+
 const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
   rows.reduce<Record<string, T>>((map, row) => {
     map[row._id] = row;
@@ -172,7 +175,7 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
       paperType: PaperType.QUIZ,
       subjects: [],
       totalQuestions: 0,
-      durationMins: 60,
+      durationMins: DEFAULT_PAPER_DURATION_MINS,
       year: new Date().getFullYear(),
       maxMarks: 0,
       instruction: createEmptyRichText(),
