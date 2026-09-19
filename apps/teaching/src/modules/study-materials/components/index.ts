@@ -6,3 +6,4 @@ export * from './UpsertMaterialModal';
 export * from './MaterialCard';
 export * from './StudyMaterialHeader';
 export * from './StudyMaterialSkeleton';
+export * from './ai';

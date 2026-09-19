@@ -31,8 +31,8 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import { useSetState } from 'react-use';
 import { AiImportStep } from './AiImportStep';
-import { AiPromptStep } from './AiPromptStep';
-import { AiSteps, type IAiStep } from './AiSteps';
+
+import { AiPromptStep, AiSteps, type IAiStep } from '@components/app/ai';
 import { AiWholePaperSetup, type IWholePaperSetup } from './AiWholePaperSetup';
 
 interface IProps {
@@ -268,7 +268,7 @@ export const AiWholePaperDrawer = ({ isOpen, onClose }: IProps) => {
               subjects={subjects}
             />
           ) : null}
-          {state.step === 'prompt' ? <AiPromptStep prompt={prompt} paperName={paperName} /> : null}
+          {state.step === 'prompt' ? <AiPromptStep prompt={prompt} fileName={paperName} /> : null}
           {state.step === 'import' ? (
             <AiImportStep text={state.jsonText} onChangeText={checkJson} issues={issues} imported={imported} />
           ) : null}

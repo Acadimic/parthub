@@ -131,6 +131,12 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
 
   if (!mode || !isReady) return null;
 
+  // A protected page used to mount for the 200 ms before `pushRoute` sent the visitor to sign-in,
+  // long enough for its `useLoadOnce` to fire a request with no token and toast a 401 over the
+  // sign-in form. Hold the loader instead until the redirect lands.
+  const isProtectedLayout = ![Layout.AUTH, Layout.ERROR, Layout.NONE].includes(layout as Layout);
+  const isRedirectingToSignIn = isProtectedLayout && !getToken();
+
   return (
     <>
       <Head>
@@ -140,7 +146,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <ColorModeContext.Provider value={colorMode}>
-        {isLoadingInitialData || !isReady ? (
+        {isLoadingInitialData || !isReady || isRedirectingToSignIn ? (
           <FullScreenLoader loading={true} />
         ) : (
           <>

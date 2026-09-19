@@ -6,17 +6,19 @@ import { useEffect, useState } from 'react';
 interface IProps {
   prompt: string;
   /** Used for the downloaded file's name. */
-  paperName: string;
+  fileName: string;
+  /** What the model is asked for, for the tips box. */
+  subject?: 'paper' | 'lessons';
 }
 
 const slug = (value: string) =>
   value
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '') || 'test-paper';
+    .replace(/(^-|-$)/g, '') || 'prompt';
 
 /** Step two: the prompt to paste into a model, with copy and download so it is never retyped. */
-export const AiPromptStep = ({ prompt, paperName }: IProps) => {
+export const AiPromptStep = ({ prompt, fileName, subject = 'paper' }: IProps) => {
   const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export const AiPromptStep = ({ prompt, paperName }: IProps) => {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `${slug(paperName)}-prompt.md`;
+    anchor.download = `${slug(fileName)}-prompt.md`;
     anchor.click();
     URL.revokeObjectURL(url);
   };
@@ -74,12 +76,18 @@ export const AiPromptStep = ({ prompt, paperName }: IProps) => {
         <TextArea value={prompt} readOnly rows={26} className="font-mono text-xs leading-5" aria-label="Prompt" />
       </DrawerSection>
       <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-        <p className="font-semibold text-foreground">Tips for a better paper</p>
+        <p className="font-semibold text-foreground">
+          Tips for a better {subject === 'paper' ? 'paper' : 'set of lessons'}
+        </p>
         <ul className="mt-1 list-disc space-y-0.5 pl-4">
           <li>Use the most capable model you have; long, structured JSON is where small models slip.</li>
           <li>If the reply is cut off, ask: "Continue the JSON from where you stopped" and join the parts.</li>
           <li>If the import reports issues, paste them back to the model and ask it to return the corrected JSON.</li>
-          <li>Ask for a second version of any weak question rather than editing the JSON by hand.</li>
+          <li>
+            {subject === 'paper'
+              ? 'Ask for a second version of any weak question rather than editing the JSON by hand.'
+              : 'Use a model with web search turned on, so the references are pages it has really seen.'}
+          </li>
         </ul>
       </div>
     </div>

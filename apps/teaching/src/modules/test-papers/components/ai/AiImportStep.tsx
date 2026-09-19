@@ -1,8 +1,8 @@
 import { RichTextView } from '@repo/ui/content';
-import { CheckCircleIcon, UploadSimpleIcon, WarningCircleIcon, XCircleIcon } from '@phosphor-icons/react';
+import { CheckCircleIcon, UploadSimpleIcon } from '@phosphor-icons/react';
+import { AiIssueList } from '@components/app/ai';
 import { Button, DrawerSection, TextArea } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
-import { cn } from '@repo/ui/lib';
 import { LevelType } from '@enums';
 import { type IAiIssue, type IImportedQuestion } from '@utils/ai/test-paper-generator';
 import { useRef } from 'react';
@@ -21,29 +21,6 @@ const LEVEL_TONE: Record<LevelType, 'success' | 'warning' | 'destructive'> = {
   [LevelType.MEDIUM]: 'warning',
   [LevelType.HARD]: 'destructive',
 };
-
-const IssueList = ({ issues }: { issues: IAiIssue[] }) => (
-  <ul className="flex flex-col gap-1">
-    {issues.map((issue, index) => (
-      <li
-        key={`${issue.path}-${index}`}
-        className={cn(
-          'flex items-start gap-2 rounded-md px-2.5 py-1.5 text-xs',
-          issue.level === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning',
-        )}
-      >
-        {issue.level === 'error' ? (
-          <XCircleIcon weight="fill" className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        ) : (
-          <WarningCircleIcon weight="fill" className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        )}
-        <span>
-          <span className="font-mono font-semibold">{issue.path}</span> — {issue.message}
-        </span>
-      </li>
-    ))}
-  </ul>
-);
 
 const PreviewQuestion = ({ item, number }: { item: IImportedQuestion; number: number }) => {
   const meta = getQuestionTypeMeta(item.question.questionType);
@@ -142,7 +119,7 @@ export const AiImportStep = ({ text, onChangeText, issues, imported }: IProps) =
           }
         >
           {issues.length ? (
-            <IssueList issues={issues} />
+            <AiIssueList issues={issues} />
           ) : (
             <p className="inline-flex items-center gap-1.5 text-xs text-success">
               <CheckCircleIcon weight="fill" className="h-4 w-4" />

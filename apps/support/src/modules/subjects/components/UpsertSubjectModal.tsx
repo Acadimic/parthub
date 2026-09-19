@@ -1,5 +1,5 @@
 import { UploadAvatar } from '@components/app/attachments';
-import { Label, Modal, ModalFooter, TextInput } from '@repo/ui/app';
+import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
 import { PositionType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { SubjectService } from '@services';
@@ -74,7 +74,7 @@ export const UpsertSubjectModal = ({ isOpen, onClose }: IProps) => {
           <div className="flex flex-col space-y-3">
             <div>
               <div>
-                <Label label="Standard Logo" required />
+                <Label label="Subject Logo" required />
                 <div className="flex justify-center mt-1">
                   <div className="w-full">
                     <UploadAvatar
@@ -93,6 +93,16 @@ export const UpsertSubjectModal = ({ isOpen, onClose }: IProps) => {
                   renameSubject(selectedSubject._id, e.target.value)
                 }
                 required
+              />
+              <TextArea
+                label="Description"
+                rows={4}
+                placeholder="What this subject covers."
+                value={selectedSubject.description || ''}
+                disabled={isLoading}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  patchSubject(selectedSubject._id, { description: e.target.value })
+                }
               />
             </div>
           </div>

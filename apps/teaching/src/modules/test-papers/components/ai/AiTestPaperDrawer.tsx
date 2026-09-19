@@ -33,9 +33,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSetState } from 'react-use';
 import { type TestPaperDto } from '@repo/shared/contracts';
 import { AiBlueprintStep, type IPlanRow } from './AiBlueprintStep';
-import { AiSteps, type IAiStep } from './AiSteps';
+import { AiPromptStep, AiSteps, type IAiStep } from '@components/app/ai';
 import { AiImportStep } from './AiImportStep';
-import { AiPromptStep } from './AiPromptStep';
 
 interface IProps {
   isOpen: boolean;
@@ -305,7 +304,7 @@ export const AiTestPaperDrawer = ({ isOpen, onClose, testPaper, sections, initia
               onRemoveRow={(key) => setState({ rows: state.rows.filter((row) => row.key !== key) })}
             />
           ) : null}
-          {state.step === 'prompt' ? <AiPromptStep prompt={prompt} paperName={testPaper.name} /> : null}
+          {state.step === 'prompt' ? <AiPromptStep prompt={prompt} fileName={testPaper.name} /> : null}
           {state.step === 'import' ? (
             <AiImportStep text={state.jsonText} onChangeText={checkJson} issues={issues} imported={imported} />
           ) : null}

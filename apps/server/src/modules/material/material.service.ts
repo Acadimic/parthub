@@ -51,6 +51,15 @@ export class MaterialService {
       .then((material) => this.getTransformedMaterial(material));
   }
 
+  /** One at a time, in file order, so `order` values land as the import assigned them. */
+  async bulkUpsert(org: Types.ObjectId, materials: MaterialDto[]): Promise<MaterialDto[]> {
+    const saved: MaterialDto[] = [];
+    for (const material of materials) {
+      saved.push(await this.upsert(org, material));
+    }
+    return saved;
+  }
+
   async getOrgMaterials(org: Types.ObjectId): Promise<MaterialDto[]> {
     return this.materialModel
       .find({ org, _deleted: { $ne: true } })

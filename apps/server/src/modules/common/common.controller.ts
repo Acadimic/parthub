@@ -6,11 +6,13 @@ import { StandardSubjectMappingService } from '@modules/standard/standard-subjec
 import { StandardService } from '@modules/standard/standard.service';
 import { SubjectService } from '@modules/subject/subject.service';
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { type IPresignedUrl } from '@repo/shared/contracts';
+import { type ILinkCheck, type IPresignedUrl } from '@repo/shared/contracts';
 import { Subdomain } from '@repo/shared/enums';
 import { RequestContextService } from '../../context/request-context.service';
 import { CommonService } from './common.service';
 import { DeleteObjectsDto, PresignedGetUrlsDto, PresignedPutUrlsDto } from './dto/presigned-url.dto';
+import { VerifyLinksDto } from './dto/verify-links.dto';
+import { LinkCheckService } from './link-check.service';
 
 @Controller('common')
 export class CommonController {
@@ -23,6 +25,7 @@ export class CommonController {
     private readonly subjectService: SubjectService,
     private readonly standardService: StandardService,
     private readonly standardSubjectMappingService: StandardSubjectMappingService,
+    private readonly linkCheckService: LinkCheckService,
   ) {}
 
   /**
@@ -92,6 +95,16 @@ export class CommonController {
     const orgId = this.requestContextService.getOrgIdSafe()?.toString();
     await this.commonService.deleteObjects(payload.keys, orgId);
     return { deleted: payload.keys.length };
+  }
+
+  /**
+   * Looks up the addresses an AI reply cites, so the importer stores only references that exist.
+   * Done here rather than in the browser because cross-origin HEAD requests are blocked there.
+   */
+  @Post('verify-links')
+  @Permissions()
+  async verifyLinks(@Body() payload: VerifyLinksDto): Promise<ILinkCheck[]> {
+    return this.linkCheckService.verify(payload.urls);
   }
 
   // The machine-to-machine twins of the two routes above. Same service calls, same shapes — only

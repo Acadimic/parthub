@@ -10,6 +10,7 @@ import {
 import { richTextFromMarkdown } from '@repo/shared/utils';
 import { LevelType, QuestionType } from '@enums';
 import { getObjectId } from '@utils/helpers';
+import { type IAiIssue, parseJsonObject } from './common';
 
 /** How many of each type a section should get. */
 export type IQuestionCounts = Record<QuestionType, number>;
@@ -290,53 +291,18 @@ interface Output {
 // Validation
 // ------------------------------------------------------------------------------------------------
 
-export interface IAiIssue {
-  level: 'error' | 'warning';
-  /** Where in the file, e.g. "S1-Q3.options" — the model's own refs, so a teacher can find it. */
-  path: string;
-  message: string;
-}
+export type { IAiIssue } from './common';
 
 export interface IParsedAiPaper {
   paper: IAiTestPaper | null;
   issues: IAiIssue[];
 }
 
-/** Finds the JSON object in a reply that may carry a code fence or a sentence around it. */
-const extractJson = (text: string): string => {
-  const unfenced = text.replace(/^\s*```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '');
-  const start = unfenced.indexOf('{');
-  const end = unfenced.lastIndexOf('}');
-  return start >= 0 && end > start ? unfenced.slice(start, end + 1) : unfenced;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
 /** Parses the reply and checks its shape; workspace checks come in `validateAiPaper`. */
 export const parseAiPaper = (text: string): IParsedAiPaper => {
+  const { value: raw, issue } = parseJsonObject(text);
+  if (!raw) return { paper: null, issues: issue ? [issue] : [] };
   const issues: IAiIssue[] = [];
-  if (!text.trim()) {
-    return { paper: null, issues: [{ level: 'error', path: 'file', message: 'Paste the JSON the model returned.' }] };
-  }
-  let raw: unknown;
-  try {
-    raw = JSON.parse(extractJson(text));
-  } catch (error) {
-    return {
-      paper: null,
-      issues: [
-        {
-          level: 'error',
-          path: 'file',
-          message: `Not valid JSON: ${error instanceof Error ? error.message : 'unknown error'}. Ask the model to return the JSON only, with every backslash doubled.`,
-        },
-      ],
-    };
-  }
-  if (!isRecord(raw)) {
-    return { paper: null, issues: [{ level: 'error', path: 'file', message: 'The file should be one JSON object.' }] };
-  }
   if (raw.format !== AI_TEST_PAPER_FORMAT) {
     issues.push({ level: 'error', path: 'format', message: `"format" must be "${AI_TEST_PAPER_FORMAT}".` });
   }

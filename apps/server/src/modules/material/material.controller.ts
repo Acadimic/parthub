@@ -4,7 +4,12 @@ import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { MaterialService } from './material.service';
 import { RequestContextService } from '../../context/request-context.service';
-import { MaterialDto, StandardIdsQueryDto, StandardSubjectQueryDto } from '@repo/shared/validations';
+import {
+  BulkUpsertMaterialsDto,
+  MaterialDto,
+  StandardIdsQueryDto,
+  StandardSubjectQueryDto,
+} from '@repo/shared/validations';
 
 @Controller('material')
 export class MaterialController {
@@ -19,6 +24,16 @@ export class MaterialController {
   async upsertMaterial(@Body() payload: MaterialDto) {
     const org = this.requestContextService.getOrgId();
     const data = await this.materialService.upsert(org, payload);
+    return data;
+  }
+
+  /** An import's lessons in one request; see `BulkUpsertMaterialsDto`. */
+  @Post('bulk-upsert')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.MANAGE_MATERIAL)
+  async bulkUpsertMaterials(@Body() payload: BulkUpsertMaterialsDto) {
+    const org = this.requestContextService.getOrgId();
+    const data = await this.materialService.bulkUpsert(org, payload.materials);
     return data;
   }
 

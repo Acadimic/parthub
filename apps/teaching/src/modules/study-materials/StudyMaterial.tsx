@@ -14,6 +14,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useSetState } from 'react-use';
 import {
+  AiMaterialDrawer,
   GenerateMaterialModal,
   MaterialCard,
   StudyMaterialHeader,
@@ -29,6 +30,7 @@ interface IProps {
 interface IState {
   isOpenUpsertModal: boolean;
   isOpenGenerateModal: boolean;
+  isOpenAi: boolean;
   /** The material the delete confirm is asking about, or `null` when it is closed. */
   materialToDelete: MaterialDto | null;
   isDeleting: boolean;
@@ -55,6 +57,7 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
   const [state, setState] = useSetState<IState>({
     isOpenUpsertModal: false,
     isOpenGenerateModal: false,
+    isOpenAi: false,
     materialToDelete: null,
     isDeleting: false,
   });
@@ -159,14 +162,22 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
       return (
         <BlankState
           label="No content yet"
-          description={`Add the first piece of ${subject.name} content for ${standard.name}, or generate it from a document.`}
+          description={`Let AI research and write a graded set of ${subject.name} lessons for ${standard.name}, or add the first piece by hand.`}
           className="rounded-lg border border-border bg-background py-12"
           action={
-            <Button
-              leftsection={<PlusIcon weight="bold" className="h-4 w-4" />}
-              text="Add content"
-              onClick={onOpenAddModal}
-            />
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button
+                leftsection={<SparkleIcon weight="bold" className="h-4 w-4" />}
+                text="Generate lessons with AI"
+                onClick={() => setState({ isOpenAi: true })}
+              />
+              <Button
+                isSecondary
+                leftsection={<PlusIcon weight="bold" className="h-4 w-4" />}
+                text="Add content"
+                onClick={onOpenAddModal}
+              />
+            </div>
           }
         />
       );
@@ -193,8 +204,8 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
             <Button
               isSecondary
               leftsection={<SparkleIcon weight="bold" className="h-4 w-4" />}
-              text="Generate"
-              onClick={() => materials[0] && generateMaterial(materials[0])}
+              text="Generate with AI"
+              onClick={() => setState({ isOpenAi: true })}
             />
           </div>
         </header>
@@ -232,6 +243,12 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
       {renderContents()}
       <UpsertMaterialModal isOpen={state.isOpenUpsertModal} onClose={onCloseUpsertModal} />
       <GenerateMaterialModal isOpen={state.isOpenGenerateModal} onClose={onCloseGenerateModal} />
+      <AiMaterialDrawer
+        isOpen={state.isOpenAi}
+        onClose={() => setState({ isOpenAi: false })}
+        standardId={standardId}
+        subjectId={subjectId}
+      />
       <SoftConfirmModal
         isOpen={!!state.materialToDelete}
         isDestructive

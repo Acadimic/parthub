@@ -2,13 +2,17 @@ import { Subdomain } from '@repo/shared/enums';
 import { Private } from '@decorators';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, NotFoundException, Param, ParseArrayPipe } from '@nestjs/common';
+import { StandardSubjectMappingService } from '@modules/standard/standard-subject-mapping.service';
 import { SubjectService } from './subject.service';
-import { SubjectDto } from '@repo/shared/validations';
+import { SubjectDto, SubjectIdDto } from '@repo/shared/validations';
 
 @Controller('subject')
 export class SubjectController {
-  constructor(private readonly subjectService: SubjectService) {}
+  constructor(
+    private readonly subjectService: SubjectService,
+    private readonly standardSubjectMappingService: StandardSubjectMappingService,
+  ) {}
 
   // Private, not authenticated — see the note on StandardController.upsertStandard.
   @Private()
@@ -16,6 +20,29 @@ export class SubjectController {
   async upsertSubject(@Body() payload: SubjectDto) {
     const data = await this.subjectService.upsert(payload);
     return data;
+  }
+
+  /** The import route: every subject of a seed file in one request. Private like `upsert`. */
+  @Private()
+  @Post('bulk-upsert')
+  async bulkUpsertSubjects(
+    @Body(new ParseArrayPipe({ items: SubjectDto, whitelist: true, forbidNonWhitelisted: true }))
+    payloads: SubjectDto[],
+  ) {
+    const data = await this.subjectService.bulkUpsert(payloads);
+    return data;
+  }
+
+  /**
+   * Soft-deletes a subject and every standard mapping that points at it, so no standard is left
+   * listing a subject the API no longer returns. See `StandardController.deleteStandard`.
+   */
+  @Private()
+  @Post('delete')
+  async deleteSubject(@Body() body: SubjectIdDto): Promise<void> {
+    const deleted = await this.subjectService.softDelete(body.subjectId);
+    if (!deleted) throw new NotFoundException('Subject not found.');
+    await this.standardSubjectMappingService.deleteSubjectMappings(body.subjectId);
   }
 
   @Get('all')

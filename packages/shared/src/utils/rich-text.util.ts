@@ -48,9 +48,13 @@ export const isRichTextEmpty = (value?: IRichText | null): boolean => !value?.te
 /** `$$…$$` before `$…$`, and a backslash-escaped `\$` is prose rather than a delimiter. */
 const MATH_PATTERN = /(\$\$(?:[^$]|\$(?!\$))+\$\$|(?<!\\)\$(?:\\\$|[^$\n])+?(?<!\\)\$)/;
 
+/** `[text](https://…)`; the label is group 1 and the address group 2, so the mark carries `href`. */
+const LINK_PATTERN = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/;
+
 /** Applied in this order so the earliest match wins consistently. `code` never nests. */
 const MARK_PATTERNS: { re: RegExp; type: string; literal?: boolean }[] = [
   { re: /`([^`]+)`/, type: 'code', literal: true },
+  { re: LINK_PATTERN, type: 'link' },
   { re: /\*\*([^*]+)\*\*/, type: 'bold' },
   { re: /~~([^~]+)~~/, type: 'strike' },
   { re: /(?<![A-Za-z0-9])_([^_]+)_(?![A-Za-z0-9])/, type: 'italic' },
@@ -68,7 +72,8 @@ const parseMarked = (input: string, marks: IRichTextMark[]): IRichTextNode[] => 
     const match = re.exec(input);
     if (!match) continue;
     const inner = match[1];
-    const nextMarks = [...marks, { type }];
+    // A link is the one mark with an attribute: the address it points at.
+    const nextMarks = [...marks, type === 'link' ? { type, attrs: { href: match[2] } } : { type }];
     return [
       ...parseMarked(input.slice(0, match.index), marks),
       // Markdown interprets nothing inside a code span, so its content is taken verbatim.

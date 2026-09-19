@@ -1,4 +1,6 @@
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
   IsEnum,
   IsMongoId,
@@ -82,4 +84,17 @@ export class MaterialDto extends BaseOwnedDto {
   @ValidateNested({ each: true })
   @Type(() => AttachmentDto)
   attachments?: AttachmentDto[];
+}
+
+/**
+ * `POST material/bulk-upsert`: an AI import's lessons in one request, so a graded set lands or
+ * fails together rather than half of it appearing on the page.
+ */
+export class BulkUpsertMaterialsDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => MaterialDto)
+  materials: MaterialDto[];
 }

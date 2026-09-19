@@ -10,6 +10,13 @@ class MaterialService {
     return resData;
   };
 
+  /** `POST material/bulk-upsert` — an AI import's lessons in one request. */
+  bulkUpsertMaterials = async (materials: MaterialDto[]) => {
+    const url = 'material/bulk-upsert';
+    const resData = await callAuthApi<MaterialDto[]>(url, API.POST, { materials });
+    return resData;
+  };
+
   /** Every material the org owns, as rows — the list screen rolls them up itself. */
   getMaterials = async () => {
     const url = 'material/all';

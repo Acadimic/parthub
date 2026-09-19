@@ -1,4 +1,4 @@
-import { type InitialDataResponse, type IPresignedUrl } from '@repo/shared/contracts';
+import { type ILinkCheck, type InitialDataResponse, type IPresignedUrl } from '@repo/shared/contracts';
 import { type IPresignedGetUrlsRequest, type IPresignedPutUrlsRequest } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi, callDefaultApi } from './http.service';
@@ -32,6 +32,13 @@ class CommonService {
       },
     });
     return res.data;
+  };
+
+  /** Looks the addresses up from the server, where cross-origin requests are allowed. */
+  verifyLinks = async (urls: string[]) => {
+    const url = 'common/verify-links';
+    const resData = await callAuthApi<ILinkCheck[]>(url, API.POST, { urls });
+    return resData;
   };
 
   deleteObjects = async (keys: string[]) => {

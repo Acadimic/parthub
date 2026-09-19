@@ -1,6 +1,6 @@
 import { DataTable } from '@components/app/tables';
 import { BlankState } from '@components/others';
-import { MagnifyingGlassIcon, ArrowSquareOutIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon, ArrowSquareOutIcon, PlusIcon, SparkleIcon, TrashIcon } from '@phosphor-icons/react';
 import { Button, SoftConfirmModal, TextInput } from '@repo/ui/app';
 import { useLoadOnce } from '@repo/ui/hooks';
 import { type IColumnData, type IMaterialStat, type ISelectItem } from '@interfaces';
@@ -10,10 +10,11 @@ import { errorToast, getStringFormattedDate, successToast } from '@utils/helpers
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
-import { AddStudyMaterialModal } from './components';
+import { AddStudyMaterialModal, AiWholeMaterialDrawer } from './components';
 
 interface IState {
   isOpenAddModal: boolean;
+  isOpenAi: boolean;
   search: string;
   /** The pair whose contents the delete confirm is asking about, or `null` when it is closed. */
   statToDelete: IMaterialStat | null;
@@ -41,6 +42,7 @@ export const StudyMaterials = () => {
   const { isLoading, isFailed, error } = useLoadOnce(useMaterialStore, 'materialStats', (s) => s.loadMaterialStats);
   const [state, setState] = useSetState<IState>({
     isOpenAddModal: false,
+    isOpenAi: false,
     search: '',
     statToDelete: null,
     isDeleting: false,
@@ -176,6 +178,15 @@ export const StudyMaterials = () => {
       Add <span className="hidden sm:inline">study material</span>
     </Button>
   );
+  const generateButton = (
+    <Button
+      isSecondary
+      leftsection={<SparkleIcon weight="bold" className="w-4 h-4" />}
+      onClick={() => setState({ isOpenAi: true })}
+    >
+      Generate <span className="hidden sm:inline">with AI</span>
+    </Button>
+  );
 
   const emptyState = state.search ? (
     <BlankState
@@ -186,8 +197,13 @@ export const StudyMaterials = () => {
   ) : (
     <BlankState
       label="No study materials yet"
-      description="Pick a standard and a subject to start adding content for your learners."
-      action={addButton}
+      description="Let AI research and write a graded set of lessons for a whole standard, or pick a standard and subject to add content by hand."
+      action={
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {generateButton}
+          {addButton}
+        </div>
+      }
     />
   );
 
@@ -211,7 +227,10 @@ export const StudyMaterials = () => {
             {materialStats.length} {materialStats.length === 1 ? 'subject' : 'subjects'}
             <span className="hidden md:inline"> · Filter by standard or subject from the column headers.</span>
           </p>
-          <div className="ml-auto">{addButton}</div>
+          <div className="ml-auto flex items-center gap-2">
+            {generateButton}
+            {addButton}
+          </div>
         </div>
         {isFailed ? (
           <BlankState
@@ -236,6 +255,7 @@ export const StudyMaterials = () => {
         onClose={onCloseAddModal}
         handleSelect={redirectToContentPage}
       />
+      <AiWholeMaterialDrawer isOpen={state.isOpenAi} onClose={() => setState({ isOpenAi: false })} />
       <SoftConfirmModal
         isOpen={!!state.statToDelete}
         isDestructive
