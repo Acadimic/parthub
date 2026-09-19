@@ -3,3 +3,4 @@ export * from './handle-error';
 export * from './processenv';
 export * from './toasts';
 export * from './util';
+export * from './format';

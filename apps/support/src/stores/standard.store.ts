@@ -24,8 +24,18 @@ export interface IStandardState extends IRequestSlice<StandardFetch> {
   /** The distinct reference standards across a standard's mappings. Was a view on the model. */
   getReferenceStandardIds: (standardId: string) => string[];
   getNextStandardGroupOrder: (standardId: string, group: string) => number;
-  /** Every standard's subject names as one comma-separated label, keyed by standard id. */
-  getSubjectNamesByStandard: () => Record<string, string>;
+  /** Every standard's subject names in mapping order, keyed by standard id. */
+  getSubjectNamesByStandard: () => Record<string, string[]>;
+  /** Every standard's subject ids in mapping order, keyed by standard id — what a subject filter matches on. */
+  getSubjectIdsByStandard: () => Record<string, string[]>;
+  /** Every subject's standard names, keyed by subject id: where a subject is used. */
+  getStandardNamesBySubject: () => Record<string, string[]>;
+  /** Every subject's standard ids, keyed by subject id. */
+  getStandardIdsBySubject: () => Record<string, string[]>;
+  /** Every standard's distinct reference standard names, keyed by standard id. */
+  getReferenceStandardNamesByStandard: () => Record<string, string[]>;
+  /** Standards grouped by `group`, groups in order of their lowest `order`, rows sorted by `order`. */
+  getStandardsByGroup: () => { group: string; standards: StandardDto[] }[];
 
   addStandards: (standards: StandardDto[]) => void;
   addSubjects: (subjects: SubjectDto[]) => void;
@@ -62,6 +72,87 @@ export interface IStandardState extends IRequestSlice<StandardFetch> {
 }
 
 const byOrder = (a: { order?: number }, b: { order?: number }): number => (a.order ?? 0) - (b.order ?? 0);
+
+type Maps = Pick<IStandardState, 'standardMap' | 'subjectMap' | 'mappingMap'>;
+
+/**
+ * Caches a derived lookup until one of the three maps is replaced.
+ *
+ * The lookups below build nested arrays, and a selector wrapped in `useShallow` compares one level
+ * deep with `Object.is` — a fresh inner array on every call never compares equal, so the component
+ * re-renders, reselects, gets another fresh array, and React stops it with "maximum update depth
+ * exceeded". Every `set` in this store replaces a map wholesale, so map identity is exactly the
+ * cache key that says whether the derivation could have changed.
+ */
+const memoByMaps = <T>(compute: (state: IStandardState) => T) => {
+  let key: Maps | undefined;
+  let value: T;
+  return (state: IStandardState): T => {
+    if (
+      key?.standardMap !== state.standardMap ||
+      key?.subjectMap !== state.subjectMap ||
+      key?.mappingMap !== state.mappingMap
+    ) {
+      key = { standardMap: state.standardMap, subjectMap: state.subjectMap, mappingMap: state.mappingMap };
+      value = compute(state);
+    }
+    return value;
+  };
+};
+
+const subjectIdsByStandard = memoByMaps((state) =>
+  state.getStandards().reduce<Record<string, string[]>>((ids, standard) => {
+    ids[standard._id] = state.getStandardSubjectIds(standard._id);
+    return ids;
+  }, {}),
+);
+
+const subjectNamesByStandard = memoByMaps((state) =>
+  Object.fromEntries(
+    Object.entries(state.getSubjectIdsByStandard()).map(([standardId, subjectIds]) => [
+      standardId,
+      subjectIds.map((subjectId) => state.subjectMap[subjectId]?.name).filter((name): name is string => !!name),
+    ]),
+  ),
+);
+
+const standardIdsBySubject = memoByMaps((state) => {
+  const ids: Record<string, string[]> = {};
+  for (const mapping of Object.values(state.mappingMap).sort(byOrder)) {
+    if (!state.standardMap[mapping.standard]) continue;
+    (ids[mapping.subject] ??= []).push(mapping.standard);
+  }
+  return ids;
+});
+
+const standardNamesBySubject = memoByMaps((state) =>
+  Object.fromEntries(
+    Object.entries(state.getStandardIdsBySubject()).map(([subjectId, standardIds]) => [
+      subjectId,
+      standardIds.map((standardId) => state.standardMap[standardId]?.name).filter((name): name is string => !!name),
+    ]),
+  ),
+);
+
+const referenceStandardNamesByStandard = memoByMaps((state) =>
+  state.getStandards().reduce<Record<string, string[]>>((names, standard) => {
+    names[standard._id] = state
+      .getReferenceStandardIds(standard._id)
+      .map((referenceId) => state.standardMap[referenceId]?.name)
+      .filter((name): name is string => !!name);
+    return names;
+  }, {}),
+);
+
+const standardsByGroup = memoByMaps((state) => {
+  const groups = new Map<string, StandardDto[]>();
+  // `getStandards` is already sorted by order, so the first standard seen fixes its group's place.
+  for (const standard of state.getStandards()) {
+    const group = standard.group ?? 'ungrouped';
+    (groups.get(group) ?? groups.set(group, []).get(group))?.push(standard);
+  }
+  return [...groups.entries()].map(([group, standards]) => ({ group, standards }));
+});
 
 const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
   rows.reduce<Record<string, T>>((map, row) => {
@@ -114,16 +205,17 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
     return standards.length + initialOrder;
   },
 
-  getSubjectNamesByStandard: () =>
-    get()
-      .getStandards()
-      .reduce<Record<string, string>>((names, standard) => {
-        names[standard._id] = get()
-          .getSubjectsByIds(get().getStandardSubjectIds(standard._id))
-          .map((subject) => subject.name)
-          .join(', ');
-        return names;
-      }, {}),
+  getSubjectIdsByStandard: () => subjectIdsByStandard(get()),
+
+  getSubjectNamesByStandard: () => subjectNamesByStandard(get()),
+
+  getStandardIdsBySubject: () => standardIdsBySubject(get()),
+
+  getStandardNamesBySubject: () => standardNamesBySubject(get()),
+
+  getReferenceStandardNamesByStandard: () => referenceStandardNamesByStandard(get()),
+
+  getStandardsByGroup: () => standardsByGroup(get()),
 
   addStandards: (standards) => {
     set((state) => ({ standardMap: { ...state.standardMap, ...keyById(standards) } }));

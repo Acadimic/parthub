@@ -1,4 +1,4 @@
-import { GameControllerIcon, GrainsSlashIcon, HouseIcon, LifebuoyIcon } from '@phosphor-icons/react';
+import { BooksIcon, GraduationCapIcon, HouseIcon, LifebuoyIcon } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 
 interface ISidebarMenu {
@@ -31,12 +31,12 @@ export const Routes: ISidebarRoute[] = [
       {
         name: 'Subjects',
         route: '/subjects',
-        icon: GameControllerIcon,
+        icon: BooksIcon,
       },
       {
         name: 'Standards',
         route: '/standards',
-        icon: GrainsSlashIcon,
+        icon: GraduationCapIcon,
       },
     ],
   },

@@ -28,9 +28,20 @@ const PresignedImageComponent = ({ url, className, isStatic, noOpen }: IProps) =
     window.open(presignedUrl, '_blank');
   };
 
+  // Re-signs whenever `url` changes, not only when nothing is signed yet. A virtualised table
+  // recycles row components across rows, so the same instance is handed a different logo after a
+  // sort, filter or search; the old guard (`!presignedUrl`) kept the previous row's image on it.
   useEffect(() => {
-    if (url && isStatic) setPresignedUrl(url);
-    else if (!presignedUrl) fetchAndSetPresignedUrl();
+    if (!url) {
+      setPresignedUrl('');
+      return;
+    }
+    if (isStatic) {
+      setPresignedUrl(url);
+      return;
+    }
+    setPresignedUrl('');
+    fetchAndSetPresignedUrl();
   }, [url]);
 
   return (

@@ -1,16 +1,18 @@
 import { type StandardDto } from '@repo/shared/contracts';
-import { PresignedImage } from '@components/app/attachments';
+import { StandardGroup } from '@enums';
+import { LogoTile } from '@components/app/attachments';
 import { BlankState } from '@components/others';
 import { DataTable } from '@components/app/tables';
-import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
-import { AlertDialog } from '@repo/ui/core';
+import { Button, TextInput } from '@repo/ui/app';
+import { AlertDialog, Badge } from '@repo/ui/core';
 import { useLoadOnce } from '@repo/ui/hooks';
 import { type IColumnData } from '@interfaces';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { useSelectorStore, useStandardStore } from '@stores';
 import { ACTIONS } from '@utils/constants';
-import { errorToast, successToast } from '@utils/helpers';
-import { useMemo } from 'react';
+import { errorToast, pluralize, successToast, titleCase } from '@utils/helpers';
+import { useRouter } from 'next/router';
+import { useEffect, useMemo } from 'react';
 import { useSetState } from 'react-use';
 import { useShallow } from 'zustand/react/shallow';
 import { UpsertStandardModal } from './components';
@@ -23,37 +25,67 @@ interface IState {
   isDeleting: boolean;
 }
 
+const GROUP_OPTIONS = Object.values(StandardGroup).map((group) => ({ label: titleCase(group), value: group }));
+
+/** A count pill followed by the names, for a cell that lists a standard's subjects or references. */
+const NameList = ({ names }: { names: string[] }) => {
+  if (!names.length) return <span className="text-muted-foreground">—</span>;
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      <span className="shrink-0 rounded-full bg-muted px-1.5 font-mono text-xxs font-semibold text-muted-foreground">
+        {names.length}
+      </span>
+      <span className="truncate text-muted-foreground">{names.join(', ')}</span>
+    </div>
+  );
+};
+
 export const Standards = () => {
+  const { query, replace } = useRouter();
   const setSelectedStandardId = useSelectorStore((state) => state.setSelectedStandardId);
   // `getStandards` builds a new sorted array on every call, so the result needs a shallow compare.
   const standards = useStandardStore(useShallow((state) => state.getStandards()));
-  // Derived in the store and selected here, not looked up in the formatter: selecting
-  // `getSubjectsByIds` would hand back a stable function reference, so a changed mapping or a
-  // renamed subject would never invalidate this component and the column would go stale.
+  const subjects = useStandardStore(useShallow((state) => state.getSubjects()));
+  // Derived in the store and selected here, not looked up in the formatter: selecting a lookup
+  // function would hand back a stable reference, so a changed mapping or a renamed subject would
+  // never invalidate this component and the column would go stale.
   const subjectNamesByStandard = useStandardStore(useShallow((state) => state.getSubjectNamesByStandard()));
+  const subjectIdsByStandard = useStandardStore(useShallow((state) => state.getSubjectIdsByStandard()));
+  const referenceNamesByStandard = useStandardStore(useShallow((state) => state.getReferenceStandardNamesByStandard()));
   const createStandard = useStandardStore((state) => state.createStandard);
   const deleteStandard = useStandardStore((state) => state.deleteStandard);
-  // Loads once on mount and reports the status. Nothing used to trigger this load at all: the table
-  // rendered its blank state whatever the data was.
   const { isLoading } = useLoadOnce(useStandardStore, 'standards', (state) => state.loadStandards);
-  const [state, setState] = useSetState<IState>({
-    isOpenCreateModal: false,
-    search: '',
-    isDeleting: false,
-  });
+  const [state, setState] = useSetState<IState>({ isOpenCreateModal: false, search: '', isDeleting: false });
 
-  // The search box used to render with no handler at all, so typing in it did nothing. Filtering is
-  // client-side because the whole collection is already in the store, and it covers the subject
-  // names too, which is the column you would actually hunt through.
+  const subjectOptions = useMemo(
+    () => subjects.map((subject) => ({ label: subject.name, value: subject._id })),
+    [subjects],
+  );
+
+  // Client-side, because the whole collection is already in the store. Covers the subject names and
+  // the description too, which is what you actually hunt through.
+  //
+  // Always a new array, even with no search term: the table re-renders its virtualised rows only
+  // when `rows` changes identity, and the Subjects and References cells read lookups that arrive
+  // with the mappings, sometimes after the standards. Without this the cells stayed "—" until the
+  // next interaction.
   const visibleStandards = useMemo(() => {
     const term = state.search.trim().toLowerCase();
-    if (!term) return standards;
-    return standards.filter((standard) =>
-      `${standard.name} ${standard.slug} ${standard.alias ?? ''} ${subjectNamesByStandard[standard._id] ?? ''}`
-        .toLowerCase()
-        .includes(term),
+    return standards.filter(
+      (standard) =>
+        !term ||
+        [
+          standard.name,
+          standard.slug,
+          standard.alias,
+          standard.description,
+          ...(subjectNamesByStandard[standard._id] ?? []),
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(term),
     );
-  }, [standards, subjectNamesByStandard, state.search]);
+  }, [standards, subjectNamesByStandard, referenceNamesByStandard, state.search]);
 
   const onOpenCreateModal = () => {
     setSelectedStandardId(createStandard());
@@ -66,9 +98,14 @@ export const Standards = () => {
     setState({ isOpenCreateModal: true });
   };
 
-  const onCloseCreateModal = () => {
-    setState({ isOpenCreateModal: false });
-  };
+  const onCloseCreateModal = () => setState({ isOpenCreateModal: false });
+
+  // `/standards?add=true` — the home page's "Add standard" lands with the drawer already open.
+  useEffect(() => {
+    if (query.add !== 'true' || isLoading) return;
+    onOpenCreateModal();
+    replace('/standards', undefined, { shallow: true });
+  }, [query.add, isLoading]);
 
   const confirmDelete = async () => {
     const standard = state.standardToDelete;
@@ -87,19 +124,17 @@ export const Standards = () => {
 
   const columns: IColumnData<StandardDto>[] = [
     {
-      label: 'Name',
+      label: 'Standard',
       dataKey: 'name',
-      width: 240,
+      width: 300,
+      isSortable: true,
       component: (row) => (
-        <div className="flex items-center space-x-2">
-          <div>
-            {row.logo ? (
-              <div className="w-6 h-6 p-1 rounded-full border border-border border-dashed">
-                <PresignedImage url={row.logo} />
-              </div>
-            ) : null}
+        <div className="flex min-w-0 items-center gap-3">
+          <LogoTile url={row.logo} name={row.name} size="md" />
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate font-semibold text-foreground">{row.name}</span>
+            <span className="truncate text-xs text-muted-foreground">{row.alias || row.slug}</span>
           </div>
-          <div className="flex-1 truncate">{row.name}</div>
         </div>
       ),
     },
@@ -107,100 +142,106 @@ export const Standards = () => {
       label: 'Group',
       dataKey: 'group',
       width: 170,
-      // The stored values are lowercase enum members ('competitive exams'), which read as a typo in
-      // a column of otherwise capitalised text.
-      valueFormatter: (row) => (row.group ? <span className="capitalize">{row.group}</span> : ''),
+      isSortable: true,
+      filters: [{ key: 'group', label: 'Group', options: GROUP_OPTIONS, getValues: (row) => row.group }],
+      valueFormatter: (row) => (row.group ? <Badge className="capitalize">{row.group}</Badge> : ''),
     },
     {
       label: 'Order',
       dataKey: 'order',
       width: 100,
+      align: 'right',
+      isSortable: true,
       // Tabular figures: proportional digits do not line up down a numeric column.
       valueFormatter: (row) => <span className="font-mono">{row.order ?? 0}</span>,
     },
     {
       label: 'Subjects',
       dataKey: 'subjects',
-      width: 240,
-      // Was `row.subjects`, a view on the MST model.
-      valueFormatter: (row) => subjectNamesByStandard[row._id] ?? '',
-    },
-    {
-      label: 'Alias',
-      dataKey: 'alias',
-      width: 200,
+      width: 300,
+      isSortable: true,
+      sortValue: (row) => (subjectIdsByStandard[row._id] ?? []).length,
+      filters: [
+        {
+          key: 'subject',
+          label: 'Subject',
+          options: subjectOptions,
+          getValues: (row) => subjectIdsByStandard[row._id] ?? [],
+        },
+      ],
+      tooltipTitle: (row) => (subjectNamesByStandard[row._id] ?? []).join(', '),
+      valueFormatter: (row) => <NameList names={subjectNamesByStandard[row._id] ?? []} />,
     },
     {
       label: 'Description',
       dataKey: 'description',
-      width: 320,
-      valueFormatter: (row) => (
-        <span className="block truncate text-muted-foreground" title={row.description ?? ''}>
-          {row.description ?? ''}
-        </span>
-      ),
+      width: 300,
+      tooltipTitle: (row) => row.description ?? '',
+      valueFormatter: (row) => <span className="text-muted-foreground">{row.description ?? ''}</span>,
     },
     {
-      label: 'Slug',
-      dataKey: 'slug',
+      label: 'References',
+      dataKey: 'references',
       width: 200,
+      tooltipTitle: (row) => (referenceNamesByStandard[row._id] ?? []).join(', '),
+      valueFormatter: (row) => <NameList names={referenceNamesByStandard[row._id] ?? []} />,
     },
     {
       label: 'Actions',
       dataKey: ACTIONS,
+      width: 80,
       menuItems: [
-        {
-          label: 'Edit',
-          onClick: onOpenEditModal,
-          icon: <PencilIcon weight="bold" className="w-4 h-4" />,
-        },
+        { label: 'Edit', onClick: onOpenEditModal, icon: <PencilIcon weight="bold" className="w-4 h-4" /> },
         {
           label: 'Delete',
-          // Asks first: the delete is soft on the server, but it also removes every subject
-          // mapping of the standard, which the dialog message says.
+          // Asks first: the delete is soft on the server, but it also removes every subject mapping
+          // of the standard, which the dialog message says.
           onClick: (row) => row && setState({ standardToDelete: row }),
           icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
-      width: 90,
     },
   ];
 
   return (
     <>
-      <div>
-        <div className="flex justify-between items-center">
-          <div className="">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="w-full sm:w-72">
             <TextInput
-              placeholder="Search Standard"
+              placeholder="Search standards"
               value={state.search}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setState({ search: e.target.value })}
               leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
+              aria-label="Search standards"
             />
           </div>
-          <div>
+          <p className="text-xs text-muted-foreground">
+            {pluralize(visibleStandards.length, 'standard')}
+            <span className="hidden md:inline"> · Filter by group or subject from the column headers.</span>
+          </p>
+          <div className="ml-auto">
             <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={onOpenCreateModal}>
               Create <span className="hidden sm:inline">Standard</span>
             </Button>
           </div>
         </div>
-        <div className="mt-4">
-          {isLoading ? (
-            <FullScreenLoader withHeader loading />
-          ) : (
-            <DataTable
-              rows={visibleStandards}
-              columns={columns}
-              emptyState={
-                state.search ? (
-                  <BlankState label="No matching standards" description="Try a different name, alias or subject." />
-                ) : (
-                  <BlankState label="No standards yet" description="Create your first standard to get started." />
-                )
-              }
-            />
-          )}
-        </div>
+        <DataTable
+          rows={visibleStandards}
+          columns={columns}
+          isLoading={isLoading}
+          onRowClick={onOpenEditModal}
+          emptyState={
+            state.search ? (
+              <BlankState
+                label="No matching standards"
+                description="Try a different name, alias, subject or description."
+              />
+            ) : (
+              <BlankState label="No standards yet" description="Create your first standard to get started." />
+            )
+          }
+        />
       </div>
       <UpsertStandardModal isOpen={state.isOpenCreateModal} onClose={onCloseCreateModal} />
       <AlertDialog
