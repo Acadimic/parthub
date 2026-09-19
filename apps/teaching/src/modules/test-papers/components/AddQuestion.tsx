@@ -1,10 +1,10 @@
+import { DrawerSection } from '@repo/ui/app';
 import { RichTextEditor } from '@repo/ui/editor';
 import { PlusIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
 import { Badge } from '@repo/ui/core';
 import { useQuestionLookups, useSelectedQuestion } from '@stores';
 import { AddOption } from './AddOption';
-import { DrawerSection } from './DrawerSection';
 import { getQuestionTypeMeta } from './question-types';
 import { QuestionTypePicker } from './QuestionTypePicker';
 

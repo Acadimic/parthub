@@ -1,4 +1,5 @@
-import { Button, Dropdown, Menu } from '@repo/ui/app';
+import { Button } from '@repo/ui/app';
+import { cn } from '@repo/ui/lib';
 import {
   CaretLeftIcon,
   CaretRightIcon,
@@ -34,12 +35,90 @@ interface IProps {
 }
 
 export const CalenderViewIconMap = {
-  [FCCalendarType.DAY]: <RowsIcon weight="bold" size={16} />,
-  [FCCalendarType.WEEK]: <GridFourIcon weight="bold" size={16} />,
-  [FCCalendarType.MONTH]: <GridNineIcon weight="bold" size={16} />,
-  [FCCalendarType.LIST]: <ListBulletsIcon weight="bold" size={16} />,
+  [FCCalendarType.DAY]: <RowsIcon weight="bold" className="h-4 w-4" />,
+  [FCCalendarType.WEEK]: <GridFourIcon weight="bold" className="h-4 w-4" />,
+  [FCCalendarType.MONTH]: <GridNineIcon weight="bold" className="h-4 w-4" />,
+  [FCCalendarType.LIST]: <ListBulletsIcon weight="bold" className="h-4 w-4" />,
 };
 
+/** Moves the date one step for the view: a day, a week (list shows a week too), or a month. */
+const step = (date: Date, calendarType: CalendarType, direction: 1 | -1): Date => {
+  if (calendarType === CalendarType.DAY) return direction > 0 ? addDaysToDate(date, 1) : subtractDaysFromDate(date, 1);
+  if (calendarType === CalendarType.MONTH) {
+    return direction > 0 ? addMonthsToDate(date, 1) : subtractMonthsFromDate(date, 1);
+  }
+  return direction > 0 ? addWeeksToDate(date, 1) : subtractWeeksFromDate(date, 1);
+};
+
+/** The heading for the view's range, in a long form and a short one for phones. */
+const rangeLabels = (date: Date, calendarType: CalendarType): { long: string; short: string } => {
+  if (calendarType === CalendarType.DAY) {
+    return { long: getFormattedDate(date, 'dddd, D MMMM YYYY'), short: getFormattedDate(date, 'ddd, D MMM') };
+  }
+  if (calendarType === CalendarType.MONTH) {
+    return { long: getFormattedDate(date, 'MMMM YYYY'), short: getFormattedDate(date, 'MMM YYYY') };
+  }
+  const start = getStartOfWeek(date);
+  const end = getEndOfWeek(date);
+  return {
+    long: `${getFormattedDate(start, 'D MMM')} – ${getFormattedDate(end, 'D MMM YYYY')}`,
+    short: `${getFormattedDate(start, 'D MMM')} – ${getFormattedDate(end, 'D MMM')}`,
+  };
+};
+
+/**
+ * When a session made from the toolbar starts: the selected day at 9 in the morning, or, for today,
+ * the next full hour. The selected date is a midnight timestamp, and a session at 12:00 AM is never
+ * what anyone meant.
+ */
+const defaultSessionStart = (date: Date, calendarType: CalendarType): Date => {
+  const now = new Date();
+  // The selected date is the first day of the range being shown; when today is in that range it is
+  // the day someone means, not the Sunday a week happens to start on.
+  const isTodayInView =
+    calendarType === CalendarType.DAY
+      ? date.toDateString() === now.toDateString()
+      : now >= date &&
+        now <= (calendarType === CalendarType.MONTH ? addMonthsToDate(date, 1) : addWeeksToDate(date, 1));
+  const start = new Date(isTodayInView ? now : date);
+  start.setHours(isTodayInView ? now.getHours() + 1 : 9, 0, 0, 0);
+  return start;
+};
+
+/** Day, week, month and list as one segmented control; labels drop to icons on a phone. */
+const ViewSwitch = ({ value, onChange }: { value: CalendarType; onChange: (view: FCCalendarType) => void }) => (
+  <div
+    className="inline-flex rounded-md border border-border bg-background p-0.5"
+    role="group"
+    aria-label="Calendar view"
+  >
+    {Object.values(FCCalendarType).map((view) => {
+      const type = CalendarTypeMap[view];
+      const isActive = type === value;
+      return (
+        <button
+          key={view}
+          type="button"
+          aria-pressed={isActive}
+          onClick={() => onChange(view)}
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded px-2 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+          )}
+          title={capitalize(type)}
+        >
+          {CalenderViewIconMap[view]}
+          <span className="hidden md:inline">{capitalize(type)}</span>
+        </button>
+      );
+    })}
+  </div>
+);
+
+/**
+ * The calendar's own toolbar, in place of FullCalendar's: Today and the arrows, the range being
+ * shown, the view switch and Create. Two rows on a phone, one from the tablet up.
+ */
 export const CustomToolbar = ({
   calendarRef,
   setCalenderType,
@@ -48,46 +127,21 @@ export const CustomToolbar = ({
   calendarType,
   selectedDate,
 }: IProps) => {
-  if (!calendarRef.current) return;
-
-  // The handlers below run after render, where the early return no longer narrows the ref.
+  // Read at call time: the ref is still empty on the first render, and bailing out until it was set
+  // left the page with no toolbar at all when nothing else caused a re-render.
   const getApi = () => calendarRef.current?.getApi();
-
   const date = new Date(selectedDate);
+  const labels = rangeLabels(date, calendarType);
 
   const handleToday = () => {
     getApi()?.today();
     setDate(Date.now());
   };
 
-  const handlePrev = () => {
-    let prevDate = date;
-    if (calendarType === CalendarType.DAY) {
-      getApi()?.prev();
-      prevDate = subtractDaysFromDate(prevDate, 1);
-    } else if (calendarType === CalendarType.WEEK || calendarType === CalendarType.LIST) {
-      prevDate = subtractWeeksFromDate(prevDate, 1);
-      getApi()?.gotoDate(prevDate);
-    } else if (calendarType === CalendarType.MONTH) {
-      prevDate = subtractMonthsFromDate(prevDate, 1);
-      getApi()?.gotoDate(prevDate);
-    }
-    setDate(Date.parse(prevDate.toISOString()));
-  };
-
-  const handleNext = () => {
-    let nextDate = date;
-    if (calendarType === CalendarType.DAY) {
-      getApi()?.next();
-      nextDate = addDaysToDate(nextDate, 1);
-    } else if (calendarType === CalendarType.WEEK || calendarType === CalendarType.LIST) {
-      nextDate = addWeeksToDate(nextDate, 1);
-      getApi()?.gotoDate(nextDate);
-    } else if (calendarType === CalendarType.MONTH) {
-      nextDate = addMonthsToDate(nextDate, 1);
-      getApi()?.gotoDate(nextDate);
-    }
-    setDate(Date.parse(nextDate.toISOString()));
+  const move = (direction: 1 | -1) => {
+    const next = step(date, calendarType, direction);
+    getApi()?.gotoDate(next);
+    setDate(next.getTime());
   };
 
   const handleViewChange = (view: FCCalendarType) => {
@@ -95,51 +149,29 @@ export const CustomToolbar = ({
     setCalenderType(CalendarTypeMap[view]);
   };
 
-  const viewItems = Object.values(FCCalendarType).map((view) => ({
-    label: capitalize(CalendarTypeMap[view]),
-    onClick: () => handleViewChange(view),
-    icon: CalenderViewIconMap[view],
-  }));
-
-  // WEEK and LIST render the same range, so they share a branch.
-  const rangeLabel = `${getFormattedDate(getStartOfWeek(date), 'MMM D')} - ${getFormattedDate(getEndOfWeek(date), 'MMM D, YYYY')}`;
-  let dateLabel: React.ReactNode = '';
-  if (calendarType === CalendarType.DAY) {
-    dateLabel = (
-      <div className="flex gap-3 items-center">
-        <p>{getFormattedDate(date, 'D MMMM YYYY')}</p>
-      </div>
-    );
-  } else if (calendarType === CalendarType.WEEK || calendarType === CalendarType.LIST) {
-    dateLabel = rangeLabel;
-  } else if (calendarType === CalendarType.MONTH) {
-    dateLabel = getFormattedDate(date, 'MMMM YYYY');
-  }
-
   return (
-    <div className="flex items-center justify-between pb-3 md:pb-3">
-      <div className="flex md:justify-start flex-col md:flex-row md:items-center gap-2 w-full">
-        <div className="flex items-center gap-2">
-          <button onClick={handleToday} className="px-4 py-1 md:py-2 text-sm bg-accent font-medium">
-            Today
-          </button>
-          <button className="p-1 rounded hover:bg-accent" onClick={handlePrev}>
-            <CaretLeftIcon className="w-5 h-5" />
-          </button>
-          <button className="p-1 rounded hover:bg-accent" onClick={handleNext}>
-            <CaretRightIcon className="w-5 h-5" />
-          </button>
-          <div className="font-semibold text-md md:text-lg truncate max-w-[120px] md:max-w-full">{dateLabel}</div>
-        </div>
-        <div className="w-full flex justify-between md:justify-end items-center gap-3 md:gap-5">
-          <Button leftsection={<PlusIcon weight="bold" size={16} />} onClick={() => handleCreateMeet(date)}>
-            <span className="block md:block">Create</span>
-          </Button>
-          <div className="flex items-center gap-2 md:gap-2">
-            <Dropdown menuItems={viewItems} selected={capitalize(calendarType)} />
-            <Menu menuItems={[]} className="px-1.5" />
-          </div>
-        </div>
+    <div className="flex flex-wrap items-center gap-2 pb-3">
+      <div className="flex items-center gap-1">
+        <Button isSecondary text="Today" onClick={handleToday} />
+        <Button isSubtle className="px-2 py-1.5" title="Previous" onClick={() => move(-1)}>
+          <CaretLeftIcon weight="bold" className="h-4 w-4" />
+        </Button>
+        <Button isSubtle className="px-2 py-1.5" title="Next" onClick={() => move(1)}>
+          <CaretRightIcon weight="bold" className="h-4 w-4" />
+        </Button>
+      </div>
+      <h2 className="min-w-0 flex-1 truncate text-base font-semibold text-foreground sm:text-lg" aria-live="polite">
+        <span className="sm:hidden">{labels.short}</span>
+        <span className="hidden sm:inline">{labels.long}</span>
+      </h2>
+      <div className="flex w-full items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end">
+        <ViewSwitch value={calendarType} onChange={handleViewChange} />
+        <Button
+          leftsection={<PlusIcon weight="bold" className="h-4 w-4" />}
+          onClick={() => handleCreateMeet(defaultSessionStart(date, calendarType))}
+        >
+          Create <span className="hidden sm:inline">session</span>
+        </Button>
       </div>
     </div>
   );

@@ -6,3 +6,6 @@ export * from './MeetingOverviewModal';
 export * from './MeetingTitle';
 export * from './UpsertMeetingModal';
 export * from './ViewMeetAttendees';
+export * from './ColorPicker';
+export * from './FrequencyPicker';
+export * from './WeekDayPicker';

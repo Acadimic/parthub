@@ -1,9 +1,8 @@
-import { TextInput } from '@repo/ui/app';
+import { TextInput, DrawerSection } from '@repo/ui/app';
 import { SectionCategoryType } from '@enums';
 import { type ITestPaperSection, useTestPaperLookups } from '@stores';
 import { defaultMarkings as APP_DEFAULT_MARKINGS } from '@utils/constants';
 import { DefaultMarkingsTable } from './DefaultMarkingsTable';
-import { DrawerSection } from './DrawerSection';
 
 interface IProps {
   section: ITestPaperSection;

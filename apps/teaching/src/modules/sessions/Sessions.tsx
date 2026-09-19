@@ -5,7 +5,6 @@ import { BlankState } from '@components/others';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { Button, SoftConfirmModal, TextInput } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
-import { MeetFrequency } from '@enums';
 import { type IColumnData, type ISelectItem } from '@interfaces';
 import {
   JoiningLink,
@@ -16,30 +15,23 @@ import {
 } from '@modules/calender/components';
 import { useMeetHooks } from '@modules/calender/hooks';
 import { useMeetLookups } from '@stores';
-import { ACTIONS } from '@utils/constants';
+import { ACTIONS, MEET_FREQUENCIES, MEET_FREQUENCY_ORDER, getMeetFrequencyMeta } from '@utils/constants';
 import {
   addDaysToDate,
-  capitalizeFirstWord,
   getFormattedTime,
   getFrequencyText,
   getFullCalendarEvents,
   getFullFormattedDate,
-  reportError,
-  splitCamelCase,
-  successToast,
 } from '@utils/helpers';
 import { useEffect, useMemo } from 'react';
 import { useSetState } from 'react-use';
 
 interface IState {
   search: string;
-  /** The session the delete confirm is asking about, or `null` while it is closed. */
-  meetToDelete: MeetDto | null;
-  isDeleting: boolean;
 }
 
-const FREQUENCY_OPTIONS: ISelectItem[] = Object.values(MeetFrequency).map((frequency) => ({
-  label: capitalizeFirstWord(splitCamelCase(frequency)),
+const FREQUENCY_OPTIONS: ISelectItem[] = MEET_FREQUENCY_ORDER.map((frequency) => ({
+  label: MEET_FREQUENCIES[frequency].label,
   value: frequency,
 }));
 
@@ -67,7 +59,7 @@ const NextRun = ({ meet }: { meet: MeetDto }) => {
 
 export const Sessions = () => {
   const meetStore = useMeetLookups();
-  const { loadMeets, deleteMeet } = meetStore;
+  const { loadMeets } = meetStore;
   const meets = meetStore.getMeets();
   const isLoading = meetStore.isLoading('meets') && !meetStore.isLoaded('meets');
   const isFailed = meetStore.isFailed('meets');
@@ -78,8 +70,11 @@ export const Sessions = () => {
     closeUpsertMeetingModal,
     closeMeetingOverviewModal,
     handleEditMeet,
+    openDeleteMeet,
+    closeDeleteMeet,
+    confirmDeleteMeet,
   } = useMeetHooks();
-  const [state, setState] = useSetState<IState>({ search: '', meetToDelete: null, isDeleting: false });
+  const [state, setState] = useSetState<IState>({ search: '' });
 
   // Saved rows only, matched against the title. The search box used to have no handler.
   const visibleMeets = useMemo(() => {
@@ -88,21 +83,6 @@ export const Sessions = () => {
     if (!term) return saved;
     return saved.filter((meet) => `${meet.title} ${meet.description ?? ''}`.toLowerCase().includes(term));
   }, [meets, state.search]);
-
-  const onConfirmDelete = async () => {
-    const meet = state.meetToDelete;
-    if (!meet) return;
-    try {
-      setState({ isDeleting: true });
-      await deleteMeet(meet._id);
-      successToast({ message: 'Session deleted.' });
-      setState({ meetToDelete: null });
-    } catch (error) {
-      reportError(error, 'Could not delete the session.');
-    } finally {
-      setState({ isDeleting: false });
-    }
-  };
 
   const columns: IColumnData<MeetDto>[] = [
     {
@@ -129,8 +109,8 @@ export const Sessions = () => {
       filters: [{ key: 'frequency', label: 'Repeats', options: FREQUENCY_OPTIONS, getValues: (row) => row.frequency }],
       component: (row) => (
         <span className="flex flex-col">
-          <Badge tone="neutral" appearance="soft" className="w-fit capitalize">
-            {splitCamelCase(row.frequency) || 'One time'}
+          <Badge tone="neutral" appearance="soft" className="w-fit">
+            {getMeetFrequencyMeta(row.frequency).label}
           </Badge>
           {row.startTime && row.weekDays?.length ? (
             <span className="mt-0.5 truncate text-xs text-muted-foreground">
@@ -186,7 +166,7 @@ export const Sessions = () => {
         },
         {
           label: 'Delete',
-          onClick: (row) => row && setState({ meetToDelete: row }),
+          onClick: (row) => row && openDeleteMeet(row),
           icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
@@ -250,19 +230,19 @@ export const Sessions = () => {
       <UpsertMeetingModal isOpen={meetState.isOpenUpsertMeetingModal} onClose={closeUpsertMeetingModal} />
       <MeetingOverviewModal
         openEditModal={openUpsertMeetingModal}
-        openDeleteModal={() => {}}
+        openDeleteModal={() => openDeleteMeet()}
         isOpen={meetState.isOpenMeetingOverviewModal}
         onClose={closeMeetingOverviewModal}
       />
       <SoftConfirmModal
         title="Delete session"
-        description={`Delete "${state.meetToDelete?.title ?? 'this session'}"? Its attendees lose the joining link.`}
-        isOpen={!!state.meetToDelete}
-        isLoading={state.isDeleting}
+        description={`Delete "${meetState.meetToDelete?.title ?? 'this session'}"? Its attendees lose the joining link.`}
+        isOpen={!!meetState.meetToDelete}
+        isLoading={meetState.isDeletingMeet}
         isDestructive
         confirmText="Delete"
-        onCancel={() => !state.isDeleting && setState({ meetToDelete: null })}
-        onConfirm={onConfirmDelete}
+        onCancel={closeDeleteMeet}
+        onConfirm={confirmDeleteMeet}
       />
     </>
   );

@@ -5,14 +5,13 @@ import { type MarkingType } from '@repo/shared/interfaces';
 import { richTextFromMarkdown } from '@repo/shared/utils';
 import { Select } from '@components/app/selects';
 import { Badge } from '@repo/ui/core';
-import { TextInput } from '@repo/ui/app';
+import { TextInput, DrawerSection } from '@repo/ui/app';
 import { Marking, QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
 import { useStandardLookups, useQuestionLookups, useSelectedQuestion, useSelectedTestPaper } from '@stores';
 import { useEffect, useState } from 'react';
 import { AnswerChoices } from './AnswerChoices';
-import { DrawerSection } from './DrawerSection';
 import { getQuestionTypeMeta } from './question-types';
 
 const MARKING_FIELDS: { name: Marking; label: string; tone: string }[] = [

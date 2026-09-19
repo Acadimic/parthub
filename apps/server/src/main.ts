@@ -35,7 +35,9 @@ async function bootstrap() {
 
   const corsOptions = {
     origin: ['*'],
-    methods: ['GET', 'POST'],
+    // DELETE is what `meet/:meetId` answers to; without it here the browser's preflight refused the
+    // request and no session could ever be deleted from the apps.
+    methods: ['GET', 'POST', 'DELETE'],
   };
 
   app.enableCors(corsOptions);

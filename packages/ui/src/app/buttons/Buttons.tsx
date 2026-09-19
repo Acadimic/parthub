@@ -85,9 +85,13 @@ export const Button = ({
   className,
   isFull,
   isDestructive,
+  ...rest
 }: IButtonProps) => {
   return (
     <button
+      // Everything else — `title`, `aria-*`, `id`, `form` — reaches the element. Without this an
+      // icon-only button had no accessible name, whatever the caller passed.
+      {...rest}
       className={getButtonClass({ isRound, isSecondary, isSubtle, isDestructive, isLoading, isFull, className })}
       type="button"
       onClick={onClick}

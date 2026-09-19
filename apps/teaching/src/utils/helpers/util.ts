@@ -9,8 +9,7 @@ import {
   splitCamelCase,
 } from '@repo/ui/lib';
 import { type IFullCalendarEvent, type ISelectItem } from '@interfaces';
-import { MeetFrequency } from '../../enums';
-import { WEEK_DAYS_INTEGER_MAPPINGS } from '../constants';
+import { WEEK_DAYS_INTEGER_MAPPINGS, getMeetFrequencyMeta } from '../constants';
 import { logOut as signOut } from '../firebase';
 import { errorToast } from './toasts';
 
@@ -110,18 +109,17 @@ const collectRecurringSessions = (
 
 export const getFullCalendarEvents = (meet: MeetDto, from: Date, to: Date): IFullCalendarEvent[] => {
   // `MeetDto` leaves these optional because one class serves both directions and a write body need
-  // not send them. A meet with no span or no frequency cannot be placed on a calendar, so it
-  // contributes no events rather than an Invalid Date.
-  const { startTime, endTime, frequency } = meet;
-  if (!startTime || !endTime || !frequency) return [];
+  // not send them. A meet with no span cannot be placed on a calendar, so it contributes no events
+  // rather than an Invalid Date.
+  const { startTime, endTime } = meet;
+  if (!startTime || !endTime) return [];
 
   const times = { start: startTime, end: endTime };
   const range = { from: new Date(from), to: new Date(to) };
   const notBefore = getStartOfDay(startTime);
-  if ([MeetFrequency.DAILY, MeetFrequency.WEEKLY].includes(frequency)) {
-    return collectRecurringSessions(meet, range, { notBefore }, times);
-  }
-  if (frequency === MeetFrequency.THIS_WEEK) {
+  const { kind } = getMeetFrequencyMeta(meet.frequency);
+  if (kind === 'ongoing') return collectRecurringSessions(meet, range, { notBefore }, times);
+  if (kind === 'thisWeek') {
     return collectRecurringSessions(meet, range, { notBefore, notAfter: getEndOfWeek(startTime) }, times);
   }
   if (new Date(startTime) >= range.from && new Date(endTime) <= range.to) {

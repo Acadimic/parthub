@@ -2,6 +2,7 @@ import { type MeetDto } from '@repo/shared/contracts';
 import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
+import { getMeetFrequencyMeta } from '../utils/constants';
 import { ColorType, MeetFrequency, MeetStatus } from '../enums';
 import { MeetService } from '../services';
 import {
@@ -71,20 +72,16 @@ export const useMeetStore = create<IMeetState>()((set, get) => ({
     return get()
       .getMeets()
       .filter((meet) => {
-        const weekDays = meet.weekDays ?? [];
-        if (meet.frequency && [MeetFrequency.DAILY, MeetFrequency.WEEKLY].includes(meet.frequency)) {
-          return weekDays.includes(dayNumber);
-        }
         if (!meet.startTime) return false;
-        if (meet.frequency === MeetFrequency.THIS_WEEK) {
+        const weekDays = meet.weekDays ?? [];
+        const { kind } = getMeetFrequencyMeta(meet.frequency);
+        if (kind === 'ongoing') return weekDays.includes(dayNumber) && date >= getStartOfDay(meet.startTime);
+        if (kind === 'thisWeek') {
           const start = getStartOfWeek(meet.startTime);
           const end = getEndOfWeek(meet.startTime);
           return date >= start && date <= end && weekDays.includes(dayNumber);
         }
-        if (meet.frequency === MeetFrequency.ONE_TIME) {
-          return getStartOfDay(meet.startTime) === getStartOfDay(date);
-        }
-        return false;
+        return getStartOfDay(meet.startTime).getTime() === getStartOfDay(date).getTime();
       });
   },
 

@@ -2,7 +2,8 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import { ErrorBoundaryFallback } from '@repo/ui/app';
 import { CalendarXIcon } from '@phosphor-icons/react';
-import { CalendarType } from '@enums';
+import { CalendarType, FCCalendarType } from '@enums';
+import { cn } from '@repo/ui/lib';
 import { type DayCellContentArg, type DayHeaderContentArg, type EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -18,12 +19,31 @@ import { getFormattedTime } from '@utils/helpers';
 import { useEffect, useRef } from 'react';
 import { CustomToolbar, getDayEvents, getMonthEvents, getWeekEvents } from '.';
 
-export const DayHeaderContent = ({ date }: DayHeaderContentArg) => {
+/** The weekday and, outside the month grid, the date — today's in a filled circle. */
+export const DayHeaderContent = ({ date, isToday, view }: DayHeaderContentArg) => {
   const dayName = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date);
+  const showDate = view.type !== FCCalendarType.MONTH;
 
   return (
-    <div className="flex flex-col items-center py-2">
-      <p className="text-sm font-medium">{dayName}</p>
+    <div className="flex flex-col items-center py-1.5">
+      <p
+        className={cn(
+          'text-xxs font-semibold uppercase tracking-caps',
+          isToday ? 'text-primary' : 'text-muted-foreground',
+        )}
+      >
+        {dayName}
+      </p>
+      {showDate ? (
+        <span
+          className={cn(
+            'mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold',
+            isToday ? 'bg-primary text-primary-foreground' : 'text-foreground',
+          )}
+        >
+          {date.getDate()}
+        </span>
+      ) : null}
     </div>
   );
 };
@@ -36,11 +56,13 @@ export const DayCellContent = ({ dayNumberText, view: { type } }: DayCellContent
 
 const EmptyListView = () => {
   return (
-    <div className="flex flex-col items-center justify-center h-full py-12 px-4">
-      <CalendarXIcon className="w-12 h-12 text-muted-foreground mb-4" />
-      <h6 className="text-lg font-semibold text-foreground mb-2">No Events Scheduled</h6>
-      <p className="text-sm text-muted-foreground text-center max-w-md">
-        There are no events scheduled for this time period. Click the + create button to add a new event.
+    <div className="flex h-full flex-col items-center justify-center px-4 py-12">
+      <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <CalendarXIcon className="h-6 w-6" />
+      </span>
+      <h6 className="mb-1 text-base font-semibold text-foreground">No sessions this week</h6>
+      <p className="max-w-md text-center text-sm text-muted-foreground">
+        Nothing is scheduled in this range. Use Create, or click a time slot, to add one.
       </p>
     </div>
   );
@@ -57,7 +79,7 @@ const EventContentDefaultView = ({ event, calenderType }: { event: EventInput; c
   return (
     <div
       style={{ background: color, border: `1px solid ${color}` }}
-      className={`px-2 flex flex-col items-start justify-center text-white text-sm h-full w-full`}
+      className="flex h-full w-full flex-col items-start justify-center overflow-hidden rounded-md px-2 text-sm text-white"
     >
       <div className="flex items-center gap-2 font-medium w-full">
         <div>{getFormattedTime(event.start as Date)}</div>
@@ -117,7 +139,7 @@ export const FullCalendarView = ({ onEventClick, onDateClick }: IProps) => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="flex h-full flex-col">
       <CustomToolbar
         calendarRef={calendarRef}
         setCalenderType={setSelectedCalenderType}
@@ -126,7 +148,7 @@ export const FullCalendarView = ({ onEventClick, onDateClick }: IProps) => {
         selectedDate={selectedCalenderDate}
         handleCreateMeet={onDateClick}
       />
-      <div className="grow">
+      <div className="grow overflow-hidden rounded-lg border border-border bg-background">
         <ErrorBoundary FallbackComponent={handleError}>
           <FullCalendar
             viewClassNames={`${selectedCalenderType === CalendarType.DAY ? 'fc-day-grid-day-frame' : ''}`}
@@ -135,7 +157,7 @@ export const FullCalendarView = ({ onEventClick, onDateClick }: IProps) => {
             initialView={CalendarViewMap[selectedCalenderType]}
             initialDate={now}
             nowIndicator
-            height={`${isSmallScreen ? 'calc(100vh - 174px)' : 'calc(100vh - 144px)'}`}
+            height={isSmallScreen ? 'calc(100vh - 192px)' : 'calc(100vh - 150px)'}
             headerToolbar={false}
             allDaySlot={false}
             dayHeaders={true}
@@ -189,8 +211,13 @@ export const FullCalendarView = ({ onEventClick, onDateClick }: IProps) => {
               if (calendarType && calendarType !== selectedCalenderType) {
                 setSelectedCalenderType(calendarType);
               }
-              // Update the selected date
-              setSelectedCalenderDate(view.currentStart.getTime());
+              // The selected day is kept while it is still in view. The month grid reports the 1st
+              // as its start, and taking that as the selection made the next week or list view open
+              // on the week of the 1st rather than the week of the day the user was on.
+              const selected = new Date(selectedCalenderDate);
+              if (selected < view.currentStart || selected >= view.currentEnd) {
+                setSelectedCalenderDate(view.currentStart.getTime());
+              }
             }}
           />
         </ErrorBoundary>

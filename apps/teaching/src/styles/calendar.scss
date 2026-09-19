@@ -1,9 +1,10 @@
 .fc .fc-timegrid-col {
-  @apply bg-background !important;
+  @apply bg-background;
 }
 
-.fc .fc-daygrid-day.fc-day-today {
-  @apply bg-background !important;
+.fc .fc-daygrid-day.fc-day-today,
+.fc .fc-timegrid-col.fc-day-today {
+  @apply bg-primary/5 !important;
 }
 
 .fc-theme-standard .fc-list-day-cushion {
@@ -71,7 +72,7 @@
 }
 .fc .fc-timegrid-slot-minor {
   border-top-style: solid;
-  @apply border bg-background border-border;
+  @apply border border-border;
 }
 
 .fc .fc-view-harness {
@@ -108,13 +109,15 @@
   @apply border-border !important;
 }
 
-.fc-theme-standard .fc-timegrid-slots td,
-.fc-theme-standard th {
+.fc-theme-standard .fc-timegrid-slots td {
   height: 3.125rem !important;
   @apply border-border !important;
 }
-.fc-theme-standard .fc-timeGridDay-view .fc-timegrid-slots td,
-.fc-theme-standard .fc-timeGridDay-view th {
+.fc-theme-standard th {
+  height: auto !important;
+  @apply border-border !important;
+}
+.fc-theme-standard .fc-timeGridDay-view .fc-timegrid-slots td {
   height: 4rem !important;
 }
 
@@ -146,14 +149,9 @@
     display: inline-block;
     font-weight: 500;
     font-size: 14px;
-    font-family: 'Roboto', sans-serif;
-    width: 30px;
+    width: auto;
     margin: auto;
-    @media (min-width: 768px) {
-      width: auto;
-      padding: 2px 4px;
-      margin: 0px;
-    }
+    padding: 0 4px;
   }
 }
 
@@ -186,17 +184,15 @@
   line-height: normal;
   padding: 0px;
   width: 100%;
-  font-family: 'Roboto', sans-serif;
   @apply text-foreground text-end;
 }
 
 .fc-daygrid-more-link {
   width: 100%;
   font-weight: 500;
-  color: #285380;
   font-size: 12px;
   margin: 2px 0px;
-  @apply bg-background;
+  @apply bg-background text-primary;
 }
 
 .fc .fc-popover {
@@ -218,7 +214,6 @@
     .fc-popover-title {
       font-weight: 500;
       font-size: 14px;
-      font-family: 'Roboto', sans-serif;
       @apply text-muted-foreground;
     }
     .fc-popover-close {
@@ -234,13 +229,12 @@
 }
 
 .fc .fc-timegrid-now-indicator-line {
-  border-color: #f64e76;
-  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.5);
+  @apply border-destructive;
   position: relative;
 }
 .fc .fc-timegrid-now-indicator-line::before {
   content: '';
-  background-color: #f64e76;
+  @apply bg-destructive;
   width: 10px;
   height: 10px;
   border-radius: 100%;
@@ -252,7 +246,7 @@
 
 th .fc-scrollgrid-sync-inner {
   height: 100%;
-  @apply flex items-center justify-start md:pl-4;
+  @apply flex items-center justify-center;
 }
 
 .fc .fc-timegrid-col-frame {
