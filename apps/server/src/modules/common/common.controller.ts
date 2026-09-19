@@ -10,7 +10,7 @@ import { type IPresignedUrl } from '@repo/shared/contracts';
 import { Subdomain } from '@repo/shared/enums';
 import { RequestContextService } from '../../context/request-context.service';
 import { CommonService } from './common.service';
-import { PresignedGetUrlsDto, PresignedPutUrlsDto } from './dto/presigned-url.dto';
+import { DeleteObjectsDto, PresignedGetUrlsDto, PresignedPutUrlsDto } from './dto/presigned-url.dto';
 
 @Controller('common')
 export class CommonController {
@@ -68,15 +68,30 @@ export class CommonController {
   @Post('presigned-PUT-urls')
   @Permissions()
   async getPreSignedPUTUrls(@Body() payload: PresignedPutUrlsDto): Promise<IPresignedUrl[]> {
-    const data = await this.commonService.getPreSignedPUTUrls(payload.files, payload.isPublic);
+    // The organization in context is the folder the files go to, and the only one they can come from.
+    const orgId = this.requestContextService.getOrgIdSafe()?.toString();
+    const data = await this.commonService.getPreSignedPUTUrls(payload.files, payload.isPublic, orgId);
     return data;
   }
 
   @Post('presigned-GET-urls')
   @Permissions()
   async getPreSignedGETUrls(@Body() payload: PresignedGetUrlsDto): Promise<IPresignedUrl[]> {
-    const data = await this.commonService.getPreSignedGETUrls(payload.keys, payload.isPublic);
+    const orgId = this.requestContextService.getOrgIdSafe()?.toString();
+    const data = await this.commonService.getPreSignedGETUrls(payload.keys, payload.isPublic, orgId);
     return data;
+  }
+
+  /**
+   * Deletes objects whose attachments were removed, or whose record failed to save after the
+   * upload. Without it every removed file stayed in the bucket for good.
+   */
+  @Post('delete-objects')
+  @Permissions()
+  async deleteObjects(@Body() payload: DeleteObjectsDto): Promise<{ deleted: number }> {
+    const orgId = this.requestContextService.getOrgIdSafe()?.toString();
+    await this.commonService.deleteObjects(payload.keys, orgId);
+    return { deleted: payload.keys.length };
   }
 
   // The machine-to-machine twins of the two routes above. Same service calls, same shapes — only

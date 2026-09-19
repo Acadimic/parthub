@@ -21,4 +21,9 @@ export class Chapter extends BaseSchema {
 
 export const ChapterSchema = SchemaFactory.createForClass(Chapter);
 
-ChapterSchema.index({ name: 1, standard: 1, subject: 1, org: 1 }, { unique: true, sparse: true });
+// Unique among live rows only: a deleted chapter's name must be reusable. See `MaterialSchema`
+// for why this is a partial index rather than a sparse one.
+ChapterSchema.index(
+  { name: 1, standard: 1, subject: 1, org: 1 },
+  { unique: true, partialFilterExpression: { _deleted: false } },
+);

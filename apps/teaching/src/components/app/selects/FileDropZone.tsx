@@ -1,3 +1,4 @@
+import { MAX_UPLOAD_BYTES } from '@repo/shared/utils';
 import { type FileExtension } from '@enums';
 import { errorToast } from '@utils/helpers';
 import Dropzone, { type FileRejection } from 'react-dropzone';
@@ -64,7 +65,7 @@ export const FileDropZone = ({
       <Dropzone
         onDrop={handleFilesChange}
         maxFiles={maxFileCount}
-        maxSize={50000000}
+        maxSize={MAX_UPLOAD_BYTES}
         accept={acceptedFileTypes}
         onDropRejected={onDropRejected}
         multiple={maxFileCount > 1}

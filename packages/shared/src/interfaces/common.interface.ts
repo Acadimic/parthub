@@ -22,6 +22,8 @@ export interface IDynamicObject {
 export interface IPresignedPutUrlRequest {
   key: string;
   contentType: string;
+  /** Declared so the server can refuse a file over the limit before signing. */
+  size?: number;
 }
 
 /** The body of `POST common/presigned-PUT-urls` and its `@Private()` twin. */

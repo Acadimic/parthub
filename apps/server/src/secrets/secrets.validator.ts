@@ -39,6 +39,11 @@ export class SecretsValidator {
   @IsOptional()
   S3_PUBLIC_BUCKET_NAME: string;
 
+  /** A folder inside both buckets that every key of this deployment lives under, e.g. `acadimic-dev/`. */
+  @IsString()
+  @IsOptional()
+  S3_PREFIX: string;
+
   @IsString()
   @IsOptional()
   SENDGRID_API_KEY: string;

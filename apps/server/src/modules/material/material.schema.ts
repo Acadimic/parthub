@@ -92,4 +92,11 @@ export class Material extends BaseSchema {
 export const MaterialSchema = SchemaFactory.createForClass(Material);
 
 MaterialSchema.index({ org: 1, _deleted: 1 });
-MaterialSchema.index({ standard: 1, subject: 1, chapter: 1, order: 1, org: 1 }, { unique: true, sparse: true });
+// Unique among live rows only. A delete is a soft delete, and with the plain unique index the
+// deleted row kept its `order`, so the next content added to the chapter — given that same next
+// order — failed with a duplicate key. `_deleted` always exists (the base schema defaults it), so
+// a partial index on `_deleted: false` is the exact condition.
+MaterialSchema.index(
+  { standard: 1, subject: 1, chapter: 1, order: 1, org: 1 },
+  { unique: true, partialFilterExpression: { _deleted: false } },
+);

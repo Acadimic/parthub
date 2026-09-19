@@ -3,8 +3,9 @@ import { Attachments, UploadFiles } from '@components/app/attachments';
 import { Select } from '@components/app/selects';
 import { Button, Label, Modal, ModalFooter, SimpleAccordions, TextInput } from '@repo/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
-import { type FileExtension, PositionType } from '@enums';
-import { useAttachment } from '@hooks/attachment.hook';
+import { type AttachmentDto } from '@repo/shared/contracts';
+import { PositionType } from '@enums';
+import { type UploadProgress, useAttachment } from '@hooks/attachment.hook';
 import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
 import { MaterialService } from '@services';
@@ -38,8 +39,12 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
   const { getStandardSubjectChapters } = useStandardLookups();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({});
+  // Uploaded attachments removed while editing. Their objects are deleted only once the save has
+  // gone through, so a cancelled edit leaves the saved material's files where they were.
+  const [removedAttachments, setRemovedAttachments] = useState<AttachmentDto[]>([]);
   const chapters = getStandardSubjectChapters(selectedStandardId, selectedSubjectId);
-  const { uploadFilesToS3 } = useAttachment();
+  const { uploadFilesToS3, deleteAttachments } = useAttachment();
   // The key of the attachment being edited, not a copy of it: a copy goes stale the moment it is
   // patched, so the row is read back out of the material on every render.
   const [selectedAttachmentKey, setSelectedAttachmentKey] = useState<string | null>(null);
@@ -66,7 +71,14 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
   const handleClose = () => {
     if (isLoading) return;
     setSelectedFiles([]);
+    setRemovedAttachments([]);
     onClose();
+  };
+
+  const onRemoveAttachment = (attachment: AttachmentDto) => {
+    if (!selectedMaterial) return;
+    removeAttachment(selectedMaterial._id, attachment.key);
+    if (attachment.isUploaded) setRemovedAttachments((current) => [...current, attachment]);
   };
 
   const removeFile = (index: number) => {
@@ -89,10 +101,16 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
       ['title', 'chapter'],
     );
     if (errors.length) return;
+    // Uploaded here, before the record is written, and deleted again below if that write fails:
+    // the bucket never holds a file that no saved material points at.
+    let uploaded: AttachmentDto[] = [];
     try {
       setIsLoading(true);
-      const attachments = (await uploadFilesToS3(selectedMaterial._id, selectedFiles)) ?? [];
-      attachments.forEach((attachment) => addAttachment(selectedMaterial._id, attachment));
+      setUploadProgress({});
+      uploaded = await uploadFilesToS3(selectedMaterial._id, selectedFiles, (index, percent) =>
+        setUploadProgress((current) => ({ ...current, [index]: percent })),
+      );
+      uploaded.forEach((attachment) => addAttachment(selectedMaterial._id, attachment));
       // Read the row back rather than posting `selectedMaterial`: the store holds immutable rows, so
       // the copy captured during render carries neither the uploads just added nor an edit made
       // after it.
@@ -100,6 +118,9 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
       if (!material) return;
       const result = await MaterialService.upsertMaterial(material);
       setSelectedFiles([]);
+      // Only now are the removed files gone for good: the record no longer refers to them.
+      await deleteAttachments(removedAttachments);
+      setRemovedAttachments([]);
       // The server's row, not a patched local one: it carries the timestamps and ownership fields
       // the list rolls up, and replacing the draft is what clears `isNew`.
       if (result?.data) addMaterials([result.data]);
@@ -107,11 +128,14 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
       successToast({ message: 'Content saved successfully!' });
       onClose();
     } catch (error) {
+      uploaded.forEach((attachment) => removeAttachment(selectedMaterial._id, attachment.key));
+      await deleteAttachments(uploaded);
       // `callAuthApi` has already toasted an HTTP failure, so toasting here would show it twice.
       // Anything thrown that is not an `Error` carries no message of its own.
       if (!(error instanceof Error)) errorToast({ message: 'Could not save the content.' });
     } finally {
       setIsLoading(false);
+      setUploadProgress({});
     }
   };
 
@@ -148,36 +172,27 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                 </div>
                 <div className="flex flex-col gap-3">
                   <Label label="Attachments" />
-                  <div className="flex justify-center border border-border py-2.5 px-3">
-                    <div className="w-full cursor-pointer">
-                      <UploadFiles
-                        selectedFiles={selectedFiles}
-                        setSelectedFiles={setSelectedFiles}
-                        removeFile={removeFile}
-                        isPdf
-                        maxFiles={5}
-                      />
-                    </div>
-                  </div>
-                  <div>
+                  <UploadFiles
+                    selectedFiles={selectedFiles}
+                    setSelectedFiles={(files) => setSelectedFiles([...selectedFiles, ...files].slice(0, 5))}
+                    removeFile={removeFile}
+                    progress={isLoading ? uploadProgress : undefined}
+                    isUploading={isLoading}
+                    isPdf
+                    maxFiles={5}
+                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Attachments
+                      attachments={selectedMaterial.attachments ?? []}
+                      onRemove={onRemoveAttachment}
+                      onEdit={(attachment) => onEditAttachment(attachment.key)}
+                      className="contents"
+                    />
                     <Button
-                      text="Add Link"
+                      text="Add link"
                       leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
                       onClick={onAddLinkAttachment}
                       isSubtle
-                    />
-                  </div>
-                  <div>
-                    <Attachments
-                      attachments={(selectedMaterial.attachments ?? []).map((attachment, index) => ({
-                        fileName: attachment.fileName,
-                        extension: attachment.fileExtension,
-                        index,
-                        onRemove: () => removeAttachment(selectedMaterial._id, attachment.key),
-                        onEdit: () => onEditAttachment(attachment.key),
-                        url: attachment.url,
-                        isStatic: attachment.isUploaded ? false : true,
-                      }))}
                     />
                   </div>
                 </div>
@@ -210,16 +225,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                           component: (
                             <div className="w-full">
                               <div className="border border-border py-2 px-2 w-full flex flex-col gap-2">
-                                <StudyMaterialView
-                                  material={selectedMaterial}
-                                  otherAttachments={selectedFiles.map((file, index) => ({
-                                    fileName: file.name,
-                                    extension: file.name.split('.').pop() as FileExtension,
-                                    index,
-                                    url: URL.createObjectURL(file),
-                                    isStatic: true,
-                                  }))}
-                                />
+                                <StudyMaterialView material={selectedMaterial} />
                               </div>
                             </div>
                           ),

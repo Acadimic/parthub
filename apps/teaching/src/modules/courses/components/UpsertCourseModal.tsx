@@ -1,10 +1,11 @@
 import { type CourseDto, type PlanDto } from '@repo/shared/contracts';
-import { UploadFiles } from '@components/app/attachments';
+import { type AttachmentDto } from '@repo/shared/contracts';
+import { Attachments, UploadFiles } from '@components/app/attachments';
 import { Select } from '@components/app/selects';
 import { Button, Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
 import { PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { PeriodType, PositionType } from '@enums';
-import { useAttachment } from '@hooks/attachment.hook';
+import { type UploadProgress, useAttachment } from '@hooks/attachment.hook';
 import { type ISelectItem } from '@interfaces';
 import { CourseService } from '@services';
 import {
@@ -65,11 +66,15 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
   const { getStandardItems } = useStandardLookups();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({});
+  // The saved image removed while editing. Its object is deleted only once the save has gone
+  // through, so cancelling leaves the course's image where it was.
+  const [removedAttachments, setRemovedAttachments] = useState<AttachmentDto[]>([]);
   const [removedPlanIds, setRemovedPlanIds] = useState<string[]>([]);
   // The saved course and plans as they were when the drawer opened. Editing patches the store as
   // the user types, so cancelling has to have something to put back.
   const snapshotRef = useRef<ISnapshot | undefined>(undefined);
-  const { uploadFilesToS3 } = useAttachment();
+  const { uploadFilesToS3, deleteAttachments } = useAttachment();
 
   const isNewCourse = !!selectedCourse?.isNew;
   const visiblePlans = selectedCoursePlans.filter((plan) => !removedPlanIds.includes(plan._id));
@@ -77,6 +82,7 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
   const resetAndClose = () => {
     snapshotRef.current = undefined;
     setRemovedPlanIds([]);
+    setRemovedAttachments([]);
     setSelectedFiles([]);
     removeSelectedCourseId();
     onClose();
@@ -118,6 +124,17 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
     else setRemovedPlanIds((planIds) => [...planIds, plan._id]);
   };
 
+  /** Takes a failed save's uploads back out of the draft and the bucket. */
+  const discardUploads = async (courseId: string, uploaded: AttachmentDto[]) => {
+    if (!uploaded.length) return;
+    const keys = uploaded.map((attachment) => attachment.key);
+    const latest = useCourseStore.getState().getCourseById(courseId);
+    patchCourse(courseId, {
+      attachments: (latest?.attachments ?? []).filter((attachment) => !keys.includes(attachment.key)),
+    });
+    await deleteAttachments(uploaded);
+  };
+
   const saveCourse = async () => {
     const courseId = selectedCourse?._id;
     if (!courseId) return;
@@ -130,14 +147,16 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
       return;
     }
     const isCreating = !!currentCourse.isNew;
+    // Uploaded before the record is written and deleted again if that write fails, so the bucket
+    // never holds an image that no saved course points at.
+    let uploaded: AttachmentDto[] = [];
     try {
       setIsLoading(true);
-      if (selectedFiles.length) {
-        const attachments = await uploadFilesToS3(courseId, selectedFiles);
-        // The hook has already said what went wrong; saving without the image would lose it.
-        if (!attachments.length) return;
-        patchCourse(courseId, { attachments: [...(currentCourse.attachments ?? []), ...attachments] });
-      }
+      setUploadProgress({});
+      uploaded = await uploadFilesToS3(courseId, selectedFiles, (index, percent) =>
+        setUploadProgress((current) => ({ ...current, [index]: percent })),
+      );
+      if (uploaded.length) patchCourse(courseId, { attachments: [...(currentCourse.attachments ?? []), ...uploaded] });
       calculateAndSetCourseStatsByCourseId(courseId);
       // Read the rows back rather than posting `selectedCourse`: the store holds immutable rows, so
       // the copy captured during render carries neither the upload above nor the fresh stats.
@@ -164,15 +183,27 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
         addPlans(result.data.plans);
       }
       removedPlanIds.forEach((planId) => removePlanById(planId));
+      // Only now is the replaced image gone for good: the record no longer refers to it.
+      await deleteAttachments(removedAttachments);
       successToast({ message: isCreating ? 'Course created.' : 'Course updated.' });
       resetAndClose();
       // A new course opens on its detail page, which is where its modules are added.
       if (isCreating) push(`/courses/${courseId}`);
     } catch (error) {
+      await discardUploads(courseId, uploaded);
       reportError(error, 'Could not save the course.');
     } finally {
       setIsLoading(false);
+      setUploadProgress({});
     }
+  };
+
+  const onRemoveAttachment = (attachment: AttachmentDto) => {
+    if (!selectedCourse) return;
+    patchCourse(selectedCourse._id, {
+      attachments: (selectedCourse.attachments ?? []).filter((item) => item.key !== attachment.key),
+    });
+    if (attachment.isUploaded) setRemovedAttachments((current) => [...current, attachment]);
   };
 
   const removeFile = (index: number) => {
@@ -251,15 +282,16 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
               />
               <div>
                 <Label label="Course Image" required />
-                <div className="flex justify-center mt-1 w-full">
-                  <div className="w-full border border-dotted border-border py-2 px-2">
-                    <UploadFiles
-                      selectedFiles={selectedFiles}
-                      setSelectedFiles={setSelectedFiles}
-                      removeFile={removeFile}
-                      isImage
-                    />
-                  </div>
+                <div className="mt-1 flex w-full flex-col gap-2">
+                  <Attachments attachments={selectedCourse.attachments ?? []} onRemove={onRemoveAttachment} />
+                  <UploadFiles
+                    selectedFiles={selectedFiles}
+                    setSelectedFiles={setSelectedFiles}
+                    removeFile={removeFile}
+                    progress={isLoading ? uploadProgress : undefined}
+                    isUploading={isLoading}
+                    isImage
+                  />
                 </div>
               </div>
               <div>

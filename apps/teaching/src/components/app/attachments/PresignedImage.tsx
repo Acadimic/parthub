@@ -12,6 +12,9 @@ interface IProps {
 const PresignedImageComponent = ({ url, className, isStatic, noOpen }: IProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [presignedUrl, setPresignedUrl] = useState<string>('');
+  // A signed URL that turns out not to load — the object was deleted, or the bucket is unreachable —
+  // falls back to the placeholder instead of the browser's broken-image glyph and alt text.
+  const [hasFailed, setHasFailed] = useState<boolean>(false);
   const { getPresignedUrls } = useAttachment();
 
   const fetchAndSetPresignedUrl = async () => {
@@ -29,6 +32,7 @@ const PresignedImageComponent = ({ url, className, isStatic, noOpen }: IProps) =
   };
 
   useEffect(() => {
+    setHasFailed(false);
     if (url && isStatic) setPresignedUrl(url);
     else if (!presignedUrl) fetchAndSetPresignedUrl();
   }, [url]);
@@ -38,12 +42,17 @@ const PresignedImageComponent = ({ url, className, isStatic, noOpen }: IProps) =
       className={`flex items-center justify-center w-full h-full text-muted-foreground ${noOpen ? '' : 'cursor-pointer'}`}
       onClick={onClick}
     >
-      {isLoading || !url || !presignedUrl ? (
+      {isLoading || !url || !presignedUrl || hasFailed ? (
         <div className="bg-muted w-full h-full">
           <Img weight="light" className={`w-full h-full ${className ? className : ''}`} />
         </div>
       ) : (
-        <img src={presignedUrl} alt="img" className={`w-full h-full ${className ? className : ''}`} />
+        <img
+          src={presignedUrl}
+          alt=""
+          onError={() => setHasFailed(true)}
+          className={`w-full h-full ${className ? className : ''}`}
+        />
       )}
     </div>
   );

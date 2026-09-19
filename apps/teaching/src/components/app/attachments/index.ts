@@ -3,3 +3,4 @@ export * from './Attachments';
 export * from './PresignedImage';
 export * from './UploadAvatar';
 export * from './UploadFiles';
+export * from './FileViewerModal';

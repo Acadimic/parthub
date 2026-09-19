@@ -22,10 +22,22 @@ class CommonService {
     return resData;
   };
 
-  uploadWithPreSignedUrl = async (presignedUrl: string, file: File) => {
+  /** PUTs the file to its signed URL; `onProgress` gets 0–100 as the body goes up. */
+  uploadWithPreSignedUrl = async (presignedUrl: string, file: File, onProgress?: (percent: number) => void) => {
     const headers = { 'Content-Type': file.type };
-    const res = await callDefaultApi().put(presignedUrl, file, { headers });
+    const res = await callDefaultApi().put(presignedUrl, file, {
+      headers,
+      onUploadProgress: (event) => {
+        if (onProgress && event.total) onProgress(Math.round((event.loaded / event.total) * 100));
+      },
+    });
     return res.data;
+  };
+
+  deleteObjects = async (keys: string[]) => {
+    const url = 'common/delete-objects';
+    const resData = await callAuthApi<{ deleted: number }>(url, API.POST, { keys });
+    return resData;
   };
 }
 

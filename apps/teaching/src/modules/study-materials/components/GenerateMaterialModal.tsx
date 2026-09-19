@@ -2,7 +2,8 @@ import { richTextFromMarkdown } from '@repo/shared/utils';
 import { UploadFiles } from '@components/app/attachments';
 import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
 import { PositionType } from '@enums';
-import { useAttachment } from '@hooks/attachment.hook';
+import { type AttachmentDto } from '@repo/shared/contracts';
+import { type UploadProgress, useAttachment } from '@hooks/attachment.hook';
 import { MaterialService } from '@services';
 import {
   useStandardLookups,
@@ -71,13 +72,14 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
   const selectorStore = useSelectorLookups();
   const materialStore = useMaterialLookups();
   const { patchMaterial, addMaterials } = materialStore;
-  const { addAttachment } = materialStore;
+  const { addAttachment, removeAttachment } = materialStore;
   const { removeSelectedMaterialId } = selectorStore;
   const selectedMaterial = useSelectedMaterial();
   const { getStandardById, getSubjectById, getChapterById } = useStandardLookups();
   const { addLinkAttachment, patchAttachment } = materialStore;
-  const { uploadFilesToS3 } = useAttachment();
+  const { uploadFilesToS3, deleteAttachments } = useAttachment();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({});
   const initialState = {
     topic: selectedMaterial?.name || '',
     isLoading: false,
@@ -107,12 +109,18 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
       return;
     }
     setState({ isLoading: true });
+    // Uploaded before the record is written and deleted again if that write fails, so the bucket
+    // never holds a file that no saved material points at.
+    let uploaded: AttachmentDto[] = [];
     try {
       // The model now returns Markdown, so the text is the content — no JSON parse, and no
       // backslash pre-escaping to survive one.
       patchMaterial(selectedMaterial._id, { content: richTextFromMarkdown(state.materialText) });
-      const attachments = (await uploadFilesToS3(selectedMaterial._id, selectedFiles)) ?? [];
-      attachments.forEach((attachment) => addAttachment(selectedMaterial._id, attachment));
+      setUploadProgress({});
+      uploaded = await uploadFilesToS3(selectedMaterial._id, selectedFiles, (index, percent) =>
+        setUploadProgress((current) => ({ ...current, [index]: percent })),
+      );
+      uploaded.forEach((attachment) => addAttachment(selectedMaterial._id, attachment));
       for (const item of videoLinks) {
         const isValid = await isYouTubeVideoValid(item.url);
         if (!isValid) continue;
@@ -134,11 +142,14 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
       removeSelectedMaterialId();
       onClose();
     } catch (error) {
+      uploaded.forEach((attachment) => removeAttachment(selectedMaterial._id, attachment.key));
+      await deleteAttachments(uploaded);
       // `callAuthApi` has already toasted an HTTP failure, so toasting here would show it twice.
       // Anything thrown that is not an `Error` carries no message of its own.
       if (!(error instanceof Error)) errorToast({ message: 'Could not generate the material.' });
     } finally {
       setState({ isLoading: false });
+      setUploadProgress({});
     }
   };
 
@@ -200,17 +211,15 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
           />
           <div className="flex flex-col gap-3">
             <Label label="Attachments" required />
-            <div className="flex justify-center border border-border py-2.5 px-3">
-              <div className="w-full cursor-pointer">
-                <UploadFiles
-                  selectedFiles={selectedFiles}
-                  setSelectedFiles={setSelectedFiles}
-                  removeFile={removeFile}
-                  isPdf
-                  maxFiles={5}
-                />
-              </div>
-            </div>
+            <UploadFiles
+              selectedFiles={selectedFiles}
+              setSelectedFiles={(files) => setSelectedFiles([...selectedFiles, ...files].slice(0, 5))}
+              removeFile={removeFile}
+              progress={state.isLoading ? uploadProgress : undefined}
+              isUploading={state.isLoading}
+              isPdf
+              maxFiles={5}
+            />
           </div>
         </div>
       }
