@@ -5,7 +5,12 @@ JSON reply back. Nothing in the app calls a model, so any provider works, and no
 until the import step has checked the reply.
 
 Entry points: **Generate with AI** in a test paper's header, **Generate questions** in a section's
-split button, and the "No sections yet" state.
+split button, the "No sections yet" state, and **Generate with AI** on `/test-papers`, which makes
+a whole paper from nothing but standards (see "A whole paper" below).
+
+The step components the AI drawers share — `AiSteps`, `AiPromptStep`, `AiPromptPackStep`,
+`AiIssueList`, `AiDrawerFooter` — live in `apps/teaching/src/components/app/ai/`. The parsing,
+JSON repair and Markdown checks they all use are in `apps/teaching/src/utils/ai/common.ts`.
 
 ## The three steps
 
@@ -17,6 +22,13 @@ split button, and the "No sections yet" state.
 3. **Import** — paste or upload the reply. It is parsed, checked against this paper (ids, counts,
    answer keys, per-type rules, duplicates), previewed as it will appear, then written through
    `POST question/bulk-upsert`. New sections named in the file are created first.
+
+## A whole paper
+
+`AiWholePaperDrawer` takes standards and optional subjects and decides the rest: the name, quiz
+type, thirty minutes, one section per subject (or one for the standard), a default type mix
+(`test-paper-plan.ts`), solutions on. The prompt is the same builder; the import creates the paper
+and its sections first, then the questions, and opens the paper.
 
 ## The JSON the model returns
 
@@ -39,7 +51,10 @@ Types live in `packages/shared/src/interfaces/ai-test-paper.interface.ts` (`IAiT
           "ref": "S1-Q1",
           "questionType": "singleChoice",
           "body": "Markdown with $LaTeX$ …",
-          "options": [{ "body": "…", "isCorrect": true }, { "body": "…", "isCorrect": false }],
+          "options": [
+            { "body": "…", "isCorrect": true },
+            { "body": "…", "isCorrect": false }
+          ],
           "solution": "Markdown …",
           "marks": { "correct": 4, "incorrect": -1, "unattempted": 0 },
           "level": "medium",
@@ -69,4 +84,15 @@ Types live in `packages/shared/src/interfaces/ai-test-paper.interface.ts` (`IAiT
 
 Models write Markdown and LaTeX reliably; they do not write ProseMirror documents reliably. The
 importer already converts Markdown (`richTextFromMarkdown` in `packages/shared`), so the file
-stays readable to a person and the conversion stays in one place.
+stays readable to a person and the conversion stays in one place. The subset the editor stores,
+and what the converter does with equations, is documented in `packages/ui/src/editor/README.md`.
+
+## Equations in replies
+
+A model that writes `\frac` with a single backslash inside JSON has written a form-feed escape,
+and `\pi` is not a JSON escape at all. Before parsing, `repairJsonEscapes` doubles the backslashes
+that cannot be JSON escapes and those that spell a LaTeX command; the count shows as a warning.
+The validator (`checkMarkdownMath`) then warns per question about leftover control characters,
+currency `$`, an odd number of `$`, and `\( \)` delimiters. The converter escapes a bare `%` or
+`$` inside an equation and reads `$` in prose under Pandoc's rule, so a price is never an
+equation. The shared prompt rules (`MARKDOWN_RULES`) tell the model all of this up front.

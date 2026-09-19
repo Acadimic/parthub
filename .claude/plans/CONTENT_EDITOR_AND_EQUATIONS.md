@@ -3,6 +3,21 @@
 Status: proposal, 2026-09-15. Supersedes `multilingual-content-equations-architecture.md`
 (the "AbleSpace" draft), which is reviewed in §3 and folded in here.
 
+**Where things stand, 2026-09-19.** Much of this is built; the reference for what exists is
+`packages/ui/src/editor/README.md`, and this document keeps the reasoning. Built: the `IRichText`
+storage model and projection (§6.2, Phase 3); the two math nodes with MathLive click-to-edit,
+palette, formula gallery, keyboard and LaTeX disclosure (§5.1–5.8, Phase 1); the Tiptap document
+editor with the block set of §5.10 *minus* `callout`, `toggle` and `taskList`, plus tables
+(Phase 2a); the reading view and shared typography (§5.11–5.12); `docToMarkdown` and the
+Markdown importer (§7, Phase 4's export and Phase 3's parser); AI authoring for test papers and
+study material through Markdown-in-JSON envelopes, with escape repair, math normalisation and a
+repair pass for stored documents (§7.6's normalisation, done client-side); the Editor Lab with a
+TOON view. Not built: the Notion block chrome (Phase 2b), `callout`/`toggle`/`taskList`, images,
+server-side `Schema.nodeFromJSON` validation, the `ContentInput` union, the multilingual work
+(Phase 5, superseded in part by `COURSE_PLATFORM_STRUCTURE.md` §4), and the legacy-editor removal
+(Phase 6). The §7.3 table is therefore aspirational where it lists `taskList`, `image`, `callout`
+and `toggle`; the subset that actually round-trips today is listed in the README.
+
 Scope confirmed with Manish: **this repo** (`parthhub-app`, not a separate product),
 **structured JSON in MongoDB** as the canonical form, and **all three workstreams in
 scope** — rich text editing, visual equation authoring, and the multilingual/translation

@@ -12,7 +12,7 @@ having to be remembered. Each one is split into **must** (a violation is a defec
 | ----------------------- | -------------------------------------------------------------------- |
 | `use-ui-component`      | writing any UI in a feature — decides what already exists            |
 | `style-with-tailwind`   | writing a className, picking a colour, or editing a theme or config  |
-| `add-a-theme`           | changing what a design token *is*, or adding a theme                 |
+| `add-a-theme`           | changing what a design token _is_, or adding a theme                 |
 | `build-a-form`          | any form, edit dialog or upsert modal in an app                      |
 | `create-core-component` | adding a wrapper in `packages/ui/src/core/`, or a shadcn primitive   |
 | `add-app-screen`        | touching an app's `pages/`, `modules/`, `layouts/` or `stores/`      |
@@ -92,12 +92,12 @@ pnpm --filter @repo/ui <script>
   108 `TS2564`) and none in app code. The declaration output is what lets shared keep those two
   exceptions to itself, which is why a stale `dist` shows up as a misleading type error in a
   consumer and why `build:shared` comes first. `declarationMap` and `sourceMap` are on, so go-to-definition and the debugger follow `dist` back to `src/*.ts` — you read and edit the source, while resolution still goes through the declaration output. Seven entry points: `@repo/shared` plus `/contracts`, `/enums`, `/interfaces`, `/responses`, `/utils` and `/validations`. **Import the subpath, never the root barrel** — the root is the union of the other six with no name in two of them, so the subpath is what says whether a name is a wire shape, an enum, a pure interface or a runtime helper. Source has zero root-barrel imports; `.` stays published only because `main`/`types` point at it. The validation DTOs are deliberately kept out of the root barrel so class-validator never reaches a browser bundle; `contracts/` re-exports their shapes as types only.
-- **`packages/ui` (`@repo/ui`)** — every shared React component, consumed as TS source via `transpilePackages` (no build): `ui/` shadcn primitives, `core/` wrappers over them, `app/` components composed from `core/`, plus `contexts/`, `hooks/`, `lib/` (cn, date-time, pure and browser helpers), `themes/` (light/dark plus the shared `uiPreset` every app's `tailwind.config.js` spreads) and `types/` (React-aware item types such as `ISelectItem`, `IMenuItem`, `IColumnData`). Subpaths: `.`, `./core`, `./app`, `./ui/*`, `./contexts`, `./hooks`, `./lib`, `./themes`, `./types`. **`./app` is deliberately not in the root barrel**: fourteen names exist in both `core` and `app` with different APIs. See `packages/ui/README.md` for the layer rules and for which components stay in the apps and why.
+- **`packages/ui` (`@repo/ui`)** — every shared React component, consumed as TS source via `transpilePackages` (no build): `ui/` shadcn primitives, `core/` wrappers over them, `app/` components composed from `core/`, plus `contexts/`, `hooks/`, `lib/` (cn, date-time, pure and browser helpers), `themes/` (light/dark plus the shared `uiPreset` every app's `tailwind.config.js` spreads) and `types/` (React-aware item types such as `ISelectItem`, `IMenuItem`, `IColumnData`). Subpaths: `.`, `./core`, `./app`, `./ui/*`, `./contexts`, `./hooks`, `./lib`, `./themes`, `./types`, plus `./content` (the read-only `RichTextView` and `MathRender`, KaTeX only) and `./editor` (the Tiptap `RichTextEditor`, the MathLive equation editor and its data). **Authored content** — study material, questions, options, solutions — is a ProseMirror document (`IRichText` in `packages/shared`) with equations as LaTeX-carrying nodes; `packages/ui/src/editor/README.md` is the reference for what it can hold, how Markdown is imported and exported, and how AI replies are repaired. **`./app` is deliberately not in the root barrel**: fourteen names exist in both `core` and `app` with different APIs. See `packages/ui/README.md` for the layer rules and for which components stay in the apps and why.
 - **Components are imported straight from the package.** Feature code writes `from '@repo/ui/app'` or `from '@repo/ui/core'`; there are no pass-through component barrels. An app keeps an `index.ts` under `src/components` only where that folder still holds its own components, and it exports those alone.
 - **Non-component barrels remain**, because they mix shared and app-only values: `src/enums/index.ts` re-exports `@repo/shared/enums` plus app-only enums; `src/interfaces/index.ts` re-exports shared pure types and `@repo/ui/types` plus app-only interfaces; `src/themes`, `src/hooks/dimensions.hook.ts` and `src/utils/helpers/index.ts` re-export from `@repo/ui`. App `src/utils/helpers/util.ts` holds only helpers that depend on app stores/services.
 - **Enum values are canonical in `packages/shared`** (they match what the server validates). App code that needs a new value adds it there, never in a local copy. Tailwind `content` in each app includes `../../packages/ui/src/**`.
 
-### Learning (`apps/learning`) — Next.js 15 Pages Router
+### Learning (`apps/learning`) — Next.js 16 Pages Router
 
 - **State management:** Zustand. One store per domain in `src/stores/*.store.ts` (user, course, material, test-paper, question, resource, standard, meet, selector, toast) — no root store and no provider; each store is a module singleton, so `useUserStore.getState()` works outside React. Entities are typed from the shared DTOs through `ClientEntity`, held as keyed maps, and edited with `patch(id, Partial<T>)`. Fetch state comes from `createRequestSlice`, so a store never hand-assigns a loading flag. Async actions are plain `async` functions wrapped in `run(key, fetcher)`.
 - **Layouts:** Pages declare their layout via `Component.layout = Layout.AUTH | Layout.SIDEBAR | ...`. Layout components live in `src/layouts/`.
@@ -111,31 +111,40 @@ pnpm --filter @repo/ui <script>
 - **Styling:** TailwindCSS 3 + MUI 6 + Emotion CSS-in-JS. Light/dark theme via shadcn tokens emitted as CSS variables from `@repo/ui` and `ColorModeContext`.
 - **Icons:** Phosphor Icons (`@phosphor-icons/react`).
 
-### Teaching (`apps/teaching`) — Next.js 15 Pages Router
+### Teaching (`apps/teaching`) — Next.js 16 Pages Router
 
 - **Purpose:** Teacher-facing app for managing courses, study materials, test papers, students, and sessions.
+- **AI generation:** test papers and study material are generated by pasting an app-written prompt into any external model and pasting its JSON back; nothing calls a model from the app. Builders, validators and importers live in `src/utils/ai/` and are documented there (`TEST_PAPER_GENERATOR.md`, `STUDY_MATERIAL_GENERATOR.md`); the shared step components are in `src/components/app/ai/`. The course generator is planned in `.claude/plans/AI_COURSE_GENERATOR.md`.
+- **Editor Lab:** `/editor` renders the editor beside its reading view, Markdown, JSON and TOON output, for trying content without saving it.
 - **State management:** Zustand (same pattern as Learning).
 - **Component layers:** Same three-layer system as Learning, imported directly from `@repo/ui/core` and `@repo/ui/app`.
 - **Styling:** TailwindCSS 3 + shadcn/ui, themed through the shared `uiPreset`. No MUI dependency.
 - **Icons:** Phosphor Icons (`@phosphor-icons/react`).
 - **Auth:** Firebase Authentication (same as Learning).
 
-### Support (`apps/support`) — Next.js 15 Pages Router
+### Support (`apps/support`) — Next.js 16 Pages Router
 
-- **Purpose:** Platform support app for managing standards, subjects, and test papers across the platform.
+- **Purpose:** The platform catalogue: the standards, subjects and standard→subject mappings every organisation teaches against, plus test papers. Every write goes through `@Private()` routes with the shared API key (`NEXT_PUBLIC_PRIVATE_API_KEY`), so the Firebase session gates the UI, not the API.
 - **State management:** Zustand (same pattern as Learning): `standard`, `selector` and `toast` stores, no root store.
 - **Component layers:** Same three-layer system, imported directly from `@repo/ui/core` and `@repo/ui/app`.
 - **Styling:** TailwindCSS 3 + shadcn/ui, themed through the shared `uiPreset`. No MUI dependency.
 - **Icons:** Phosphor Icons (`@phosphor-icons/react`).
 - **Auth:** Firebase Authentication (same as Learning/Teaching).
-- **Pages:** Home, Standards, Subjects, Test Papers, Profile, Sign In.
+- **Pages:** Home (a catalogue dashboard: summary tiles, one card grid per standard group, subject usage), Standards and Subjects (sortable, filterable tables with logo tiles, an edit drawer with description and logo upload, soft delete with confirmation), Test Papers, Profile, Sign In. `DataTable` here is the teaching one (sorting, column filters, skeleton, row click).
+- **Seed data:** `data/support/` (gitignored) holds the standards, subjects and mappings CSVs, one SVG logo per row and the `build.mjs` / `import.mjs` scripts. `data/support/README.md` documents the columns, the logo upload path and the import.
 
 ### Server (`apps/server`) — NestJS 12 + Fastify 5
 
-- **Module structure:** One NestJS module per domain (Auth, User, Firebase, Org, Subject, Course, Material, Chapter, TestPaper, Question). Each has controller → service → Mongoose schema.
+- **Module structure:** One NestJS module per domain (Auth, User, Firebase, Org, Standard, Subject, Chapter, Course, Plan, Material, TestPaper, Question, Meet, Batch, and Common for cross-cutting routes). Each has controller → service → Mongoose schema.
+- **Files:** uploads go straight to S3 through presigned URLs issued by `common/presigned-PUT-urls` and read through `common/presigned-GET-urls`; `common/delete-objects` removes what an attachment no longer points at, and `common/verify-links` checks the addresses an AI reply cites. Keys are scoped per organization under `S3_PREFIX` (`<prefix>orgs/<orgId>/…`, `<prefix>shared/…` for private routes) by `S3Service.resolveKey`, which refuses another organization's key. Env: `S3_BUCKET_NAME`, `S3_PUBLIC_BUCKET_NAME`, `S3_PREFIX`. Uploads happen only when a form saves, and are rolled back if the record write fails.
 - **Database:** MongoDB via Mongoose 9. Base schema in `src/database/base.schema.ts`, and two global
   plugins attached to the connection (change tracking, activity logging). See the
-  `query-with-mongoose` skill — Mongoose 9 pre-middleware is async, with no `next()`.
+  `query-with-mongoose` skill — Mongoose 9 pre-middleware is async, with no `next()`. Every unique
+  index is partial on `_deleted: false`, so a soft-deleted row never blocks a re-create; a module
+  whose index definition changed calls `syncIndexes()` in `onModuleInit`, because Mongoose never
+  replaces an existing index on its own.
+- **Errors:** `HttpExceptionFilter` renders Nest exceptions as `{ error: { code, message } }`, and
+  `MongoDuplicateKeyFilter` turns a duplicate-key error into a 409 that names the colliding field.
 - **Auth:** Firebase Admin SDK validates JWTs via `passport-firebase-jwt`. Global `FirebaseAuthGuard` applied via `APP_GUARD`. Use `@Public()` decorator to exempt endpoints.
 - **HTTP:** Fastify adapter with Brotli compression and Helmet. Global `ValidationPipe` with whitelist/transform.
 - **Logging:** nestjs-pino with pino-pretty in dev. Authorization headers redacted.

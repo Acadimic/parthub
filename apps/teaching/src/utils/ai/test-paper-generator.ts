@@ -10,7 +10,7 @@ import {
 import { richTextFromMarkdown } from '@repo/shared/utils';
 import { LevelType, QuestionType } from '@enums';
 import { getObjectId } from '@utils/helpers';
-import { type IAiIssue, parseJsonObject } from './common';
+import { checkMarkdownMath, type IAiIssue, MARKDOWN_RULES, parseJsonObject, repairIssue } from './common';
 
 /** How many of each type a section should get. */
 export type IQuestionCounts = Record<QuestionType, number>;
@@ -101,16 +101,6 @@ export const TYPE_GUIDANCE: Record<QuestionType, string> = {
   [QuestionType.FILL_IN_THE_BLANK]: 'one blank written as ____; the answer is at most three words, in "answer"',
   [QuestionType.SUBJECTIVE]: 'a written answer; put a model answer of 3–8 sentences in "answer"',
 };
-
-/** The Markdown subset the editor stores, stated for the model. */
-const MARKDOWN_RULES = `
-- Paragraphs separated by a blank line; **bold**, _italic_, \`code\`.
-- Bullet lists with "- ", ordered lists with "1. ".
-- Inline maths as $...$ and display maths on its own line as $$...$$, in LaTeX. Chemistry with \\ce{...} inside maths, e.g. $\\ce{H2SO4}$.
-- Tables as GitHub pipe tables when a question genuinely needs one.
-- No HTML, images, footnotes or references to "the figure": there are no figures.
-- A literal dollar sign in prose is written \\$.
-- Inside JSON strings every backslash is doubled: write "\\\\frac{1}{2}" for \\frac{1}{2}.`;
 
 const percent = (count: number, share: number) => Math.round((count * share) / 100);
 
@@ -300,9 +290,9 @@ export interface IParsedAiPaper {
 
 /** Parses the reply and checks its shape; workspace checks come in `validateAiPaper`. */
 export const parseAiPaper = (text: string): IParsedAiPaper => {
-  const { value: raw, issue } = parseJsonObject(text);
+  const { value: raw, issue, repairs } = parseJsonObject(text);
   if (!raw) return { paper: null, issues: issue ? [issue] : [] };
-  const issues: IAiIssue[] = [];
+  const issues: IAiIssue[] = repairIssue(repairs);
   if (raw.format !== AI_TEST_PAPER_FORMAT) {
     issues.push({ level: 'error', path: 'format', message: `"format" must be "${AI_TEST_PAPER_FORMAT}".` });
   }
@@ -408,6 +398,13 @@ const checkQuestion = (question: IAiQuestion, path: string, target: IValidationT
     return;
   }
   if (!question.body?.trim()) issues.push({ level: 'error', path, message: 'The question body is empty.' });
+  checkMarkdownMath(
+    [question.body, question.solution, question.answer, ...(question.options ?? []).map((option) => option.body)]
+      .filter(Boolean)
+      .join('\n'),
+    path,
+    issues,
+  );
   if (!Object.values(LevelType).includes(question.level)) {
     issues.push({
       level: 'error',

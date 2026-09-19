@@ -6,6 +6,7 @@ import {
   PencilSimpleIcon,
   SparkleIcon,
   TrashIcon,
+  WrenchIcon,
 } from '@phosphor-icons/react';
 import { Collapse, Menu } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
@@ -20,6 +21,8 @@ interface IProps {
   onToggle: () => void;
   onEdit: () => void;
   onGenerate: () => void;
+  /** Re-reads the content for equations that arrived broken, and saves the fixed version. */
+  onRepair: () => void;
   onDelete: () => void;
 }
 
@@ -27,7 +30,16 @@ interface IProps {
  * One piece of content: a header line that reads at a glance, and the content itself underneath
  * once opened. Same shape as a question card on a paper, so the two pages feel like one app.
  */
-export const MaterialCard = ({ material, number, isExpanded, onToggle, onEdit, onGenerate, onDelete }: IProps) => {
+export const MaterialCard = ({
+  material,
+  number,
+  isExpanded,
+  onToggle,
+  onEdit,
+  onGenerate,
+  onRepair,
+  onDelete,
+}: IProps) => {
   const attachmentCount = (material.attachments ?? []).length;
   return (
     <article
@@ -83,6 +95,7 @@ export const MaterialCard = ({ material, number, isExpanded, onToggle, onEdit, o
               onClick: onGenerate,
               icon: <SparkleIcon weight="bold" className="h-4 w-4" />,
             },
+            { label: 'Repair equations', onClick: onRepair, icon: <WrenchIcon weight="bold" className="h-4 w-4" /> },
             { label: 'Delete content', onClick: onDelete, icon: <TrashIcon weight="bold" className="h-4 w-4" /> },
           ]}
           className="px-1"

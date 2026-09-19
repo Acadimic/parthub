@@ -7,6 +7,13 @@ authored content is *edited and stored*; this document owns what the content han
 Reference read before writing: the live schemas in `apps/server/src/modules`, and the prior art in
 `acadimic-cloud` (which has `CourseModule` and `Access`, neither yet in parthhub).
 
+**Update, 2026-09-19.** The content-field changes in §2 are done: `Material.content`, a question's
+body, options and solution, and `TestPaper.instruction` are `IRichText` documents (see
+`packages/ui/src/editor/README.md`). Test papers and study material can be generated from an
+external model and imported (`apps/teaching/src/utils/ai/`); the course generator that composes
+them into day-by-day modules is planned in `AI_COURSE_GENERATOR.md` and depends on the
+`CourseModule` shape described here. The rest of this document is still a proposal.
+
 Four decisions were taken up front and everything below follows from them:
 
 | Decision | Chosen |
@@ -538,16 +545,21 @@ go on sharing sections silently or fork them. Both need deciding before Stage 1 
 Two problems are not specific to this plan but will bite it.
 
 **Every unique index needs a partial filter.** Everything here soft-deletes via `BaseSchema._deleted`,
-and none of the unique indexes exclude deleted rows:
+and a unique index that does not exclude deleted rows rejects a legitimate re-create with a row
+nobody can see. `chapter`, `material`, `standard`, `subject` and `standard-subject-mapping` now
+carry `partialFilterExpression: { _deleted: false }` (with `syncIndexes()` on module init to
+replace the old definitions). These still do not:
 
 ```ts
-CourseModuleSchema.index({ course: 1, day: 1 }, { unique: true });                          // today
-MaterialSchema.index({ standard: 1, subject: 1, chapter: 1, order: 1, org: 1 }, { unique: true, sparse: true });
+CourseContentSchema.index({ course: 1, day: 1 }, { unique: true });
 CompletedModuleSchema.index({ course: 1, courseModule: 1, collectionItem: 1, createdBy: 1 }, { unique: true });
+// also: Reaction, Bookmark, Follower, Invite, Meet (meetingId), User (uid, org),
+// UserStudentMapping, UserBatchMapping, StudentStandardMapping, StudentProductMapping
 ```
 
-Delete day 3 and re-create it and the insert is rejected by a row nobody can see. Each needs
-`partialFilterExpression: { _deleted: false }`.
+Delete day 3 and re-create it and the insert is rejected. Each needs the same partial filter, and a
+duplicate that does slip through now surfaces as a 409 from `MongoDuplicateKeyFilter` rather than a
+bare 500.
 
 **Slugs are unindexed.** `Course`, `CourseModule`, `Material` and `TestPaper` all carry `slug` with
 no uniqueness constraint. If slugs are public URLs they need `(org, slug)` unique — and with §4,

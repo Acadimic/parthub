@@ -72,7 +72,13 @@ Types live in `packages/shared/src/interfaces/ai-study-material.interface.ts` (`
       "content": "# Why things move\n\n…Markdown with $LaTeX$…",
       "keyTerms": [{ "term": "inertia", "definition": "…" }],
       "resources": [
-        { "kind": "video", "title": "…", "url": "https://www.youtube.com/watch?v=…", "source": "Khan Academy", "note": "…" },
+        {
+          "kind": "video",
+          "title": "…",
+          "url": "https://www.youtube.com/watch?v=…",
+          "source": "Khan Academy",
+          "note": "…"
+        },
         { "kind": "article", "title": "…", "url": "https://…", "source": "NCERT", "note": "…" },
         { "kind": "pdf", "title": "…", "url": "https://…/chapter.pdf", "source": "…", "note": "…" }
       ]
@@ -98,3 +104,28 @@ Types live in `packages/shared/src/interfaces/ai-study-material.interface.ts` (`
 Browsers block cross-origin HEAD requests, and YouTube answers 200 for a watch address whose
 video does not exist. The server route fetches with a timeout and a small worker pool, refuses
 private addresses, and asks YouTube's oEmbed endpoint whether a video is really public.
+
+## Equations: what goes wrong and what the importer does about it
+
+A model writing LaTeX inside JSON with single backslashes produces JSON escapes, not commands:
+`\frac` is a form feed plus `rac`, `\times` a tab plus `imes`, `\ne` a newline plus `e`, and
+`\pi` or `\div` are invalid escapes that make the reply unparseable. The importer now:
+
+- repairs the raw text before `JSON.parse` (`repairJsonEscapes` in `packages/shared`): invalid
+  escapes are doubled, and `\b \f \n \r \t` are doubled only when the letters after them spell a
+  LaTeX command, so a real `\n` line break survives; the count is shown as a warning;
+- repairs any control character that still reaches an equation (`repairLatexControlEscapes`) and
+  escapes a bare `%` inside maths, since `20%` renders as `20`;
+- accepts `\( … \)` and `\[ … \]` as well as `$ … $` and `$$ … $$`, including multi-line blocks;
+- reads `$` as an equation delimiter only under Pandoc's rule — the opening `$` is followed by a
+  non-space and the closing one follows a non-space and does not precede a digit — so a price such
+  as `$5000 at 8%` stays prose;
+- warns on control characters, currency `$`, an odd number of `$`, and the `\(` delimiters.
+
+What the editor stores, and every rule the converter applies to Markdown and equations, is in
+`packages/ui/src/editor/README.md`.
+
+Content imported before this fix can be repaired in place: **Repair equations** in a subject's
+Contents header runs `repairRichText` over every content on the page (or one, from a card's menu),
+restoring commands, escaping percent signs, turning parenthesised equations that lost their `\(`
+back into equation nodes, and re-joining a paragraph a `\n` inside an equation had split.

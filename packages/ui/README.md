@@ -41,6 +41,9 @@ package imports an app.
 | `@repo/ui/content`  | `RichTextView`, `MathRender` — what a student downloads         |
 | `@repo/ui/editor`   | `RichTextEditor`, the equation editor and its data              |
 
+The `content` and `editor` subpaths — the document model, what the editor can hold, Markdown import
+and export, equation handling — are documented in `src/editor/README.md`.
+
 **`core` and `app` are separate subpaths on purpose.** Fourteen names exist in
 both with a different API: `Breadcrumb`, `Button`, `Card`, `Checkbox`,
 `DateInput`, `Label`, `Link`, `Menu`, `Modal`, `Popover`, `Spinner`, `Tabs`,
@@ -139,8 +142,10 @@ product decision per app, so sharing them would couple the apps to each other.
 
 `Select`, `DataTable`, `CheckboxSelection` and `RadioSelection` sit just behind
 the second group: each needs `Html` or `BlankState` from `components/others`.
-`Html` pulls in the math-jax editor, which is 60 teaching-only files, and both
-differ in support. Reconciling those two components is the next step if you want
+`Html` pulls in the math-jax editor, which is 60 teaching-only files. `DataTable`
+is now byte-identical in teaching and support (support took the teaching version
+with sorting, column filters, skeleton rows and row click); learning still has the
+older one. Reconciling `Html` and the learning table is the next step if you want
 this cluster shared.
 
 ## History

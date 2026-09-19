@@ -196,6 +196,12 @@ A mapper is deliberately explicit rather than a spread. Spreading a lean
 document leaks `_deleted`, `__v` and any field added later, which is how the
 current responses grew fields no client expects.
 
+Standards, subjects and their mappings have no mapper yet. Until they get one,
+their services keep `__v` out at the query — `.select('-__v')` on reads and
+`projection: { __v: 0 }` on the upserts — because the support dashboard posts a
+loaded row straight back, and the global `forbidNonWhitelisted` rejected every
+edit with "property __v should not exist".
+
 ## How the apps use it
 
 **Type the HTTP layer once.** This single change turns every service call from
@@ -346,3 +352,27 @@ than an alternative. Once controllers declare contract return types, adding
 Swagger gives browsable docs almost for free. It does not remove the need for
 the contracts — the apps type their stores against them directly — and a
 generated client would duplicate what `contracts/` already provides.
+
+## Authored content and AI reply formats (added 2026-09-19)
+
+Two families of shape sit beside the entity contracts and follow the same rules.
+
+**Authored content** is `IRichText` (`packages/shared/src/interfaces/rich-text.interface.ts`):
+`format: 'doc/v1'`, `doc` (the ProseMirror document), `text` (the plain-text projection, written
+on every save and the only thing search, sort and previews read). The request side is
+`RichTextDto` in `dtos/validations/rich-text.dto.ts`, which validates the envelope only — the
+tree is not rebuilt against the editor schema on the server yet. Fields that hold it:
+`Material.content`, a question's `body` and its options' and solution's `body`,
+`TestPaper.instruction`. The full model, and the Markdown subset the importer and exporter
+agree on, is in `packages/ui/src/editor/README.md`.
+
+**AI reply formats** are pure interfaces in `packages/shared/src/interfaces/ai-*.interface.ts`
+(`IAiTestPaper`, format `acadimic.test-paper/v1`; `IAiStudyMaterial`, format
+`acadimic.study-material/v1`). They are _not_ DTOs: a model's reply is parsed, repaired and
+validated in the teaching app, then turned into ordinary entity DTOs and written through the bulk
+routes (`question/bulk-upsert`, `material/bulk-upsert`), so the server sees nothing new. Content
+fields in these formats are Markdown strings, never documents. Each format carries the workspace
+ids the prompt listed, so the importer never matches by name.
+
+**Two small wire shapes** live in `contracts/`: `IPresignedUrl` (`key`, `url`) for uploads, and
+`ILinkCheck` (`url`, `ok`, `status`, `contentType`, `error`) returned by `common/verify-links`.

@@ -1,75 +1,279 @@
-# `@repo/ui/editor` and `@repo/ui/content`
+# Authored content: the editor, the reading view, and everything that feeds them
 
-Authored content — study material, questions, options, solutions — is a ProseMirror document
-(`IRichText` in `@repo/shared`) with equations as atomic nodes. Two subpaths split what a teacher
-needs to write it from what a student needs to read it:
+This is the reference for how authored content — study material, questions, options, solutions —
+is written, stored, rendered, imported and exported. It covers `@repo/ui/editor`,
+`@repo/ui/content`, and the shared utilities in `@repo/shared/utils` they depend on. The design
+rationale lives in `.claude/plans/CONTENT_EDITOR_AND_EQUATIONS.md`; this file records what is
+built and how to use it. Updated 2026-09-19.
 
-| Subpath            | Depends on              | Who imports it                                 |
-| ------------------ | ----------------------- | ---------------------------------------------- |
-| `@repo/ui/content` | KaTeX                   | every app — `RichTextView`, `MathRender`       |
-| `@repo/ui/editor`  | Tiptap, MathLive, KaTeX | teaching and support — `RichTextEditor` and co |
+## 1. The model in one paragraph
 
-`editor` imports from `content`, never the reverse. The plan behind the design is
-`.claude/plans/CONTENT_EDITOR_AND_EQUATIONS.md`.
+Content is a **ProseMirror document** stored as JSON, wrapped in an `IRichText` envelope with a
+plain-text projection beside it. Equations are **atomic nodes carrying LaTeX**, never text. The
+teaching app edits the document with Tiptap; every app renders it with React, never `innerHTML`,
+except for KaTeX's own output. Markdown is the **interchange format**: models write it, imports
+parse it, exports produce it, and nothing edits it in place. The document is canonical.
 
-## Layout
+```ts
+interface IRichText {
+  format: 'doc/v1'; // RichTextFormat.DOC_V1
+  doc: IRichTextDoc; // { type: 'doc', content: IRichTextNode[] }
+  text: string; // plain-text projection: search, sort, previews, CSV
+}
+```
+
+`text` is denormalised on every write by `docToPlainText`; equations appear as their LaTeX. Never
+hand-write it and never walk `doc` for a preview — read `text`. `createEmptyRichText()` gives a
+fresh empty value (one empty paragraph, because ProseMirror needs a block to put the caret in).
+
+## 2. The two subpaths
+
+| Subpath            | Depends on                | Exports                                                                                                                                                              | Who imports it                                            |
+| ------------------ | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `@repo/ui/content` | KaTeX (+ mhchem)          | `RichTextView`, `MathRender`, `renderLatex`                                                                                                                          | every app — what a student reads                          |
+| `@repo/ui/editor`  | Tiptap 3, MathLive, KaTeX | `RichTextEditor`, `toRichText`, `collectEquations`, `docToMarkdown`, the math and table extensions, `EquationEditor`, `ChemistryEditor`, the symbol and formula data | teaching (and support later) — what a teacher writes with |
+
+`editor` imports from `content`, never the reverse. The editor is heavy, so screens that can be
+read without it load it through `next/dynamic`.
 
 ```
 content/
-  MathRender.tsx        one LaTeX string → KaTeX, memoised, trust off, mhchem on
-  RichTextView.tsx      stored document → React; no innerHTML anywhere
+  MathRender.tsx        one LaTeX string → KaTeX; memoised (500 entries), trust off, mhchem on
+  RichTextView.tsx      stored document → React; safe links; unknown nodes fall through as text
 editor/
   RichTextEditor.tsx    the Tiptap instance: frame, toolbar, placeholder, projection
   document.ts           toRichText (wrap a doc as a stored value), collectEquations
-  markdown/
-    doc-to-markdown.ts  document → Markdown, the export path (import is in @repo/shared)
-  toolbar/
-    EditorToolbar.tsx   undo/redo · block type · marks · lists · table · equation
-    TableInsertMenu.tsx the rows × columns picker with header-row and borders toggles
-    TableToolbar.tsx    the row shown while the caret is in a table: rows, columns, borders
-    ToolbarButton.tsx   the controls the toolbar is built from
-  extensions/
-    math-names.ts       'inlineMath' / 'blockMath' — a rename is a stored-document migration
-    math-nodes.ts       the two nodes: commands, shortcuts, input rules, paste rules
-    MathNodeView.tsx    click-to-edit in place; one open editor at a time
-    table.ts            Tiptap's table with a `bordered` flag, and the insert command
-  equation/
-    EquationEditor.tsx  the panel: field, header actions, symbols, formulas, source
-    SymbolPalette.tsx   searchable, grouped, with the author's recent picks first
-    FormulaGallery.tsx  searchable complete formulas, filtered by subject
-    ChemistryEditor.tsx reactants → arrow → products, with state symbols and charges
-    symbols.ts          the palette taxonomy — data
-    formulas.ts         the gallery — data, the seed for a per-subject gallery later
-    chemistry.ts        the mhchem model: parse / build arrows and reaction chains
-    recent-symbols.ts   the localStorage-backed Recent group
-    panel-controls.tsx  the small controls the panel and its popovers share
+  markdown/doc-to-markdown.ts   document → Markdown (export). Import lives in @repo/shared.
+  toolbar/              EditorToolbar, TableInsertMenu, TableToolbar, ToolbarButton
+  extensions/           math-names, math-nodes, MathNodeView, table
+  equation/             EquationEditor, SymbolPalette, FormulaGallery, ChemistryEditor, data
 ```
 
-## What the editor does for an equation
+Shared, in `packages/shared/src/utils/`:
 
-- **Insert**: toolbar (Inline · Display · Chemistry), `Ctrl/⌘+E` and `Ctrl/⌘+Shift+E`, `$…$`
-  typed inline, `$$` then space for a display equation. With text selected, Inline converts
-  the selection into an equation.
-- **Paste**: `$…$` and `$$…$$` in pasted text become equation nodes.
-- **Edit**: click the equation; it opens in place. Enter or clicking away commits, Esc cancels
-  back to the previous value, a blank equation is removed rather than kept.
-- **Header actions**: inline ↔ display, duplicate, copy source, show source, on-screen keyboard
-  (chemistry hides it), delete, cancel, done.
-- **Palette**: templates with `#?` placeholders; Tab moves between boxes. Search covers labels,
-  keywords and the LaTeX itself. The last twelve inserted symbols lead the list.
-- **Tables**: pick rows × columns from the grid, with or without borders and a header row. Inside
-  a table a second toolbar row adds and deletes rows and columns, toggles the header row and the
-  borders, or deletes the table. Markdown export writes a pipe table; import reads one back.
-- **Chemistry**: a reaction is a chain of species and arrows. Arrows carry a direction and a
-  condition (with one-click Heat, Light, Catalyst…). Chips insert state symbols, charges,
-  isotopes, gas-evolved and precipitate marks at the caret.
+| File                   | What                                                                                                                                     |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `rich-text.util.ts`    | `createEmptyRichText`, `docToPlainText`, `isRichTextEmpty`, `richTextFromMarkdown`, `splitInlineMath`, `repairRichText`                  |
+| `latex-repair.util.ts` | `repairJsonEscapes`, `repairLatexControlEscapes`, `repairLeadingLostEscape`, `escapeLatexPercent`, `escapeLatexDollar`, `normaliseLatex` |
 
-## Adding things
+## 3. What a document can contain
 
-- A **symbol**: one entry in `symbols.ts`. Give it `keywords` for the words a teacher would type.
-- A **formula**: one entry in `formulas.ts` with a `subject`.
-- A **chemistry chip** or **arrow condition**: `CHEMISTRY_INSERTS` / `ARROW_CONDITIONS` in `chemistry.ts`.
-- A **node type**: an extension under `extensions/`, a renderer in `content/RichTextView.tsx`,
-  a serializer entry in `markdown/doc-to-markdown.ts`, and a reader in
-  `@repo/shared/src/utils/rich-text.util.ts` — all four, or the type is lost on one path.
-- An **equation action**: a command on `math-nodes.ts` and a `PanelButton` in `EquationEditor.tsx`.
+The schema is Tiptap's StarterKit trimmed and extended. Every node below is edited, rendered,
+exported to Markdown and imported from Markdown — all four, or it would be lost on one path.
+
+### Blocks
+
+| Node                                            | Notes                                                                                                      |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `paragraph`                                     |                                                                                                            |
+| `heading`                                       | levels **1–3 only**; deeper headings are not admitted                                                      |
+| `bulletList`, `orderedList`, `listItem`         | list items hold paragraphs                                                                                 |
+| `blockquote`                                    |                                                                                                            |
+| `codeBlock`                                     | fenced; contents are literal                                                                               |
+| `horizontalRule`                                |                                                                                                            |
+| `hardBreak`                                     | Shift+Enter                                                                                                |
+| `table`, `tableRow`, `tableHeader`, `tableCell` | `bordered` flag on the table; cells hold **inline content only** (no blocks in cells); optional header row |
+| `blockMath`                                     | a display equation; `attrs.latex`                                                                          |
+
+### Inline
+
+| Node / mark                                     | Notes                                                                                                                    |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `text`                                          | with marks                                                                                                               |
+| `inlineMath`                                    | an inline equation; `attrs.latex`; atomic, selectable, draggable                                                         |
+| `bold`, `italic`, `underline`, `strike`, `code` | marks                                                                                                                    |
+| `link`                                          | mark with `attrs.href`; only `http(s):`, `mailto:` and `tel:` are rendered as links, anything else renders as plain text |
+
+### Not supported, deliberately
+
+Images, raw HTML, footnotes, task lists, callouts, toggles, nested tables, headings 4–6, colours
+and font sizes. A model or an import that produces any of these gets a paragraph of text instead
+(nothing is dropped silently), and the AI prompts tell models not to use them. The plan's
+`callout` and `toggle` blocks (§5.10) are not built.
+
+## 4. The editor
+
+`RichTextEditor` takes an `IRichText` (only its `doc` is loaded) and fires `onChange` with a
+complete `IRichText`, projection included. Props follow the input-wrapper contract: `label`,
+`required`, `error`, `helperText`, `placeholder`, `className`, `editorClassName`.
+
+**Toolbar**: undo/redo · block type (Text, Heading 1–3, Quote, Code block) · Bold, Italic,
+Underline, Strikethrough, Inline code · bulleted and numbered lists · table (rows × columns
+picker with header-row and borders toggles) and divider · Equation (Inline, Display, Chemistry).
+Inside a table a second row adds and deletes rows and columns, toggles the header row and the
+borders, or deletes the table.
+
+**Keyboard**: the usual `Ctrl/⌘` B, I, U, Z, Shift+Z; `Ctrl/⌘+E` inline equation (with text
+selected, converts the selection); `Ctrl/⌘+Shift+E` display equation; Markdown-style input rules
+for headings, lists, quotes and code; `$…$` typed inline becomes an equation; `$$` then space
+starts a display equation.
+
+**Paste**: `$…$` and `$$…$$` in pasted text become equation nodes; a pasted URL becomes a link
+(a typed one does not until the author makes it one).
+
+**Links**: `openOnClick` is off in the editor so a click edits rather than navigates.
+
+**Placeholder**: shown in an empty document; default "Start writing. Ctrl/⌘ + E adds an
+equation, or type $x^2$".
+
+**Rendering**: the content area carries `DOCUMENT_CLASS`, the same typography `RichTextView`
+uses, so what an author edits is what a reader sees. Tiptap renders client-side only
+(`immediatelyRender: false`) because of the Pages Router.
+
+### Equations in the editor
+
+An equation is a node; clicking it opens the **equation panel** in place (one open at a time).
+Enter or clicking away commits, Esc cancels, a blank equation is removed. Header actions: inline
+↔ display, duplicate, copy source, show source, on-screen keyboard, delete, cancel, done.
+
+- **Field**: MathLive — a WYSIWYG maths field that produces LaTeX. A teacher never has to see a
+  backslash; the LaTeX source is one click away for those who want it.
+- **Symbol palette**: grouped, searchable by label, keyword and LaTeX; templates with `#?`
+  placeholders that Tab moves between; the last twelve picks lead the list (localStorage).
+- **Formula gallery**: complete formulas, searchable, filtered by subject.
+- **Chemistry**: a reaction is a chain of species and arrows; arrows carry a direction and a
+  condition (Heat, Light, Catalyst…); chips insert state symbols, charges, isotopes, gas and
+  precipitate marks. Output is mhchem `\ce{…}`.
+- **Commands** (on the math extensions, usable by any host): `insertInlineMath`,
+  `insertBlockMath`, `setMathLatex`, `duplicateMath`, `toggleMathDisplayMode`.
+
+### Where it is used
+
+- Teaching: study material content (`UpsertMaterialModal`), question body, options and solution
+  (`AddQuestion`, `AddOption`, `AddSolution`), and the **Editor Lab** at `/editor` (see §9).
+- Learning: read-only through `RichTextView` (exam questions, options, answers, content view).
+- Support: not yet.
+
+## 5. The reading view
+
+`RichTextView` walks the document and renders each node type with React elements. Marks wrap
+text in `strong`, `em`, `u`, `s`, `code` or `a`. Unknown node types render their children as text
+and unknown marks are ignored, so content is never lost when a newer document meets an older
+build. `fallback` renders when the value is empty. Equations go through `MathRender`.
+
+Security: no `dangerouslySetInnerHTML` anywhere except the KaTeX output in `MathRender`, produced
+with `trust: false`, so `\href`, `\url` and `\includegraphics` are disabled and an equation cannot
+smuggle a link or a remote image. `maxExpand` and `maxSize` bound macro bombs. A link's `href` is
+checked against `http(s):`, `mailto:`, `tel:` before it renders as a link.
+
+Errors: KaTeX runs with `throwOnError: false`, so a bad expression renders as a red monospace chip
+carrying the source and the error in its title, and never takes down the page. `strict: 'ignore'`
+keeps it lenient about Unicode in maths.
+
+Performance: `renderLatex` memoises by `(displayMode, latex)` up to 500 entries, cleared wholesale
+on overflow. The same formula across sixty rows renders once.
+
+## 6. Markdown in: `richTextFromMarkdown`
+
+The write path for everything that does not come from the editor: AI replies, imports, pastes.
+Deliberately narrow — it accepts what the editor can store and turns unknown lines into
+paragraphs, so no input is dropped.
+
+| Markdown                                                                         | Becomes                     |
+| -------------------------------------------------------------------------------- | --------------------------- |
+| `#`, `##`, `###`                                                                 | heading 1–3                 |
+| blank-line separated text                                                        | paragraphs                  |
+| `- `, `* `, `+ `                                                                 | bullet list                 |
+| `1. `, `1) `                                                                     | ordered list                |
+| `> `                                                                             | blockquote                  |
+| ` ``` ` fences                                                                   | code block                  |
+| `---`, `***`, `___`                                                              | horizontal rule             |
+| GFM pipe table (header row, separator, body rows)                                | table, bordered, header row |
+| `$$…$$` on one line, or a `$$` … `$$` block over several lines; `\[…\]` likewise | display equation            |
+| `$…$`, `\(…\)`, `$$…$$` inside a line                                            | inline equation             |
+| `**bold**`, `_italic_`, `~~strike~~`, `` `code` ``                               | marks                       |
+| `[text](https://…)`                                                              | link mark                   |
+| `\$`                                                                             | a literal dollar sign       |
+
+Rules worth knowing:
+
+- **`$` follows Pandoc's rule.** It opens an equation only when followed by a non-space, and
+  closes one only when preceded by a non-space and not followed by a digit. So "costs $5000 at 8%
+  and returns $800" has no equation in it, while "$x = 5$" does. Inside a code span nothing is an
+  equation.
+- **Marks are parsed before equations**, so `**Answer: $x$ and $y$**` is one bold run with two
+  equations in it.
+- **Every equation is normalised** (`normaliseLatex`): control characters that were lost
+  backslashes are restored (`<TAB>imes` → `\times`), a command that lost its first letter at the
+  start is restored (`rac{a}{b}` → `\frac{a}{b}`), a bare `%` becomes `\%` (otherwise it is a
+  LaTeX comment), a bare `$` becomes `\$` (a price inside an equation), and whitespace is trimmed.
+- **Not imported**: `*italic*` with single asterisks (write `_italic_`), `<u>` underline, images,
+  HTML, nested lists, task lists, hard breaks.
+
+## 7. Markdown out: `docToMarkdown`
+
+The export path, and what proves the stored JSON is a document rather than a private encoding.
+Every node in §3 serialises: headings, marks in a fixed order (`**_x_**` and `_**x**_` are the
+same document and must be the same string), underline as `<u>…</u>` (Markdown has none), lists,
+quotes, fenced code, rules, pipe tables (with `|` escaped in cells), `$…$` and `$$\n…\n$$`,
+`---`, and hard breaks as a backslash before the newline. Bare `$` in prose is escaped as `\$` so
+a re-import does not invent an equation.
+
+The AI-safe subset — what round-trips `doc → Markdown → doc` exactly — is everything in §3 except
+underline (exported as HTML the importer does not read) and hard breaks.
+
+## 8. The AI path, end to end
+
+Models write **Markdown inside a JSON envelope**; the app parses, checks, converts and imports.
+The generators live in `apps/teaching/src/utils/ai/` and are documented in
+`TEST_PAPER_GENERATOR.md` and `STUDY_MATERIAL_GENERATOR.md` there. What matters to content:
+
+1. **The prompt** states the Markdown subset above (`MARKDOWN_RULES` in `common.ts`), asks for
+   `$…$` and `$$…$$` only, `20\%` inside maths, `\$5000` for money, and **doubled backslashes**
+   inside JSON strings — because `"\frac"` in JSON is a form feed followed by `rac`.
+2. **Before parsing**, `repairJsonEscapes` doubles every backslash that is not a JSON escape
+   (`\pi`, `\div`, `\(`), and doubles `\b \f \n \r \t` when the letters after them spell a LaTeX
+   command, so a real line break survives. The count is shown to the teacher as a warning.
+3. **Validation** (`checkMarkdownMath`) warns on leftover control characters, currency `$`, an odd
+   number of `$`, and `\( \)` delimiters.
+4. **Conversion** is `richTextFromMarkdown`, with the normalisation of §6.
+5. **Import** writes `IRichText` values through the bulk routes.
+
+Content imported before these safeguards existed can be repaired in place with **Repair
+equations** on a subject's material page (header button for every content, card menu for one).
+`repairRichText` restores commands, escapes `%` and `$`, turns parenthesised equations that lost
+their `\(` back into nodes, re-joins a paragraph a `\n` inside an equation had split, converts prose
+swallowed into an equation back to text, and re-pairs bold that was split around an equation. It
+returns how many places changed.
+
+## 9. The Editor Lab (`/editor` in the teaching app)
+
+A scratch page for trying the editor on preset documents and seeing the same document as the
+reading view, as Markdown, as JSON, and as TOON (Token-Oriented Object Notation — the JSON encoded
+for a model, to make the token cost of structure visible). It also hosts `MathFieldPlayground`
+for the bare MathLive field. Nothing on it is saved.
+
+## 10. Storage and validation
+
+`RichTextDto` (`packages/shared/src/dtos/validations/rich-text.dto.ts`) validates the envelope:
+`format` is the enum, `doc` is an object, `text` is a string. The server does **not** yet rebuild
+the tree against the schema (`Schema.nodeFromJSON`), which the plan calls for; a client can store
+a node type the apps do not know, and the reading view will render it as text. Fields holding
+content: `Material.content`, a question's `body` and the `body` of each of its options and its
+solution, and `TestPaper.instruction`.
+
+## 11. Adding things
+
+- A **symbol**: one entry in `equation/symbols.ts`, with `keywords` for what a teacher would type.
+- A **formula**: one entry in `equation/formulas.ts` with a `subject`.
+- A **chemistry chip** or **arrow condition**: `CHEMISTRY_INSERTS` / `ARROW_CONDITIONS` in
+  `equation/chemistry.ts`.
+- A **node type**: an extension under `extensions/`, a renderer in `content/RichTextView.tsx`, a
+  serializer entry in `markdown/doc-to-markdown.ts`, and a reader in
+  `@repo/shared/src/utils/rich-text.util.ts` — all four, or the type is lost on one path. Then add
+  it to the AI prompts' rules and to §3 here.
+- An **equation action**: a command on `extensions/math-nodes.ts` and a `PanelButton` in
+  `equation/EquationEditor.tsx`.
+- A **repair** for a new way content arrives broken: a pure function in `latex-repair.util.ts`,
+  wired into `normaliseLatex` (equations) or `repairRichText` (stored documents), with a case in
+  the scratch checks before shipping.
+
+## 12. Known gaps
+
+- Server-side structural validation of `doc` (§10).
+- Hindi and other Indic text inside `\text{}` renders through KaTeX's fallback fonts; not yet
+  verified on devices (plan §6.6, §6.10).
+- No image node; course covers and material files are attachments, not content.
+- The Notion-style block chrome of the plan (drag handles, slash menu) is not built; the toolbar
+  is the whole UI.
+- `*italic*` and `<u>` are not imported from Markdown.

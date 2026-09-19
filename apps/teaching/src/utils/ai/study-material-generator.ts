@@ -9,7 +9,7 @@ import {
 import { richTextFromMarkdown } from '@repo/shared/utils';
 import { DocumentType, FileExtension, LevelType, LinkType } from '@enums';
 import { getObjectId } from '@utils/helpers';
-import { type IAiIssue, MARKDOWN_RULES, parseJsonObject } from './common';
+import { checkMarkdownMath, type IAiIssue, MARKDOWN_RULES, parseJsonObject, repairIssue } from './common';
 import { EXAM_STYLES, LANGUAGES } from './test-paper-generator';
 
 export { EXAM_STYLES, LANGUAGES };
@@ -265,9 +265,9 @@ export interface IParsedAiMaterials {
 
 /** Parses the reply and checks its shape; workspace checks come in `validateAiMaterials`. */
 export const parseAiMaterials = (text: string): IParsedAiMaterials => {
-  const { value: raw, issue } = parseJsonObject(text);
+  const { value: raw, issue, repairs } = parseJsonObject(text);
   if (!raw) return { file: null, issues: issue ? [issue] : [] };
-  const issues: IAiIssue[] = [];
+  const issues: IAiIssue[] = repairIssue(repairs);
   if (raw.format !== AI_STUDY_MATERIAL_FORMAT) {
     issues.push({ level: 'error', path: 'format', message: `"format" must be "${AI_STUDY_MATERIAL_FORMAT}".` });
   }
@@ -351,6 +351,7 @@ const checkContent = (material: IAiMaterial, path: string, issues: IAiIssue[]) =
   if (/<[a-z][^>]*>/i.test(content)) {
     issues.push({ level: 'warning', path: `${path}.content`, message: 'Contains HTML tags, which the editor drops.' });
   }
+  checkMarkdownMath(content, `${path}.content`, issues);
 };
 
 const checkMaterial = (material: IAiMaterial, path: string, target: IMaterialValidationTarget, issues: IAiIssue[]) => {

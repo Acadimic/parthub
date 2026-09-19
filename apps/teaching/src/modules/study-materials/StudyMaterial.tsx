@@ -1,6 +1,12 @@
 import { type MaterialDto } from '@repo/shared/contracts';
 import { Button, Card, SoftConfirmModal } from '@repo/ui/app';
-import { ArrowsInLineVerticalIcon, ArrowsOutLineVerticalIcon, PlusIcon, SparkleIcon } from '@phosphor-icons/react';
+import {
+  ArrowsInLineVerticalIcon,
+  ArrowsOutLineVerticalIcon,
+  PlusIcon,
+  SparkleIcon,
+  WrenchIcon,
+} from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import {
   useMaterialLookups,
@@ -11,6 +17,7 @@ import {
 } from '@stores';
 import { errorToast, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
+import { useMaterialRepair } from '@hooks/material-repair.hook';
 import { useEffect, useState } from 'react';
 import { useSetState } from 'react-use';
 import {
@@ -108,6 +115,8 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
     removeSelectedMaterialId();
   };
 
+  const { onRepairMaterial, onRepairAll, isRepairing } = useMaterialRepair(materials);
+
   const onCloseDeleteModal = () => {
     if (state.isDeleting) return;
     setState({ materialToDelete: null });
@@ -202,6 +211,14 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
               />
             ) : null}
             <Button
+              isSubtle
+              leftsection={<WrenchIcon weight="bold" className="h-4 w-4" />}
+              text="Repair equations"
+              title="Fix equations that arrived broken from an AI import"
+              onClick={onRepairAll}
+              isLoading={isRepairing}
+            />
+            <Button
               isSecondary
               leftsection={<SparkleIcon weight="bold" className="h-4 w-4" />}
               text="Generate with AI"
@@ -219,6 +236,7 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
               onToggle={() => toggle(material._id)}
               onEdit={() => editMaterial(material)}
               onGenerate={() => generateMaterial(material)}
+              onRepair={() => onRepairMaterial(material)}
               onDelete={() => setState({ materialToDelete: material })}
             />
           ))}
