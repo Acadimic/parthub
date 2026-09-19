@@ -1,10 +1,15 @@
+import { UserCell } from '@components/app/avatars';
 import { DataTable } from '@components/app/tables';
-import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
-import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { type IColumnData } from '@interfaces';
-import { type IUser, useSelectorLookups, useUserLookups } from '@stores';
+import { BlankState } from '@components/others';
+import { MagnifyingGlassIcon, PencilIcon, PlusIcon } from '@phosphor-icons/react';
+import { Button, TextInput } from '@repo/ui/app';
+import { Badge } from '@repo/ui/core';
+import { AccountType, Gender } from '@enums';
+import { type IColumnData, type ISelectItem } from '@interfaces';
+import { type IUser, useSelectorLookups, useStandardLookups, useUserLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
-import { getStringFormattedDate, getStringFormattedDateWithTime } from '@utils/helpers';
+import { getStringFormattedDate, getStringFormattedDateWithTime, capitalizeFirstWord } from '@utils/helpers';
+import { useMemo } from 'react';
 import { useSetState } from 'react-use';
 import { AddStudentsModal, UpsertStudentModal } from './components';
 
@@ -12,43 +17,79 @@ interface IState {
   isOpenUpsertStudentModal: boolean;
   isOpenBulkAddStudentsModal: boolean;
   isOpenAddStudentsModal: boolean;
-  isLoading: boolean;
+  search: string;
 }
 
+const GENDER_OPTIONS: ISelectItem[] = Object.values(Gender).map((gender) => ({
+  label: capitalizeFirstWord(gender),
+  value: gender,
+}));
+const STATUS_OPTIONS: ISelectItem[] = [
+  { label: 'Joined', value: AccountType.SELF },
+  { label: 'Invited', value: AccountType.INVITED },
+];
+
+/** Whether a person has signed in themselves or is still on an invitation. */
+export const AccountStatusBadge = ({ accountType }: { accountType: AccountType }) =>
+  accountType === AccountType.SELF ? (
+    <Badge tone="success" appearance="soft" withDot>
+      Joined
+    </Badge>
+  ) : (
+    <Badge tone="warning" appearance="soft" withDot>
+      Invited
+    </Badge>
+  );
+
 export const Students = () => {
-  const selectorStore = useSelectorLookups();
+  const { setSelectedStudentId } = useSelectorLookups();
   const userStore = useUserLookups();
-  const { setSelectedStudentId } = selectorStore;
+  const standardStore = useStandardLookups();
   const { createStudent, getStudentStandardsByStudentId, getStudentEnrolledDateByStudentId, removeNewUsers } =
     userStore;
-  const isLoadingUsers = userStore.isLoading('users');
+  const isLoading = userStore.isLoading('users');
+  const isFailed = userStore.isFailed('users');
   const students = userStore.getStudents();
   const [state, setState] = useSetState<IState>({
     isOpenUpsertStudentModal: false,
     isOpenBulkAddStudentsModal: false,
     isOpenAddStudentsModal: false,
-    isLoading: false,
+    search: '',
   });
 
-  const openAddStudentsModal = () => {
-    setState({ isOpenAddStudentsModal: true });
-  };
+  const standardOptions: ISelectItem[] = standardStore
+    .getStandards()
+    .map((standard) => ({ label: standard.name, value: standard._id }));
+  const standardNames = (student: IUser) =>
+    getStudentStandardsByStudentId(student._id)
+      .map((standard) => standard.name)
+      .join(', ');
+
+  // Saved rows only, and matched against what the table shows: name, email and enrolled standards.
+  // The search box used to render with no handler at all.
+  const visibleStudents = useMemo(() => {
+    const saved = students.filter((student) => !student.isNew);
+    const term = state.search.trim().toLowerCase();
+    if (!term) return saved;
+    return saved.filter((student) =>
+      `${student.name} ${student.lastName ?? ''} ${student.email} ${standardNames(student)}`
+        .toLowerCase()
+        .includes(term),
+    );
+  }, [students, state.search, standardStore]);
+
+  const openAddStudentsModal = () => setState({ isOpenAddStudentsModal: true });
+  const closeAddStudentsModal = () => setState({ isOpenAddStudentsModal: false });
 
   const openBulkAddStudentsModal = () => {
-    setState({ isOpenBulkAddStudentsModal: true });
-    closeAddStudentsModal();
+    setState({ isOpenBulkAddStudentsModal: true, isOpenAddStudentsModal: false });
   };
 
   const openUpsertStudentModal = () => {
     // Select the draft the store just made: without this the drawer opens on nothing and the blank
     // row is left behind in the table.
     setSelectedStudentId(createStudent()._id);
-    setState({ isOpenUpsertStudentModal: true });
-    closeAddStudentsModal();
-  };
-
-  const closeAddStudentsModal = () => {
-    setState({ isOpenAddStudentsModal: false });
+    setState({ isOpenUpsertStudentModal: true, isOpenAddStudentsModal: false });
   };
 
   const closeUpsertStudentModal = () => {
@@ -61,132 +102,130 @@ export const Students = () => {
     setState({ isOpenUpsertStudentModal: true });
   };
 
-  const onClickStudent = (_student: IUser) => {};
-
   const columns: IColumnData<IUser>[] = [
-    // {
-    //   label: 'Id',
-    //   dataKey: '_id',
-    // },
     {
-      label: 'Name',
+      label: 'Student',
       dataKey: 'name',
-      valueFormatter: (row: IUser) => {
-        return (
-          <div className="cursor-pointer truncate text-primary" onClick={() => onClickStudent(row)}>
-            <span className="text-inherit">{row.name}</span>
-          </div>
-        );
-      },
-      // getColor: (row: IUser) => getRandomColor(`${row._id}`),
+      width: 280,
+      isSortable: true,
+      filters: [
+        {
+          key: 'standard',
+          label: 'Enrolled standard',
+          options: standardOptions,
+          getValues: (row) => getStudentStandardsByStudentId(row._id).map((standard) => standard._id),
+        },
+      ],
+      component: (row) => <UserCell user={row} />,
     },
     {
-      label: 'Last Name',
-      dataKey: 'lastName',
-    },
-    {
-      label: 'Email',
-      dataKey: 'email',
-    },
-    {
-      label: 'Role',
-      dataKey: 'designation',
-      valueFormatter: (row: IUser) => {
-        return (
-          <div className="capitalize">
-            <span className="">{row.designation}</span>
-          </div>
-        );
-      },
+      label: 'Standards',
+      dataKey: 'standards',
+      width: 200,
+      valueFormatter: (row) => standardNames(row),
     },
     {
       label: 'Gender',
       dataKey: 'gender',
-      valueFormatter: (row: IUser) => {
-        return (
-          <div className="capitalize">
-            <span className="">{row.gender}</span>
-          </div>
-        );
-      },
+      width: 110,
+      filters: [{ key: 'gender', label: 'Gender', options: GENDER_OPTIONS, getValues: (row) => row.gender }],
+      valueFormatter: (row) => (row.gender ? <span className="capitalize">{row.gender}</span> : ''),
     },
     {
-      label: 'DOB',
+      label: 'Date of birth',
       dataKey: 'dob',
-      valueFormatter: (row: IUser) => row.dob && getStringFormattedDate(row.dob),
+      width: 140,
+      isSortable: true,
+      valueFormatter: (row) => (row.dob ? getStringFormattedDate(row.dob) : ''),
     },
     {
-      label: 'Invitation Status',
+      label: 'Status',
       dataKey: 'accountType',
-      valueFormatter: (row: IUser) => {
-        return (
-          <div className="capitalize">
-            <span className="">{row.accountType}</span>
-          </div>
-        );
+      width: 120,
+      filters: [{ key: 'status', label: 'Status', options: STATUS_OPTIONS, getValues: (row) => row.accountType }],
+      valueFormatter: (row) => <AccountStatusBadge accountType={row.accountType} />,
+    },
+    {
+      label: 'Enrolled',
+      dataKey: 'enrolledAt',
+      width: 130,
+      sortValue: (row) => getStudentEnrolledDateByStudentId(row._id),
+      valueFormatter: (row) => {
+        const enrolledAt = getStudentEnrolledDateByStudentId(row._id);
+        return enrolledAt ? getStringFormattedDate(enrolledAt) : '';
       },
     },
     {
-      label: 'Enrolled Standards',
-      dataKey: 'standards',
-      valueFormatter: (row: IUser) =>
-        getStudentStandardsByStudentId(row._id)
-          .map((standard) => standard.name)
-          .join(', '),
-    },
-    {
-      label: 'Enrolled At',
-      dataKey: 'sections',
-      valueFormatter: (row: IUser) => getStringFormattedDate(getStudentEnrolledDateByStudentId(row._id)),
-    },
-    {
-      label: 'Last Active',
+      label: 'Last active',
       dataKey: 'lastActive',
-      valueFormatter: (row: IUser) => row.lastActive && getStringFormattedDateWithTime(row.lastActive),
+      width: 170,
+      sortValue: (row) => (row.lastActive ? String(row.lastActive) : ''),
+      valueFormatter: (row) => (row.lastActive ? getStringFormattedDateWithTime(row.lastActive) : ''),
     },
     {
       label: 'Actions',
       dataKey: ACTIONS,
+      width: 90,
       menuItems: [
         {
           label: 'Edit',
           onClick: (row) => row && editStudent(row),
           icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
-        {
-          label: 'Delete',
-          onClick: () => {},
-          icon: <TrashIcon weight="bold" className="w-4 h-4" />,
-        },
       ],
-      width: 96,
     },
   ];
 
+  const addButton = (
+    <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={openAddStudentsModal}>
+      Add <span className="hidden sm:inline">students</span>
+    </Button>
+  );
+
+  const emptyState = state.search.trim() ? (
+    <BlankState
+      label="No matching students"
+      description="Try a different name, email or standard."
+      action={<Button isSecondary text="Clear search" onClick={() => setState({ search: '' })} />}
+    />
+  ) : (
+    <BlankState
+      label="No students yet"
+      description="Invite students one at a time, or upload a sheet to add a whole batch."
+      action={addButton}
+    />
+  );
+
   return (
     <>
-      {!isLoadingUsers ? (
-        <div>
-          <div className="flex justify-between items-center">
-            <div className="">
-              <TextInput
-                placeholder="Search Students"
-                leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
-              />
-            </div>
-            <div>
-              <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={openAddStudentsModal}>
-                Add <span className="hidden sm:inline">Students</span>
-              </Button>
-            </div>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="w-full sm:w-72">
+            <TextInput
+              placeholder="Search by name, email or standard"
+              value={state.search}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setState({ search: event.target.value })}
+              leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
+              aria-label="Search students"
+            />
           </div>
-          <div className="mt-4">
-            <DataTable rows={students} columns={columns} />
-          </div>
+          <p className="text-xs text-muted-foreground">
+            {students.length} {students.length === 1 ? 'student' : 'students'}
+            <span className="hidden md:inline"> · Filter by standard, gender or status from the column headers.</span>
+          </p>
+          <div className="ml-auto">{addButton}</div>
         </div>
-      ) : (
-        <FullScreenLoader withHeader loading={isLoadingUsers} />
-      )}
+        {isFailed ? (
+          <BlankState
+            label="Could not load students"
+            description={userStore.getError('users')}
+            action={<Button text="Retry" onClick={() => userStore.loadUsers()} />}
+            className="rounded-lg border border-border bg-background py-10"
+          />
+        ) : (
+          <DataTable rows={visibleStudents} columns={columns} isLoading={isLoading} emptyState={emptyState} />
+        )}
+      </div>
       <AddStudentsModal
         isOpen={state.isOpenAddStudentsModal}
         onClose={closeAddStudentsModal}

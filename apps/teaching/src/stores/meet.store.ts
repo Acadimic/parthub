@@ -34,6 +34,8 @@ export interface IMeetState extends IRequestSlice<MeetFetch> {
   /** Moves a meet to another day, keeping its start and end times. */
   setMeetDate: (meetId: string, date: Date) => void;
   removeMeetById: (meetId: string) => void;
+  /** Deletes a session on the server, then drops it from the store. */
+  deleteMeet: (meetId: string) => Promise<void>;
 
   /** Adds an unsaved meet and returns it, for the caller to select. */
   createMeet: (date: Date) => MeetDto;
@@ -114,6 +116,11 @@ export const useMeetStore = create<IMeetState>()((set, get) => ({
       const { [meetId]: removed, ...meetMap } = state.meetMap;
       return removed ? { meetMap } : state;
     });
+  },
+
+  deleteMeet: async (meetId) => {
+    await MeetService.deleteMeet(meetId);
+    get().removeMeetById(meetId);
   },
 
   createMeet: (date) => {

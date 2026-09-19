@@ -9,6 +9,13 @@ class MeetService {
     return resData;
   };
 
+  /** `DELETE meet/:meetId` — the one collection here whose server route deletes rather than upserts a flag. */
+  deleteMeet = async (meetId: string) => {
+    const url = `meet/${meetId}`;
+    const resData = await callAuthApi(url, API.DELETE);
+    return resData;
+  };
+
   getMeets = async () => {
     const url = 'meet/all';
     const resData = await callAuthApi<MeetDto[]>(url, API.GET);

@@ -1,5 +1,5 @@
 import { type SuccessResponse } from '@repo/shared/responses';
-import axios, { type AxiosError } from 'axios';
+import axios, { type AxiosError, type AxiosInstance } from 'axios';
 import { API, StorageKey, Subdomain } from '../enums';
 import { generateAndSetNewToken } from '../utils/firebase';
 import { getTimezone, getTimezoneOffset, getToken, handleError } from '../utils/helpers';
@@ -53,6 +53,13 @@ const createAxiosInstance = (isUnAuth: boolean, url: string) => {
  * Calls an authenticated endpoint. `T` is the response contract from
  * `@repo/shared`, so the caller gets `{ data: T }` rather than `any`.
  */
+/** One request by method. POST carries the body; GET and DELETE carry it as the query string. */
+const send = (axiosInstance: AxiosInstance, method: API, url: string, body?: object | null) => {
+  if (method === API.POST) return axiosInstance.post(url, body);
+  if (method === API.DELETE) return axiosInstance.delete(url, { params: body });
+  return axiosInstance.get(url, { params: body });
+};
+
 export const callAuthApi = async <T = unknown>(
   url: string,
   method: API,
@@ -66,8 +73,7 @@ export const callAuthApi = async <T = unknown>(
     // with `forbidNonWhitelisted`, so one `isNew` on a posted store instance fails the whole
     // request. Binary uploads go through `callDefaultApi` and never reach this.
     const body = data ? toPayload(data) : data;
-    const response =
-      method === API.POST ? await axiosInstance.post(url, body) : await axiosInstance.get(url, { params: body });
+    const response = await send(axiosInstance, method, url, body);
     return response.data;
   } catch (error) {
     // handleError throws unless the caller opted out, in which case there is nothing to return.
@@ -85,8 +91,7 @@ export const callUnAuthApi = async <T = unknown>(
   try {
     const axiosInstance = createAxiosInstance(true, url);
     const body = data ? toPayload(data) : data;
-    const response =
-      method === API.POST ? await axiosInstance.post(url, body) : await axiosInstance.get(url, { params: body });
+    const response = await send(axiosInstance, method, url, body);
     return response.data;
   } catch (error) {
     // handleError throws unless the caller opted out, in which case there is nothing to return.

@@ -2,7 +2,7 @@ import { type CourseDto } from '@repo/shared/contracts';
 import { PresignedImage } from '@components/app/attachments';
 import { DataTable } from '@components/app/tables';
 import { BlankState } from '@components/others';
-import { type IColumnData } from '@interfaces';
+import { type IColumnData, type ISelectItem } from '@interfaces';
 import { Badge } from '@repo/ui/core';
 import { Button, SoftConfirmModal, TextInput } from '@repo/ui/app';
 import { useLoadOnce } from '@repo/ui/hooks';
@@ -38,6 +38,22 @@ export const Courses = () => {
   const { createCourse, loadCourses, deleteCourse } = courseStore;
   const { getStandardNamesText, getSubjectNamesText } = standardStore;
   const courses = courseStore.getCourses();
+  const standardOptions: ISelectItem[] = standardStore
+    .getStandards()
+    .map((standard) => ({ label: standard.name, value: standard._id }));
+  const subjectOptions: ISelectItem[] = standardStore.getStandardsSubjectItems(
+    standardOptions.map((option) => option.value),
+  );
+  /** A course with no subjects, or the ALL marker, covers every subject of its standards, so it matches any of them. */
+  const courseSubjectIds = (course: CourseDto) => {
+    const subjects = (course.subjects ?? []).filter((id) => id !== ALL);
+    if (subjects.length) return subjects;
+    return standardStore.getStandardsSubjectItems(course.standards ?? []).map((item) => item.value);
+  };
+  const totalDuration = (course: CourseDto) => {
+    const stats = course.stats;
+    return stats ? stats.materialsDurationMins + stats.meetsDurationMins + stats.testsDurationMins : 0;
+  };
   // Loads once on mount, retries after a failure, and reports the status the screen branches on.
   const { isLoading, isFailed, error } = useLoadOnce(useCourseStore, 'courses', (state) => state.loadCourses);
   const [state, setState] = useSetState<IState>({
@@ -101,62 +117,92 @@ export const Courses = () => {
     }
   };
 
+  /** The second line under a course's name: its standards and subjects, which used to be two columns. */
+  const describeScope = (row: CourseDto) => {
+    const standards = getStandardNamesText(row.standards ?? []) || 'No standard';
+    const subjects = getSubjectNamesText((row.subjects ?? []).filter((id) => id !== ALL)) || 'All subjects';
+    return `${standards} · ${subjects}`;
+  };
+
   const columns: IColumnData<CourseDto>[] = [
     {
-      label: 'Name',
+      label: 'Course',
       dataKey: 'name',
-      width: 260,
+      width: 320,
+      isSortable: true,
+      filters: [
+        { key: 'standard', label: 'Standard', options: standardOptions, getValues: (row) => row.standards ?? [] },
+        { key: 'subject', label: 'Subject', options: subjectOptions, getValues: courseSubjectIds },
+      ],
       component: (row) => (
-        <div className="flex items-center space-x-2">
-          <div>
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
             {(row.attachments ?? []).length ? (
-              <div className="w-6 h-6 p-1 rounded-full border border-border border-dashed">
-                <PresignedImage url={(row.attachments ?? [])[0].url} noOpen />
-              </div>
-            ) : null}
+              <PresignedImage url={(row.attachments ?? [])[0].url} noOpen />
+            ) : (
+              <span className="text-sm font-semibold text-muted-foreground">{row.name.slice(0, 1).toUpperCase()}</span>
+            )}
           </div>
-          <div className="flex-1 truncate">{row.name}</div>
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate font-semibold text-foreground">{row.name}</span>
+            <span className="truncate text-xs text-muted-foreground">{describeScope(row)}</span>
+          </div>
         </div>
       ),
-    },
-    {
-      label: 'Standards',
-      dataKey: 'standards',
-      valueFormatter: (row) => getStandardNamesText(row.standards ?? []),
-    },
-    {
-      label: 'Subjects',
-      dataKey: 'subjects',
-      valueFormatter: (row) => getSubjectNamesText(row.subjects ?? []) || ALL,
     },
     {
       label: 'Modules',
       dataKey: 'daysCount',
       width: 110,
-      valueFormatter: (row) => row.stats?.daysCount ?? 0,
+      align: 'right',
+      sortValue: (row) => row.stats?.daysCount ?? 0,
+      valueFormatter: (row) => <span className="font-mono">{row.stats?.daysCount ?? 0}</span>,
     },
     {
-      label: 'Test Papers',
+      label: 'Tests',
       dataKey: 'testsCount',
-      width: 120,
-      valueFormatter: (row) => row.stats?.testsCount ?? 0,
+      width: 100,
+      align: 'right',
+      sortValue: (row) => row.stats?.testsCount ?? 0,
+      valueFormatter: (row) => <span className="font-mono">{row.stats?.testsCount ?? 0}</span>,
+    },
+    {
+      label: 'Sessions',
+      dataKey: 'meetsCount',
+      width: 110,
+      align: 'right',
+      sortValue: (row) => row.stats?.meetsCount ?? 0,
+      valueFormatter: (row) => <span className="font-mono">{row.stats?.meetsCount ?? 0}</span>,
     },
     {
       label: 'Duration',
       dataKey: 'durationMins',
       width: 120,
-      valueFormatter: (row) => {
-        const stats = row.stats;
-        if (!stats) return '0 mins';
-        return `${stats.materialsDurationMins + stats.meetsDurationMins + stats.testsDurationMins} mins`;
-      },
+      align: 'right',
+      sortValue: totalDuration,
+      valueFormatter: (row) => <span className="font-mono">{totalDuration(row)} min</span>,
     },
     {
-      label: 'Published',
+      label: 'Status',
       dataKey: 'isPublished',
-      width: 120,
-      valueFormatter: (row) =>
-        row.isPublished ? <Badge tone="success">Published</Badge> : <Badge tone="neutral">Draft</Badge>,
+      width: 125,
+      sortValue: (row) => (row.isPublished ? 1 : 0),
+      filters: [
+        {
+          key: 'status',
+          label: 'Status',
+          options: [
+            { label: 'Published', value: 'published' },
+            { label: 'Draft', value: 'draft' },
+          ],
+          getValues: (row) => (row.isPublished ? 'published' : 'draft'),
+        },
+      ],
+      valueFormatter: (row) => (
+        <Badge tone={row.isPublished ? 'success' : 'neutral'} appearance="soft" withDot>
+          {row.isPublished ? 'Published' : 'Draft'}
+        </Badge>
+      ),
     },
     {
       label: 'Actions',
@@ -178,13 +224,13 @@ export const Courses = () => {
           icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
-      width: 96,
+      width: 90,
     },
   ];
 
   const addCourseButton = (
     <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={onOpenAddCourseModal}>
-      Add <span className="hidden sm:inline">Course</span>
+      Add <span className="hidden sm:inline">course</span>
     </Button>
   );
 
@@ -218,7 +264,11 @@ export const Courses = () => {
         onRowClick={openCourse}
         emptyState={
           state.search ? (
-            <BlankState label="No matching courses" description="Try a different name, standard or subject." />
+            <BlankState
+              label="No matching courses"
+              description="Try a different name, standard or subject."
+              action={<Button isSecondary text="Clear search" onClick={() => setState({ search: '' })} />}
+            />
           ) : (
             <BlankState
               label="No courses yet"
@@ -233,19 +283,24 @@ export const Courses = () => {
 
   return (
     <>
-      <div>
-        <div className="flex justify-between items-center">
-          <div className="">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="w-full sm:w-72">
             <TextInput
-              placeholder="Search Course"
+              placeholder="Search courses"
               value={state.search}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setState({ search: e.target.value })}
               leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
+              aria-label="Search courses"
             />
           </div>
-          <div>{addCourseButton}</div>
+          <p className="text-xs text-muted-foreground">
+            {visibleCourses.length} {visibleCourses.length === 1 ? 'course' : 'courses'}
+            <span className="hidden md:inline"> · Filter by standard, subject or status from the column headers.</span>
+          </p>
+          <div className="ml-auto">{addCourseButton}</div>
         </div>
-        <div className="mt-4">{renderTable()}</div>
+        {renderTable()}
       </div>
 
       <UpsertCourseModal isOpen={state.isOpenAddModal} onClose={onCloseAddModal} />

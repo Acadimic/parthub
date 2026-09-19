@@ -1,7 +1,9 @@
-import { Accordions, Button, Loader, Menu, SoftConfirmModal } from '@repo/ui/app';
-import { PencilIcon, TrashIcon } from '@phosphor-icons/react';
-import { BlankState, TitleWithIcon } from '@components/others';
-import { MaterialInfo } from '@modules/study-materials/components';
+import { type CourseDto, type MeetDto } from '@repo/shared/contracts';
+import { MeetItem } from '@components/common';
+import { BlankState } from '@components/others';
+import { ArrowsInLineVerticalIcon, ArrowsOutLineVerticalIcon, PlusIcon } from '@phosphor-icons/react';
+import { Button, Card, SoftConfirmModal } from '@repo/ui/app';
+import { Badge } from '@repo/ui/core';
 import {
   type ICourseModule,
   useCourseLookups,
@@ -14,9 +16,16 @@ import {
 } from '@stores';
 import { reportError, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSetState } from 'react-use';
-import { CourseModuleView, SessionsView, UpsertCourseModuleModal, UpsertSessionsModal } from './components';
+import {
+  CourseHeader,
+  CourseModuleCard,
+  CourseSkeleton,
+  UpsertCourseModal,
+  UpsertCourseModuleModal,
+  UpsertSessionsModal,
+} from './components';
 
 interface IProps {
   courseId: string;
@@ -25,44 +34,95 @@ interface IProps {
 interface IState {
   isOpenUpsertCourseModuleModal: boolean;
   isOpenUpsertSessionsModal: boolean;
+  isOpenEditCourse: boolean;
   /** The module the delete confirm is asking about, or undefined when it is closed. */
   moduleToDelete?: ICourseModule;
   isDeletingModule: boolean;
 }
 
+/**
+ * The courses whose modules a course page shows. A course lists itself in `courses`, which is how a
+ * bundle is represented; the course itself stands in when the list is somehow empty.
+ */
+const moduleCourseIds = (course: CourseDto | undefined): string[] => {
+  if (!course) return [];
+  return course.courses?.length ? course.courses : [course._id];
+};
+
+/** The course's live sessions, with their joining links, or a note that there are none yet. */
+const SessionsSection = ({ meets, onAdd }: { meets: MeetDto[]; onAdd: () => void }) => (
+  <section className="rounded-lg border border-border bg-background">
+    <header className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">
+      <div className="flex min-w-[10rem] flex-1 items-center gap-2">
+        <h2 className="text-sm font-semibold text-foreground">Sessions</h2>
+        <Badge tone="neutral" appearance="soft" className="whitespace-nowrap px-1.5 py-0 text-xxs">
+          {meets.length} {meets.length === 1 ? 'session' : 'sessions'}
+        </Badge>
+      </div>
+      <div className="ml-auto">
+        <Button
+          isSecondary
+          leftsection={<PlusIcon weight="bold" className="h-4 w-4" />}
+          text="Add session"
+          onClick={onAdd}
+        />
+      </div>
+    </header>
+    <div className="flex flex-col gap-2 p-3">
+      {meets.length ? (
+        meets.map((meet) => <MeetItem key={meet._id} meet={meet} isSmallJoinable />)
+      ) : (
+        <BlankState
+          label="No sessions yet"
+          description="Live sessions attached to this course show here, with their joining links."
+          className="py-8"
+        />
+      )}
+    </div>
+  </section>
+);
+
 export const Course = ({ courseId }: IProps) => {
   const { push } = useRouter();
-  const selectorStore = useSelectorLookups();
+  const { setSelectedCourseId, setSelectedCourseModuleId } = useSelectorLookups();
   const courseStore = useCourseLookups();
   const materialStore = useMaterialLookups();
   const testPaperStore = useTestPaperLookups();
   const meetStore = useMeetLookups();
-  const { setSelectedCourseId, setSelectedCourseModuleId } = selectorStore;
   const selectedCourse = useSelectedCourse();
-  const {
-    getCourseModulesByCourseId,
-    loadCourseModules,
-    createCourseModule,
-    deleteCourseModule,
-    getCourseById,
-    loadCourse,
-  } = courseStore;
-  const { loadStandardsMaterials } = materialStore;
-  const isLoadingMaterials = materialStore.isLoading('materials');
-  const { loadTestPapers } = testPaperStore;
-  const isLoadingTestPapers = testPaperStore.isLoading('testPapers');
-  const { loadMeets } = meetStore;
-  const isLoadingCourse = courseStore.isLoading('course');
+  const { getCourseModulesByCourseId, loadCourseModules, createCourseModule, deleteCourseModule, loadCourse } =
+    courseStore;
+  const isLoadingModules =
+    courseStore.isLoading('courseModules') ||
+    testPaperStore.isLoading('testPapers') ||
+    materialStore.isLoading('materials');
   const [state, setState] = useSetState<IState>({
     isOpenUpsertCourseModuleModal: false,
     isOpenUpsertSessionsModal: false,
+    isOpenEditCourse: false,
     isDeletingModule: false,
   });
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const onOpenUpsertCourseModuleModal = (id: string) => {
+  const courseIds = moduleCourseIds(selectedCourse);
+  const courseModules = courseIds.flatMap((id) => getCourseModulesByCourseId(id));
+  const meets = meetStore.getMeetsByIds(selectedCourse?.meets ?? []);
+  const allExpanded = courseModules.length > 0 && courseModules.every((courseModule) => expanded.has(courseModule._id));
+
+  const toggle = (id: string) =>
+    setExpanded((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const toggleAll = () =>
+    setExpanded(allExpanded ? new Set() : new Set(courseModules.map((courseModule) => courseModule._id)));
+
+  const onOpenUpsertCourseModuleModal = () => {
     // Select the draft the store just made: without this the drawer opens on nothing and the blank
     // module is left behind.
-    setSelectedCourseModuleId(createCourseModule(id)._id);
+    setSelectedCourseModuleId(createCourseModule(courseIds[0] ?? courseId)._id);
     setState({ isOpenUpsertCourseModuleModal: true });
   };
 
@@ -71,16 +131,10 @@ export const Course = ({ courseId }: IProps) => {
     setState({ isOpenUpsertCourseModuleModal: true });
   };
 
-  const onCloseUpsertCourseModuleModal = () => {
-    setState({ isOpenUpsertCourseModuleModal: false });
-  };
-
-  const onOpenUpsertSessionsModal = () => {
-    setState({ isOpenUpsertSessionsModal: true });
-  };
-
-  const onCloseUpsertSessionsModal = () => {
-    setState({ isOpenUpsertSessionsModal: false });
+  const onCloseEditCourse = () => {
+    setState({ isOpenEditCourse: false });
+    // The course drawer clears the selection on its way out, and this page reads from it.
+    setSelectedCourseId(courseId);
   };
 
   const onConfirmDeleteModule = async () => {
@@ -112,101 +166,104 @@ export const Course = ({ courseId }: IProps) => {
         return;
       }
       loadCourseModules(courseId);
-      loadTestPapers();
-      loadStandardsMaterials(course.standards ?? []);
-      loadMeets();
+      testPaperStore.loadTestPapers();
+      materialStore.loadStandardsMaterials(course.standards ?? []);
+      meetStore.loadMeets();
     };
     loadCourseData();
   }, [courseId]);
 
-  if (!selectedCourse) return <Loader isLoading={isLoadingCourse} />;
+  if (!selectedCourse) return <CourseSkeleton />;
+
+  const renderModules = () => {
+    if (!courseModules.length && isLoadingModules) return <CourseSkeleton />;
+    if (!courseModules.length) {
+      return (
+        <BlankState
+          label="No modules yet"
+          description="A module is one day of study material, test papers and sessions. Add the first one to start building the course."
+          className="rounded-lg border border-border bg-background py-12"
+          action={
+            <Button
+              leftsection={<PlusIcon weight="bold" className="h-4 w-4" />}
+              text="Add module"
+              onClick={onOpenUpsertCourseModuleModal}
+            />
+          }
+        />
+      );
+    }
+    return (
+      <section className="rounded-lg border border-border bg-background">
+        <header className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">
+          <div className="flex min-w-[10rem] flex-1 items-center gap-2">
+            <h2 className="text-sm font-semibold text-foreground">Modules</h2>
+            <Badge tone="neutral" appearance="soft" className="whitespace-nowrap px-1.5 py-0 text-xxs">
+              {courseModules.length} {courseModules.length === 1 ? 'module' : 'modules'}
+            </Badge>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            {courseModules.length > 1 ? (
+              <Button
+                isSubtle
+                leftsection={
+                  allExpanded ? (
+                    <ArrowsInLineVerticalIcon className="h-4 w-4" />
+                  ) : (
+                    <ArrowsOutLineVerticalIcon className="h-4 w-4" />
+                  )
+                }
+                text={allExpanded ? 'Collapse all' : 'Expand all'}
+                onClick={toggleAll}
+              />
+            ) : null}
+            <Button
+              isSecondary
+              leftsection={<PlusIcon weight="bold" className="h-4 w-4" />}
+              text="Add module"
+              onClick={onOpenUpsertCourseModuleModal}
+            />
+          </div>
+        </header>
+        <div className="flex flex-col gap-2 p-3">
+          {courseModules.map((courseModule, index) => (
+            <CourseModuleCard
+              key={courseModule._id}
+              courseModule={courseModule}
+              number={index + 1}
+              isExpanded={expanded.has(courseModule._id)}
+              onToggle={() => toggle(courseModule._id)}
+              onEdit={() => onEditCourseModule(courseModule)}
+              onDelete={() => setState({ moduleToDelete: courseModule })}
+            />
+          ))}
+        </div>
+      </section>
+    );
+  };
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-3">
-        {(selectedCourse.courses ?? []).map((id: string) => {
-          const course = getCourseById(id);
-          const courseModules = getCourseModulesByCourseId(id);
-          if (!course) return null;
-          return (
-            <div key={id} className="flex flex-col gap-6">
-              <div className="">
-                <div className="flex flex-col md:flex-row justify-between items-center gap-3 mb-4">
-                  <TitleWithIcon title={`Modules for ${course?.name}`} />
-                  <Button text="Add Module" onClick={() => onOpenUpsertCourseModuleModal(id)} />
-                </div>
-                <div>
-                  {courseModules.length !== 0 && (
-                    <Accordions
-                      openIndexes={[0]}
-                      items={courseModules.map((courseModule) => ({
-                        title: (
-                          <div className="flex flex-col md:flex-row justify-between w-full items-center relative">
-                            <div className="flex flex-col md:flex-row text-sm font-semibold justify-start items-start space-x-4">
-                              <div>{courseModule.name}</div>{' '}
-                              <div className="">
-                                <MaterialInfo
-                                  materialIds={courseModule.materials ?? []}
-                                  testPaperIds={courseModule.testPapers ?? []}
-                                />
-                              </div>
-                            </div>
-                            <div className="absolute -right-4">
-                              <Menu
-                                menuItems={[
-                                  {
-                                    label: 'Edit',
-                                    onClick: () => onEditCourseModule(courseModule),
-                                    icon: <PencilIcon weight="bold" className="w-4 h-4" />,
-                                  },
-                                  {
-                                    label: 'Delete',
-                                    onClick: () => setState({ moduleToDelete: courseModule }),
-                                    icon: <TrashIcon weight="bold" className="w-4 h-4" />,
-                                  },
-                                ]}
-                                className=""
-                              />
-                            </div>
-                          </div>
-                        ),
-                        component: <CourseModuleView courseModule={courseModule} />,
-                      }))}
-                    />
-                  )}
-                  {courseModules.length === 0 &&
-                    (courseStore.isLoading('courseModules') || isLoadingTestPapers || isLoadingMaterials) && (
-                      <Loader
-                        isLoading={courseStore.isLoading('courseModules') || isLoadingTestPapers || isLoadingMaterials}
-                      />
-                    )}
-                  {courseModules.length === 0 &&
-                    !courseStore.isLoading('courseModules') &&
-                    !isLoadingTestPapers &&
-                    !isLoadingMaterials && (
-                      <div className="flex items-center justify-center w-full h-80">
-                        <BlankState
-                          label="No modules yet"
-                          description="A module is one day of study material, test papers and sessions."
-                          action={<Button text="Add Module" onClick={() => onOpenUpsertCourseModuleModal(id)} />}
-                        />
-                      </div>
-                    )}
-                </div>
-              </div>
-              <div>
-                <div className="flex flex-col md:flex-row justify-between items-center gap-3 mb-4">
-                  <TitleWithIcon title={`Sessions for ${course?.name}`} />
-                  <Button text="Add Session" onClick={onOpenUpsertSessionsModal} />
-                </div>
-                <SessionsView course={course} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <UpsertCourseModuleModal isOpen={state.isOpenUpsertCourseModuleModal} onClose={onCloseUpsertCourseModuleModal} />
-      <UpsertSessionsModal isOpen={state.isOpenUpsertSessionsModal} onClose={onCloseUpsertSessionsModal} />
+    <div className="flex flex-col gap-4">
+      <Card className="px-5 py-5 border rounded-lg">
+        <CourseHeader
+          course={selectedCourse}
+          moduleCount={courseModules.length}
+          onEdit={() => setState({ isOpenEditCourse: true })}
+          onAddModule={onOpenUpsertCourseModuleModal}
+        />
+      </Card>
+      {renderModules()}
+      <SessionsSection meets={meets} onAdd={() => setState({ isOpenUpsertSessionsModal: true })} />
+      <UpsertCourseModuleModal
+        isOpen={state.isOpenUpsertCourseModuleModal}
+        onClose={() => setState({ isOpenUpsertCourseModuleModal: false })}
+      />
+      <UpsertSessionsModal
+        isOpen={state.isOpenUpsertSessionsModal}
+        onClose={() => setState({ isOpenUpsertSessionsModal: false })}
+      />
+      {/* Mounted only while open: its close clears the course selection this page depends on. */}
+      {state.isOpenEditCourse ? <UpsertCourseModal isOpen onClose={onCloseEditCourse} /> : null}
       <SoftConfirmModal
         isOpen={!!state.moduleToDelete}
         title="Delete module?"

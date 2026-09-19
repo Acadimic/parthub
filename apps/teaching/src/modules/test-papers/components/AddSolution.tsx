@@ -3,20 +3,22 @@ import { RichTextEditor } from '@repo/ui/editor';
 import { type OptionDto, type QuestionDto } from '@repo/shared/contracts';
 import { type MarkingType } from '@repo/shared/interfaces';
 import { richTextFromMarkdown } from '@repo/shared/utils';
-import { CheckboxSelection, RadioSelection } from '@components/app/selections';
 import { Select } from '@components/app/selects';
+import { Badge } from '@repo/ui/core';
 import { TextInput } from '@repo/ui/app';
 import { Marking, QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
 import { useStandardLookups, useQuestionLookups, useSelectedQuestion, useSelectedTestPaper } from '@stores';
 import { useEffect, useState } from 'react';
-import { SelectQuestionType } from './SelectQuestionType';
+import { AnswerChoices } from './AnswerChoices';
+import { DrawerSection } from './DrawerSection';
+import { getQuestionTypeMeta } from './question-types';
 
-const MARKING_FIELDS = [
-  { name: Marking.CORRECT, label: 'Correct Marks', placeholder: 'Correct' },
-  { name: Marking.INCORRECT, label: 'Incorrect Marks', placeholder: 'Incorrect' },
-  { name: Marking.UNATTEMPTED, label: 'Unattempted Marks', placeholder: 'Unattempted' },
+const MARKING_FIELDS: { name: Marking; label: string; tone: string }[] = [
+  { name: Marking.CORRECT, label: 'Correct', tone: 'text-success' },
+  { name: Marking.INCORRECT, label: 'Incorrect', tone: 'text-destructive' },
+  { name: Marking.UNATTEMPTED, label: 'Unattempted', tone: 'text-warning' },
 ];
 
 /**
@@ -37,13 +39,7 @@ const toMarkInputs = (markings?: MarkingType): IMarkInputs => {
   return inputs;
 };
 
-/**
- * The marks to store for a set of inputs.
- *
- * Every key is written on every change, an unparseable field as 0. The previous version deleted the
- * key instead and refilled it afterwards, so the store never saw `-` and a negative mark could not
- * be typed at all; `MarkingsDto` requires all three, so a missing one also failed validation.
- */
+/** Every key is written on every change, an unparseable field as 0; `MarkingsDto` requires all three. */
 const toMarkings = (inputs: IMarkInputs): MarkingType => {
   const parse = (value: string) => {
     const parsed = parseFloat(value);
@@ -57,7 +53,7 @@ const toMarkings = (inputs: IMarkInputs): MarkingType => {
   };
 };
 
-/** The three marks-per-outcome inputs, which differ only in name and label. */
+/** The three marks-per-outcome inputs in one row, coloured the way the paper shows them. */
 const MarkingInputs = ({
   marks,
   onChange,
@@ -65,20 +61,21 @@ const MarkingInputs = ({
   marks: IMarkInputs;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }) => (
-  <div className="flex flex-col md:flex-row gap-2.5">
-    {MARKING_FIELDS.map(({ name, label, placeholder }) => (
-      <div key={name} className="w-full md:w-[33.33%]">
+  <div className="grid grid-cols-3 gap-3">
+    {MARKING_FIELDS.map(({ name, label, tone }) => (
+      <label key={name} className="flex flex-col gap-1">
+        <span className={`text-xs font-semibold ${tone}`}>{label}</span>
         <TextInput
           name={name}
           type="number"
-          label={label}
-          placeholder={placeholder}
-          className="w-32 font-mono"
-          required
+          step="0.5"
+          placeholder="0"
+          className="font-mono"
           value={marks[name] ?? ''}
           onChange={onChange}
+          aria-label={`${label} marks`}
         />
-      </div>
+      </label>
     ))}
   </div>
 );
@@ -89,63 +86,54 @@ const QuestionTaxonomy = ({
   standardItems,
   subjectItems,
   getChapterItems,
-  onStandardChange,
   onPatchQuestion,
 }: {
   question: QuestionDto;
   standardItems: ISelectItem[];
   subjectItems: ISelectItem[];
   getChapterItems: (standard: string, subject: string) => ISelectItem[];
-  onStandardChange: (values: ISelectItem[]) => void;
   onPatchQuestion: (id: string, fields: Partial<QuestionDto>) => void;
 }) => (
-  <div className="flex flex-col md:flex-row gap-2.5">
-    <div className="flex flex-col md:flex-row gap-2.5">
-      <Select
-        label="Standards"
-        items={standardItems}
-        required
-        isGrouped
-        values={question.standard ? [question.standard] : []}
-        onChange={onStandardChange}
-        isSingleSelect
-      />
-      <Select
-        label="Subject"
-        items={subjectItems}
-        values={question.subject ? [question.subject] : []}
-        onChange={(values) => onPatchQuestion(question._id, { subject: values[0]?.value })}
-        isSingleSelect
-        isDisabled={!question.standard}
-      />
-    </div>
-    <div className="flex items-end gap-2.5">
-      {question.standard && question.subject && (
-        <>
-          <div className="w-full flex-1">
-            <Select
-              label="Chapter"
-              items={getChapterItems(question.standard, question.subject)}
-              values={question.chapter ? [question.chapter] : []}
-              onChange={(values) => values[0] && onPatchQuestion(question._id, { chapter: values[0]?.value })}
-              isSingleSelect
-              required
-            />
-          </div>
-          <div className="pb-[1px]">
-            <AddChapterButton standard={question.standard} subject={question.subject} />
-          </div>
-        </>
-      )}
-    </div>
+  <div className="grid gap-3 sm:grid-cols-2">
+    <Select
+      label="Standard"
+      items={standardItems}
+      required
+      isGrouped
+      values={question.standard ? [question.standard] : []}
+      onChange={(values) => values[0] && onPatchQuestion(question._id, { standard: values[0].value })}
+      isSingleSelect
+    />
+    <Select
+      label="Subject"
+      items={subjectItems}
+      values={question.subject ? [question.subject] : []}
+      onChange={(values) => onPatchQuestion(question._id, { subject: values[0]?.value })}
+      isSingleSelect
+      isDisabled={!question.standard}
+      placeholder={question.standard ? 'Select subject' : 'Choose a standard first'}
+    />
+    {question.standard && question.subject ? (
+      <div className="flex items-end gap-2 sm:col-span-2">
+        <div className="min-w-0 flex-1">
+          <Select
+            label="Chapter"
+            items={getChapterItems(question.standard, question.subject)}
+            values={question.chapter ? [question.chapter] : []}
+            onChange={(values) => values[0] && onPatchQuestion(question._id, { chapter: values[0]?.value })}
+            isSingleSelect
+            required
+          />
+        </div>
+        <div className="pb-px">
+          <AddChapterButton standard={question.standard} subject={question.subject} />
+        </div>
+      </div>
+    ) : null}
   </div>
 );
 
-/**
- * A question's subject choices, or none while it has no standard yet — `QuestionDto` leaves
- * `standard` optional because a write body need not send it. Outside the component so the guard
- * does not count against the render function's complexity.
- */
+/** A question's subject choices, or none while it has no standard yet. */
 const toSubjectItems = (
   standard: string | undefined,
   getItems: (standardId: string) => ISelectItem[],
@@ -154,42 +142,22 @@ const toSubjectItems = (
 /** The typed-in answer for a question that has no options list, as text the input can hold. */
 const toAnswerText = (options: OptionDto[]): string => options[0]?.body.text ?? '';
 
+const answerHint = (hasChoices: boolean, isMultiple: boolean) => {
+  if (!hasChoices) return 'What the student has to enter to be marked correct.';
+  return isMultiple ? 'Tick every option that is correct.' : 'Pick the one correct option.';
+};
+
+/**
+ * Step two of the question drawer: the answer, the marks, where the question belongs, and the
+ * worked solution. The question is shown at the top, read-only, so the author marks the answer
+ * against the text they wrote rather than from memory.
+ */
 export const AddSolution = () => {
-  const questionStore = useQuestionLookups();
-  const { patchQuestion, patchOption, setSolution } = questionStore;
+  const { patchQuestion, patchOption, setSolution } = useQuestionLookups();
   const selectedTestPaper = useSelectedTestPaper();
   const selectedQuestion = useSelectedQuestion();
   const { getStandardSubjectItems, getStandardItemsByIds, getChapterItems } = useStandardLookups();
   const [marks, setMarks] = useState<IMarkInputs>(() => toMarkInputs(selectedQuestion?.markings));
-
-  const handleCheckboxOptionClick = (optionId: string) => {
-    if (!selectedQuestion) return;
-    const option = (selectedQuestion.options ?? []).find((item) => item._id === optionId);
-    if (!option) return;
-    patchOption(selectedQuestion._id, optionId, { isCorrect: !option.isCorrect });
-  };
-
-  /** Exactly one correct answer, so selecting one clears the rest. */
-  const handleRadioOptionClick = (optionId: string) => {
-    if (!selectedQuestion) return;
-    (selectedQuestion.options ?? []).forEach((item) =>
-      patchOption(selectedQuestion._id, item._id, { isCorrect: item._id === optionId }),
-    );
-  };
-
-  const handleStandardChange = (values: ISelectItem[]) => {
-    if (!selectedQuestion) return;
-    const value = values[0].value;
-    patchQuestion(selectedQuestion._id, { standard: value });
-  };
-
-  const handleChangeMarks = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!selectedQuestion) return;
-    const { name, value } = e.target;
-    const newMarks: IMarkInputs = { ...marks, [name as Marking]: value };
-    setMarks(newMarks);
-    patchQuestion(selectedQuestion._id, { markings: toMarkings(newMarks) });
-  };
 
   // Keyed on the type as well as the id: changing a question's type replaces its marks with the
   // section's defaults for the new type, and the inputs have to follow.
@@ -199,90 +167,85 @@ export const AddSolution = () => {
 
   if (!selectedQuestion || !selectedTestPaper) return null;
 
-  const questionOptions = selectedQuestion.options ?? [];
-  // Built here rather than in the store so an option keeps its equations in the picker: the label
-  // is a rendered node, which is what `ISelectItem.label` allows.
-  const optionItems: ISelectItem[] = questionOptions.map((option) => ({
-    label: <RichTextView value={option.body} />,
-    value: option._id,
-  }));
-  const isMultipleChoice = selectedQuestion.questionType === QuestionType.MULTIPLE_CHOICE;
-  const isSingleOrBoolean =
-    selectedQuestion.questionType === QuestionType.SINGLE_CHOICE ||
-    selectedQuestion.questionType === QuestionType.BOOLEAN;
+  const meta = getQuestionTypeMeta(selectedQuestion.questionType);
+  const options = selectedQuestion.options ?? [];
+  const TypeIcon = meta.icon;
+
+  const toggleOption = (optionId: string) => {
+    if (meta.isMultiple) {
+      const option = options.find((item) => item._id === optionId);
+      if (option) patchOption(selectedQuestion._id, optionId, { isCorrect: !option.isCorrect });
+      return;
+    }
+    // Exactly one correct answer, so selecting one clears the rest.
+    options.forEach((item) => patchOption(selectedQuestion._id, item._id, { isCorrect: item._id === optionId }));
+  };
+
+  const handleChangeMarks = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    const next: IMarkInputs = { ...marks, [name as Marking]: value };
+    setMarks(next);
+    patchQuestion(selectedQuestion._id, { markings: toMarkings(next) });
+  };
+
+  const setTypedAnswer = (text: string) => {
+    const [first] = options;
+    // A typed-in answer is plain by nature, so it round-trips through the plain-text builder
+    // rather than opening a full editor for one number or word.
+    if (first) patchOption(selectedQuestion._id, first._id, { body: richTextFromMarkdown(text) });
+  };
 
   return (
-    <div className="flex flex-col justify-center items-center w-full gap-4 pb-8">
-      <div className="w-full flex justify-end">
-        <SelectQuestionType />
+    <div className="flex flex-col gap-6">
+      <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
+        <div className="mb-1.5 flex items-center gap-2">
+          <Badge tone="neutral" appearance="soft" className="gap-1.5">
+            <TypeIcon className="h-3.5 w-3.5" />
+            {meta.label}
+          </Badge>
+          <span className="text-xxs font-semibold uppercase tracking-caps text-muted-foreground">Question</span>
+        </div>
+        <RichTextView value={selectedQuestion.body} />
       </div>
-      <div className="flex flex-col gap-12 w-full">
-        <div className="">
-          <div className="flex gap-2">
-            <span className="shrink-0 text-sm font-bold text-foreground">Question:</span>
-            <RichTextView value={selectedQuestion.body} />
-          </div>
-          <div>
-            {isMultipleChoice && (
-              <CheckboxSelection
-                selectedValues={questionOptions.filter((option) => option.isCorrect).map((option) => option._id)}
-                label="Select one or more options."
-                options={optionItems}
-                handleClick={handleCheckboxOptionClick}
-                required
-              />
-            )}
-            {isSingleOrBoolean && (
-              <RadioSelection
-                selectedValue={questionOptions.find((option) => option.isCorrect)?._id}
-                label="Select one option."
-                options={optionItems}
-                handleClick={handleRadioOptionClick}
-                required
-              />
-            )}
-            {!isMultipleChoice && !isSingleOrBoolean && (
-              <TextInput
-                placeholder="Enter Answer"
-                value={toAnswerText(questionOptions)}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  const [firstOption] = questionOptions;
-                  // A typed-in answer is plain by nature, so it round-trips through the plain-text
-                  // builder rather than opening a full editor for one number or word.
-                  if (firstOption) {
-                    patchOption(selectedQuestion._id, firstOption._id, {
-                      body: richTextFromMarkdown(e.target.value),
-                    });
-                  }
-                }}
-              />
-            )}
-          </div>
-        </div>
-        <div className="">
-          <MarkingInputs marks={marks} onChange={handleChangeMarks} />
-        </div>
-        <div>
-          <QuestionTaxonomy
-            question={selectedQuestion}
-            standardItems={getStandardItemsByIds(selectedTestPaper.standards ?? [])}
-            subjectItems={toSubjectItems(selectedQuestion.standard, getStandardSubjectItems)}
-            getChapterItems={getChapterItems}
-            onStandardChange={handleStandardChange}
-            onPatchQuestion={patchQuestion}
+
+      <DrawerSection title="Correct answer" isRequired hint={answerHint(meta.hasChoices, meta.isMultiple)}>
+        {meta.hasChoices ? (
+          <AnswerChoices options={options} isMultiple={meta.isMultiple} onToggle={toggleOption} />
+        ) : (
+          <TextInput
+            placeholder={selectedQuestion.questionType === QuestionType.INTEGER ? 'e.g. 42' : 'The expected answer'}
+            value={toAnswerText(options)}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setTypedAnswer(event.target.value)}
+            aria-label="Correct answer"
           />
-        </div>
-        <div>
-          <div>
-            <RichTextEditor
-              label="Add Solution"
-              value={selectedQuestion.solution?.body}
-              onChange={(body) => setSolution(selectedQuestion._id, body)}
-              editorClassName="min-h-[14rem]"
-            />
-          </div>
-        </div>
-      </div>
+        )}
+      </DrawerSection>
+
+      <DrawerSection
+        title="Marks"
+        hint="Filled from the section's default marking; change them for this question only."
+      >
+        <MarkingInputs marks={marks} onChange={handleChangeMarks} />
+      </DrawerSection>
+
+      <DrawerSection title="Classification" hint="Where the question sits in the syllabus, for filtering and reports.">
+        <QuestionTaxonomy
+          question={selectedQuestion}
+          standardItems={getStandardItemsByIds(selectedTestPaper.standards ?? [])}
+          subjectItems={toSubjectItems(selectedQuestion.standard, getStandardSubjectItems)}
+          getChapterItems={getChapterItems}
+          onPatchQuestion={patchQuestion}
+        />
+      </DrawerSection>
+
+      <DrawerSection title="Solution" hint="Shown to the student after the attempt. Optional, but worth it.">
+        <RichTextEditor
+          value={selectedQuestion.solution?.body}
+          onChange={(body) => setSolution(selectedQuestion._id, body)}
+          placeholder="Explain the working, step by step."
+          editorClassName="min-h-[10rem] rounded-lg"
+        />
+      </DrawerSection>
     </div>
   );
 };

@@ -11,11 +11,12 @@ interface IProps {
 
 export const StudyMaterialView = ({ material, otherAttachments }: IProps) => {
   return (
-    <div className="w-full">
-      <div className="">
-        <RichTextView value={material.content} />
-      </div>
-      <div className="flex flex-col gap-2 mt-4">
+    <div className="flex w-full flex-col gap-4">
+      <RichTextView
+        value={material.content}
+        fallback={<p className="text-sm text-muted-foreground">No written content.</p>}
+      />
+      <div className="flex flex-col gap-2">
         {(material.attachments ?? []).length > 0 ? (
           <div>
             <Label label="Attachments" />

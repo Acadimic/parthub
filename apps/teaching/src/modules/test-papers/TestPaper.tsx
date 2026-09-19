@@ -1,17 +1,7 @@
 import { defaultMarkings } from '@utils/constants';
-import { type QuestionDto } from '@repo/shared/contracts';
-import {
-  Accordions,
-  Button,
-  Card,
-  Loader,
-  Menu,
-  Modal,
-  ModalFooter,
-  SoftConfirmModal,
-  SplitButton,
-} from '@repo/ui/app';
-import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
+import { type QuestionDto, type TestPaperDto } from '@repo/shared/contracts';
+import { Button, Card, Modal, ModalFooter, SoftConfirmModal } from '@repo/ui/app';
+import { PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import { PositionType, SectionCategoryType, SectionType } from '@enums';
 import { type IMenuItem } from '@interfaces';
@@ -27,20 +17,18 @@ import {
   useTestPaperLookups,
   useTestPaperStore,
 } from '@stores';
-import { errorToast, reportError, splitCamelCase, successToast } from '@utils/helpers';
+import { errorToast, reportError, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
-import { ChapterName } from '@components/common/ChapterName';
 import {
   CreateTestPaperModal,
   GenerateQuestionsModal,
-  Options,
-  Question,
-  Solution,
+  QuestionSteps,
+  SectionCard,
   TestPaperDetails,
+  TestPaperSkeleton,
   UpsertQuestionFooter,
-  UpsertQuestionStepper,
   UpsertTestPaperSection,
 } from './components';
 
@@ -53,7 +41,14 @@ interface IState {
   isOpenGenerateQuestions: boolean;
   isOpenEditPaper: boolean;
   isLoading: boolean;
-  section: ITestPaperSection | null;
+  /**
+   * The id of the section the drawer is editing, or `null` while it is closed. The id and not the
+   * row: the form patches the store as the author types, and a copy held here would stay as it was
+   * when the drawer opened — the name field used to ignore every keystroke for exactly that reason.
+   */
+  sectionId: string | null;
+  /** A saved section as it was when its drawer opened, so Cancel can put it back. */
+  sectionBackup: ITestPaperSection | null;
   isOpenAddSection: boolean;
   /** The section the delete confirm is asking about, or `null` while it is closed. */
   sectionToDelete: ITestPaperSection | null;
@@ -63,6 +58,70 @@ interface IState {
 
 /** The title an upsert modal shows, which depends only on whether the row is still a draft. */
 const getUpsertTitle = (isNew: boolean | undefined, noun: string) => `${isNew ? 'Create New' : 'Update'} ${noun}`;
+
+/**
+ * The sections the header should count. The loaded list is the truth once it is in; until then
+ * the paper's own id list stands in, so the tile does not show 0 and jump.
+ */
+const countSections = (paper: TestPaperDto, loadedCount: number, isLoading: boolean) =>
+  isLoading && loadedCount === 0 ? (paper.sections?.length ?? 0) : loadedCount;
+
+/** The section drawer, with its title and primary action worded for a draft or a saved row. */
+const SectionDrawer = ({
+  section,
+  isOpen,
+  isLoading,
+  onClose,
+  onSave,
+}: {
+  section: ITestPaperSection | undefined;
+  isOpen: boolean;
+  isLoading: boolean;
+  onClose: () => void;
+  onSave: () => void;
+}) => (
+  <Modal
+    position={PositionType.RIGHT}
+    className="w-full md:w-[36rem] md:max-w-[90%]"
+    title={section?.isNew ? 'New section' : 'Edit section'}
+    description="Name the section and set what its questions are worth by default."
+    isOpen={isOpen && !!section}
+    onClose={onClose}
+    component={section && <UpsertTestPaperSection section={section} isLoading={isLoading} />}
+    footer={
+      <ModalFooter
+        saveText={section?.isNew ? 'Create section' : 'Save changes'}
+        onCancel={onClose}
+        onSave={onSave}
+        isLoading={isLoading}
+      />
+    }
+  />
+);
+
+/** The screen when there is no paper to show: the list failed to load, or the id matches nothing. */
+const PaperMissing = ({
+  error,
+  onRetry,
+  onBack,
+}: {
+  /** The load error, when there was one; absent, the paper simply does not exist. */
+  error?: string;
+  onRetry: () => void;
+  onBack: () => void;
+}) => (
+  <BlankState
+    label={error ? 'Could not load this paper' : 'Paper not found'}
+    description={error ?? 'It may have been deleted, or the link is wrong.'}
+    className="py-16"
+    action={
+      <div className="flex gap-2">
+        {error ? <Button text="Retry" onClick={onRetry} /> : null}
+        <Button isSecondary text="Back to test papers" onClick={onBack} />
+      </div>
+    }
+  />
+);
 
 export const TestPaper = ({ testPaperId }: IProps) => {
   const testPaperStore = useTestPaperLookups();
@@ -98,13 +157,15 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     isOpenGenerateQuestions: false,
     isOpenEditPaper: false,
     isLoading: false,
-    section: null,
+    sectionId: null,
+    sectionBackup: null,
     isOpenAddSection: false,
     sectionToDelete: null,
     questionToDelete: null,
     isDeleting: false,
   });
   const sections = selectedTestPaper ? getTestPaperSectionsByIds(selectedTestPaper.sections ?? []) : [];
+  const editingSection = state.sectionId ? getTestPaperSectionById(state.sectionId) : undefined;
   const hasSections = sections.length !== 0;
   const isLoadingSections = isLoadingTestPaperSections || isLoadingTestPapers;
 
@@ -149,11 +210,11 @@ export const TestPaper = ({ testPaperId }: IProps) => {
       source?.defaultMarkings ?? structuredClone(defaultMarkings),
       `Section ${sections.length + 1}`,
     );
-    setState({ section: newSection, isOpenAddSection: true });
+    setState({ sectionId: newSection._id, sectionBackup: null, isOpenAddSection: true });
   };
 
   const editSection = (section: ITestPaperSection) => {
-    setState({ section, isOpenAddSection: true });
+    setState({ sectionId: section._id, sectionBackup: structuredClone(section), isOpenAddSection: true });
   };
 
   const editQuestion = (questionId: string, sectionId: string) => {
@@ -179,24 +240,25 @@ export const TestPaper = ({ testPaperId }: IProps) => {
   };
 
   const saveSection = async () => {
-    if (!state.section || !selectedTestPaper) return;
-    if (!state.section.name?.trim()) {
+    const section = editingSection;
+    if (!section || !selectedTestPaper) return;
+    if (!section.name?.trim()) {
       errorToast({ message: 'Section name is required.' });
       return;
     }
     try {
       setState({ isLoading: true });
-      const sectionIds = [...new Set([...(selectedTestPaper.sections ?? []), state.section._id])];
-      if (state.section.isNew) patchTestPaper(selectedTestPaper._id, { sections: sectionIds });
+      const sectionIds = [...new Set([...(selectedTestPaper.sections ?? []), section._id])];
+      if (section.isNew) patchTestPaper(selectedTestPaper._id, { sections: sectionIds });
       // Re-read for the same reason as `CreateTestPaperModal`: `patchTestPaper` has just added the
       // section id, and `selectedTestPaper` is the copy from before that patch.
       const paperToSave = useTestPaperStore.getState().getTestPaperById(selectedTestPaper._id) ?? selectedTestPaper;
       await Promise.all([
-        state.section.isNew ? TestPaperService.upsertTestPaper(paperToSave) : Promise.resolve(),
-        TestPaperService.upsertTestPaperSection(state.section),
+        section.isNew ? TestPaperService.upsertTestPaper(paperToSave) : Promise.resolve(),
+        TestPaperService.upsertTestPaperSection(section),
       ]);
-      patchTestPaperSection(state.section._id, { isNew: false });
-      setState({ isOpenAddSection: false, section: null });
+      patchTestPaperSection(section._id, { isNew: false });
+      setState({ isOpenAddSection: false, sectionId: null, sectionBackup: null });
     } catch (error) {
       // Previously an empty `catch {}`: a rejected save left the drawer open with no explanation.
       reportError(error, 'Could not save the section.');
@@ -249,8 +311,13 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     }
   };
 
-  const onCloseAddQuestionModal = () => {
-    if (state.isLoading || !selectedTestPaperSection || !selectedQuestion) return;
+  /**
+   * `isForce` is how the footer closes the drawer after a successful save: at that moment the
+   * save's own loading flag is still set, and without it the guard below would keep the drawer
+   * open on top of the question it has just added.
+   */
+  const onCloseAddQuestionModal = (isForce = false) => {
+    if ((state.isLoading && !isForce) || !selectedTestPaperSection || !selectedQuestion) return;
     // Options are embedded, so dropping the question drops them with it.
     if (selectedQuestion.isNew) removeQuestionById(selectedQuestion._id);
     removeSelectedQuestionId();
@@ -259,21 +326,13 @@ export const TestPaper = ({ testPaperId }: IProps) => {
 
   const onCloseAddSectionModal = () => {
     if (state.isLoading) return;
-    setState({ isOpenAddSection: false });
+    // The form patches the store as the author types, so Cancel has to undo: a draft that was
+    // never saved is dropped (or "Section 3" would count up on every cancelled attempt), and a
+    // saved section is put back as it was when the drawer opened.
+    if (editingSection?.isNew) removeTestPaperSection(editingSection._id);
+    else if (state.sectionBackup) patchTestPaperSection(state.sectionBackup._id, state.sectionBackup);
+    setState({ isOpenAddSection: false, sectionId: null, sectionBackup: null });
   };
-
-  const getAddQuestionItems = (sectionId: string): IMenuItem[] => [
-    {
-      label: 'Add Question',
-      onClick: () => onOpenAddQuestionModal(sectionId),
-      icon: <PlusIcon weight="bold" className="w-4 h-4" />,
-    },
-    {
-      label: 'Generate Questions',
-      onClick: () => onOpenGenerateQuestionsModal(sectionId),
-      icon: <UploadSimpleIcon weight="bold" className="w-4 h-4" />,
-    },
-  ];
 
   const getSectionMenuItems = (section: ITestPaperSection): IMenuItem[] => [
     {
@@ -294,73 +353,6 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     },
   ];
 
-  const renderQuestion = (question: QuestionDto, sectionId: string) => (
-    <div className="w-full">
-      <div className="flex justify-between items-center">
-        <div className="text-xs font-semibold capitalize">{splitCamelCase(question.questionType)}</div>
-        <div className="-mr-3">
-          <Menu
-            menuItems={[
-              {
-                label: 'Edit Question',
-                onClick: () => editQuestion(question._id, sectionId),
-                icon: <PencilIcon weight="bold" className="w-4 h-4" />,
-              },
-              {
-                label: 'Delete Question',
-                onClick: () => setState({ questionToDelete: question }),
-                icon: <TrashIcon weight="bold" className="w-4 h-4" />,
-              },
-            ]}
-            className=""
-          />
-        </div>
-      </div>
-      <div>
-        <Options question={question} />
-      </div>
-      <div className="py-2">
-        <Solution question={question} prefix={`Solution:`} />
-        <ChapterName chapterId={question.chapter} />
-      </div>
-    </div>
-  );
-
-  const renderSection = (section: ITestPaperSection) => {
-    const questions = getSectionQuestions(section._id);
-    return (
-      <div className="min-h-[100px]">
-        {/* The section's menu lives here rather than in the accordion title, which is a `<button>`:
-            a menu trigger nested inside it was a button inside a button. */}
-        <div className="flex justify-end items-center gap-2">
-          <SplitButton
-            menuItems={getAddQuestionItems(section._id)}
-            text="Add Question"
-            onClick={() => onOpenAddQuestionModal(section._id)}
-          />
-          <Menu menuItems={getSectionMenuItems(section)} className="" />
-        </div>
-        <div className="py-3">
-          {questions.length ? (
-            <Accordions
-              isIconLast={true}
-              key={section._id}
-              items={questions.map((question, index) => ({
-                title: <Question question={question} prefix={`Q${index + 1}.`} marks={question.markings} />,
-                component: renderQuestion(question, section._id),
-              }))}
-            />
-          ) : (
-            <BlankState
-              label="No questions yet"
-              description="Add one question at a time, or generate a batch from a document."
-            />
-          )}
-        </div>
-      </div>
-    );
-  };
-
   useEffect(() => {
     if (!testPaperId) push('/test-papers');
     else {
@@ -376,66 +368,93 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     if (useTestPaperStore.getState().shouldLoad('testPapers')) loadTestPapers();
   }, []);
 
-  if (!selectedTestPaper) return null;
+  const isPaperLoading = isLoadingTestPapers && !selectedTestPaper;
+  const isPaperFailed = testPaperStore.isFailed('testPapers') && !selectedTestPaper;
+  const isSectionsFailed = testPaperStore.isFailed('testPaperSections');
+
+  if (isPaperLoading) return <TestPaperSkeleton />;
+
+  if (!selectedTestPaper) {
+    return (
+      <PaperMissing
+        error={isPaperFailed ? (testPaperStore.getError('testPapers') ?? 'Something went wrong.') : undefined}
+        onRetry={() => loadTestPapers()}
+        onBack={() => push('/test-papers')}
+      />
+    );
+  }
+
+  const renderSections = () => {
+    if (hasSections) {
+      return sections.map((section) => (
+        <SectionCard
+          key={section._id}
+          section={section}
+          questions={getSectionQuestions(section._id)}
+          onAddQuestion={() => onOpenAddQuestionModal(section._id)}
+          onGenerateQuestions={() => onOpenGenerateQuestionsModal(section._id)}
+          sectionMenuItems={getSectionMenuItems(section)}
+          onEditQuestion={(question) => editQuestion(question._id, section._id)}
+          onDeleteQuestion={(question) => setState({ questionToDelete: question })}
+        />
+      ));
+    }
+    if (isLoadingSections) return <TestPaperSkeleton withHeader={false} />;
+    if (isSectionsFailed) {
+      return (
+        <BlankState
+          label="Could not load the questions"
+          description={testPaperStore.getError('testPaperSections')}
+          className="py-12"
+          action={<Button text="Retry" onClick={() => loadTestPaperSectionsWithQuestions(testPaperId)} />}
+        />
+      );
+    }
+    return (
+      <BlankState
+        label="No sections yet"
+        description="A paper is organised in sections — Physics, Chemistry, or Section A and B. Add the first one to start writing questions."
+        className="py-12"
+        action={
+          <Button
+            text="Add section"
+            leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
+            onClick={addNewSection}
+          />
+        }
+      />
+    );
+  };
 
   return (
-    <div className="flex flex-col gap-3">
-      <Card>
+    <div className="flex flex-col gap-4">
+      <Card className="px-5 py-5 border rounded-lg">
         <TestPaperDetails
           testPaper={selectedTestPaper}
+          sectionCount={countSections(selectedTestPaper, sections.length, isLoadingSections)}
           addNewSection={addNewSection}
           onEditPaper={() => setState({ isOpenEditPaper: true })}
         />
       </Card>
-      {hasSections && (
-        <Accordions
-          openIndexes={[0]}
-          items={sections.map((section) => ({
-            // Text only: everything interactive moved into the panel below.
-            title: (
-              <div className="text-sm font-bold text-foreground">
-                {section.name}{' '}
-                <span className="font-normal text-muted-foreground">
-                  ({getSectionQuestions(section._id).length}{' '}
-                  {getSectionQuestions(section._id).length === 1 ? 'question' : 'questions'})
-                </span>
-              </div>
-            ),
-            component: renderSection(section),
-          }))}
-        />
-      )}
-      {!hasSections && isLoadingSections && <Loader isLoading={isLoadingSections} />}
-      {!hasSections && !isLoadingSections && (
-        <BlankState
-          label="No sections found"
-          description="A paper needs at least one section before questions can be added."
-          action={
-            <Button
-              text="Add Section"
-              leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
-              onClick={addNewSection}
-            />
-          }
-        />
-      )}
+      {renderSections()}
       <Modal
         position={PositionType.RIGHT}
         className="min-w-full md:min-w-[60%] lg:min-w-[60%] md:max-w-[60%] lg:max-w-[60%]"
         title={getUpsertTitle(selectedQuestion?.isNew, 'Question')}
+        description="Two steps: write the question and its options, then mark the answer and add a solution."
         isOpen={state.isOpenUpsertQuestion}
-        onClose={onCloseAddQuestionModal}
-        component={<UpsertQuestionStepper />}
+        onClose={() => onCloseAddQuestionModal()}
+        component={<QuestionSteps />}
         footer={
           <UpsertQuestionFooter onClose={onCloseAddQuestionModal} setLoading={setLoading} isLoading={state.isLoading} />
         }
       />
-      <Modal
-        title={getUpsertTitle(state.section?.isNew, 'Section')}
+      <SectionDrawer
+        section={editingSection}
         isOpen={state.isOpenAddSection}
+        isLoading={state.isLoading}
         onClose={onCloseAddSectionModal}
-        component={state.section && <UpsertTestPaperSection section={state.section} isLoading={state.isLoading} />}
-        footer={<ModalFooter onCancel={onCloseAddSectionModal} onSave={saveSection} isLoading={state.isLoading} />}
+        onSave={saveSection}
       />
       <GenerateQuestionsModal isOpen={state.isOpenGenerateQuestions} onClose={onCloseGenerateQuestionsModal} />
       {/* Mounted only while open, so its auto-name effect cannot reach the selected paper otherwise. */}

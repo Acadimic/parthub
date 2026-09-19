@@ -1,15 +1,22 @@
 import { RichTextEditor } from '@repo/ui/editor';
 import { PlusIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
-import { Button } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
 import { useQuestionLookups, useSelectedQuestion } from '@stores';
 import { AddOption } from './AddOption';
-import { SelectQuestionType } from './SelectQuestionType';
+import { DrawerSection } from './DrawerSection';
+import { getQuestionTypeMeta } from './question-types';
+import { QuestionTypePicker } from './QuestionTypePicker';
 
-/** Question types whose answers are picked from a list, and so need option editors. */
-const CHOICE_TYPES: QuestionType[] = [QuestionType.SINGLE_CHOICE, QuestionType.MULTIPLE_CHOICE];
+/** Fewer than this and the author cannot remove one; more is the author's call. */
+const MIN_OPTIONS = 2;
 
+/**
+ * Step one of the question drawer: what kind of question, the question itself, and its options.
+ *
+ * The answer, marks and classification wait for step two, so this screen is only the content a
+ * student will read — the thing the author has in their head when they open the drawer.
+ */
 export const AddQuestion = () => {
   const { patchQuestion, addOption, removeOption } = useQuestionLookups();
   const selectedQuestion = useSelectedQuestion();
@@ -17,26 +24,44 @@ export const AddQuestion = () => {
   if (!selectedQuestion) return null;
 
   const options = selectedQuestion.options ?? [];
-  const isChoiceQuestion = CHOICE_TYPES.includes(selectedQuestion.questionType as QuestionType);
-  // True/false stays out of the editors above — its two options are not the author's to write — but
-  // it is shown, because the answer step used to be the first place the options appeared at all.
-  const isBooleanQuestion = selectedQuestion.questionType === QuestionType.BOOLEAN;
+  const meta = getQuestionTypeMeta(selectedQuestion.questionType);
+  // True/false options are the store's, not the author's: shown, not edited.
+  const isBoolean = selectedQuestion.questionType === QuestionType.BOOLEAN;
 
   return (
-    <div className="flex w-full flex-col items-center justify-center">
-      <div className="flex w-full justify-end">
-        <SelectQuestionType />
-      </div>
-      <div className="flex w-full flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      <DrawerSection
+        title="Question type"
+        hint={selectedQuestion.isNew ? undefined : 'The type is fixed once a question is saved.'}
+      >
+        <QuestionTypePicker />
+      </DrawerSection>
+
+      <DrawerSection title="Question" isRequired>
         <RichTextEditor
-          label="Question"
-          required
           value={selectedQuestion.body}
           onChange={(body) => patchQuestion(selectedQuestion._id, { body })}
-          editorClassName="min-h-[11rem]"
+          placeholder="Write the question. Ctrl/⌘ + E adds an equation."
+          editorClassName="min-h-[10rem] rounded-lg"
         />
+      </DrawerSection>
 
-        {isChoiceQuestion ? (
+      {meta.hasChoices && !isBoolean ? (
+        <DrawerSection
+          title="Options"
+          isRequired
+          hint="Write every option here; which ones are correct is chosen on the next step."
+          action={
+            <button
+              type="button"
+              onClick={() => addOption(selectedQuestion._id)}
+              className="flex h-7 items-center gap-1 rounded-md px-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <PlusIcon className="h-3.5 w-3.5" weight="bold" />
+              Add option
+            </button>
+          }
+        >
           <div className="flex flex-col gap-3">
             {options.map((option, index) => (
               <AddOption
@@ -45,35 +70,33 @@ export const AddQuestion = () => {
                 option={option}
                 index={index}
                 onRemove={(optionId) => removeOption(selectedQuestion._id, optionId)}
-                canRemove={options.length > 1 && index !== 0}
+                canRemove={options.length > MIN_OPTIONS}
               />
             ))}
-            <div className="flex justify-end pb-8 pt-2">
-              <Button
-                isSecondary
-                text="Add Option"
-                leftsection={<PlusIcon weight="bold" className="h-4 w-4" />}
-                onClick={() => addOption(selectedQuestion._id)}
-              />
-            </div>
           </div>
-        ) : null}
+        </DrawerSection>
+      ) : null}
 
-        {isBooleanQuestion ? (
-          <div className="flex flex-col gap-2 pb-8">
-            <p className="text-xs font-medium text-muted-foreground">
-              The options are fixed for a true/false question. The correct one is chosen on the next step.
-            </p>
-            <div className="flex gap-2">
-              {options.map((option) => (
-                <Badge key={option._id} tone="neutral" appearance="outline">
-                  {option.body.text}
-                </Badge>
-              ))}
-            </div>
+      {isBoolean ? (
+        <DrawerSection
+          title="Options"
+          hint="The two options are fixed for a true/false question; the correct one is chosen next."
+        >
+          <div className="flex gap-2">
+            {options.map((option) => (
+              <Badge key={option._id} tone="neutral" appearance="outline" className="px-3 py-1 text-sm">
+                {option.body.text}
+              </Badge>
+            ))}
           </div>
-        ) : null}
-      </div>
+        </DrawerSection>
+      ) : null}
+
+      {!meta.hasChoices ? (
+        <p className="rounded-lg border border-dashed border-border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
+          {meta.description}. The answer is entered on the next step.
+        </p>
+      ) : null}
     </div>
   );
 };

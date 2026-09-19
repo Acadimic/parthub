@@ -1,9 +1,12 @@
 import { type MeetDto } from '@repo/shared/contracts';
 import { DataTable } from '@components/app/tables';
-import { Button, FullScreenLoader, TextInput, Tooltip } from '@repo/ui/app';
 import { CopyUrl } from '@components/common';
+import { BlankState } from '@components/others';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { type IColumnData } from '@interfaces';
+import { Button, SoftConfirmModal, TextInput } from '@repo/ui/app';
+import { Badge } from '@repo/ui/core';
+import { MeetFrequency } from '@enums';
+import { type IColumnData, type ISelectItem } from '@interfaces';
 import {
   JoiningLink,
   MeetingOverviewModal,
@@ -16,138 +19,165 @@ import { useMeetLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import {
   addDaysToDate,
+  capitalizeFirstWord,
   getFormattedTime,
   getFrequencyText,
   getFullCalendarEvents,
   getFullFormattedDate,
+  reportError,
   splitCamelCase,
+  successToast,
 } from '@utils/helpers';
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useSetState } from 'react-use';
+
+interface IState {
+  search: string;
+  /** The session the delete confirm is asking about, or `null` while it is closed. */
+  meetToDelete: MeetDto | null;
+  isDeleting: boolean;
+}
+
+const FREQUENCY_OPTIONS: ISelectItem[] = Object.values(MeetFrequency).map((frequency) => ({
+  label: capitalizeFirstWord(splitCamelCase(frequency)),
+  value: frequency,
+}));
+
+/** When a session next runs: the first occurrence in the coming fortnight, else its own start. */
+const nextOccurrence = (meet: MeetDto): { start: Date | string; end: Date | string } | null => {
+  const events = getFullCalendarEvents(meet, new Date(), addDaysToDate(new Date(), 15));
+  const next = events[0];
+  if (next) return { start: next.start, end: next.end };
+  if (meet.startTime && meet.endTime) return { start: meet.startTime, end: meet.endTime };
+  return null;
+};
+
+const NextRun = ({ meet }: { meet: MeetDto }) => {
+  const next = nextOccurrence(meet);
+  if (!next) return <span className="text-muted-foreground">—</span>;
+  return (
+    <span className="flex flex-col">
+      <span className="truncate font-medium text-foreground">{getFullFormattedDate(next.start)}</span>
+      <span className="truncate text-xs text-muted-foreground">
+        {getFormattedTime(next.start)} – {getFormattedTime(next.end)}
+      </span>
+    </span>
+  );
+};
 
 export const Sessions = () => {
-  const { push } = useRouter();
   const meetStore = useMeetLookups();
-  const { loadMeets } = meetStore;
+  const { loadMeets, deleteMeet } = meetStore;
   const meets = meetStore.getMeets();
-  const isLoadingMeets = meetStore.isLoading('meets');
-  const isLoadedMeets = meetStore.isLoaded('meets');
+  const isLoading = meetStore.isLoading('meets') && !meetStore.isLoaded('meets');
+  const isFailed = meetStore.isFailed('meets');
   const {
-    state,
+    state: meetState,
     handleCreateMeet,
     openUpsertMeetingModal,
     closeUpsertMeetingModal,
     closeMeetingOverviewModal,
     handleEditMeet,
   } = useMeetHooks();
+  const [state, setState] = useSetState<IState>({ search: '', meetToDelete: null, isDeleting: false });
 
-  const onClickSession = (_session: MeetDto) => {
-    push(`/calender`);
+  // Saved rows only, matched against the title. The search box used to have no handler.
+  const visibleMeets = useMemo(() => {
+    const saved = meets.filter((meet) => !meet.isNew);
+    const term = state.search.trim().toLowerCase();
+    if (!term) return saved;
+    return saved.filter((meet) => `${meet.title} ${meet.description ?? ''}`.toLowerCase().includes(term));
+  }, [meets, state.search]);
+
+  const onConfirmDelete = async () => {
+    const meet = state.meetToDelete;
+    if (!meet) return;
+    try {
+      setState({ isDeleting: true });
+      await deleteMeet(meet._id);
+      successToast({ message: 'Session deleted.' });
+      setState({ meetToDelete: null });
+    } catch (error) {
+      reportError(error, 'Could not delete the session.');
+    } finally {
+      setState({ isDeleting: false });
+    }
   };
 
   const columns: IColumnData<MeetDto>[] = [
-    // {
-    //   label: 'Id',
-    //   dataKey: '_id',
-    // },
     {
-      label: 'Name',
-      dataKey: 'name',
-      valueFormatter: (row: MeetDto) => {
-        return (
-          <div className="cursor-pointer text-primary" onClick={() => onClickSession(row)}>
-            <MeetingTitle meet={row} />
-          </div>
-        );
-      },
+      label: 'Session',
+      dataKey: 'title',
+      width: 260,
+      isSortable: true,
+      component: (row) => <MeetingTitle meet={row} className="font-semibold text-foreground" />,
     },
-
     {
-      label: 'Date and Time',
-      dataKey: 'date',
-      component: (row: MeetDto) => {
-        const events = getFullCalendarEvents(row, new Date(), addDaysToDate(new Date(), 15));
-        const nextEvent = events[0];
-        return (
-          <Tooltip>
-            {nextEvent ? (
-              <>
-                <div className="truncate w-full">{getFullFormattedDate(nextEvent.start)}</div>
-                <div className="truncate w-full">{`${getFormattedTime(nextEvent.start)} - ${getFormattedTime(nextEvent.end)}`}</div>
-              </>
-            ) : (
-              <>
-                <div className="truncate w-full">{row.startTime ? getFullFormattedDate(row.startTime) : ''}</div>
-                <div className="truncate w-full">
-                  {row.startTime && row.endTime
-                    ? `${getFormattedTime(row.startTime)} - ${getFormattedTime(row.endTime)}`
-                    : ''}
-                </div>
-              </>
-            )}
-          </Tooltip>
-        );
+      label: 'Next run',
+      dataKey: 'startTime',
+      width: 190,
+      sortValue: (row) => {
+        const next = nextOccurrence(row);
+        return next ? new Date(next.start).getTime() : null;
       },
+      component: (row) => <NextRun meet={row} />,
     },
-
     {
-      label: 'Repeat On',
-      dataKey: 'frequencyText',
-      component: (row: MeetDto) => {
-        const frequency = row.startTime ? getFrequencyText([...(row.weekDays ?? [])], row.startTime) : '';
-        return (
-          <Tooltip title={frequency}>
-            <div className="truncate w-full">{frequency}</div>
-          </Tooltip>
-        );
-      },
+      label: 'Repeats',
+      dataKey: 'frequency',
+      width: 200,
+      filters: [{ key: 'frequency', label: 'Repeats', options: FREQUENCY_OPTIONS, getValues: (row) => row.frequency }],
+      component: (row) => (
+        <span className="flex flex-col">
+          <Badge tone="neutral" appearance="soft" className="w-fit capitalize">
+            {splitCamelCase(row.frequency) || 'One time'}
+          </Badge>
+          {row.startTime && row.weekDays?.length ? (
+            <span className="mt-0.5 truncate text-xs text-muted-foreground">
+              {getFrequencyText([...row.weekDays], row.startTime)}
+            </span>
+          ) : null}
+        </span>
+      ),
     },
-
     {
       label: 'Teachers',
       dataKey: 'teachers',
-      component: (row: MeetDto) => {
-        return <ViewMeetAttendees attendeeIds={row.attendees ?? []} isTeachers noLabel />;
-      },
+      width: 150,
+      component: (row) => <ViewMeetAttendees attendeeIds={row.attendees ?? []} isTeachers noLabel />,
     },
-
     {
       label: 'Students',
       dataKey: 'students',
-      component: (row: MeetDto) => {
-        return <ViewMeetAttendees attendeeIds={row.attendees ?? []} isStudents noLabel />;
-      },
+      width: 150,
+      component: (row) => <ViewMeetAttendees attendeeIds={row.attendees ?? []} isStudents noLabel />,
     },
-
+    {
+      label: 'Duration',
+      dataKey: 'durationMins',
+      width: 110,
+      align: 'right',
+      sortValue: (row) => row.durationMins ?? 0,
+      valueFormatter: (row) => (row.durationMins ? <span className="font-mono">{row.durationMins} min</span> : ''),
+    },
     {
       label: 'Join',
       dataKey: 'join',
-      component: (row: MeetDto) => {
-        return (
-          <div className="flex flex-col gap-2 w-full">
-            <JoiningLink url={row.meetingLink ?? ''} />
-            <CopyUrl url={row.meetingLink ?? ''} />
-          </div>
-        );
-      },
+      width: 150,
+      component: (row) =>
+        row.meetingLink ? (
+          <span className="flex items-center gap-1">
+            <JoiningLink url={row.meetingLink} isSmall />
+            <CopyUrl url={row.meetingLink} isCopyIconOnly />
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
     },
-
-    {
-      label: 'Frequency',
-      dataKey: 'frequency',
-      component: (row: MeetDto) => {
-        return <div className="capitalize">{splitCamelCase(row.frequency)}</div>;
-      },
-    },
-
-    {
-      label: 'Duration (mins)',
-      dataKey: 'durationMins',
-    },
-
     {
       label: 'Actions',
       dataKey: ACTIONS,
+      width: 90,
       menuItems: [
         {
           label: 'Edit',
@@ -156,51 +186,83 @@ export const Sessions = () => {
         },
         {
           label: 'Delete',
-          onClick: () => {},
+          onClick: (row) => row && setState({ meetToDelete: row }),
           icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
-      width: 96,
     },
   ];
 
   useEffect(() => {
-    if (!isLoadingMeets && !isLoadedMeets) loadMeets();
+    if (meetStore.shouldLoad('meets')) loadMeets();
   }, []);
+
+  const addButton = (
+    <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={() => handleCreateMeet(new Date())}>
+      Add <span className="hidden sm:inline">session</span>
+    </Button>
+  );
+
+  const emptyState = state.search.trim() ? (
+    <BlankState
+      label="No matching sessions"
+      description="Try a different title."
+      action={<Button isSecondary text="Clear search" onClick={() => setState({ search: '' })} />}
+    />
+  ) : (
+    <BlankState
+      label="No sessions yet"
+      description="Schedule a live class and share its joining link with a batch."
+      action={addButton}
+    />
+  );
 
   return (
     <>
-      {!isLoadingMeets ? (
-        <div>
-          <div className="flex justify-between items-center">
-            <div className="">
-              <TextInput
-                placeholder="Search Sessions"
-                leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
-              />
-            </div>
-            <div>
-              <Button
-                leftsection={<PlusIcon weight="bold" className="w-4 h-4" />}
-                onClick={() => handleCreateMeet(new Date())}
-              >
-                Add <span className="hidden sm:inline">Session</span>
-              </Button>
-            </div>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="w-full sm:w-72">
+            <TextInput
+              placeholder="Search sessions"
+              value={state.search}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setState({ search: event.target.value })}
+              leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
+              aria-label="Search sessions"
+            />
           </div>
-          <div className="mt-4">
-            <DataTable rows={meets} columns={columns} />
-          </div>
+          <p className="text-xs text-muted-foreground">
+            {meets.length} {meets.length === 1 ? 'session' : 'sessions'}
+            <span className="hidden md:inline"> · Filter by how often a session repeats from the column header.</span>
+          </p>
+          <div className="ml-auto">{addButton}</div>
         </div>
-      ) : (
-        <FullScreenLoader withHeader loading={isLoadingMeets} />
-      )}
-      <UpsertMeetingModal isOpen={state.isOpenUpsertMeetingModal} onClose={closeUpsertMeetingModal} />
+        {isFailed ? (
+          <BlankState
+            label="Could not load sessions"
+            description={meetStore.getError('meets')}
+            action={<Button text="Retry" onClick={() => loadMeets()} />}
+            className="rounded-lg border border-border bg-background py-10"
+          />
+        ) : (
+          <DataTable rows={visibleMeets} columns={columns} isLoading={isLoading} emptyState={emptyState} />
+        )}
+      </div>
+      <UpsertMeetingModal isOpen={meetState.isOpenUpsertMeetingModal} onClose={closeUpsertMeetingModal} />
       <MeetingOverviewModal
         openEditModal={openUpsertMeetingModal}
         openDeleteModal={() => {}}
-        isOpen={state.isOpenMeetingOverviewModal}
+        isOpen={meetState.isOpenMeetingOverviewModal}
         onClose={closeMeetingOverviewModal}
+      />
+      <SoftConfirmModal
+        title="Delete session"
+        description={`Delete "${state.meetToDelete?.title ?? 'this session'}"? Its attendees lose the joining link.`}
+        isOpen={!!state.meetToDelete}
+        isLoading={state.isDeleting}
+        isDestructive
+        confirmText="Delete"
+        onCancel={() => !state.isDeleting && setState({ meetToDelete: null })}
+        onConfirm={onConfirmDelete}
       />
     </>
   );

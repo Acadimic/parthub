@@ -3,7 +3,7 @@ import { BlankState } from '@components/others';
 import { MagnifyingGlassIcon, ArrowSquareOutIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { Button, SoftConfirmModal, TextInput } from '@repo/ui/app';
 import { useLoadOnce } from '@repo/ui/hooks';
-import { type IColumnData, type IMaterialStat } from '@interfaces';
+import { type IColumnData, type IMaterialStat, type ISelectItem } from '@interfaces';
 import { useMaterialStore, useSelectorStore, useStandardLookups } from '@stores';
 import { ACTIONS } from '@utils/constants';
 import { errorToast, getStringFormattedDate, successToast } from '@utils/helpers';
@@ -28,7 +28,14 @@ export const StudyMaterials = () => {
   // this table used to show.
   const materialStats = useMaterialStore((state) => state.materialStats);
   const deleteMaterials = useMaterialStore((state) => state.deleteMaterials);
-  const { getStandardById, getSubjectById } = useStandardLookups();
+  const standardStore = useStandardLookups();
+  const { getStandardById, getSubjectById } = standardStore;
+  const standardOptions: ISelectItem[] = standardStore
+    .getStandards()
+    .map((standard) => ({ label: standard.name, value: standard._id }));
+  const subjectOptions: ISelectItem[] = standardStore.getStandardsSubjectItems(
+    standardOptions.map((option) => option.value),
+  );
   const { isLoading, isFailed, error } = useLoadOnce(useMaterialStore, 'materialStats', (s) => s.loadMaterialStats);
   const [state, setState] = useSetState<IState>({
     isOpenAddModal: false,
@@ -98,17 +105,25 @@ export const StudyMaterials = () => {
     {
       label: 'Standard',
       dataKey: 'standard',
-      valueFormatter: (row) => getStandardName(row),
+      width: 220,
+      sortValue: (row) => getStandardName(row),
+      filters: [{ key: 'standard', label: 'Standard', options: standardOptions, getValues: (row) => row.standard }],
+      valueFormatter: (row) => <span className="font-semibold text-foreground">{getStandardName(row)}</span>,
     },
     {
       label: 'Subject',
       dataKey: 'subject',
+      width: 220,
+      sortValue: (row) => getSubjectName(row),
+      filters: [{ key: 'subject', label: 'Subject', options: subjectOptions, getValues: (row) => row.subject }],
       valueFormatter: (row) => getSubjectName(row),
     },
     {
       label: 'Contents',
       dataKey: 'count',
       width: 120,
+      align: 'right',
+      isSortable: true,
       // Tabular figures: proportional digits do not line up down a numeric column.
       valueFormatter: (row) => <span className="font-mono">{row.count}</span>,
     },
@@ -116,11 +131,15 @@ export const StudyMaterials = () => {
       label: 'Duration',
       dataKey: 'durationMins',
       width: 120,
-      valueFormatter: (row) => <span className="font-mono">{row.durationMins ?? 0} mins</span>,
+      align: 'right',
+      sortValue: (row) => row.durationMins ?? 0,
+      valueFormatter: (row) => <span className="font-mono">{row.durationMins ?? 0} min</span>,
     },
     {
       label: 'Last updated',
       dataKey: 'lastUpdatedAt',
+      width: 160,
+      isSortable: true,
       valueFormatter: (row) => (row.lastUpdatedAt ? getStringFormattedDate(row.lastUpdatedAt) : ''),
     },
     {
@@ -138,18 +157,22 @@ export const StudyMaterials = () => {
           icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
-      width: 96,
+      width: 90,
     },
   ];
 
   const addButton = (
     <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={onOpenAddModal}>
-      Add <span className="hidden sm:inline">Study Materials</span>
+      Add <span className="hidden sm:inline">study material</span>
     </Button>
   );
 
   const emptyState = state.search ? (
-    <BlankState label="No matching study materials" description="Try a different standard or subject name." />
+    <BlankState
+      label="No matching study materials"
+      description="Try a different standard or subject name."
+      action={<Button isSecondary text="Clear search" onClick={() => setState({ search: '' })} />}
+    />
   ) : (
     <BlankState
       label="No study materials yet"
@@ -163,37 +186,39 @@ export const StudyMaterials = () => {
 
   return (
     <>
-      <div>
-        <div className="flex justify-between items-center">
-          <div className="">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="w-full sm:w-72">
             <TextInput
-              placeholder="Search Study Materials"
+              placeholder="Search by standard or subject"
               value={state.search}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setState({ search: e.target.value })}
               leftsection={<MagnifyingGlassIcon weight="bold" className="w-4 h-4" />}
+              aria-label="Search study materials"
             />
           </div>
-          <div>{addButton}</div>
+          <p className="text-xs text-muted-foreground">
+            {materialStats.length} {materialStats.length === 1 ? 'subject' : 'subjects'}
+            <span className="hidden md:inline"> · Filter by standard or subject from the column headers.</span>
+          </p>
+          <div className="ml-auto">{addButton}</div>
         </div>
-        <div className="mt-4">
-          {isFailed ? (
-            <div className="rounded-lg border border-border bg-background py-10">
-              <BlankState
-                label="Could not load study materials"
-                description={error ?? 'Something went wrong. Try again.'}
-                action={<Button text="Retry" onClick={() => useMaterialStore.getState().loadMaterialStats()} />}
-              />
-            </div>
-          ) : (
-            <DataTable
-              rows={visibleStats}
-              columns={columns}
-              isLoading={isLoading}
-              emptyState={emptyState}
-              onRowClick={openContents}
-            />
-          )}
-        </div>
+        {isFailed ? (
+          <BlankState
+            label="Could not load study materials"
+            description={error ?? 'Something went wrong. Try again.'}
+            action={<Button text="Retry" onClick={() => useMaterialStore.getState().loadMaterialStats()} />}
+            className="rounded-lg border border-border bg-background py-10"
+          />
+        ) : (
+          <DataTable
+            rows={visibleStats}
+            columns={columns}
+            isLoading={isLoading}
+            emptyState={emptyState}
+            onRowClick={openContents}
+          />
+        )}
       </div>
 
       <AddStudyMaterialModal

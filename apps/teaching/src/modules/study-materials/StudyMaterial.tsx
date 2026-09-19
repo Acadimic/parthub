@@ -1,6 +1,6 @@
 import { type MaterialDto } from '@repo/shared/contracts';
-import { Accordions, Button, Card, Loader, SoftConfirmModal } from '@repo/ui/app';
-import { PencilIcon, PlusIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react';
+import { Button, Card, SoftConfirmModal } from '@repo/ui/app';
+import { ArrowsInLineVerticalIcon, ArrowsOutLineVerticalIcon, PlusIcon, SparkleIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import {
   useMaterialLookups,
@@ -11,9 +11,15 @@ import {
 } from '@stores';
 import { errorToast, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSetState } from 'react-use';
-import { GenerateMaterialModal, StudyMaterialDetails, StudyMaterialView, UpsertMaterialModal } from './components';
+import {
+  GenerateMaterialModal,
+  MaterialCard,
+  StudyMaterialHeader,
+  StudyMaterialSkeleton,
+  UpsertMaterialModal,
+} from './components';
 
 interface IProps {
   standardId: string;
@@ -52,6 +58,17 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
     materialToDelete: null,
     isDeleting: false,
   });
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const allExpanded = materials.length > 0 && materials.every((material) => expanded.has(material._id));
+
+  const toggle = (id: string) =>
+    setExpanded((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const toggleAll = () => setExpanded(allExpanded ? new Set() : new Set(materials.map((material) => material._id)));
 
   const onOpenAddModal = () => {
     // The new row has to be selected as well as created: the modal renders its body from
@@ -124,7 +141,7 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
     if (isLoadedStandards && (!standard || !subject)) push('/study-materials');
   }, [isLoadedStandards, standard, subject]);
 
-  if (!standard || !subject) return <Loader isLoading />;
+  if (!standard || !subject) return <StudyMaterialSkeleton />;
 
   // `updatedAt` is absent on a row saved once and never edited, so fall back to when it was created
   // rather than reporting the subject as never updated.
@@ -132,82 +149,87 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
     const updatedAt = material.updatedAt ?? material.createdAt ?? '';
     return updatedAt > max ? updatedAt : max;
   }, '');
+  const durationMins = materials.reduce((total, material) => total + (material.durationMins ?? 0), 0);
+  const attachmentCount = materials.reduce((total, material) => total + (material.attachments ?? []).length, 0);
+  const isLoadingFirst = isLoadingMaterials && materials.length === 0;
 
-  const addButton = (
-    <Button leftsection={<PlusIcon weight="bold" className="w-4 h-4" />} onClick={onOpenAddModal}>
-      Add <span className="hidden sm:inline">Content</span>
-    </Button>
-  );
-
-  return (
-    <div className="flex flex-col gap-3">
-      <Card>
-        <StudyMaterialDetails
-          standard={standard}
-          subject={subject}
-          count={materials.length}
-          lastUpdatedAt={maxLastUpdatedAt}
-        />
-      </Card>
-      {materials.length > 0 && (
-        <>
-          <div className="flex justify-end">{addButton}</div>
-          <Accordions
-            items={materials.map((material, index) => {
-              const attachmentCount = (material.attachments ?? []).length;
-              return {
-                title: (
-                  // Text only: the accordion renders its title inside the toggle button, so a menu
-                  // or a button here would be an interactive element nested in another one. The
-                  // actions moved into the panel below.
-                  <div className="flex w-full items-center gap-2">
-                    <span className="text-sm font-bold text-foreground">
-                      <span className="text-muted-foreground">{index + 1}.</span> {material.name}
-                    </span>
-                    <span className="text-xs font-normal text-muted-foreground">
-                      {attachmentCount} attachment{attachmentCount === 1 ? '' : 's'} · {material.durationMins ?? 0} mins
-                    </span>
-                  </div>
-                ),
-                component: (
-                  <div className="flex flex-col gap-3 px-4 pb-4">
-                    <div className="flex flex-wrap justify-end gap-2 border-b border-border pb-2">
-                      <Button
-                        isSubtle
-                        text="Edit"
-                        leftsection={<PencilIcon weight="bold" className="w-4 h-4" />}
-                        onClick={() => editMaterial(material)}
-                      />
-                      <Button
-                        isSubtle
-                        text="Generate"
-                        leftsection={<UploadSimpleIcon weight="bold" className="w-4 h-4" />}
-                        onClick={() => generateMaterial(material)}
-                      />
-                      <Button
-                        isSubtle
-                        isDestructive
-                        text="Delete"
-                        leftsection={<TrashIcon weight="bold" className="w-4 h-4" />}
-                        onClick={() => setState({ materialToDelete: material })}
-                      />
-                    </div>
-                    <StudyMaterialView material={material} />
-                  </div>
-                ),
-              };
-            })}
-          />
-        </>
-      )}
-      {materials.length === 0 && isLoadingMaterials && <Loader isLoading />}
-      {materials.length === 0 && !isLoadingMaterials && (
+  const renderContents = () => {
+    if (isLoadingFirst) return <StudyMaterialSkeleton />;
+    if (!materials.length) {
+      return (
         <BlankState
           label="No content yet"
-          description={`Add the first piece of ${subject.name} content for ${standard.name}.`}
-          action={addButton}
+          description={`Add the first piece of ${subject.name} content for ${standard.name}, or generate it from a document.`}
+          className="rounded-lg border border-border bg-background py-12"
+          action={
+            <Button
+              leftsection={<PlusIcon weight="bold" className="h-4 w-4" />}
+              text="Add content"
+              onClick={onOpenAddModal}
+            />
+          }
         />
-      )}
+      );
+    }
+    return (
+      <section className="rounded-lg border border-border bg-background">
+        <header className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">
+          <h2 className="text-sm font-semibold text-foreground">Contents</h2>
+          <div className="ml-auto flex items-center gap-2">
+            {materials.length > 1 ? (
+              <Button
+                isSubtle
+                leftsection={
+                  allExpanded ? (
+                    <ArrowsInLineVerticalIcon className="h-4 w-4" />
+                  ) : (
+                    <ArrowsOutLineVerticalIcon className="h-4 w-4" />
+                  )
+                }
+                text={allExpanded ? 'Collapse all' : 'Expand all'}
+                onClick={toggleAll}
+              />
+            ) : null}
+            <Button
+              isSecondary
+              leftsection={<SparkleIcon weight="bold" className="h-4 w-4" />}
+              text="Generate"
+              onClick={() => materials[0] && generateMaterial(materials[0])}
+            />
+          </div>
+        </header>
+        <div className="flex flex-col gap-2 p-3">
+          {materials.map((material, index) => (
+            <MaterialCard
+              key={material._id}
+              material={material}
+              number={index + 1}
+              isExpanded={expanded.has(material._id)}
+              onToggle={() => toggle(material._id)}
+              onEdit={() => editMaterial(material)}
+              onGenerate={() => generateMaterial(material)}
+              onDelete={() => setState({ materialToDelete: material })}
+            />
+          ))}
+        </div>
+      </section>
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Card className="px-5 py-5 border rounded-lg">
+        <StudyMaterialHeader
+          standard={standard}
+          subject={subject}
+          contentCount={materials.length}
+          durationMins={durationMins}
+          attachmentCount={attachmentCount}
+          lastUpdatedAt={maxLastUpdatedAt || undefined}
+          onAddContent={onOpenAddModal}
+        />
+      </Card>
+      {renderContents()}
       <UpsertMaterialModal isOpen={state.isOpenUpsertModal} onClose={onCloseUpsertModal} />
       <GenerateMaterialModal isOpen={state.isOpenGenerateModal} onClose={onCloseGenerateModal} />
       <SoftConfirmModal
