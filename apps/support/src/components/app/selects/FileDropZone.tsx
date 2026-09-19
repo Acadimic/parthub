@@ -54,6 +54,9 @@ export const FileDropZone = ({
     acceptedFileTypes['image/jpeg'] = [];
     acceptedFileTypes['image/jpg'] = [];
     acceptedFileTypes['image/gif'] = [];
+    // Standard and subject logos are SVG tiles (data/support/logos), and this app is where they
+    // are uploaded. Only here: the teaching and learning drop zones take user content.
+    acceptedFileTypes['image/svg+xml'] = [];
   }
   if (isVideo) {
     acceptedFileTypes['video/mp4'] = [];

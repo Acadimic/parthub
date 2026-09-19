@@ -3,11 +3,13 @@ import { PresignedImage } from '@components/app/attachments';
 import { BlankState } from '@components/others';
 import { DataTable } from '@components/app/tables';
 import { Button, FullScreenLoader, TextInput } from '@repo/ui/app';
+import { AlertDialog } from '@repo/ui/core';
 import { useLoadOnce } from '@repo/ui/hooks';
 import { type IColumnData } from '@interfaces';
-import { MagnifyingGlassIcon, PencilIcon, PlusIcon } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { useSelectorStore, useStandardStore } from '@stores';
 import { ACTIONS } from '@utils/constants';
+import { errorToast, successToast } from '@utils/helpers';
 import { useMemo } from 'react';
 import { useSetState } from 'react-use';
 import { useShallow } from 'zustand/react/shallow';
@@ -16,6 +18,9 @@ import { UpsertStandardModal } from './components';
 interface IState {
   isOpenCreateModal: boolean;
   search: string;
+  /** The standard a delete has been asked for and not yet confirmed. */
+  standardToDelete?: StandardDto;
+  isDeleting: boolean;
 }
 
 export const Standards = () => {
@@ -27,12 +32,14 @@ export const Standards = () => {
   // renamed subject would never invalidate this component and the column would go stale.
   const subjectNamesByStandard = useStandardStore(useShallow((state) => state.getSubjectNamesByStandard()));
   const createStandard = useStandardStore((state) => state.createStandard);
+  const deleteStandard = useStandardStore((state) => state.deleteStandard);
   // Loads once on mount and reports the status. Nothing used to trigger this load at all: the table
   // rendered its blank state whatever the data was.
   const { isLoading } = useLoadOnce(useStandardStore, 'standards', (state) => state.loadStandards);
   const [state, setState] = useSetState<IState>({
     isOpenCreateModal: false,
     search: '',
+    isDeleting: false,
   });
 
   // The search box used to render with no handler at all, so typing in it did nothing. Filtering is
@@ -61,6 +68,21 @@ export const Standards = () => {
 
   const onCloseCreateModal = () => {
     setState({ isOpenCreateModal: false });
+  };
+
+  const confirmDelete = async () => {
+    const standard = state.standardToDelete;
+    if (!standard || state.isDeleting) return;
+    try {
+      setState({ isDeleting: true });
+      await deleteStandard(standard._id);
+      successToast({ message: `${standard.name} deleted.` });
+      setState({ standardToDelete: undefined });
+    } catch (error) {
+      errorToast({ message: (error as Error)?.message || 'Could not delete the standard.' });
+    } finally {
+      setState({ isDeleting: false });
+    }
   };
 
   const columns: IColumnData<StandardDto>[] = [
@@ -104,25 +126,40 @@ export const Standards = () => {
       valueFormatter: (row) => subjectNamesByStandard[row._id] ?? '',
     },
     {
+      label: 'Alias',
+      dataKey: 'alias',
+      width: 200,
+    },
+    {
+      label: 'Description',
+      dataKey: 'description',
+      width: 320,
+      valueFormatter: (row) => (
+        <span className="block truncate text-muted-foreground" title={row.description ?? ''}>
+          {row.description ?? ''}
+        </span>
+      ),
+    },
+    {
       label: 'Slug',
       dataKey: 'slug',
       width: 200,
     },
     {
-      label: 'Alias',
-      dataKey: 'alias',
-      width: 150,
-    },
-    {
       label: 'Actions',
       dataKey: ACTIONS,
-      // A 'Delete' item sat here with `onClick: () => {}` — it opened nothing and deleted nothing.
-      // There is no delete endpoint for standards yet; restore the item with the endpoint.
       menuItems: [
         {
           label: 'Edit',
           onClick: onOpenEditModal,
           icon: <PencilIcon weight="bold" className="w-4 h-4" />,
+        },
+        {
+          label: 'Delete',
+          // Asks first: the delete is soft on the server, but it also removes every subject
+          // mapping of the standard, which the dialog message says.
+          onClick: (row) => row && setState({ standardToDelete: row }),
+          icon: <TrashIcon weight="bold" className="w-4 h-4" />,
         },
       ],
       width: 90,
@@ -166,6 +203,15 @@ export const Standards = () => {
         </div>
       </div>
       <UpsertStandardModal isOpen={state.isOpenCreateModal} onClose={onCloseCreateModal} />
+      <AlertDialog
+        isOpen={!!state.standardToDelete}
+        onClose={() => !state.isDeleting && setState({ standardToDelete: undefined })}
+        onConfirm={confirmDelete}
+        title={`Delete ${state.standardToDelete?.name ?? 'standard'}?`}
+        message="The standard and its subject mappings are removed from every app. Content already tagged with it keeps its reference."
+        confirmText={state.isDeleting ? 'Deleting…' : 'Delete'}
+        isDanger
+      />
     </>
   );
 };

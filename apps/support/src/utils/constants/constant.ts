@@ -279,6 +279,11 @@ export const STANDARD_GROUP_ORDER: IDynamicObject = {
   [StandardGroup.COMPETITIVE_EXAMS]: 500,
   [StandardGroup.POST_GRADUATE_COMPETITIVE_EXAMS]: 1000,
   [StandardGroup.GATE]: 1500,
+  [StandardGroup.GENERAL]: 1200,
+  [StandardGroup.OLYMPIADS]: 1300,
+  [StandardGroup.UNDERGRADUATE]: 1400,
+  [StandardGroup.POST_GRADUATE]: 1600,
+  [StandardGroup.LEARNING_TRACKS]: 1700,
 };
 
 export const ACTIONS = 'actions';

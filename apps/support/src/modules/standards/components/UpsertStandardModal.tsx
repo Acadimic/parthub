@@ -1,9 +1,10 @@
 import { UploadAvatar } from '@components/app/attachments';
 import { Select } from '@components/app/selects';
-import { Label, Modal, ModalFooter, TextInput } from '@repo/ui/app';
+import { Label, Modal, ModalFooter, TextArea, TextInput } from '@repo/ui/app';
 import { PositionType, StandardGroup } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { type ISelectItem } from '@interfaces';
+import { type StandardSubjectMappingDto } from '@repo/shared/contracts';
 import { StandardService } from '@services';
 import { useSelectedStandard, useSelectorStore, useStandardStore } from '@stores';
 import { successToast } from '@utils/helpers';
@@ -46,6 +47,9 @@ export const UpsertStandardModal = ({ isOpen, onClose }: IProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { uploadFilesToS3 } = useAttachment();
   const [selectedFile, setSelectedFile] = useState<File>();
+  // Saved mappings the user has unticked. Dropping them from the store only hides them; the save
+  // posts them back with `_deleted: true`, which is how a row is removed on this API.
+  const [removedMappings, setRemovedMappings] = useState<StandardSubjectMappingDto[]>([]);
 
   const closeModal = async () => {
     const standardId = useSelectorStore.getState().selectedStandardId;
@@ -58,6 +62,7 @@ export const UpsertStandardModal = ({ isOpen, onClose }: IProps) => {
     else await Promise.all([store.loadStandards(), store.loadStandardSubjectMappings()]);
     useSelectorStore.getState().setSelectedStandardId('');
     setSelectedFile(undefined);
+    setRemovedMappings([]);
     onClose();
   };
 
@@ -77,7 +82,8 @@ export const UpsertStandardModal = ({ isOpen, onClose }: IProps) => {
       if (!standard) return;
       await StandardService.upsertStandard(standard);
       const mappings = store.getStandardSubjectMappings(standardId);
-      await StandardService.upsertStandardSubjectMappings(mappings);
+      const deletions = removedMappings.map((mapping) => ({ ...mapping, _deleted: true }));
+      await StandardService.upsertStandardSubjectMappings([...mappings, ...deletions]);
       // Both are saved now, so clear the draft flag on the standard and on every mapping.
       store.addStandardSubjectMappings(mappings.map((mapping) => ({ ...mapping, isNew: false })));
       store.patchStandard(standardId, { isNew: false });
@@ -111,8 +117,11 @@ export const UpsertStandardModal = ({ isOpen, onClose }: IProps) => {
     const standardId = selectedStandard._id;
     values.forEach((value) => createStandardSubjectMapping(standardId, value.value));
     const mappings = useStandardStore.getState().getStandardSubjectMappings(standardId);
-    const removedMappings = mappings.filter((mapping) => !values.find((value) => value.value === mapping.subject));
-    removeStandardSubjectMappings(removedMappings);
+    const unticked = mappings.filter((mapping) => !values.find((value) => value.value === mapping.subject));
+    removeStandardSubjectMappings(unticked);
+    // A draft mapping was never saved, so there is nothing to delete for it; a re-ticked subject
+    // gets a fresh draft above, so its old row must still be deleted or the pair collides.
+    setRemovedMappings((current) => [...current, ...unticked.filter((mapping) => !mapping.isNew)]);
   };
 
   const handleReferenceStandardChange = (values: ISelectItem[]) => {
@@ -182,6 +191,16 @@ export const UpsertStandardModal = ({ isOpen, onClose }: IProps) => {
                 value={selectedStandard.alias || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   patchStandard(selectedStandard._id, { alias: e.target.value })
+                }
+              />
+              <TextArea
+                label="Description"
+                rows={4}
+                placeholder="What this standard covers, who it is for, and the exam or curriculum it follows."
+                value={selectedStandard.description || ''}
+                disabled={isLoading}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  patchStandard(selectedStandard._id, { description: e.target.value })
                 }
               />
               <Select

@@ -31,6 +31,11 @@ export class Standard extends BaseSchema {
 
 export const StandardSchema = SchemaFactory.createForClass(Standard);
 
-StandardSchema.index({ name: 1 }, { unique: true });
-StandardSchema.index({ slug: 1 }, { unique: true, sparse: true });
-StandardSchema.index({ order: 1 }, { unique: true, sparse: true });
+// Unique among live rows only. Deletes are soft, and a plain unique index counted the deleted
+// rows too, so re-creating a standard with a deleted one's name or order failed with a duplicate
+// key. `_deleted` always exists (the base schema defaults it); `$exists` keeps rows without a slug
+// or order out of those two indexes, which is what `sparse` did before.
+const live = { _deleted: false };
+StandardSchema.index({ name: 1 }, { unique: true, partialFilterExpression: live });
+StandardSchema.index({ slug: 1 }, { unique: true, partialFilterExpression: { ...live, slug: { $exists: true } } });
+StandardSchema.index({ order: 1 }, { unique: true, partialFilterExpression: { ...live, order: { $exists: true } } });

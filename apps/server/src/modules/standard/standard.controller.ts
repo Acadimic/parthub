@@ -2,10 +2,10 @@ import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import { Private } from '@decorators';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
-import { Controller, Get, Post, Body, ParseArrayPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, NotFoundException, ParseArrayPipe } from '@nestjs/common';
 import { StandardService } from './standard.service';
 import { StandardSubjectMappingService } from './standard-subject-mapping.service';
-import { StandardDto, StandardSubjectMappingDto } from '@repo/shared/validations';
+import { StandardDto, StandardIdDto, StandardSubjectMappingDto } from '@repo/shared/validations';
 
 @Controller('standard')
 export class StandardController {
@@ -33,6 +33,19 @@ export class StandardController {
   ) {
     const data = await this.standardService.bulkUpsert(payloads);
     return data;
+  }
+
+  /**
+   * Soft-deletes a standard together with its subject mappings. Private like `upsert`: the
+   * support dashboard is the only caller. Nothing is removed — every read already filters
+   * `_deleted`, so the row stays for auditing and disappears from the API.
+   */
+  @Private()
+  @Post('delete')
+  async deleteStandard(@Body() body: StandardIdDto): Promise<void> {
+    const deleted = await this.standardService.softDelete(body.standardId);
+    if (!deleted) throw new NotFoundException('Standard not found.');
+    await this.standardSubjectMappingService.deleteStandardMappings(body.standardId);
   }
 
   @Get('all')

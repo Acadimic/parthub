@@ -8,10 +8,17 @@ import { SubjectDto } from '@repo/shared/validations';
 export class SubjectService {
   constructor(@InjectModel(Subject.name) private subjectModel: Model<SubjectDocument>) {}
 
+  // `__v` is left out because the support app posts a loaded row straight back on the next edit,
+  // where the global `forbidNonWhitelisted` rejects it with "property __v should not exist" — the
+  // same reason CourseService and PlanService drop it.
   async upsert(payload: SubjectDto): Promise<SubjectDocument> {
     const { _id } = payload;
     return this.subjectModel
-      .findOneAndUpdate({ _id }, { ...payload }, { returnDocument: 'after', upsert: true, runValidators: true })
+      .findOneAndUpdate(
+        { _id },
+        { ...payload },
+        { returnDocument: 'after', upsert: true, runValidators: true, projection: { __v: 0 } },
+      )
       .lean<SubjectDocument>();
   }
 
@@ -33,7 +40,10 @@ export class SubjectService {
   }
 
   async getAll(): Promise<SubjectDocument[]> {
-    return this.subjectModel.find({ _deleted: { $ne: true } }).lean<SubjectDocument[]>();
+    return this.subjectModel
+      .find({ _deleted: { $ne: true } })
+      .select('-__v')
+      .lean<SubjectDocument[]>();
   }
 
   async findAll(org: string) {

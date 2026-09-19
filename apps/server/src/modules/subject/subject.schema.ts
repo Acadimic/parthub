@@ -21,5 +21,7 @@ export class Subject extends BaseSchema {
 
 export const SubjectSchema = SchemaFactory.createForClass(Subject);
 
-SubjectSchema.index({ name: 1 }, { unique: true });
-SubjectSchema.index({ slug: 1 }, { unique: true, sparse: true });
+// Unique among live rows only — see the note on StandardSchema's indexes.
+const live = { _deleted: false };
+SubjectSchema.index({ name: 1 }, { unique: true, partialFilterExpression: live });
+SubjectSchema.index({ slug: 1 }, { unique: true, partialFilterExpression: { ...live, slug: { $exists: true } } });

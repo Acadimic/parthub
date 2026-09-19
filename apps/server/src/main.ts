@@ -7,6 +7,7 @@ import { Types } from 'mongoose';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
+import { MongoDuplicateKeyFilter } from './filters/mongo-duplicate-key.filter';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 
 async function bootstrap() {
@@ -31,7 +32,7 @@ async function bootstrap() {
     }),
   );
   app.useGlobalInterceptors(new TransformInterceptor());
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new HttpExceptionFilter(), new MongoDuplicateKeyFilter());
 
   const corsOptions = {
     origin: ['*'],

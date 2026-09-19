@@ -15,6 +15,13 @@ class StandardService {
     return resData;
   };
 
+  /** `POST standard/delete` — soft-deletes the standard and its subject mappings. */
+  deleteStandard = async (standardId: string) => {
+    const url = 'standard/delete';
+    const resData = await callAuthApi(url, API.POST, { standardId });
+    return resData;
+  };
+
   getStandards = async () => {
     const url = 'standard/private-all';
     const resData = await callAuthApi<StandardDto[]>(url, API.GET);

@@ -40,6 +40,10 @@ export interface IStandardState extends IRequestSlice<StandardFetch> {
 
   removeStandard: (standardId: string) => void;
   removeSubject: (subjectId: string) => void;
+  /** Deletes on the server, then drops the row and its mappings from the store. Throws on failure. */
+  deleteStandard: (standardId: string) => Promise<void>;
+  /** Deletes on the server, then drops the row and every mapping pointing at it. Throws on failure. */
+  deleteSubject: (subjectId: string) => Promise<void>;
   removeStandardSubjectMappings: (mappings: StandardSubjectMappingDto[]) => void;
 
   /** Adds an unsaved standard and returns its id, for the caller to select. */
@@ -189,6 +193,22 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
         Object.entries(state.mappingMap).filter(([mappingId]) => !removedIds.has(mappingId)),
       ),
     }));
+  },
+
+  deleteStandard: async (standardId) => {
+    await StandardService.deleteStandard(standardId);
+    const store = get();
+    store.removeStandardSubjectMappings(store.getStandardSubjectMappings(standardId));
+    store.removeStandard(standardId);
+  },
+
+  deleteSubject: async (subjectId) => {
+    await SubjectService.deleteSubject(subjectId);
+    const store = get();
+    store.removeStandardSubjectMappings(
+      Object.values(store.mappingMap).filter((mapping) => mapping.subject === subjectId),
+    );
+    store.removeSubject(subjectId);
   },
 
   createStandard: () => {

@@ -21,4 +21,9 @@ export class StandardSubjectMapping extends BaseSchema {
 
 export const StandardSubjectMappingSchema = SchemaFactory.createForClass(StandardSubjectMapping);
 
-StandardSubjectMappingSchema.index({ subject: 1, standard: 1 }, { unique: true });
+// Unique among live rows only: unticking a subject soft-deletes its mapping, and ticking it again
+// creates a new row for the same pair. See the note on StandardSchema's indexes.
+StandardSubjectMappingSchema.index(
+  { subject: 1, standard: 1 },
+  { unique: true, partialFilterExpression: { _deleted: false } },
+);
