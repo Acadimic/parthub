@@ -8,6 +8,7 @@ import { useMaterialStore, useSelectorStore, useStandardLookups } from '@stores'
 import { ACTIONS } from '@utils/constants';
 import { errorToast, getStringFormattedDate, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 import { useSetState } from 'react-use';
 import { AddStudyMaterialModal } from './components';
 
@@ -20,7 +21,8 @@ interface IState {
 }
 
 export const StudyMaterials = () => {
-  const { push } = useRouter();
+  const router = useRouter();
+  const { push } = router;
   const setSelectedStandardId = useSelectorStore((state) => state.setSelectedStandardId);
   const setSelectedSubjectId = useSelectorStore((state) => state.setSelectedSubjectId);
   // A roll-up built on every call, so the selector needs a shallow compare. It is derived rather
@@ -61,6 +63,14 @@ export const StudyMaterials = () => {
   const onOpenAddModal = () => {
     setState({ isOpenAddModal: true });
   };
+
+  // `?add=true` arrives from the home page's quick actions: open the picker once, then drop the
+  // flag from the address so a refresh or a back navigation does not reopen it.
+  useEffect(() => {
+    if (router.query.add !== 'true') return;
+    setState({ isOpenAddModal: true });
+    router.replace(router.pathname, undefined, { shallow: true });
+  }, [router.query.add]);
 
   const onCloseAddModal = () => {
     setState({ isOpenAddModal: false });

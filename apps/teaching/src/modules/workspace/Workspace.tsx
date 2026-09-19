@@ -1,42 +1,79 @@
-import { DynamicSlider, FullScreenLoader } from '@repo/ui/app';
-import { useCourseLookups, useMaterialLookups, useMeetLookups, useSelectedUser, useTestPaperLookups } from '@stores';
+import { RectangleSkeleton } from '@repo/ui/app';
+import {
+  useBatchLookups,
+  useCourseLookups,
+  useMaterialLookups,
+  useMeetLookups,
+  useSelectedUser,
+  useTestPaperLookups,
+  useUserLookups,
+} from '@stores';
+import { addDaysToDate, getEndOfWeek, getFullCalendarEvents, getStartOfWeek } from '@utils/helpers';
 import { useEffect } from 'react';
 import {
   AddItem,
   CourseItem,
+  GettingStarted,
+  type ISetupStep,
   MaterialItem,
   SectionHeader,
   TestPaperItem,
   UpcomingSessions,
+  WeekActivity,
+  WorkspaceHero,
   WorkspaceSummary,
 } from './components';
 
 /** How many tiles a row shows before "View all" is the better route. */
-const ROW_LIMIT = 5;
+const ROW_LIMIT = 3;
 
-const greet = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
-};
+const WorkspaceSkeleton = () => (
+  <div className="flex flex-col gap-6" aria-busy="true" aria-label="Loading your workspace">
+    <RectangleSkeleton height={140} width="100%" />
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      {Array.from({ length: 6 }, (_, index) => (
+        <RectangleSkeleton key={index} height={64} width="100%" />
+      ))}
+    </div>
+    <div className="grid gap-4 lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        <RectangleSkeleton height={260} width="100%" />
+      </div>
+      <RectangleSkeleton height={260} width="100%" />
+    </div>
+  </div>
+);
 
 export const Workspace = () => {
   const courseStore = useCourseLookups();
   const testPaperStore = useTestPaperLookups();
   const materialStore = useMaterialLookups();
   const meetStore = useMeetLookups();
+  const userStore = useUserLookups();
+  const batchStore = useBatchLookups();
   const selectedUser = useSelectedUser();
 
-  const courses = courseStore.getCourses();
-  const testPapers = testPaperStore.getTestPapers();
+  const courses = courseStore.getCourses().filter((course) => !course.isNew);
+  const testPapers = testPaperStore.getTestPapers().filter((paper) => !paper.isNew);
   // Derived from the materials the store holds — `material/all` returns rows, not roll-ups.
   const materialStats = materialStore.getMaterialStats();
+  const meets = meetStore.getMeets().filter((meet) => !meet.isNew);
+  const students = userStore.getStudents();
+  const batches = batchStore.getBatches();
   const todaysSessions = meetStore.getTodaysScheduledMeets();
 
-  // The root store's `loadHomePageData` fanned out to these four. With the root store gone the
+  const weekStart = getStartOfWeek(new Date());
+  const weekSessionCount = meets.reduce(
+    (total, meet) => total + getFullCalendarEvents(meet, weekStart, getEndOfWeek(new Date())).length,
+    0,
+  );
+  const hasUpcoming = meets.some(
+    (meet) => getFullCalendarEvents(meet, new Date(), addDaysToDate(new Date(), 30)).length,
+  );
+
+  // The root store's `loadHomePageData` fanned out to these. With the root store gone the
   // composition belongs to the screen that needs it, and each store reports its own status.
-  const isLoadingHomePageData =
+  const isLoading =
     courseStore.isLoading('courses') ||
     testPaperStore.isLoading('testPapers') ||
     materialStore.isLoading('materialStats') ||
@@ -47,77 +84,78 @@ export const Workspace = () => {
     if (testPaperStore.shouldLoad('testPapers')) testPaperStore.loadTestPapers();
     if (materialStore.shouldLoad('materialStats')) materialStore.loadMaterialStats();
     if (meetStore.shouldLoad('meets')) meetStore.loadMeets();
+    if (batchStore.shouldLoad('batchesData')) batchStore.loadBatchesData();
     // Once on mount, like the root store's fan-out did.
   }, []);
 
-  if (isLoadingHomePageData) return <FullScreenLoader withHeader loading />;
+  if (isLoading) return <WorkspaceSkeleton />;
 
-  const courseItems = courses.slice(0, ROW_LIMIT).map((course) => <CourseItem key={course._id} course={course} />);
-  const testPaperItems = testPapers
-    .slice(0, ROW_LIMIT)
-    .map((testPaper) => <TestPaperItem key={testPaper._id} testPaper={testPaper} />);
-  const materialItems = materialStats
-    .slice(0, ROW_LIMIT)
-    .map((materialStat) => (
-      <MaterialItem key={materialStat.standard + materialStat.subject} materialStat={materialStat} />
-    ));
+  const steps: ISetupStep[] = [
+    { label: 'Invite your first students', href: '/students', isDone: students.length > 0 },
+    { label: 'Group them into a batch', href: '/batches', isDone: batches.length > 0 },
+    { label: 'Add study material for a subject', href: '/study-materials?add=true', isDone: materialStats.length > 0 },
+    { label: 'Create a test paper', href: '/test-papers?add=true', isDone: testPapers.length > 0 },
+    { label: 'Build a course from them', href: '/courses?add=true', isDone: courses.length > 0 },
+    { label: 'Schedule a live session', href: '/calender?add=true', isDone: hasUpcoming },
+  ];
+  const isSetUp = steps.every((step) => step.isDone);
 
   // The first name only — "Good morning, Priya Sharma" reads like a form letter.
   const firstName = selectedUser?.name?.trim().split(' ')[0];
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-10 pb-16">
-      <header>
-        <h1 className="text-2xl font-bold">
-          {greet()}
-          {firstName ? `, ${firstName}` : ''}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">Here is what is happening in your workspace today.</p>
-      </header>
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 pb-16">
+      <WorkspaceHero firstName={firstName} todayCount={todaysSessions.length} />
 
       <WorkspaceSummary
+        studentCount={students.length}
+        batchCount={batches.length}
         courseCount={courses.length}
         testPaperCount={testPapers.length}
+        publishedTestPaperCount={testPapers.filter((paper) => paper.isPublished).length}
         materialCount={materialStats.length}
-        sessionCount={todaysSessions.length}
+        weekSessionCount={weekSessionCount}
       />
 
-      <section>
-        <SectionHeader title="Today's Sessions" count={todaysSessions.length} href="/sessions" />
-        <UpcomingSessions />
-      </section>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <section className="lg:col-span-2">
+          <SectionHeader title="Upcoming sessions" hint="The next seven days, soonest first." href="/sessions" />
+          <UpcomingSessions />
+        </section>
+        <div className="flex flex-col gap-4">
+          <WeekActivity meets={meets} />
+          {!isSetUp ? <GettingStarted steps={steps} /> : null}
+        </div>
+      </div>
 
       <section>
         <SectionHeader title="Courses" count={courses.length} href="/courses" />
-        <DynamicSlider
-          items={[...courseItems, <AddItem key="add-course" href="/courses?add=true" text="Add Course" />]}
-          showDots={false}
-          autoPlay={false}
-        />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {courses.slice(0, ROW_LIMIT).map((course) => (
+            <CourseItem key={course._id} course={course} />
+          ))}
+          <AddItem href="/courses?add=true" text="Add course" />
+        </div>
       </section>
 
       <section>
-        <SectionHeader title="Test Papers" count={testPapers.length} href="/test-papers" />
-        <DynamicSlider
-          items={[
-            ...testPaperItems,
-            <AddItem key="add-test-paper" href="/test-papers?add=true" text="Add Test Paper" />,
-          ]}
-          showDots={false}
-          autoPlay={false}
-        />
+        <SectionHeader title="Test papers" count={testPapers.length} href="/test-papers" />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {testPapers.slice(0, ROW_LIMIT).map((testPaper) => (
+            <TestPaperItem key={testPaper._id} testPaper={testPaper} />
+          ))}
+          <AddItem href="/test-papers?add=true" text="Create test paper" />
+        </div>
       </section>
 
       <section>
-        <SectionHeader title="Study Materials" count={materialStats.length} href="/study-materials" />
-        <DynamicSlider
-          items={[
-            ...materialItems,
-            <AddItem key="add-material" href="/study-materials?add=true" text="Add Study Material" />,
-          ]}
-          showDots={false}
-          autoPlay={false}
-        />
+        <SectionHeader title="Study materials" count={materialStats.length} href="/study-materials" />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {materialStats.slice(0, ROW_LIMIT).map((materialStat) => (
+            <MaterialItem key={materialStat.standard + materialStat.subject} materialStat={materialStat} />
+          ))}
+          <AddItem href="/study-materials?add=true" text="Add study material" />
+        </div>
       </section>
     </div>
   );

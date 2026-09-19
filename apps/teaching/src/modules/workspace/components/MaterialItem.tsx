@@ -22,7 +22,7 @@ export const MaterialItem = ({ materialStat }: IProps) => {
   const subject = getSubjectById(materialStat.subject);
 
   return (
-    <Card className="group flex h-full flex-col overflow-hidden border border-border transition-colors hover:border-primary">
+    <Card className="group flex h-full flex-col overflow-hidden rounded-lg border border-border transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md">
       <Link
         href={`/study-materials/${materialStat.standard}/${materialStat.subject}`}
         onClick={handleClick}

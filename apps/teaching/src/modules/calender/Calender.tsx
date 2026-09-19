@@ -1,6 +1,7 @@
 import { BlankState } from '@components/others';
 import { Button, RectangleSkeleton, SoftConfirmModal } from '@repo/ui/app';
 import { useMeetLookups } from '@stores';
+import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { FullCalendarView, MeetingOverviewModal, UpsertMeetingModal } from './components';
 import { useMeetHooks } from './hooks';
@@ -22,6 +23,7 @@ const CalendarSkeleton = () => (
 );
 
 export const Calender = () => {
+  const router = useRouter();
   const meetStore = useMeetLookups();
   const { loadMeets } = meetStore;
   const isLoading = meetStore.isLoading('meets') && !meetStore.isLoaded('meets');
@@ -41,6 +43,16 @@ export const Calender = () => {
   useEffect(() => {
     if (meetStore.shouldLoad('meets')) loadMeets();
   }, []);
+
+  // `?add=true` arrives from the home page: open the session drawer on the next full hour, then
+  // drop the flag from the address so a refresh or a back navigation does not reopen it.
+  useEffect(() => {
+    if (router.query.add !== 'true') return;
+    const start = new Date();
+    start.setHours(start.getHours() + 1, 0, 0, 0);
+    handleCreateMeet(start);
+    router.replace(router.pathname, undefined, { shallow: true });
+  }, [router.query.add]);
 
   if (isLoading) return <CalendarSkeleton />;
 

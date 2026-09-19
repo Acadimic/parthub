@@ -5,3 +5,6 @@ export * from './SectionHeader';
 export * from './TestPaperItem';
 export * from './UpcomingSessions';
 export * from './WorkspaceSummary';
+export * from './GettingStarted';
+export * from './WeekActivity';
+export * from './WorkspaceHero';

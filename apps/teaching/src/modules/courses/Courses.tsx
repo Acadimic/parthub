@@ -18,7 +18,7 @@ import { useCourseLookups, useCourseStore, useSelectorLookups, useStandardLookup
 import { ACTIONS, ALL } from '@utils/constants';
 import { reportError, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSetState } from 'react-use';
 import { UpsertCourseModal } from './components';
 
@@ -31,7 +31,8 @@ interface IState {
 }
 
 export const Courses = () => {
-  const { push } = useRouter();
+  const router = useRouter();
+  const { push } = router;
   const courseStore = useCourseLookups();
   const standardStore = useStandardLookups();
   const { setSelectedCourseId } = useSelectorLookups();
@@ -92,6 +93,14 @@ export const Courses = () => {
     setSelectedCourseId(createCourse()._id);
     setState({ isOpenAddModal: true });
   };
+
+  // `?add=true` arrives from the home page's quick actions: open the create drawer once, then drop
+  // the flag from the address so a refresh or a back navigation does not reopen it.
+  useEffect(() => {
+    if (router.query.add !== 'true') return;
+    onOpenAddCourseModal();
+    router.replace(router.pathname, undefined, { shallow: true });
+  }, [router.query.add]);
 
   const onOpenEditCourseModal = (course: CourseDto) => {
     setSelectedCourseId(course._id);

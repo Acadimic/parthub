@@ -11,7 +11,7 @@ import { useSelectorStore, useStandardLookups, useTestPaperStore } from '@stores
 import { ACTIONS, ALL } from '@utils/constants';
 import { reportError, successToast, capitalizeFirstWord } from '@utils/helpers';
 import { useRouter } from 'next/router';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSetState } from 'react-use';
 import { useShallow } from 'zustand/react/shallow';
 import { CreateTestPaperModal } from './components';
@@ -49,7 +49,8 @@ const matchesSearch = (
 };
 
 export const TestPapers = () => {
-  const { push } = useRouter();
+  const router = useRouter();
+  const { push } = router;
   const setSelectedTestPaperId = useSelectorStore((state) => state.setSelectedTestPaperId);
   const setSelectedTestPaperSectionId = useSelectorStore((state) => state.setSelectedTestPaperSectionId);
   // `getTestPapers` builds a new array on every call, so the result needs a shallow compare.
@@ -106,6 +107,14 @@ export const TestPapers = () => {
     setSelectedTestPaperId(createTestPaper()._id);
     setState({ isOpenCreateModal: true });
   };
+
+  // `?add=true` arrives from the home page's quick actions: open the create drawer once, then drop
+  // the flag from the address so a refresh or a back navigation does not reopen it.
+  useEffect(() => {
+    if (router.query.add !== 'true') return;
+    onOpenCreateModal();
+    router.replace(router.pathname, undefined, { shallow: true });
+  }, [router.query.add]);
 
   const onOpenEditModal = (testPaper: TestPaperDto) => {
     setSelectedTestPaperId(testPaper._id);

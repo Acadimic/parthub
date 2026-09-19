@@ -24,7 +24,7 @@ export const CourseItem = ({ course }: IProps) => {
   const coverUrl = (course.attachments ?? [])[0]?.url;
 
   return (
-    <Card className="group flex h-full flex-col overflow-hidden border border-border transition-colors hover:border-primary">
+    <Card className="group flex h-full flex-col overflow-hidden rounded-lg border border-border transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md">
       <Link href={`/courses/${course._id}`} onClick={handleClick} className="flex h-full flex-col">
         <div className="h-40 w-full shrink-0 bg-muted">
           {coverUrl ? (
