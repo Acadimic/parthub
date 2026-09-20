@@ -8,10 +8,12 @@ import { Button, SoftConfirmModal, TextInput } from '@repo/ui/app';
 import { useLoadOnce } from '@repo/ui/hooks';
 import {
   ArrowClockwiseIcon,
+  ArrowCounterClockwiseIcon,
   ArrowSquareOutIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   PlusIcon,
+  RocketLaunchIcon,
   SparkleIcon,
   TrashIcon,
 } from '@phosphor-icons/react';
@@ -30,6 +32,9 @@ interface IState {
   /** The course the delete confirm is asking about, or undefined when it is closed. */
   courseToDelete?: CourseDto;
   isDeleting: boolean;
+  /** The course the publish confirm is asking about, or undefined when it is closed. */
+  courseToPublish?: CourseDto;
+  isPublishing: boolean;
 }
 
 export const Courses = () => {
@@ -38,7 +43,7 @@ export const Courses = () => {
   const courseStore = useCourseLookups();
   const standardStore = useStandardLookups();
   const { setSelectedCourseId } = useSelectorLookups();
-  const { createCourse, loadCourses, deleteCourse } = courseStore;
+  const { createCourse, loadCourses, deleteCourse, setCoursePublished } = courseStore;
   const { getStandardNamesText, getSubjectNamesText } = standardStore;
   const courses = courseStore.getCourses();
   const standardOptions: ISelectItem[] = standardStore
@@ -64,6 +69,7 @@ export const Courses = () => {
     isOpenAi: false,
     search: '',
     isDeleting: false,
+    isPublishing: false,
   });
 
   // The search box used to render with no handler at all, so typing in it did nothing. Filtering is
@@ -112,6 +118,22 @@ export const Courses = () => {
 
   const onCloseAddModal = () => {
     setState({ isOpenAddModal: false });
+  };
+
+  const onConfirmPublish = async () => {
+    const course = state.courseToPublish;
+    if (!course) return;
+    const isPublished = !course.isPublished;
+    try {
+      setState({ isPublishing: true });
+      await setCoursePublished(course._id, isPublished);
+      successToast({ message: isPublished ? `"${course.name}" is published.` : `"${course.name}" is back in draft.` });
+      setState({ courseToPublish: undefined });
+    } catch (error) {
+      reportError(error, 'Could not change the course status.');
+    } finally {
+      setState({ isPublishing: false });
+    }
   };
 
   const onConfirmDelete = async () => {
@@ -231,6 +253,17 @@ export const Courses = () => {
           icon: <PencilIcon weight="bold" className="w-4 h-4" />,
         },
         {
+          // Read off the row: one menu serves every row, and the wording has to follow the status.
+          label: (row) => (row?.isPublished ? 'Unpublish' : 'Publish'),
+          onClick: (row) => row && setState({ courseToPublish: row }),
+          icon: (row) =>
+            row?.isPublished ? (
+              <ArrowCounterClockwiseIcon weight="bold" className="w-4 h-4" />
+            ) : (
+              <RocketLaunchIcon weight="bold" className="w-4 h-4" />
+            ),
+        },
+        {
           label: 'Delete',
           onClick: (row) => row && setState({ courseToDelete: row }),
           icon: <TrashIcon weight="bold" className="w-4 h-4" />,
@@ -334,6 +367,19 @@ export const Courses = () => {
 
       <UpsertCourseModal isOpen={state.isOpenAddModal} onClose={onCloseAddModal} />
       <AiCourseDrawer isOpen={state.isOpenAi} onClose={() => setState({ isOpenAi: false })} />
+      <SoftConfirmModal
+        isOpen={!!state.courseToPublish}
+        title={state.courseToPublish?.isPublished ? 'Unpublish this course?' : 'Publish this course?'}
+        description={
+          state.courseToPublish?.isPublished
+            ? `"${state.courseToPublish?.name}" will no longer be visible to learners. Its modules and sessions are kept.`
+            : `Learners in the course’s standards will be able to see "${state.courseToPublish?.name}" and enrol.`
+        }
+        confirmText={state.courseToPublish?.isPublished ? 'Unpublish' : 'Publish'}
+        isLoading={state.isPublishing}
+        onConfirm={onConfirmPublish}
+        onCancel={() => !state.isPublishing && setState({ courseToPublish: undefined })}
+      />
       <SoftConfirmModal
         isOpen={!!state.courseToDelete}
         title="Delete course?"

@@ -58,6 +58,8 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   /** Recomputes a course's roll-ups from its modules and stores them on the course. */
   calculateAndSetCourseStatsByCourseId: (courseId: string) => CourseStatsDto | undefined;
 
+  /** Publishes a course or puts it back in draft, and keeps the saved row in the store. */
+  setCoursePublished: (courseId: string, isPublished: boolean) => Promise<void>;
   /** Soft-deletes a course on the server, then drops it from the store. */
   deleteCourse: (courseId: string) => Promise<void>;
   /** Soft-deletes a module on the server, then drops it from the store. */
@@ -274,6 +276,19 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
     };
     get().patchCourse(courseId, { stats });
     return stats;
+  },
+
+  setCoursePublished: async (courseId, isPublished) => {
+    const course = get().getCourseById(courseId);
+    if (!course) return;
+    // `publishedDate` is when the course last went live, so going back to draft leaves it alone.
+    const next: CourseDto = {
+      ...course,
+      isPublished,
+      publishedDate: isPublished ? new Date().toISOString() : course.publishedDate,
+    };
+    const result = await CourseService.upsertCourse(next);
+    get().addCourses([result?.data ?? next]);
   },
 
   deleteCourse: async (courseId) => {

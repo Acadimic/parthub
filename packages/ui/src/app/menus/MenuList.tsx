@@ -1,4 +1,8 @@
-import { type IMenuItem } from '../../types';
+import { type IMenuItem, type MenuItemValue } from '../../types';
+
+/** A menu item's label or icon: the value as given, or what it reads off the row. */
+const resolve = <T, V>(value: MenuItemValue<T, V>, data?: T): V =>
+  typeof value === 'function' ? (value as (row?: T) => V)(data) : value;
 
 export const MenuList = <T,>({ menuItems, data }: { menuItems: IMenuItem<T>[]; data?: T }) => {
   return (
@@ -13,8 +17,8 @@ export const MenuList = <T,>({ menuItems, data }: { menuItems: IMenuItem<T>[]; d
                 item.isCurrent ? 'text-primary' : ''
               } ${!isLastItem ? 'border-b border-border' : ''}`}
             >
-              <span className="text-inherit w-5 flex-shrink-0">{item.icon}</span>
-              {item.label}
+              <span className="text-inherit w-5 flex-shrink-0">{item.icon ? resolve(item.icon, data) : null}</span>
+              {resolve(item.label, data)}
             </button>
           </div>
         );

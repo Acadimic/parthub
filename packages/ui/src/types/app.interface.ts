@@ -8,9 +8,12 @@ export interface ISelectItem extends Omit<ISharedSelectItem, 'label' | 'icon'> {
   icon?: ReactNode;
 }
 
+/** A menu item's value, or a reading of the row it is rendered against — "Publish" against "Unpublish". */
+export type MenuItemValue<T, V> = V | ((row?: T) => V);
+
 export interface IMenuItem<T = unknown> {
-  label: string | ReactNode;
-  icon?: ReactNode;
+  label: MenuItemValue<T, string | ReactNode>;
+  icon?: MenuItemValue<T, ReactNode>;
   value?: string;
   onClick: (row?: T) => void;
   isCurrent?: boolean;

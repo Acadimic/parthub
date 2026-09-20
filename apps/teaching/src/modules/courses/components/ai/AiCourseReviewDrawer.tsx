@@ -14,7 +14,7 @@ import { Button, DrawerSection, Modal, TextArea } from '@repo/ui/app';
 import { Badge, Spinner } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
 import { PositionType } from '@enums';
-import { CommonService, CourseService } from '@services';
+import { CommonService } from '@services';
 import { useCourseLookups, useMaterialLookups, useMeetLookups, useTestPaperLookups } from '@stores';
 import { type IAiIssue } from '@utils/ai/common';
 import {
@@ -251,13 +251,7 @@ export const AiCourseReviewDrawer = ({ isOpen, onClose, course, modules }: IProp
   const setPublished = async (isPublished: boolean) => {
     setState({ isPublishing: true });
     try {
-      const next = {
-        ...course,
-        isPublished,
-        publishedDate: isPublished ? new Date().toISOString() : course.publishedDate,
-      };
-      const saved = await CourseService.upsertCourse(next);
-      courseStore.addCourses([saved?.data ?? next]);
+      await courseStore.setCoursePublished(course._id, isPublished);
       successToast({ message: isPublished ? `"${course.name}" is published.` : `"${course.name}" is back in draft.` });
       onClose();
     } catch (error) {
