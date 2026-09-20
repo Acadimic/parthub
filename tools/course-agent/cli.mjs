@@ -438,7 +438,7 @@ commands['course:content'] = async (options) => {
     if (result.kind === 'lessons') {
       const rows = result.imported.map((item) => ({ ...item.dto, order: nextOrder(result.pack.standardId, result.pack.subjectId) }));
       await api('material/bulk-upsert', { method: 'POST', body: { materials: rows } });
-      await api('course/link-content', {
+      await api('course/link-module', {
         method: 'POST',
         body: {
           courseModule: result.pack.moduleId,
@@ -449,7 +449,7 @@ commands['course:content'] = async (options) => {
       summary.lessons += rows.length;
     } else {
       await createPaper(result.pack, result.imported);
-      await api('course/link-content', {
+      await api('course/link-module', {
         method: 'POST',
         body: { courseModule: result.pack.moduleId, testPapers: [result.pack.testPaperId], done: [{ key: result.pack.pendingKey, createdId: result.pack.testPaperId }] },
       });
@@ -552,7 +552,7 @@ commands['course:sessions'] = async (options) => {
       color: enums.ColorType.BLUE,
     };
     await api('meet/upsert', { method: 'POST', body: meet });
-    await api('course/link-content', { method: 'POST', body: { courseModule: row.moduleId, meets: [meet._id], done: [{ key: row.session.key, createdId: meet._id }] } });
+    await api('course/link-module', { method: 'POST', body: { courseModule: row.moduleId, meets: [meet._id], done: [{ key: row.session.key, createdId: meet._id }] } });
     created.push(meet._id);
     row.meetId = meet._id;
   }

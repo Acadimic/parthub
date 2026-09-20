@@ -2,8 +2,8 @@ import { Accordions } from '@repo/ui/app';
 import { DynamicSubtitle } from '@components/common';
 import { useCourseLookups, useMeetLookups, useSelectedCourse } from '@stores';
 import { getPlural } from '@utils/helpers';
-import { CourseContents } from './CourseContents';
-import { Sessions } from './course-contents';
+import { CourseModuleList } from './CourseModuleList';
+import { Sessions } from './course-modules';
 
 interface IProps {
   isPreview: boolean;
@@ -35,7 +35,7 @@ export const SelectedCourseModules = ({ isPreview, closeCourseOverview }: IProps
                 {
                   title: <DynamicSubtitle title={courseItem.name} subtitle="Module" count={courseModules.length} />,
                   component: (
-                    <CourseContents
+                    <CourseModuleList
                       closeCourseOverview={closeCourseOverview}
                       courseId={selectedCourse._id}
                       course={courseItem}

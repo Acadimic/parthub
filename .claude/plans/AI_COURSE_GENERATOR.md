@@ -226,7 +226,7 @@ Both are small and backward compatible:
 ### 3.3 Server
 
 - `POST material/bulk-upsert` and `POST question/bulk-upsert` exist. Add **`POST
-course/link-content`**: `{ courseModule, materials?: string[], testPapers?: string[], clearPending?:
+course/link-module`**: `{ courseModule, materials?: string[], testPapers?: string[], clearPending?:
 string[] }` — one small idempotent write that appends links and clears pending keys, so linking
   never has to re-send the whole module and cannot race with a concurrent edit of its name.
 - Course stats recompute after a link (the existing `calculateAndSetCourseStatsByCourseId` on the
@@ -338,7 +338,7 @@ The step where the server runs the prompts, so a teacher clicks _Generate_ and w
 ## 9. Order of work
 
 1. Phase 1 contract, builder, validator, importer, drawer, bulk-modules route, Playwright run.
-2. Phase 2 pending-work storage, generator extensions, link-content route, queue panel.
+2. Phase 2 pending-work storage, generator extensions, link-module route, queue panel.
 3. Phase 3 sessions and generated cover.
 4. Phase 4 local checks, review prompt, publish gate.
 5. Phase 5 only once 1–4 have been used on real courses for a few weeks, so the job model

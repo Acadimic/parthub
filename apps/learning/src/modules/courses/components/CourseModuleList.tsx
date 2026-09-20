@@ -1,6 +1,6 @@
 import { Accordions } from '@repo/ui/app';
 import { type ICourse, useCourseLookups, useMaterialLookups, useTestPaperLookups } from '@stores';
-import { CourseContentItem } from './CourseContentItem';
+import { CourseModuleItem } from './CourseModuleItem';
 import { CourseInfo } from './CourseInfo';
 
 interface IProps {
@@ -10,7 +10,7 @@ interface IProps {
   closeCourseOverview: () => void;
 }
 
-export const CourseContents = ({ courseId, course, isPreview, closeCourseOverview }: IProps) => {
+export const CourseModuleList = ({ courseId, course, isPreview, closeCourseOverview }: IProps) => {
   const courseStore = useCourseLookups();
   const materialStore = useMaterialLookups();
   const testPaperStore = useTestPaperLookups();
@@ -48,7 +48,7 @@ export const CourseContents = ({ courseId, course, isPreview, closeCourseOvervie
                 <div className="flex flex-col divide-y divide-border">
                   {getMaterialsByIds(courseModule.materials ?? []).map((material) => {
                     return (
-                      <CourseContentItem
+                      <CourseModuleItem
                         courseId={courseId}
                         courseModuleId={courseModule._id}
                         key={material._id}
@@ -60,7 +60,7 @@ export const CourseContents = ({ courseId, course, isPreview, closeCourseOvervie
                   })}
                   {getTestPapersByIds(courseModule.testPapers ?? []).map((testPaper) => {
                     return (
-                      <CourseContentItem
+                      <CourseModuleItem
                         courseId={courseId}
                         courseModuleId={courseModule._id}
                         key={testPaper._id}

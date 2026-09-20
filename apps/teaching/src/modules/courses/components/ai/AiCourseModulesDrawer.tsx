@@ -20,11 +20,11 @@ import { hasErrors } from '@utils/ai/common';
 import {
   buildCoursePrompts,
   type IContentReply,
-  type ICourseContentContext,
+  type ICourseModuleContext,
   type ILessonReply,
   type IQuizReply,
   readContentReply,
-} from '@utils/ai/course-content';
+} from '@utils/ai/course-modules';
 import { getObjectId, reportError, successToast } from '@utils/helpers';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSetState } from 'react-use';
@@ -124,7 +124,7 @@ const ReplyRow = ({ reply, result, onRemove }: { reply: IReply; result: IContent
  * replies imported together. Each import links what it created into the right module and settles
  * the pending items, so the course page's "to generate" counts fall as the work is done.
  */
-export const AiCourseContentDrawer = ({ isOpen, onClose, course, modules }: IProps) => {
+export const AiCourseModulesDrawer = ({ isOpen, onClose, course, modules }: IProps) => {
   const standardStore = useStandardLookups();
   const materialStore = useMaterialLookups();
   const courseStore = useCourseLookups();
@@ -143,7 +143,7 @@ export const AiCourseContentDrawer = ({ isOpen, onClose, course, modules }: IPro
     materialStore.loadStandardsMaterials(course.standards ?? []);
   }, [isOpen]);
 
-  const context: ICourseContentContext = useMemo(() => {
+  const context: ICourseModuleContext = useMemo(() => {
     const standardIds = course.standards ?? [];
     const subjectIds = course.subjects?.length
       ? course.subjects
@@ -237,7 +237,7 @@ export const AiCourseContentDrawer = ({ isOpen, onClose, course, modules }: IPro
           }));
           const saved = await MaterialService.bulkUpsertMaterials(rows);
           if (saved?.data) materialStore.addMaterials(saved.data);
-          const linked = await CourseService.linkCourseContent({
+          const linked = await CourseService.linkCourseModule({
             courseModule: result.pack.moduleId,
             materials: rows.map((row) => row._id),
             done: result.imported
@@ -255,7 +255,7 @@ export const AiCourseContentDrawer = ({ isOpen, onClose, course, modules }: IPro
             durationMins: result.pack.spec.durationMins,
             imported: result.imported,
           });
-          const linked = await CourseService.linkCourseContent({
+          const linked = await CourseService.linkCourseModule({
             courseModule: result.pack.moduleId,
             testPapers: [result.pack.testPaperId],
             done: [{ key: result.pack.pendingKey, createdId: result.pack.testPaperId }],

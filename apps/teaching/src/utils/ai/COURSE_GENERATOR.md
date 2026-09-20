@@ -61,9 +61,9 @@ planned quiz, each quiz its own paper with a minted id. Import: add any number o
 pasted; each is read by its `format`, matched to the day or quiz it answers (`courseModule`,
 `testPaperId`), checked as the generators check any reply, and imported: lessons through
 `material/bulk-upsert`, quizzes as a paper, a section and questions (`createPaperFromImport`,
-shared with the test paper generator). Each import then calls `POST course/link-content`, which
+shared with the test paper generator). Each import then calls `POST course/link-module`, which
 appends the ids to the module and marks the pending items done with what was created. The
-builders and the reply reader are in `course-content.ts`.
+builders and the reply reader are in `course-modules.ts`.
 
 ## Phase 3 — sessions and cover
 

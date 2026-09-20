@@ -10,5 +10,5 @@ export * from './study-material-setup';
 export * from './study-material-prompt';
 export * from './study-material-generator';
 export * from './course-generator';
-export * from './course-content';
+export * from './course-modules';
 export * from './course-review';

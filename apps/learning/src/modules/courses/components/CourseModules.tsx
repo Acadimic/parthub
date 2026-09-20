@@ -5,7 +5,7 @@ import { ListIcon } from '@phosphor-icons/react';
 import { House } from '@phosphor-icons/react/dist/ssr';
 import { useSelectedCourse, useStandardLookups } from '@stores';
 import { useState } from 'react';
-import { CourseContent } from './course-contents/CourseContent';
+import { CourseModuleContent } from './course-modules/CourseModuleContent';
 import { SelectedCourseModules } from './SelectedCourseModules';
 
 export const CourseModules = () => {
@@ -51,7 +51,7 @@ export const CourseModules = () => {
             />
           </div>
           <div>
-            <CourseContent />
+            <CourseModuleContent />
           </div>
         </div>
         <div className="hidden md:block md:w-[30%] overflow-auto h-[calc(100vh-4rem)] bg-background py-4 border-l border-border">

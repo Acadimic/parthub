@@ -134,7 +134,7 @@ export const AiCourseSessionsDrawer = ({ isOpen, onClose, course, modules }: IPr
         await MeetService.upsertMeet(meet);
         meetStore.addMeets([meet]);
         createdIds.push(meet._id);
-        const linked = await CourseService.linkCourseContent({
+        const linked = await CourseService.linkCourseModule({
           courseModule: day.courseModule._id,
           meets: [meet._id],
           done: [{ key: day.session.key, createdId: meet._id }],

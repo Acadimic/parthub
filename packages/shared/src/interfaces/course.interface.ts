@@ -5,8 +5,8 @@ export interface ICourseBase {
   thumbnail?: string;
 }
 
-/** The body of `POST course/link-content`; see `LinkCourseContentDto`. */
-export interface ILinkCourseContent {
+/** The body of `POST course/link-module`; see `LinkCourseModuleDto`. */
+export interface ILinkCourseModule {
   courseModule: string;
   materials?: string[];
   testPapers?: string[];

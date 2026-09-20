@@ -130,11 +130,11 @@ export class PendingDoneDto {
 }
 
 /**
- * `POST course/link-content`: appends generated content to a module and settles the pending items
- * it fulfils. A small idempotent write, so linking never re-sends the whole module and cannot race
+ * `POST course/link-module`: appends generated content to a module and settles the pending items it
+ * fulfils. A small idempotent write, so linking never re-sends the whole module and cannot race
  * with an edit of its name.
  */
-export class LinkCourseContentDto {
+export class LinkCourseModuleDto {
   @IsNotEmpty()
   @IsMongoId()
   courseModule: string;

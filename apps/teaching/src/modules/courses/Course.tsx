@@ -25,7 +25,7 @@ import {
   UpsertCourseModal,
   UpsertCourseModuleModal,
   UpsertSessionsModal,
-  AiCourseContentDrawer,
+  AiCourseModulesDrawer,
   AiCourseSessionsDrawer,
   AiCourseReviewDrawer,
   CourseGenerationPanel,
@@ -282,7 +282,7 @@ export const Course = ({ courseId }: IProps) => {
       />
       {renderModules()}
       <SessionsSection meets={meets} onAdd={() => setState({ isOpenUpsertSessionsModal: true })} />
-      <AiCourseContentDrawer
+      <AiCourseModulesDrawer
         isOpen={state.isOpenContent}
         onClose={() => setState({ isOpenContent: false })}
         course={selectedCourse}

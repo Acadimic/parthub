@@ -1,17 +1,11 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { getTransformedBaseFields } from '@database/base.transform';
 import { PlanService } from '@modules/plan/plan.service';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { CourseDto, CourseModuleDto, CourseWithPlansDto, LinkCourseModuleDto, PlanDto } from '@repo/shared/validations';
 import { Model, Types } from 'mongoose';
 import { Course, CourseDocument } from './course.schema';
 import { CourseModule, CourseModuleDocument } from './schemas/course-module.schema';
-import {
-  CourseDto,
-  CourseModuleDto,
-  CourseWithPlansDto,
-  PlanDto,
-  LinkCourseContentDto,
-} from '@repo/shared/validations';
 
 @Injectable()
 export class CourseService {
@@ -171,7 +165,7 @@ export class CourseService {
    * `$addToSet` keeps a retried link from duplicating an id; the pending array is rewritten from the
    * stored one because a positional update per key would need one round trip each.
    */
-  async linkCourseContent(org: Types.ObjectId, payload: LinkCourseContentDto): Promise<CourseModuleDto | null> {
+  async linkCourseModule(org: Types.ObjectId, payload: LinkCourseModuleDto): Promise<CourseModuleDto | null> {
     const current = await this.courseModuleModel
       .findOne({ _id: payload.courseModule, org, _deleted: { $ne: true } })
       .lean<CourseModuleDocument>();

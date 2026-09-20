@@ -9,7 +9,7 @@ import {
   CourseDto,
   CourseModuleDto,
   CourseWithPlansDto,
-  LinkCourseContentDto,
+  LinkCourseModuleDto,
   PlanDto,
 } from '@repo/shared/validations';
 
@@ -62,12 +62,12 @@ export class CourseController {
   }
 
   /** Appends generated content to a module and settles the pending items it fulfils. */
-  @Post('link-content')
+  @Post('link-module')
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.CREATE_COURSE, PermissionItem.EDIT_COURSE)
-  async linkCourseContent(@Body() payload: LinkCourseContentDto): Promise<CourseModuleDto> {
+  async linkCourseModule(@Body() payload: LinkCourseModuleDto): Promise<CourseModuleDto> {
     const org = this.requestContextService.getOrgId();
-    const courseModule = await this.courseService.linkCourseContent(org, payload);
+    const courseModule = await this.courseService.linkCourseModule(org, payload);
     if (!courseModule) throw new NotFoundException('Course module not found.');
     return courseModule;
   }

@@ -1,5 +1,5 @@
 import { CourseItemType, ModuleContentType } from '@enums';
-import { type ICourseContentItem } from '@interfaces';
+import { type ICourseModuleItem } from '@interfaces';
 import { type IMaterial, type ITestPaper, useMaterialLookups, useSelectorLookups } from '@stores';
 import { useRouter } from 'next/router';
 import { useApp } from './app.hook';
@@ -49,7 +49,7 @@ export const useCourse = () => {
     setIsCourseMenuOpen(!isCourseMenuOpen);
   };
 
-  const onClickCourseContentItem = (item: ICourseContentItem) => {
+  const onClickCourseModuleItem = (item: ICourseModuleItem) => {
     const { material, testPaper, courseModuleId } = item;
     setSelectedCourseModuleId(courseModuleId);
     if (material) {
@@ -62,9 +62,9 @@ export const useCourse = () => {
     removeSelectedContent();
   };
 
-  const onClickCoursePreviewContentItem = (item: ICourseContentItem) => {
+  const onClickCoursePreviewModuleItem = (item: ICourseModuleItem) => {
     const { courseId } = item;
-    onClickCourseContentItem(item);
+    onClickCourseModuleItem(item);
     push(`/courses/${courseId}/modules`);
   };
 
@@ -86,8 +86,8 @@ export const useCourse = () => {
     selectedCourseModuleId,
     handleCourseMenuClick,
     isCourseMenuOpen,
-    onClickCourseContentItem,
-    onClickCoursePreviewContentItem,
+    onClickCourseModuleItem,
+    onClickCoursePreviewModuleItem,
     getModuleContentType,
   };
 };

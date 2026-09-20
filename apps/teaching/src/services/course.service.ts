@@ -1,5 +1,5 @@
 import { type CourseDto, type CourseModuleDto, type PlanDto } from '@repo/shared/contracts';
-import { type ILinkCourseContent } from '@interfaces';
+import { type ILinkCourseModule } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
@@ -30,9 +30,9 @@ class CourseService {
     return resData;
   };
 
-  /** `POST course/link-content` — appends generated content to a module and settles its pending items. */
-  linkCourseContent = async (payload: ILinkCourseContent) => {
-    const url = 'course/link-content';
+  /** `POST course/link-module` — appends generated content to a module and settles its pending items. */
+  linkCourseModule = async (payload: ILinkCourseModule) => {
+    const url = 'course/link-module';
     const resData = await callAuthApi<CourseModuleDto>(url, API.POST, payload);
     return resData;
   };

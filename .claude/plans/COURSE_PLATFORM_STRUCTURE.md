@@ -68,7 +68,7 @@ the mistake that produced the gap.
 | Entity | Today | Change needed |
 | --- | --- | --- |
 | `Course` | name, description, thumbnail, standards[], subjects[], **courses[]**, meets[], attachments[], stats, isPublished | add `language`, `variantGroup`; bundle rules (§5) |
-| `CourseContent` | course, name, day, materials[], testPapers[], meets[] | **rename to `CourseModule`** (§3); add `language` guard |
+| `CourseModule` | course, name, day, materials[], testPapers[], meets[] | renamed from `CourseContent` (§3, done); add `language` guard |
 | `Material` | name, content (string), attachments[], standard, subject, chapter, course, level, durationMins | `content` → `IRichText`; add `language`; resolve bank-vs-owned (§8) |
 | `TestPaper` | name, sections[] (refs), totals, paperType, instruction, mergedTestPapers[] | `instruction` → `IRichText`; add `language`; drop `totalMarks`/`duration`/`type` (§2.3-H) |
 | `TestPaperSection` | name, description, sectionType, defaultMarkings (Mixed), **subsections[]**, instruction | `description`/`instruction` → `IRichText`; `defaultMarkings` → real subdocument; add `language` (a shared section must not be composed into a paper of another language) — questions keep pointing *at* it (§12.3) |
@@ -99,10 +99,12 @@ grep -rhoE "name: ([A-Za-z]+)\.name"             --include="*.module.ts"  apps/s
 grep -hoE "const url = [\`']([^\`']*)" apps/teaching/src/services/*.service.ts
 ```
 
-**Seven models are registered in `MongooseModule.forFeature` and injected into nothing:**
-`Option`, `Solution`, `CourseContent`, `CompletedModule`, `TestPaperSection`, `TestPaperResult`,
+**Six models are registered in `MongooseModule.forFeature` and injected into nothing:**
+`Option`, `Solution`, `CompletedModule`, `TestPaperSection`, `TestPaperResult`,
 `StudentProductMapping`. A registered-but-uninjected model compiles, starts and serves traffic; it
-simply has no code path. That is why the gap survived — nothing fails loudly.
+simply has no code path. That is why the gap survived — nothing fails loudly. `CourseModule` was the
+seventh and has since been given its service and routes; re-run the greps above rather than trusting
+this list.
 
 **Eleven client calls have no matching route.** Seven are the sub-entity layer of these four flows:
 
@@ -237,13 +239,16 @@ See **§12** for the shape that addresses A–H.
 
 ## 3. Modules stay day-based
 
-`CourseContent` keeps `day` as its key and its unique `(course, day)` index. A course is a dated
+`CourseModule` keeps `day` as its key and its unique `(course, day)` index. A course is a dated
 run; `name` is the label on the day, not an identifier.
 
-**Rename the collection to `CourseModule`.** It is called that in acadimic-cloud, it is called that
-in conversation, and `CompletedModule.courseModule` already points at it under that name — only the
-class and collection disagree. The rename is a Mongoose `collection` option plus a data move, and it
-is cheap now and annoying later.
+**The collection has been renamed to `CourseModule`** (it was `CourseContent`). It is called that in
+acadimic-cloud, it is called that in conversation, and `CompletedModule.courseModule` already
+pointed at it under that name — only the class and collection disagreed. What it took was the
+Mongoose `collection` option below plus a data move: `coursecontents` renamed to `coursemodules`,
+carrying its documents and indexes, and the `ActivityLog.entityType` rows retagged. The field list
+below still describes the target shape, not today's — `description` is still a plain string, and the
+unique index is not partial yet (§9).
 
 ```ts
 @Schema({ timestamps: true, collection: 'coursemodules' })
@@ -551,7 +556,7 @@ carry `partialFilterExpression: { _deleted: false }` (with `syncIndexes()` on mo
 replace the old definitions). These still do not:
 
 ```ts
-CourseContentSchema.index({ course: 1, day: 1 }, { unique: true });
+CourseModuleSchema.index({ course: 1, day: 1 }, { unique: true });
 CompletedModuleSchema.index({ course: 1, courseModule: 1, collectionItem: 1, createdBy: 1 }, { unique: true });
 // also: Reaction, Bookmark, Follower, Invite, Meet (meetingId), User (uid, org),
 // UserStudentMapping, UserBatchMapping, StudentStandardMapping, StudentProductMapping
@@ -597,8 +602,10 @@ consistency. No new features; fixes live bugs and stops the later phases buildin
 `TestPaper`, `Question`. Backfill everything to `'en'`. The module/course language check of §4.2.
 The variant switcher in the apps.
 
-**Phase 3 — `CourseModule` rename.** Class, collection, refs, `CompletedModule.courseModule`.
-Mechanical, and cheaper the sooner it happens.
+**Phase 3 — `CourseModule` rename. Done.** Class, collection, refs,
+`CompletedModule.courseModule`, and the `CourseContent` naming that had spread into the link route,
+the AI content phase and the learning components. What remains of §3 is the partial index and the
+`description` conversion, both of which belong to their own phases.
 
 **Phase 4 — access.** The `Access` collection, purchase writing the bundle closure, the
 reconciliation job of §6.2, read paths moved off `StudentProductMapping`, then its removal.

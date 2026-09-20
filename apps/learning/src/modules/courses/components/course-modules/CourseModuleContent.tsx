@@ -123,7 +123,7 @@ const ContentActionsRow = ({
   );
 };
 
-export const CourseContent = () => {
+export const CourseModuleContent = () => {
   const selectorStore = useSelectorLookups();
   const userStore = useUserLookups();
   const meetStore = useMeetLookups();

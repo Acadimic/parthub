@@ -38,7 +38,7 @@ import {
 import { defaultCounts } from './test-paper-plan';
 
 /** The workspace, as the prompts and the reply checks need it. */
-export interface ICourseContentContext {
+export interface ICourseModuleContext {
   course: CourseDto;
   modules: CourseModuleDto[];
   standards: StandardDto[];
@@ -84,13 +84,13 @@ const isOpen = (work: IAiPendingWork) => work.status === 'pending' || work.statu
  * The subject a module's lessons belong to: the chapter's when a planned lesson names one, else
  * the course's first subject, else the first subject of the standard. A material needs one.
  */
-const subjectFor = (specs: IAiLessonSpec[], context: ICourseContentContext): string => {
+const subjectFor = (specs: IAiLessonSpec[], context: ICourseModuleContext): string => {
   const chaptered = specs.map((spec) => spec.chapter).find(Boolean);
   const chapter = chaptered ? context.chapters.find((row) => row._id === chaptered) : undefined;
   return chapter?.subject ?? context.course.subjects?.[0] ?? context.subjects[0]?._id ?? '';
 };
 
-const lessonPackFor = (courseModule: CourseModuleDto, context: ICourseContentContext): ILessonPack | null => {
+const lessonPackFor = (courseModule: CourseModuleDto, context: ICourseModuleContext): ILessonPack | null => {
   const works = (courseModule.pending ?? []).filter((work) => work.kind === 'lesson' && isOpen(work));
   if (!works.length) return null;
   const specs = works.map((work) => work.spec as IAiLessonSpec);
@@ -139,7 +139,7 @@ const lessonPackFor = (courseModule: CourseModuleDto, context: ICourseContentCon
 
 const quizPacksFor = (
   courseModule: CourseModuleDto,
-  context: ICourseContentContext,
+  context: ICourseModuleContext,
   testPaperIdFor: (pendingKey: string) => string,
 ): IQuizPack[] =>
   (courseModule.pending ?? [])
@@ -196,7 +196,7 @@ const quizPacksFor = (
  * unrelated import must still match after it.
  */
 export const buildCoursePrompts = (
-  context: ICourseContentContext,
+  context: ICourseModuleContext,
   testPaperIdFor: (pendingKey: string) => string = () => createObjectId(),
 ): ICoursePrompts => {
   const ordered = [...context.modules].sort((a, b) => a.day - b.day);
@@ -238,7 +238,7 @@ const nextOrder = (materials: MaterialDto[], standardId: string, subjectId: stri
     .filter((material) => material.standard === standardId && material.subject === subjectId && !material.isNew)
     .reduce((max, material) => Math.max(max, material.order ?? 0), 0) + 1;
 
-const readLessonReply = (text: string, prompts: ICoursePrompts, context: ICourseContentContext): IContentReply => {
+const readLessonReply = (text: string, prompts: ICoursePrompts, context: ICourseModuleContext): IContentReply => {
   const parsed = parseAiMaterials(text);
   if (!parsed.file) return { kind: 'unknown', issues: parsed.issues };
   const pack = prompts.lessons.find((item) => item.moduleId === parsed.file?.courseModule);
@@ -277,7 +277,7 @@ const readLessonReply = (text: string, prompts: ICoursePrompts, context: ICourse
   return { kind: 'lessons', pack, imported, issues };
 };
 
-const readQuizReply = (text: string, prompts: ICoursePrompts, context: ICourseContentContext): IContentReply => {
+const readQuizReply = (text: string, prompts: ICoursePrompts, context: ICourseModuleContext): IContentReply => {
   const parsed = parseAiPaper(text);
   if (!parsed.paper) return { kind: 'unknown', issues: parsed.issues };
   const pack = prompts.quizzes.find((item) => item.testPaperId === parsed.paper?.testPaperId);
@@ -315,7 +315,7 @@ const readQuizReply = (text: string, prompts: ICoursePrompts, context: ICourseCo
 export const readContentReply = (
   text: string,
   prompts: ICoursePrompts,
-  context: ICourseContentContext,
+  context: ICourseModuleContext,
 ): IContentReply => {
   const { value, issue } = parseJsonObject(text);
   if (!value) return { kind: 'unknown', issues: issue ? [issue] : [] };

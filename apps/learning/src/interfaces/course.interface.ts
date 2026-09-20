@@ -1,6 +1,6 @@
 import { type IMaterial, type ITestPaper } from '@stores';
 
-export interface ICourseContentItem {
+export interface ICourseModuleItem {
   courseId: string;
   courseModuleId: string;
   material?: IMaterial;

@@ -33,7 +33,7 @@ const getItemDetails = (material?: IMaterial, testPaper?: ITestPaper) => ({
   durationMins: material?.durationMins ?? testPaper?.durationMins ?? 0,
 });
 
-export const CourseContentItem = ({
+export const CourseModuleItem = ({
   isPreview,
   material,
   testPaper,
@@ -44,7 +44,7 @@ export const CourseContentItem = ({
   const courseStore = useCourseLookups();
   const selectorStore = useSelectorLookups();
   const { isCourseModuleItemCompleted } = courseStore;
-  const { onClickCourseContentItem, onClickCoursePreviewContentItem, getModuleContentType } = useCourse();
+  const { onClickCourseModuleItem, onClickCoursePreviewModuleItem, getModuleContentType } = useCourse();
   const { selectedMaterialId, selectedTestPaperId, selectedCourseModuleId } = selectorStore;
 
   const moduleContentType = useMemo(() => {
@@ -52,8 +52,8 @@ export const CourseContentItem = ({
   }, [courseId]);
 
   const handleClick = () => {
-    if (isPreview) onClickCoursePreviewContentItem({ courseId, material, testPaper, courseModuleId });
-    else onClickCourseContentItem({ courseId, material, testPaper, courseModuleId });
+    if (isPreview) onClickCoursePreviewModuleItem({ courseId, material, testPaper, courseModuleId });
+    else onClickCourseModuleItem({ courseId, material, testPaper, courseModuleId });
     closeCourseOverview();
   };
 

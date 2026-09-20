@@ -17,7 +17,7 @@ export type {
   IBatchStat,
   IMaterialStat,
   ICourseBase,
-  ILinkCourseContent,
+  ILinkCourseModule,
   IMaterialInfo,
   IQuestionBase,
   ITestPaperBase,
