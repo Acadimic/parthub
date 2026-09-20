@@ -93,9 +93,12 @@ which is why the filter is the thing to get right.
   startup.** Two consequences worth knowing: a new index on a large collection costs startup time,
   and **changing** a definition does not drop the old index. That is exactly why the `orgId` → `org`
   rename needed the dev database dropped — the stale indexes lingered and kept enforcing the old
-  shape. The fix that does not need a dropped database is `Model.syncIndexes()` in the module's
-  `onModuleInit`, which drops what the schema no longer declares and builds what it does;
-  `MaterialModule`, `StandardModule` and `SubjectModule` do this, and it is a no-op once they match.
+  shape. The fix that does not need a dropped database is `GET sync-indexes`, which sweeps every
+  registered model, drops what a schema no longer declares, builds what it does, and reports what it
+  changed. It drops hand-built indexes too, and offers no preview — `Model.diffIndexes()` is the
+  read-only equivalent. It replaced the `syncIndexes()` calls four modules used to make in
+  `onModuleInit`, so changing an index definition is a deploy step rather than something that
+  happens invisibly on every boot.
 
 - **Prefer fetching by ids over `populate`.** The codebase populates in exactly one method —
   `lookupInvite`, two calls, for `role` and `org` — because that `@Public()` response has to name

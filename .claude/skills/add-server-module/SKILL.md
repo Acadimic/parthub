@@ -99,9 +99,10 @@ elsewhere.
   plain (or `sparse`) unique index counts the deleted rows, so re-creating a deleted name failed
   with a duplicate key. `chapter`, `material`, `standard`, `subject` and `standard-subject-mapping`
   are the examples; an optional key adds `<field>: { $exists: true }` to the filter, which is what
-  `sparse` used to do. When you change an existing index's options, add `syncIndexes()` to the
-  module's `onModuleInit` (see `MaterialModule`, `StandardModule`): Mongoose creates missing indexes
-  but never replaces one whose definition changed.
+  `sparse` used to do. When you change an existing index's options, declare it and stop there:
+  Mongoose creates missing indexes but never replaces one whose definition changed, and the fix is
+  `GET sync-indexes` after deploying. Do not add a `syncIndexes()` hook to the module — four used to
+  carry one, and that route replaced all four.
 - Export the service from its module when another module injects it, and import that module rather
   than reaching for the model directly. Two modules sharing a model is a sign the boundary is wrong.
 - A module with no persistence needs only `providers` and `exports`; `S3Module` and `SendGridModule`

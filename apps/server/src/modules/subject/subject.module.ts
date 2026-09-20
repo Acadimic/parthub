@@ -1,7 +1,6 @@
-import { Module, OnModuleInit } from '@nestjs/common';
-import { InjectModel, MongooseModule } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Subject, SubjectDocument, SubjectSchema } from './subject.schema';
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Subject, SubjectSchema } from './subject.schema';
 import { SubjectController } from './subject.controller';
 import { SubjectService } from './subject.service';
 import { StandardModule } from '@modules/standard/standard.module';
@@ -13,11 +12,4 @@ import { StandardModule } from '@modules/standard/standard.module';
   providers: [SubjectService],
   exports: [SubjectService],
 })
-export class SubjectModule implements OnModuleInit {
-  constructor(@InjectModel(Subject.name) private readonly subjectModel: Model<SubjectDocument>) {}
-
-  /** The unique indexes changed from plain or sparse to partial — see StandardModule. */
-  async onModuleInit(): Promise<void> {
-    await this.subjectModel.syncIndexes();
-  }
-}
+export class SubjectModule {}

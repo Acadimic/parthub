@@ -35,6 +35,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ContextModule } from './context/context.module';
 import { RequestContextService } from './context/request-context.service';
+import { IndexSyncService } from './database/index-sync.service';
 import { registerGlobalPlugins } from './database/plugins/register-plugins';
 import { AccessGuard } from './guards/access.guard';
 import { AuthGuard } from './guards/auth.guard';
@@ -133,6 +134,7 @@ import { SecretsService } from './secrets/secrets.service';
       useClass: AccessGuard,
     },
     AppService,
+    IndexSyncService,
   ],
 })
 export class AppModule {}
