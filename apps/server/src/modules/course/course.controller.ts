@@ -4,7 +4,14 @@ import { Permissions } from '@decorators/permissions.decorator';
 import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { RequestContextService } from '../../context/request-context.service';
-import { CourseDto, CourseModuleDto, CourseWithPlansDto, PlanDto } from '@repo/shared/validations';
+import {
+  BulkUpsertCourseModulesDto,
+  CourseDto,
+  CourseModuleDto,
+  CourseWithPlansDto,
+  LinkCourseContentDto,
+  PlanDto,
+} from '@repo/shared/validations';
 
 @Controller('course')
 export class CourseController {
@@ -43,6 +50,26 @@ export class CourseController {
   async upsertCourseModule(@Body() payload: CourseModuleDto): Promise<CourseModuleDto> {
     const org = this.requestContextService.getOrgId();
     return this.courseService.upsertCourseModule(org, payload);
+  }
+
+  /** A generated course's modules in one request, in file order. */
+  @Post('upsert/course/modules')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.CREATE_COURSE, PermissionItem.EDIT_COURSE)
+  async bulkUpsertCourseModules(@Body() payload: BulkUpsertCourseModulesDto): Promise<CourseModuleDto[]> {
+    const org = this.requestContextService.getOrgId();
+    return this.courseService.bulkUpsertCourseModules(org, payload.modules);
+  }
+
+  /** Appends generated content to a module and settles the pending items it fulfils. */
+  @Post('link-content')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.CREATE_COURSE, PermissionItem.EDIT_COURSE)
+  async linkCourseContent(@Body() payload: LinkCourseContentDto): Promise<CourseModuleDto> {
+    const org = this.requestContextService.getOrgId();
+    const courseModule = await this.courseService.linkCourseContent(org, payload);
+    if (!courseModule) throw new NotFoundException('Course module not found.');
+    return courseModule;
   }
 
   @Get('course/modules/:courseId')

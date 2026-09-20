@@ -101,6 +101,23 @@ export class CourseDto extends BaseOwnedDto {
   @ValidateNested()
   @Type(() => CourseStatsDto)
   stats?: CourseStatsDto;
+
+  /** The syllabus the course follows, one line per topic; written by the AI generator. */
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  outline?: string[];
+
+  /** "Can do" statements a learner should be able to make afterwards. */
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  outcomes?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  prerequisites?: string[];
 }
 
 /**

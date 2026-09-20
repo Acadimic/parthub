@@ -12,6 +12,7 @@ import {
   MagnifyingGlassIcon,
   PencilIcon,
   PlusIcon,
+  SparkleIcon,
   TrashIcon,
 } from '@phosphor-icons/react';
 import { useCourseLookups, useCourseStore, useSelectorLookups, useStandardLookups } from '@stores';
@@ -20,10 +21,11 @@ import { reportError, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo } from 'react';
 import { useSetState } from 'react-use';
-import { UpsertCourseModal } from './components';
+import { UpsertCourseModal, AiCourseDrawer } from './components';
 
 interface IState {
   isOpenAddModal: boolean;
+  isOpenAi: boolean;
   search: string;
   /** The course the delete confirm is asking about, or undefined when it is closed. */
   courseToDelete?: CourseDto;
@@ -59,6 +61,7 @@ export const Courses = () => {
   const { isLoading, isFailed, error } = useLoadOnce(useCourseStore, 'courses', (state) => state.loadCourses);
   const [state, setState] = useSetState<IState>({
     isOpenAddModal: false,
+    isOpenAi: false,
     search: '',
     isDeleting: false,
   });
@@ -242,6 +245,15 @@ export const Courses = () => {
       Add <span className="hidden sm:inline">course</span>
     </Button>
   );
+  const generateButton = (
+    <Button
+      isSecondary
+      leftsection={<SparkleIcon weight="bold" className="w-4 h-4" />}
+      onClick={() => setState({ isOpenAi: true })}
+    >
+      Generate <span className="hidden sm:inline">with AI</span>
+    </Button>
+  );
 
   const renderTable = () => {
     // The failure branch comes first: `DataTable`'s empty state would otherwise read "no courses"
@@ -281,8 +293,13 @@ export const Courses = () => {
           ) : (
             <BlankState
               label="No courses yet"
-              description="A course groups modules of study material, test papers and live sessions."
-              action={addCourseButton}
+              description="Let AI lay a syllabus across weeks of study days, reusing your lessons and tests, or build a course by hand."
+              action={
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {generateButton}
+                  {addCourseButton}
+                </div>
+              }
             />
           )
         }
@@ -307,12 +324,16 @@ export const Courses = () => {
             {visibleCourses.length} {visibleCourses.length === 1 ? 'course' : 'courses'}
             <span className="hidden md:inline"> · Filter by standard, subject or status from the column headers.</span>
           </p>
-          <div className="ml-auto">{addCourseButton}</div>
+          <div className="ml-auto flex items-center gap-2">
+            {generateButton}
+            {addCourseButton}
+          </div>
         </div>
         {renderTable()}
       </div>
 
       <UpsertCourseModal isOpen={state.isOpenAddModal} onClose={onCloseAddModal} />
+      <AiCourseDrawer isOpen={state.isOpenAi} onClose={() => setState({ isOpenAi: false })} />
       <SoftConfirmModal
         isOpen={!!state.courseToDelete}
         title="Delete course?"

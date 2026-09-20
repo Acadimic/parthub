@@ -25,6 +25,10 @@ import {
   UpsertCourseModal,
   UpsertCourseModuleModal,
   UpsertSessionsModal,
+  AiCourseContentDrawer,
+  AiCourseSessionsDrawer,
+  AiCourseReviewDrawer,
+  CourseGenerationPanel,
 } from './components';
 
 interface IProps {
@@ -35,6 +39,9 @@ interface IState {
   isOpenUpsertCourseModuleModal: boolean;
   isOpenUpsertSessionsModal: boolean;
   isOpenEditCourse: boolean;
+  isOpenContent: boolean;
+  isOpenSessions: boolean;
+  isOpenReview: boolean;
   /** The module the delete confirm is asking about, or undefined when it is closed. */
   moduleToDelete?: ICourseModule;
   isDeletingModule: boolean;
@@ -100,6 +107,9 @@ export const Course = ({ courseId }: IProps) => {
     isOpenUpsertCourseModuleModal: false,
     isOpenUpsertSessionsModal: false,
     isOpenEditCourse: false,
+    isOpenContent: false,
+    isOpenSessions: false,
+    isOpenReview: false,
     isDeletingModule: false,
   });
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -175,6 +185,13 @@ export const Course = ({ courseId }: IProps) => {
 
   if (!selectedCourse) return <CourseSkeleton />;
 
+  // Lessons and quizzes an AI plan still owes, across every module.
+  const pendingCount = courseModules.reduce(
+    (sum, courseModule) =>
+      sum + (courseModule.pending ?? []).filter((work) => work.status !== 'done' && work.status !== 'skipped').length,
+    0,
+  );
+
   const renderModules = () => {
     if (!courseModules.length && isLoadingModules) return <CourseSkeleton />;
     if (!courseModules.length) {
@@ -201,6 +218,11 @@ export const Course = ({ courseId }: IProps) => {
             <Badge tone="neutral" appearance="soft" className="whitespace-nowrap px-1.5 py-0 text-xxs">
               {courseModules.length} {courseModules.length === 1 ? 'module' : 'modules'}
             </Badge>
+            {pendingCount ? (
+              <Badge tone="warning" appearance="soft" className="whitespace-nowrap px-1.5 py-0 text-xxs">
+                {pendingCount} {pendingCount === 1 ? 'item' : 'items'} to generate
+              </Badge>
+            ) : null}
           </div>
           <div className="ml-auto flex items-center gap-2">
             {courseModules.length > 1 ? (
@@ -252,8 +274,32 @@ export const Course = ({ courseId }: IProps) => {
           onAddModule={onOpenUpsertCourseModuleModal}
         />
       </Card>
+      <CourseGenerationPanel
+        modules={courseModules}
+        onGenerateContent={() => setState({ isOpenContent: true })}
+        onScheduleSessions={() => setState({ isOpenSessions: true })}
+        onReview={() => setState({ isOpenReview: true })}
+      />
       {renderModules()}
       <SessionsSection meets={meets} onAdd={() => setState({ isOpenUpsertSessionsModal: true })} />
+      <AiCourseContentDrawer
+        isOpen={state.isOpenContent}
+        onClose={() => setState({ isOpenContent: false })}
+        course={selectedCourse}
+        modules={courseModules}
+      />
+      <AiCourseSessionsDrawer
+        isOpen={state.isOpenSessions}
+        onClose={() => setState({ isOpenSessions: false })}
+        course={selectedCourse}
+        modules={courseModules}
+      />
+      <AiCourseReviewDrawer
+        isOpen={state.isOpenReview}
+        onClose={() => setState({ isOpenReview: false })}
+        course={selectedCourse}
+        modules={courseModules}
+      />
       <UpsertCourseModuleModal
         isOpen={state.isOpenUpsertCourseModuleModal}
         onClose={() => setState({ isOpenUpsertCourseModuleModal: false })}

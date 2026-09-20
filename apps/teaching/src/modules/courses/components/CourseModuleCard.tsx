@@ -1,10 +1,12 @@
 import { type MaterialDto, type MeetDto, type TestPaperDto } from '@repo/shared/contracts';
+import { type IAiLessonSpec, type IAiPendingWork, type IAiTestSpec } from '@repo/shared/interfaces';
 import {
   BookOpenTextIcon,
   CaretDownIcon,
   ClockIcon,
   FileTextIcon,
   PencilSimpleIcon,
+  SparkleIcon,
   TrashIcon,
   VideoCameraIcon,
   YoutubeLogoIcon,
@@ -54,6 +56,93 @@ const Row = ({
   </li>
 );
 
+/** The lessons and quizzes an AI plan still owes this module. */
+const pendingWork = (courseModule: ICourseModule): IAiPendingWork[] =>
+  (courseModule.pending ?? []).filter((work) => work.status !== 'done' && work.status !== 'skipped');
+
+/** "2 lessons and 1 quiz", or empty. */
+const pendingLabelOf = (pending: IAiPendingWork[]): string => {
+  const lessons = pending.filter((work) => work.kind === 'lesson').length;
+  const tests = pending.length - lessons;
+  return [
+    lessons ? `${lessons} ${lessons === 1 ? 'lesson' : 'lessons'}` : '',
+    tests ? `${tests} ${tests === 1 ? 'quiz' : 'quizzes'}` : '',
+  ]
+    .filter(Boolean)
+    .join(' and ');
+};
+
+const specName = (work: IAiPendingWork) => (work.spec as { name: string }).name;
+const specMeta = (work: IAiPendingWork) =>
+  work.kind === 'lesson'
+    ? `${(work.spec as IAiLessonSpec).level ?? ''} · ${(work.spec as IAiLessonSpec).durationMins ?? '?'} min`
+    : `${(work.spec as IAiTestSpec).questionCount ?? '?'} questions`;
+
+/** What the plan still owes the module, listed like its real content so the gap is visible. */
+const PendingGroup = ({ pending }: { pending: IAiPendingWork[] }) =>
+  pending.length ? (
+    <Group title="Planned, to generate" count={pending.length}>
+      {pending.map((work) => (
+        <Row
+          key={work.key}
+          icon={
+            work.kind === 'lesson' ? <BookOpenTextIcon className="h-4 w-4" /> : <FileTextIcon className="h-4 w-4" />
+          }
+          meta={specMeta(work)}
+        >
+          {specName(work)}
+        </Row>
+      ))}
+    </Group>
+  ) : null;
+
+const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
+
+/** The header line's figures: day, counts, minutes, and what an AI plan still owes. */
+const ModuleCounts = ({
+  day,
+  materials,
+  tests,
+  meets,
+  durationMins,
+  pendingLabel,
+}: {
+  day: number;
+  materials: number;
+  tests: number;
+  meets: number;
+  durationMins: number;
+  pendingLabel: string;
+}) => (
+  <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+    <Badge tone="neutral" appearance="soft" className="px-1.5 py-0 text-xxs">
+      Day {day}
+    </Badge>
+    <span className="inline-flex items-center gap-1 text-xxs text-muted-foreground">
+      <BookOpenTextIcon className="h-3 w-3" />
+      {plural(materials, 'material', 'materials')}
+    </span>
+    <span className="inline-flex items-center gap-1 text-xxs text-muted-foreground">
+      <FileTextIcon className="h-3 w-3" />
+      {plural(tests, 'test', 'tests')}
+    </span>
+    <span className="inline-flex items-center gap-1 text-xxs text-muted-foreground">
+      <VideoCameraIcon className="h-3 w-3" />
+      {plural(meets, 'session', 'sessions')}
+    </span>
+    <span className="inline-flex items-center gap-1 text-xxs text-muted-foreground">
+      <ClockIcon className="h-3 w-3" />
+      {durationMins} min
+    </span>
+    {pendingLabel ? (
+      <Badge tone="warning" appearance="soft" className="gap-1 px-1.5 py-0 text-xxs">
+        <SparkleIcon className="h-3 w-3" />
+        {pendingLabel} to generate
+      </Badge>
+    ) : null}
+  </span>
+);
+
 /**
  * One module of a course: a day's worth of material, papers and sessions.
  *
@@ -72,6 +161,8 @@ export const CourseModuleCard = ({ courseModule, number, isExpanded, onToggle, o
     testPapers.reduce((total, paper) => total + (paper.durationMins ?? 0), 0) +
     meets.reduce((total, meet) => total + (meet.durationMins ?? 0), 0);
   const isEmpty = !materials.length && !testPapers.length && !meets.length;
+  const pending = pendingWork(courseModule);
+  const pendingLabel = pendingLabelOf(pending);
 
   return (
     <article
@@ -90,27 +181,14 @@ export const CourseModuleCard = ({ courseModule, number, isExpanded, onToggle, o
           <span className="whitespace-nowrap text-xs font-semibold uppercase leading-5 tracking-caps text-primary">
             Module {number}
           </span>
-          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-            <Badge tone="neutral" appearance="soft" className="px-1.5 py-0 text-xxs">
-              Day {courseModule.day}
-            </Badge>
-            <span className="inline-flex items-center gap-1 text-xxs text-muted-foreground">
-              <BookOpenTextIcon className="h-3 w-3" />
-              {materials.length} {materials.length === 1 ? 'material' : 'materials'}
-            </span>
-            <span className="inline-flex items-center gap-1 text-xxs text-muted-foreground">
-              <FileTextIcon className="h-3 w-3" />
-              {testPapers.length} {testPapers.length === 1 ? 'test' : 'tests'}
-            </span>
-            <span className="inline-flex items-center gap-1 text-xxs text-muted-foreground">
-              <VideoCameraIcon className="h-3 w-3" />
-              {meets.length} {meets.length === 1 ? 'session' : 'sessions'}
-            </span>
-            <span className="inline-flex items-center gap-1 text-xxs text-muted-foreground">
-              <ClockIcon className="h-3 w-3" />
-              {durationMins} min
-            </span>
-          </span>
+          <ModuleCounts
+            day={courseModule.day}
+            materials={materials.length}
+            tests={testPapers.length}
+            meets={meets.length}
+            durationMins={durationMins}
+            pendingLabel={pendingLabel}
+          />
           <CaretDownIcon
             className={cn(
               'mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-transform',
@@ -124,6 +202,9 @@ export const CourseModuleCard = ({ courseModule, number, isExpanded, onToggle, o
         <span className="block text-base font-semibold leading-6 text-foreground">{courseModule.name}</span>
         {courseModule.description ? (
           <span className="block text-sm text-muted-foreground">{courseModule.description}</span>
+        ) : null}
+        {courseModule.topics?.length ? (
+          <span className="block text-xs text-muted-foreground">{courseModule.topics.join(' · ')}</span>
         ) : null}
       </button>
       {/* Over the header row's spacer: a menu inside the toggle button would nest interactive elements. */}
@@ -140,9 +221,12 @@ export const CourseModuleCard = ({ courseModule, number, isExpanded, onToggle, o
         <div className="flex flex-col gap-4 border-t border-border px-4 py-4">
           {isEmpty ? (
             <p className="text-sm text-muted-foreground">
-              Nothing in this module yet. Edit it to add material, papers or sessions.
+              {pendingLabel
+                ? `Nothing here yet: ${pendingLabel} are planned and still to be generated.`
+                : 'Nothing in this module yet. Edit it to add material, papers or sessions.'}
             </p>
           ) : null}
+          <PendingGroup pending={pending} />
           <Group title="Study material" count={materials.length}>
             {materials.map((material) => (
               <Row

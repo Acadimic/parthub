@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2017",
     "module": "commonjs",
-    "lib": ["es2017"],
+    "lib": ["es2019"],
     "declaration": true,
     // Lets an editor's go-to-definition land on `src/*.ts` instead of the emitted `.d.ts`,
     // and a debugger step into the real source. Consumers still *resolve* through `dist`

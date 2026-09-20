@@ -1,5 +1,6 @@
 import { BaseSchema } from '@database/base.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { type IAiPendingWork } from '@repo/shared/interfaces';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type CourseContentDocument = HydratedDocument<CourseContent>;
@@ -29,6 +30,16 @@ export class CourseContent extends BaseSchema {
 
   @Prop([{ type: MongooseSchema.Types.ObjectId, ref: 'Meet' }])
   meets: string[];
+
+  @Prop({ type: [String], default: undefined })
+  topics: string[];
+
+  @Prop({ type: Number })
+  week: number;
+
+  /** `IAiPendingWork[]`; the spec inside varies by kind, so the array is stored as-is. */
+  @Prop({ type: [MongooseSchema.Types.Mixed], default: undefined })
+  pending: IAiPendingWork[];
 }
 
 export const CourseContentSchema = SchemaFactory.createForClass(CourseContent);

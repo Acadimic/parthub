@@ -32,6 +32,10 @@
     "./validations": {
       "types": "./dist/dtos/validations/index.d.ts",
       "default": "./dist/dtos/validations/index.js"
+    },
+    "./ai": {
+      "types": "./dist/ai/index.d.ts",
+      "default": "./dist/ai/index.js"
     }
   },
   "typesVersions": {
@@ -53,6 +57,9 @@
       ],
       "validations": [
         "dist/dtos/validations/index.d.ts"
+      ],
+      "ai": [
+        "dist/ai/index.d.ts"
       ]
     }
   },

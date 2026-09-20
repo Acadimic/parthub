@@ -1,4 +1,5 @@
 import { type CourseDto, type CourseModuleDto, type PlanDto } from '@repo/shared/contracts';
+import { type ILinkCourseContent } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
 
@@ -18,6 +19,20 @@ class CourseService {
 
   upsertCourseModule = async (payload: CourseModuleDto) => {
     const url = 'course/upsert/course/module';
+    const resData = await callAuthApi<CourseModuleDto>(url, API.POST, payload);
+    return resData;
+  };
+
+  /** `POST course/upsert/course/modules` — a generated course's modules in one request. */
+  bulkUpsertCourseModules = async (modules: CourseModuleDto[]) => {
+    const url = 'course/upsert/course/modules';
+    const resData = await callAuthApi<CourseModuleDto[]>(url, API.POST, { modules });
+    return resData;
+  };
+
+  /** `POST course/link-content` — appends generated content to a module and settles its pending items. */
+  linkCourseContent = async (payload: ILinkCourseContent) => {
+    const url = 'course/link-content';
     const resData = await callAuthApi<CourseModuleDto>(url, API.POST, payload);
     return resData;
   };

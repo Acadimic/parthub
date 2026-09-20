@@ -1,12 +1,23 @@
 import { CheckIcon, CopyIcon, DownloadSimpleIcon } from '@phosphor-icons/react';
 import { Button, DrawerSection, TextArea } from '@repo/ui/app';
 import { cn } from '@repo/ui/lib';
-import { type IAiPromptPack } from '@utils/ai/study-material-generator';
 import { errorToast } from '@utils/helpers';
 import { useEffect, useState } from 'react';
 
+/** One prompt in a pack: a stable key, a title for the list, the text. */
+export interface IPromptPackItem {
+  key: string;
+  title: string;
+  prompt: string;
+}
+
 interface IProps {
-  packs: IAiPromptPack[];
+  packs: IPromptPackItem[];
+  /** The list's heading; defaults to "N prompts, one per subject". */
+  heading?: string;
+  hint?: string;
+  /** The tips box; omit for the default whole-subject tips. */
+  tips?: string[];
 }
 
 const slug = (value: string) =>
@@ -15,12 +26,12 @@ const slug = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '') || 'prompt';
 
-const download = (pack: IAiPromptPack) => {
+const download = (pack: IPromptPackItem) => {
   const blob = new Blob([pack.prompt], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `${slug(pack.title)}-lessons-prompt.md`;
+  anchor.download = `${slug(pack.title)}-prompt.md`;
   anchor.click();
   URL.revokeObjectURL(url);
 };
@@ -29,7 +40,13 @@ const download = (pack: IAiPromptPack) => {
  * Step two of a whole-standard run: one prompt per subject. Each is a separate conversation with
  * the model — a whole subject already fills a reply, so several subjects in one would be cut off.
  */
-export const AiPromptPackStep = ({ packs }: IProps) => {
+const DEFAULT_TIPS = [
+  'Use the most capable model you have, with web search on, so the syllabus and references are real.',
+  'A long set may come back in parts. Reply "continue" until the model says it is done, and add every part.',
+  'If the import reports issues, paste them back and ask for the corrected lessons only.',
+];
+
+export const AiPromptPackStep = ({ packs, heading, hint, tips = DEFAULT_TIPS }: IProps) => {
   const [selected, setSelected] = useState(0);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const current = packs[Math.min(selected, packs.length - 1)];
@@ -40,10 +57,10 @@ export const AiPromptPackStep = ({ packs }: IProps) => {
     return () => clearTimeout(timer);
   }, [copiedKey]);
 
-  const copy = async (pack: IAiPromptPack) => {
+  const copy = async (pack: IPromptPackItem) => {
     try {
       await navigator.clipboard.writeText(pack.prompt);
-      setCopiedKey(`${pack.standardId}:${pack.subjectId}`);
+      setCopiedKey(pack.key);
     } catch {
       errorToast({ message: 'Could not copy. Select the text and copy it by hand.' });
     }
@@ -60,8 +77,11 @@ export const AiPromptPackStep = ({ packs }: IProps) => {
   return (
     <div className="flex flex-col gap-6">
       <DrawerSection
-        title={`${packs.length} ${packs.length === 1 ? 'prompt' : 'prompts'}, one per subject`}
-        hint="Run each in its own chat with a model that has web search. Every reply is imported in the next step; you can import them as they arrive."
+        title={heading ?? `${packs.length} ${packs.length === 1 ? 'prompt' : 'prompts'}, one per subject`}
+        hint={
+          hint ??
+          'Run each in its own chat with a model that has web search. Every reply is imported in the next step; you can import them as they arrive.'
+        }
         action={
           packs.length > 1 ? (
             <Button
@@ -75,7 +95,7 @@ export const AiPromptPackStep = ({ packs }: IProps) => {
       >
         <ul className="flex flex-col gap-1.5">
           {packs.map((pack, index) => {
-            const key = `${pack.standardId}:${pack.subjectId}`;
+            const { key } = pack;
             const isCurrent = index === selected;
             return (
               <li
@@ -131,13 +151,11 @@ export const AiPromptPackStep = ({ packs }: IProps) => {
         />
       </DrawerSection>
       <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-        <p className="font-semibold text-foreground">Tips for a whole subject</p>
+        <p className="font-semibold text-foreground">Tips</p>
         <ul className="mt-1 list-disc space-y-0.5 pl-4">
-          <li>Use the most capable model you have, with web search on, so the syllabus and references are real.</li>
-          <li>
-            A long set may come back in parts. Reply "continue" until the model says it is done, and add every part.
-          </li>
-          <li>If the import reports issues, paste them back and ask for the corrected lessons only.</li>
+          {tips.map((tip) => (
+            <li key={tip}>{tip}</li>
+          ))}
         </ul>
       </div>
     </div>

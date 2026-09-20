@@ -35,3 +35,6 @@ pnpm-debug.log*
 next-env.d.ts
 
 data
+
+# The terminal course agent's session and run state
+.course-agent/

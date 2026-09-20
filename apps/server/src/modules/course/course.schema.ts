@@ -80,6 +80,15 @@ export class Course extends BaseSchema {
 
   @Prop({ type: MongooseSchema.Types.Mixed })
   stats: Stats;
+
+  @Prop({ type: [String], default: undefined })
+  outline: string[];
+
+  @Prop({ type: [String], default: undefined })
+  outcomes: string[];
+
+  @Prop({ type: [String], default: undefined })
+  prerequisites: string[];
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);

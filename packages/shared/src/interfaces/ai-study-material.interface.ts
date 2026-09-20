@@ -62,5 +62,7 @@ export interface IAiStudyMaterial {
   outline?: string[];
   /** Set when the model split a long reply: part 1 of 2, and so on. The importer merges the parts. */
   part?: { index: number; total: number };
+  /** The course module these lessons were planned for, echoed from the prompt; the import links them into it. */
+  courseModule?: string;
   materials: IAiMaterial[];
 }

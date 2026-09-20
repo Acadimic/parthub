@@ -298,7 +298,17 @@ export const AiWholeMaterialDrawer = ({ isOpen, onClose }: IProps) => {
         />
       );
     }
-    if (state.step === 'prompts') return <AiPromptPackStep packs={packs} />;
+    if (state.step === 'prompts') {
+      return (
+        <AiPromptPackStep
+          packs={packs.map((pack) => ({
+            key: pairKey(pack.standardId, pack.subjectId),
+            title: pack.title,
+            prompt: pack.prompt,
+          }))}
+        />
+      );
+    }
     return (
       <AiWholeMaterialImportStep
         replies={parsedReplies.map((item) => item.reply)}

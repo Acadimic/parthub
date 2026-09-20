@@ -65,5 +65,7 @@ export interface IAiTestPaper {
   /** What the model was asked for, echoed back so a file can be understood without its prompt. */
   title?: string;
   generatedBy?: string;
+  /** The course module this paper was planned for, echoed from the prompt; the import links it into the module. */
+  courseModule?: string;
   sections: IAiSection[];
 }

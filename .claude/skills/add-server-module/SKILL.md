@@ -61,7 +61,7 @@ elsewhere.
    ```
 
 4. **Never fill the ownership fields yourself.** `registerGlobalPlugins` attaches both plugins to
-   the connection once, in `MongooseModule.forRootAsync`, so *every* model gets them. Change
+   the connection once, in `MongooseModule.forRootAsync`, so _every_ model gets them. Change
    tracking stamps `org`, `createdBy` and `updatedBy` from the CLS request context on `save`,
    `updateOne`, `updateMany`, `findOneAndUpdate`, `replaceOne`, `findOneAndReplace`, `insertMany`
    and `bulkWrite`; activity logging records the change. Setting those fields in a service — or in
@@ -94,9 +94,14 @@ elsewhere.
   context and the status code.
 - Index what you actually query. The convention for an org-scoped entity is
   `{ org: 1, _deleted: 1 }`, which nine schemas carry today, plus a unique compound index that
-  includes `org` for a natural key — `chapter` and `material` both do this with
-  `{ unique: true, sparse: true }`. Adding the pair to a schema you are already editing is welcome;
-  the org filter is on every read either way.
+  includes `org` for a natural key. **A unique index is partial on live rows** —
+  `{ unique: true, partialFilterExpression: { _deleted: false } }` — because deletes are soft and a
+  plain (or `sparse`) unique index counts the deleted rows, so re-creating a deleted name failed
+  with a duplicate key. `chapter`, `material`, `standard`, `subject` and `standard-subject-mapping`
+  are the examples; an optional key adds `<field>: { $exists: true }` to the filter, which is what
+  `sparse` used to do. When you change an existing index's options, add `syncIndexes()` to the
+  module's `onModuleInit` (see `MaterialModule`, `StandardModule`): Mongoose creates missing indexes
+  but never replaces one whose definition changed.
 - Export the service from its module when another module injects it, and import that module rather
   than reaching for the model directly. Two modules sharing a model is a sign the boundary is wrong.
 - A module with no persistence needs only `providers` and `exports`; `S3Module` and `SendGridModule`
@@ -113,18 +118,19 @@ elsewhere.
 
 ## What the pipeline already does
 
-| Stage             | Component                            | What it means for your module                                    |
-| ----------------- | ------------------------------------ | ---------------------------------------------------------------- |
-| Authentication    | `AuthGuard` (first `APP_GUARD`)      | Verifies the Firebase JWT, resolves the subdomain, fills the CLS context |
-| Authorization     | `AccessGuard` (second `APP_GUARD`)   | Enforces `@Permissions` / `@Subdomains`; a route declaring neither is refused |
-| Validation        | global `ValidationPipe`              | Validates and whitelists a body whose metatype is a class — see `add-api-endpoint` for arrays |
-| Response          | `TransformInterceptor`               | Wraps the return value as `{ data }`                              |
-| Errors            | `HttpExceptionFilter`                | Renders an `HttpException` as `{ error: { code, message } }`       |
-| Ownership fields  | `change-tracking.plugin`             | Stamps `org`, `createdBy`, `updatedBy` on every write             |
-| Audit trail       | `activity-logging.plugin`            | Records the change, per model                                     |
-| Request state     | `ClsModule` + `RequestContextService`| Makes the user, org, role and subdomain available anywhere        |
-| Config            | `SecretsService`                     | Loads and validates secrets at boot                               |
-| Logging           | nestjs-pino                          | Structured logs, authorization redacted                           |
+| Stage            | Component                             | What it means for your module                                                                 |
+| ---------------- | ------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Authentication   | `AuthGuard` (first `APP_GUARD`)       | Verifies the Firebase JWT, resolves the subdomain, fills the CLS context                      |
+| Authorization    | `AccessGuard` (second `APP_GUARD`)    | Enforces `@Permissions` / `@Subdomains`; a route declaring neither is refused                 |
+| Validation       | global `ValidationPipe`               | Validates and whitelists a body whose metatype is a class — see `add-api-endpoint` for arrays |
+| Response         | `TransformInterceptor`                | Wraps the return value as `{ data }`                                                          |
+| Errors           | `HttpExceptionFilter`                 | Renders an `HttpException` as `{ error: { code, message } }`                                  |
+| Duplicate keys   | `MongoDuplicateKeyFilter`             | Renders a Mongo duplicate-key error as a 409 naming the field                                 |
+| Ownership fields | `change-tracking.plugin`              | Stamps `org`, `createdBy`, `updatedBy` on every write                                         |
+| Audit trail      | `activity-logging.plugin`             | Records the change, per model                                                                 |
+| Request state    | `ClsModule` + `RequestContextService` | Makes the user, org, role and subdomain available anywhere                                    |
+| Config           | `SecretsService`                      | Loads and validates secrets at boot                                                           |
+| Logging          | nestjs-pino                           | Structured logs, authorization redacted                                                       |
 
 The guards are registered in that order on purpose: `AccessGuard` reads the context `AuthGuard`
 fills, so swapping them breaks authorization silently.
@@ -169,7 +175,7 @@ src/database/     base.schema.ts and plugins/ (change tracking, activity logging
 src/decorators/   @Public, @Private, @Permissions, @Subdomains, @User
 src/guards/       AuthGuard, AccessGuard
 src/interceptors/ TransformInterceptor
-src/filters/      HttpExceptionFilter
+src/filters/      HttpExceptionFilter, MongoDuplicateKeyFilter
 src/secrets/      SecretsService and the Secrets enum
 src/utils/        helpers with no Nest dependency
 ```

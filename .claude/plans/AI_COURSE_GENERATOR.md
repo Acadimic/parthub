@@ -1,6 +1,6 @@
 # AI Course Generator — Plan
 
-Status: proposal, 2026-09-19. Builds on the two generators that already ship in the teaching
+Status: Phases 1–4 built 2026-09-20 (see `apps/teaching/src/utils/ai/COURSE_GENERATOR.md`, which also lists the deviations). The generation core has moved to `@repo/shared/ai`, and a terminal agent (`.claude/agents/course-builder.md` with `tools/course-agent/cli.mjs`) runs the whole pipeline as the model — the internal precursor of Phase 5, which remains blocked on provider credentials and a job model. Phase 6 unsized. Builds on the two generators that already ship in the teaching
 app — test papers (`apps/teaching/src/utils/ai/test-paper-generator.ts`) and study material
 (`study-material-generator.ts`) — and on the course domain described in
 `COURSE_PLATFORM_STRUCTURE.md`. Read those first; this document only adds what a _course_ needs.

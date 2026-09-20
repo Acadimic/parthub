@@ -6,3 +6,4 @@ export * from './SessionsView';
 export * from './UpsertCourseModal';
 export * from './UpsertCourseModuleModal';
 export * from './UpsertSessionsModal';
+export * from './ai';

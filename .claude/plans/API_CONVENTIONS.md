@@ -228,15 +228,21 @@ collections, and reads must not filter on it.
 
 ## Naming
 
-| Concern           | Convention                          | Example                   |
-| ----------------- | ----------------------------------- | ------------------------- |
-| Controller path   | singular resource                   | `@Controller('course')`   |
-| Create or update  | `POST <resource>/upsert`            | `POST course/upsert`      |
-| List for an org   | `GET <resource>/all`                | `GET course/all`          |
-| Single item       | `GET <resource>/:id`                | `GET course/:id`          |
-| Nested list       | `GET <resource>/<parent>/:parentId` | `GET chapter/course/:id`  |
-| Bulk write        | `POST <resource>/bulk/upsert`       | `POST invite/bulk/upsert` |
-| Action on an item | `POST <resource>/<verb>`            | `POST user/revoke`        |
+| Concern           | Convention                                       | Example                    |
+| ----------------- | ------------------------------------------------ | -------------------------- |
+| Controller path   | singular resource                                | `@Controller('course')`    |
+| Create or update  | `POST <resource>/upsert`                         | `POST course/upsert`       |
+| List for an org   | `GET <resource>/all`                             | `GET course/all`           |
+| Single item       | `GET <resource>/:id`                             | `GET course/:id`           |
+| Nested list       | `GET <resource>/<parent>/:parentId`              | `GET chapter/course/:id`   |
+| Bulk write        | `POST <resource>/bulk-upsert`                    | `POST subject/bulk-upsert` |
+| Soft delete       | `POST <resource>/delete` with `{ <resource>Id }` | `POST standard/delete`     |
+| Action on an item | `POST <resource>/<verb>`                         | `POST user/revoke`         |
+
+`invite/bulk/upsert` is the one older spelling; the five later bulk routes (material, question,
+subject, standard, standard mapping) use `bulk-upsert`, and new ones should too. A delete is a
+soft delete: the service sets `_deleted: true`, cascades to dependants (a standard's mappings), and
+answers 404 when no live row has that id.
 
 Do not put a subdomain in the path. `@Subdomains(...)` carries that, and it is
 enforced rather than implied.
@@ -253,6 +259,11 @@ Errors come from `HttpExceptionFilter`, so throw Nest exceptions and let it
 format them. Prefer the specific type: `ForbiddenException` for a permission
 failure, `NotFoundException` for a missing document, `BadRequestException` for
 input that passed validation but is not usable.
+
+A MongoDB duplicate key (code 11000) is caught by `MongoDuplicateKeyFilter` and
+answered as a 409 whose message names the colliding field and value, so a unique
+index can stay the last line of defence without surfacing as a bare 500. Any
+other `MongoServerError` still becomes a 500.
 
 ## Migrating an existing module
 

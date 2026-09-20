@@ -67,10 +67,10 @@ which is why the filter is the thing to get right.
 8. **The upsert shape is fixed:**
 
    ```ts
-   findOneAndUpdate({ _id, org }, { ...payload }, { new: true, upsert: true, runValidators: true })
+   findOneAndUpdate({ _id, org }, { ...payload }, { new: true, upsert: true, runValidators: true });
    ```
 
-   `runValidators` matters: an upsert skips schema validation without it. `org` in the *filter*
+   `runValidators` matters: an upsert skips schema validation without it. `org` in the _filter_
    (not just the update) is what stops an upsert reaching into another organization.
 
 9. **ObjectId lives in the schema, string lives in the DTO.** `BaseSchema` stores `org`,
@@ -81,15 +81,21 @@ which is why the filter is the thing to get right.
 ## should
 
 - **Index for the query you wrote.** The convention for an org-scoped entity is
-  `{ org: 1, _deleted: 1 }`. A natural key gets a unique compound index that includes `org`, with
-  `sparse: true` — `chapter` and `material` are the examples. Order matters: `{ org, _deleted }`
-  serves `find({ org, _deleted })` and `find({ org })`, but not `find({ _deleted })`.
+  `{ org: 1, _deleted: 1 }`. A natural key gets a unique compound index that includes `org`, and
+  **every unique index is partial on live rows**: `partialFilterExpression: { _deleted: false }`,
+  plus `<field>: { $exists: true }` for an optional key (what `sparse` used to cover). Deletes are
+  soft, and a plain unique index counted the deleted rows — re-creating a deleted standard's name
+  or order failed with E11000. `chapter`, `material`, `standard`, `subject` and
+  `standard-subject-mapping` are the examples. Order matters: `{ org, _deleted }` serves
+  `find({ org, _deleted })` and `find({ org })`, but not `find({ _deleted })`.
 
 - **`autoIndex` is not configured, so Mongoose's default stands and the app builds indexes at
   startup.** Two consequences worth knowing: a new index on a large collection costs startup time,
   and **changing** a definition does not drop the old index. That is exactly why the `orgId` → `org`
   rename needed the dev database dropped — the stale indexes lingered and kept enforcing the old
-  shape.
+  shape. The fix that does not need a dropped database is `Model.syncIndexes()` in the module's
+  `onModuleInit`, which drops what the schema no longer declares and builds what it does;
+  `MaterialModule`, `StandardModule` and `SubjectModule` do this, and it is a no-op once they match.
 
 - **Prefer fetching by ids over `populate`.** The codebase populates in exactly one method —
   `lookupInvite`, two calls, for `role` and `org` — because that `@Public()` response has to name

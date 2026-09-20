@@ -5,7 +5,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Course, CourseDocument } from './course.schema';
 import { CourseContent, CourseContentDocument } from './schemas/course-content.schema';
-import { CourseDto, CourseModuleDto, CourseWithPlansDto, PlanDto } from '@repo/shared/validations';
+import {
+  CourseDto,
+  CourseModuleDto,
+  CourseWithPlansDto,
+  PlanDto,
+  LinkCourseContentDto,
+} from '@repo/shared/validations';
 
 @Injectable()
 export class CourseService {
@@ -148,6 +154,49 @@ export class CourseService {
         if (!courseModule) throw new InternalServerErrorException('Course module was not saved.');
         return this.getTransformedCourseModule(courseModule);
       });
+  }
+
+  /** One at a time, in file order, so the unique `(course, day)` index sees each day once. */
+  async bulkUpsertCourseModules(org: Types.ObjectId, modules: CourseModuleDto[]): Promise<CourseModuleDto[]> {
+    const saved: CourseModuleDto[] = [];
+    for (const courseModule of modules) {
+      saved.push(await this.upsertCourseModule(org, courseModule));
+    }
+    return saved;
+  }
+
+  /**
+   * Appends content ids to a module and marks pending items done.
+   *
+   * `$addToSet` keeps a retried link from duplicating an id; the pending array is rewritten from the
+   * stored one because a positional update per key would need one round trip each.
+   */
+  async linkCourseContent(org: Types.ObjectId, payload: LinkCourseContentDto): Promise<CourseModuleDto | null> {
+    const current = await this.courseContentModel
+      .findOne({ _id: payload.courseModule, org, _deleted: { $ne: true } })
+      .lean<CourseContentDocument>();
+    if (!current) return null;
+    const doneByKey = new Map((payload.done ?? []).map((item) => [item.key, item.createdId]));
+    const pending = (current.pending ?? []).map((work) =>
+      doneByKey.has(work.key)
+        ? { ...work, status: 'done' as const, createdId: doneByKey.get(work.key) ?? work.createdId }
+        : work,
+    );
+    return this.courseContentModel
+      .findOneAndUpdate(
+        { _id: payload.courseModule, org },
+        {
+          $set: { pending },
+          $addToSet: {
+            materials: { $each: payload.materials ?? [] },
+            testPapers: { $each: payload.testPapers ?? [] },
+            meets: { $each: payload.meets ?? [] },
+          },
+        },
+        { returnDocument: 'after', runValidators: true },
+      )
+      .lean<CourseContentDocument>()
+      .then((courseModule) => (courseModule ? this.getTransformedCourseModule(courseModule) : null));
   }
 
   /** A course's modules in the order a learner works through them; `day` is the running order. */
