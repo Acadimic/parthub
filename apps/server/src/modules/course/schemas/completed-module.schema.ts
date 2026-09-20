@@ -10,7 +10,7 @@ export class CompletedModule extends BaseSchema {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Course', required: true })
   course: string;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'CourseContent', required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'CourseModule', required: true })
   courseModule: string;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, refPath: 'collectionRef', required: true })

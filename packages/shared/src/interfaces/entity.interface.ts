@@ -17,8 +17,8 @@ import type { QuestionType } from '../enums/question.enum';
  *
  * Each is written from the server's Mongoose schema. `ICourseModuleFields` was the exception while
  * the routes it serves (`course/upsert/course/module`, `course/course/modules/:courseId`) had no
- * schema behind them; they are backed by `CourseContent`
- * (`course/schemas/course-content.schema.ts`) and validated by `CourseModuleDto`, so the shape is
+ * schema behind them; they are backed by `CourseModule`
+ * (`course/schemas/course-module.schema.ts`) and validated by `CourseModuleDto`, so the shape is
  * reconciled rather than inferred. The interface stays because the learning store holds it, and any
  * change to it belongs in the DTO first.
  */
@@ -38,7 +38,7 @@ export interface ICompletedModuleFields {
   isSkipped?: boolean;
 }
 
-/** `course/schemas/course-content.schema.ts`, whose wire shape is `CourseModuleDto`. */
+/** `course/schemas/course-module.schema.ts`, whose wire shape is `CourseModuleDto`. */
 export interface ICourseModuleFields {
   _id: string;
   course: string;

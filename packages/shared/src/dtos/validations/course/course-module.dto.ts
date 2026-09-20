@@ -43,13 +43,12 @@ export class PendingWorkDto {
 }
 
 /**
- * The wire shape of the server's `CourseContent` schema
- * (`apps/server/src/modules/course/schemas/course-content.schema.ts`), which the apps call a
- * "course module".
+ * The wire shape of the server's `CourseModule` schema
+ * (`apps/server/src/modules/course/schemas/course-module.schema.ts`).
  *
- * The two names describe the same document: the collection was named for the content a course day
- * holds, and the apps for the unit a learner works through. Nothing translates between them, so the
- * DTO carries the schema's field list unchanged and only the name differs.
+ * The schema was `CourseContent` until the apps' name won: the collection had been named for the
+ * content a course day holds, the apps for the unit a learner works through. Nothing translated
+ * between them, so the DTO carries the schema's field list unchanged.
  */
 export class CourseModuleDto extends BaseOwnedDto {
   @IsNotEmpty()

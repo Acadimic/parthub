@@ -4,7 +4,7 @@ import { PlanService } from '@modules/plan/plan.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Course, CourseDocument } from './course.schema';
-import { CourseContent, CourseContentDocument } from './schemas/course-content.schema';
+import { CourseModule, CourseModuleDocument } from './schemas/course-module.schema';
 import {
   CourseDto,
   CourseModuleDto,
@@ -17,7 +17,7 @@ import {
 export class CourseService {
   constructor(
     @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
-    @InjectModel(CourseContent.name) private courseContentModel: Model<CourseContentDocument>,
+    @InjectModel(CourseModule.name) private courseModuleModel: Model<CourseModuleDocument>,
     private readonly planService: PlanService,
   ) {}
 
@@ -112,7 +112,7 @@ export class CourseService {
   }
 
   /**
-   * The wire shape of a course module — the `CourseContent` document the apps call a module.
+   * The wire shape of a course module.
    *
    * Spread rather than a field list, so a plain field added to the schema needs no change here.
    * Only the values whose stored type differs from the contract are named: an `ObjectId` becomes a
@@ -121,7 +121,7 @@ export class CourseService {
    * `__v` is removed because the apps post a loaded row straight back on the next edit, where the
    * global `forbidNonWhitelisted` rejects it with "property __v should not exist".
    */
-  getTransformedCourseModule(courseModule: CourseContentDocument): CourseModuleDto {
+  getTransformedCourseModule(courseModule: CourseModuleDocument): CourseModuleDto {
     // Cast only to make the delete legal: `HydratedDocument` types `__v` as required, and TypeScript
     // refuses `delete` on a non-optional property.
     delete (courseModule as { __v?: number }).__v;
@@ -136,20 +136,20 @@ export class CourseService {
   }
 
   /** The list form, for the `find()` routes. */
-  getTransformedCourseModules(courseModules: CourseContentDocument[]): CourseModuleDto[] {
+  getTransformedCourseModules(courseModules: CourseModuleDocument[]): CourseModuleDto[] {
     return (courseModules ?? []).map((courseModule) => this.getTransformedCourseModule(courseModule));
   }
 
   async upsertCourseModule(org: Types.ObjectId, payload: CourseModuleDto): Promise<CourseModuleDto> {
     const { _id } = payload;
-    return this.courseContentModel
+    return this.courseModuleModel
       .findOneAndUpdate(
         // org in the filter so an upsert cannot reach another organization's document
         { _id, org },
         { ...payload },
         { returnDocument: 'after', upsert: true, runValidators: true },
       )
-      .lean<CourseContentDocument>()
+      .lean<CourseModuleDocument>()
       .then((courseModule) => {
         if (!courseModule) throw new InternalServerErrorException('Course module was not saved.');
         return this.getTransformedCourseModule(courseModule);
@@ -172,9 +172,9 @@ export class CourseService {
    * stored one because a positional update per key would need one round trip each.
    */
   async linkCourseContent(org: Types.ObjectId, payload: LinkCourseContentDto): Promise<CourseModuleDto | null> {
-    const current = await this.courseContentModel
+    const current = await this.courseModuleModel
       .findOne({ _id: payload.courseModule, org, _deleted: { $ne: true } })
-      .lean<CourseContentDocument>();
+      .lean<CourseModuleDocument>();
     if (!current) return null;
     const doneByKey = new Map((payload.done ?? []).map((item) => [item.key, item.createdId]));
     const pending = (current.pending ?? []).map((work) =>
@@ -182,7 +182,7 @@ export class CourseService {
         ? { ...work, status: 'done' as const, createdId: doneByKey.get(work.key) ?? work.createdId }
         : work,
     );
-    return this.courseContentModel
+    return this.courseModuleModel
       .findOneAndUpdate(
         { _id: payload.courseModule, org },
         {
@@ -195,16 +195,16 @@ export class CourseService {
         },
         { returnDocument: 'after', runValidators: true },
       )
-      .lean<CourseContentDocument>()
+      .lean<CourseModuleDocument>()
       .then((courseModule) => (courseModule ? this.getTransformedCourseModule(courseModule) : null));
   }
 
   /** A course's modules in the order a learner works through them; `day` is the running order. */
   async getOrgCourseModules(org: Types.ObjectId, courseId: string): Promise<CourseModuleDto[]> {
-    return this.courseContentModel
+    return this.courseModuleModel
       .find({ org, course: courseId, _deleted: { $ne: true } })
       .sort({ day: 1 })
-      .lean<CourseContentDocument[]>()
+      .lean<CourseModuleDocument[]>()
       .then((courseModules) => this.getTransformedCourseModules(courseModules));
   }
 

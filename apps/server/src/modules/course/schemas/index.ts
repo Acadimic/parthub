@@ -1,2 +1,2 @@
-export * from './course-content.schema';
+export * from './course-module.schema';
 export * from './completed-module.schema';

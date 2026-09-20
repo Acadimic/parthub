@@ -14,8 +14,8 @@ import { useTestPaperStore } from './test-paper.store';
 /**
  * A course module, as the server sends and accepts it.
  *
- * The name is the app's; the collection is `CourseContent`. `isNew` comes from `BaseOwnedDto` and
- * is stripped from every request body, so a draft module is typed exactly like a saved one.
+ * `isNew` comes from `BaseOwnedDto` and is stripped from every request body, so a draft module is
+ * typed exactly like a saved one.
  */
 export type ICourseModule = CourseModuleDto;
 

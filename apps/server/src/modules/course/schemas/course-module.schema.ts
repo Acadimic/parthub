@@ -3,10 +3,19 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { type IAiPendingWork } from '@repo/shared/interfaces';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
-export type CourseContentDocument = HydratedDocument<CourseContent>;
+export type CourseModuleDocument = HydratedDocument<CourseModule>;
 
-@Schema({ timestamps: true })
-export class CourseContent extends BaseSchema {
+/**
+ * A day of a course: what a learner works through, and the material, tests and sessions it holds.
+ *
+ * The collection is named explicitly rather than left to Mongoose's pluralisation of the class,
+ * because the class has been renamed once already: it was `CourseContent`, whose documents lived in
+ * `coursecontents` and were moved across by hand. Nothing fails loudly when a class rename moves the
+ * collection — the server starts, the queries run, and every course simply has no modules. Spelling
+ * the name out is what stops that happening a second time.
+ */
+@Schema({ timestamps: true, collection: 'coursemodules' })
+export class CourseModule extends BaseSchema {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Course', required: true })
   course: string;
 
@@ -42,7 +51,7 @@ export class CourseContent extends BaseSchema {
   pending: IAiPendingWork[];
 }
 
-export const CourseContentSchema = SchemaFactory.createForClass(CourseContent);
+export const CourseModuleSchema = SchemaFactory.createForClass(CourseModule);
 
-CourseContentSchema.index({ course: 1, day: 1 }, { unique: true });
-CourseContentSchema.index({ org: 1, _deleted: 1 });
+CourseModuleSchema.index({ course: 1, day: 1 }, { unique: true });
+CourseModuleSchema.index({ org: 1, _deleted: 1 });
