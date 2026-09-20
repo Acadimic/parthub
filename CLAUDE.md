@@ -205,6 +205,8 @@ the `upgrade-a-dependency` skill before touching any version.
 ## Code Style
 
 - Prettier: 120 char width, single quotes, trailing commas, 2-space indent, LF line endings
+- **Comments are few and short**: one or two lines stating the constraint, longer only in a docblock
+  on an exported contract, and never a retelling of the bug that led there. See `write-comments`.
 - **ESLint 10 with flat config in all six workspaces** — every one has its own `eslint.config.js`;
   there is no `.eslintrc.js` left, because ESLint 10 does not read that format at all.
 - The three apps take Next's rules from `@next/eslint-plugin-next` directly, not from

@@ -31,6 +31,13 @@ argument-hint: '[file or area]'
    noise; it makes a file longer without making it clearer.
 4. **A comment that is now wrong is worse than none.** If you change a line, read the comment above
    it. A stale comment misleads a reader who trusts it.
+5. **Two lines, not ten.** State the constraint and stop. Only a docblock on an exported contract
+   runs longer, and only because its caller is in another workspace. Everything else — a comment in
+   a screen, a store, a service — says the one thing that would be lost and ends there.
+6. **Do not narrate the bug you just fixed.** A comment holds the constraint that stands now, not
+   the investigation that found it. Past tense earns its place only where it warns off a change
+   someone would otherwise make, and then as a clause ("this used to read X, which broke Y"), never
+   a paragraph. The symptom, the measurement and the reasoning belong in the commit message.
 
 ## should
 
@@ -81,4 +88,5 @@ issue-tracker shorthand. A comment is read by someone who has never met you.
 
 Before keeping a comment, ask: *if I delete this, does a competent reader lose information they
 cannot recover from the code?* If no, delete it. If yes, make sure it says the thing that would
-have been lost — usually a constraint, a consequence, or a decision and its alternative.
+have been lost — usually a constraint, a consequence, or a decision and its alternative — in as
+few lines as that takes.
