@@ -2,20 +2,26 @@ import { RichTextEditor } from '@repo/ui/editor';
 import { TrashIcon } from '@phosphor-icons/react';
 import { type OptionDto } from '@repo/shared/contracts';
 import { Tooltip } from '@repo/ui/core';
-import { useQuestionLookups } from '@stores';
+import { useQuestionStore } from '@stores';
+import { memo } from 'react';
 import { optionLetter } from './question-types';
 
 interface IProps {
   questionId: string;
   option: OptionDto;
   index: number;
-  onRemove: (optionId: string) => void;
   canRemove: boolean;
 }
 
-/** One option being written: its letter, its editor, and a remove control when there are spares. */
-export const AddOption = ({ questionId, option, index, onRemove, canRemove }: IProps) => {
-  const { patchOption } = useQuestionLookups();
+/**
+ * One option being written: its letter, its editor, and a remove control when there are spares.
+ *
+ * Memoised, and holding only the actions it calls: each option carries a Tiptap editor, and the
+ * store's lookups re-rendered all of them on every character typed into the question above.
+ */
+export const AddOption = memo(function AddOption({ questionId, option, index, canRemove }: IProps) {
+  const patchOption = useQuestionStore((state) => state.patchOption);
+  const removeOption = useQuestionStore((state) => state.removeOption);
   const letter = optionLetter(index);
 
   return (
@@ -40,7 +46,7 @@ export const AddOption = ({ questionId, option, index, onRemove, canRemove }: IP
           type="button"
           aria-label={`Remove option ${letter}`}
           disabled={!canRemove}
-          onClick={() => onRemove(option._id)}
+          onClick={() => removeOption(questionId, option._id)}
           className="mt-8 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
         >
           <TrashIcon className="h-4 w-4" />
@@ -48,4 +54,4 @@ export const AddOption = ({ questionId, option, index, onRemove, canRemove }: IP
       </Tooltip>
     </div>
   );
-};
+});

@@ -9,11 +9,11 @@ import { QuestionService, TestPaperService } from '@services';
 import {
   type ITestPaperSection,
   useStandardLookups,
-  useQuestionLookups,
-  useSelectedQuestion,
+  useQuestionStore,
   useSelectedTestPaper,
   useSelectedTestPaperSection,
   useSelectorLookups,
+  useSelectorStore,
   useTestPaperLookups,
   useTestPaperStore,
 } from '@stores';
@@ -130,10 +130,10 @@ export const TestPaper = ({ testPaperId }: IProps) => {
   const { getSectionQuestions, patchTestPaperSection, removeTestPaperSection, reloadTestPaper } = testPaperStore;
   const { patchTestPaper } = testPaperStore;
   const selectorStore = useSelectorLookups();
-  const questionStore = useQuestionLookups();
   const {
     setSelectedTestPaperSectionId,
     selectedQuestionType,
+    selectedQuestionId,
     setSelectedUpsertQuestionStep,
     removeSelectedQuestionId,
     setSelectedQuestionId,
@@ -141,7 +141,11 @@ export const TestPaper = ({ testPaperId }: IProps) => {
   } = selectorStore;
   const selectedTestPaperSection = useSelectedTestPaperSection();
   const selectedTestPaper = useSelectedTestPaper();
-  const selectedQuestion = useSelectedQuestion();
+  // Stable actions and one boolean, not the lookups: the drawer patches the open question on every
+  // keystroke, and this screen re-renders every section and card below it.
+  const createQuestion = useQuestionStore((state) => state.createQuestion);
+  const removeQuestionById = useQuestionStore((state) => state.removeQuestionById);
+  const isNewQuestion = useQuestionStore((state) => !!state.questionMap[selectedQuestionId]?.isNew);
   const {
     getTestPaperSectionById,
     getTestPaperSectionsByIds,
@@ -152,7 +156,6 @@ export const TestPaper = ({ testPaperId }: IProps) => {
   const isLoadingTestPapers = testPaperStore.isLoading('testPapers');
   const isLoadingTestPaperSections = testPaperStore.isLoading('testPaperSections');
   const { loadOrgChapters } = useStandardLookups();
-  const { createQuestion, removeQuestionById } = questionStore;
   const { push } = useRouter();
   const [state, setState] = useSetState<IState>({
     isOpenUpsertQuestion: false,
@@ -316,9 +319,12 @@ export const TestPaper = ({ testPaperId }: IProps) => {
    * open on top of the question it has just added.
    */
   const onCloseAddQuestionModal = (isForce = false) => {
-    if ((state.isLoading && !isForce) || !selectedTestPaperSection || !selectedQuestion) return;
+    // Read the draft at call time: the footer patches `isNew` to false and closes in the same tick,
+    // so a flag captured during render still says "draft" and drops the question it has just saved.
+    const questionId = useSelectorStore.getState().selectedQuestionId;
+    if ((state.isLoading && !isForce) || !selectedTestPaperSection || !questionId) return;
     // Options are embedded, so dropping the question drops them with it.
-    if (selectedQuestion.isNew) removeQuestionById(selectedQuestion._id);
+    if (useQuestionStore.getState().getQuestionById(questionId)?.isNew) removeQuestionById(questionId);
     removeSelectedQuestionId();
     setState({ isOpenUpsertQuestion: false });
   };
@@ -389,7 +395,6 @@ export const TestPaper = ({ testPaperId }: IProps) => {
         <SectionCard
           key={section._id}
           section={section}
-          questions={getSectionQuestions(section._id)}
           onAddQuestion={() => onOpenAddQuestionModal(section._id)}
           onGenerateQuestions={() => onOpenAi(section._id)}
           sectionMenuItems={getSectionMenuItems(section)}
@@ -448,7 +453,7 @@ export const TestPaper = ({ testPaperId }: IProps) => {
       <Modal
         position={PositionType.RIGHT}
         className="min-w-full md:min-w-[60%] lg:min-w-[60%] md:max-w-[60%] lg:max-w-[60%]"
-        title={getUpsertTitle(selectedQuestion?.isNew, 'Question')}
+        title={getUpsertTitle(isNewQuestion, 'Question')}
         description="Two steps: write the question and its options, then mark the answer and add a solution."
         isOpen={state.isOpenUpsertQuestion}
         onClose={() => onCloseAddQuestionModal()}

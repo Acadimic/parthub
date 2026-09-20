@@ -3,7 +3,7 @@ import { repairRichText } from '@repo/shared/utils';
 import { MaterialService } from '@services';
 import { useMaterialStore } from '@stores';
 import { reportError, successToast } from '@utils/helpers';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 /**
  * Fixes equations that arrived broken from an AI import — commands whose backslash became a
@@ -24,7 +24,8 @@ const places = (count: number) => `${count} ${count === 1 ? 'place' : 'places'}`
 export const useMaterialRepair = (materials: MaterialDto[]) => {
   const [isRepairing, setIsRepairing] = useState(false);
 
-  const onRepairMaterial = async (material: MaterialDto) => {
+  // Stable: it is handed to memoised content cards.
+  const onRepairMaterial = useCallback(async (material: MaterialDto) => {
     try {
       const repairs = await repairMaterial(material);
       successToast({
@@ -33,7 +34,7 @@ export const useMaterialRepair = (materials: MaterialDto[]) => {
     } catch (error) {
       reportError(error, 'Could not repair the content.');
     }
-  };
+  }, []);
 
   const onRepairAll = async () => {
     setIsRepairing(true);

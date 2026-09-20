@@ -7,7 +7,7 @@ import { type ISelectItem } from '@interfaces';
 import { QuestionService, TestPaperService } from '@services';
 import {
   type ITestPaperSection,
-  useQuestionLookups,
+  useQuestionStore,
   useStandardLookups,
   useTestPaperLookups,
   useTestPaperStore,
@@ -83,7 +83,6 @@ const newRow = (section?: ITestPaperSection, isEnabled = false): IPlanRow => ({
 export const AiTestPaperDrawer = ({ isOpen, onClose, testPaper, sections, initialSectionId }: IProps) => {
   const standardStore = useStandardLookups();
   const testPaperStore = useTestPaperLookups();
-  const questionStore = useQuestionLookups();
   const [state, setState] = useSetState<IState>({
     step: 'blueprint',
     rows: [],
@@ -218,6 +217,8 @@ export const AiTestPaperDrawer = ({ isOpen, onClose, testPaper, sections, initia
 
   const importQuestions = async () => {
     if (!imported.length || state.isImporting) return;
+    // Read here, not subscribed: this drawer stays mounted behind the question drawer.
+    const questionStore = useQuestionStore.getState();
     setState({ isImporting: true });
     const created: string[] = [];
     try {

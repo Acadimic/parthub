@@ -5,8 +5,8 @@ import { CaretDownIcon, LightbulbIcon, PencilSimpleIcon, TagIcon, TrashIcon } fr
 import { Collapse, Menu } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
-import { useStandardLookups } from '@stores';
-import { useState } from 'react';
+import { useStandardStore } from '@stores';
+import { memo, useState } from 'react';
 import { AnswerChoices } from './AnswerChoices';
 import { getQuestionTypeMeta } from './question-types';
 
@@ -15,9 +15,10 @@ interface IProps {
   /** 1-based position in its section. */
   number: number;
   isExpanded: boolean;
-  onToggle: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  /** Take their subject rather than being bound per row, so the memo below holds. */
+  onToggle: (questionId: string) => void;
+  onEdit: (question: QuestionDto) => void;
+  onDelete: (question: QuestionDto) => void;
 }
 
 /** The mark as it is written on a paper: a negative number already carries its sign. */
@@ -91,11 +92,20 @@ const QuestionAnswer = ({ question }: { question: QuestionDto }) => {
  * card; edit and delete live in a menu at the right, so a click on the text never lands on a
  * destructive action.
  */
-export const QuestionCard = ({ question, number, isExpanded, onToggle, onEdit, onDelete }: IProps) => {
-  const { getChapterById } = useStandardLookups();
+export const QuestionCard = memo(function QuestionCard({
+  question,
+  number,
+  isExpanded,
+  onToggle,
+  onEdit,
+  onDelete,
+}: IProps) {
   const meta = getQuestionTypeMeta(question.questionType);
   const TypeIcon = meta.icon;
-  const chapterName = question.chapter ? getChapterById(question.chapter)?.name : undefined;
+  // The name alone: a whole-store subscription would re-render every card and undo the memo.
+  const chapterName = useStandardStore((state) =>
+    question.chapter ? state.chapterMap[question.chapter]?.name : undefined,
+  );
   // The body mounts on the first expand and stays, so a collapsed paper renders no option lists and
   // a reopen is instant. Derived during render, not in an effect: `Collapse` measures the content in
   // its own effect, and content mounted one commit later would measure as nothing.
@@ -111,7 +121,7 @@ export const QuestionCard = ({ question, number, isExpanded, onToggle, onEdit, o
     >
       <button
         type="button"
-        onClick={onToggle}
+        onClick={() => onToggle(question._id)}
         aria-expanded={isExpanded}
         className="flex w-full flex-col gap-2 rounded-lg px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
@@ -152,8 +162,16 @@ export const QuestionCard = ({ question, number, isExpanded, onToggle, onEdit, o
       <div className="absolute right-3 top-2.5">
         <Menu
           menuItems={[
-            { label: 'Edit question', onClick: onEdit, icon: <PencilSimpleIcon weight="bold" className="h-4 w-4" /> },
-            { label: 'Delete question', onClick: onDelete, icon: <TrashIcon weight="bold" className="h-4 w-4" /> },
+            {
+              label: 'Edit question',
+              onClick: () => onEdit(question),
+              icon: <PencilSimpleIcon weight="bold" className="h-4 w-4" />,
+            },
+            {
+              label: 'Delete question',
+              onClick: () => onDelete(question),
+              icon: <TrashIcon weight="bold" className="h-4 w-4" />,
+            },
           ]}
           className="px-1"
         />
@@ -162,4 +180,4 @@ export const QuestionCard = ({ question, number, isExpanded, onToggle, onEdit, o
       <Collapse isOpen={isExpanded}>{hasOpened ? <QuestionAnswer question={question} /> : null}</Collapse>
     </article>
   );
-};
+});

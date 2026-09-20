@@ -32,7 +32,7 @@ export interface ITestPaperState extends IRequestSlice<TestPaperFetch> {
   getTestPapersByIds: (testPaperIds: string[]) => TestPaperDto[];
   getTestPaperSectionsByIds: (sectionIds: string[]) => ITestPaperSection[];
   getTestPapersByStandardIds: (standardIds: string[]) => TestPaperDto[];
-  /** A section's questions. Was the `questions` view on the section model. */
+  /** A section's questions, unsubscribed — for an event handler. Rendering uses `useSectionQuestions`. */
   getSectionQuestions: (sectionId: string) => QuestionDto[];
   /** A paper's subjects as select items. Was a view on the model. */
   getTestPaperSubjectItems: (testPaperId: string) => ISelectItem[];
@@ -245,10 +245,12 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
   },
 }));
 
-/** The store's lookups, subscribed to its state. */
+/**
+ * The store's lookups, subscribed to its state and to the standard store the item builders read.
+ * Deliberately not to the question store, which changes on every keystroke in the question drawer;
+ * a section's questions come from `useSectionQuestions`.
+ */
 export const useTestPaperLookups = (): ITestPaperState => {
-  // `getSectionQuestions` and the item builders read the question and standard stores.
-  useQuestionStore(useShallow((state) => state.questionMap));
   useStandardStore(useShallow((state) => [state.standardMap, state.subjectMap]));
   return useTestPaperStore(useShallow((state) => state));
 };

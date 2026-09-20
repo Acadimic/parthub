@@ -1,15 +1,12 @@
-import { useStandardLookups } from '@stores';
+import { useStandardStore } from '@stores';
 
 interface IProps {
   chapterId?: string | null | undefined;
 }
 
 export const ChapterName = ({ chapterId }: IProps) => {
-  const { getChapterById } = useStandardLookups();
+  // The one name: a whole-store subscription would re-render every content on the page.
+  const name = useStandardStore((state) => (chapterId ? state.chapterMap[chapterId]?.name : null));
 
-  return (
-    <div className="text-xs text-muted-foreground flex justify-end mt-1 italic truncate">
-      {chapterId ? getChapterById(chapterId)?.name : null}
-    </div>
-  );
+  return <div className="text-xs text-muted-foreground flex justify-end mt-1 italic truncate">{name}</div>;
 };

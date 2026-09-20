@@ -11,6 +11,7 @@ import {
 import { Collapse, Menu } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
+import { memo, useState } from 'react';
 import { StudyMaterialView } from './StudyMaterialView';
 
 interface IProps {
@@ -18,19 +19,20 @@ interface IProps {
   /** 1-based position on the page. */
   number: number;
   isExpanded: boolean;
-  onToggle: () => void;
-  onEdit: () => void;
-  onGenerate: () => void;
+  /** Take their subject rather than being bound per row, so the memo below holds. */
+  onToggle: (materialId: string) => void;
+  onEdit: (material: MaterialDto) => void;
+  onGenerate: (material: MaterialDto) => void;
   /** Re-reads the content for equations that arrived broken, and saves the fixed version. */
-  onRepair: () => void;
-  onDelete: () => void;
+  onRepair: (material: MaterialDto) => void;
+  onDelete: (material: MaterialDto) => void;
 }
 
 /**
  * One piece of content: a header line that reads at a glance, and the content itself underneath
  * once opened. Same shape as a question card on a paper, so the two pages feel like one app.
  */
-export const MaterialCard = ({
+export const MaterialCard = memo(function MaterialCard({
   material,
   number,
   isExpanded,
@@ -39,8 +41,13 @@ export const MaterialCard = ({
   onGenerate,
   onRepair,
   onDelete,
-}: IProps) => {
+}: IProps) {
   const attachmentCount = (material.attachments ?? []).length;
+  // `Collapse` renders its children open or shut, so the content mounts on first expand and stays.
+  // Derived during render: `Collapse` measures in an effect, and a later mount measures as nothing.
+  const [hasOpened, setHasOpened] = useState(isExpanded);
+  if (isExpanded && !hasOpened) setHasOpened(true);
+
   return (
     <article
       className={cn(
@@ -50,7 +57,7 @@ export const MaterialCard = ({
     >
       <button
         type="button"
-        onClick={onToggle}
+        onClick={() => onToggle(material._id)}
         aria-expanded={isExpanded}
         className="flex w-full flex-col gap-1.5 rounded-lg px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
@@ -89,23 +96,37 @@ export const MaterialCard = ({
       <div className="absolute right-3 top-2.5">
         <Menu
           menuItems={[
-            { label: 'Edit content', onClick: onEdit, icon: <PencilSimpleIcon weight="bold" className="h-4 w-4" /> },
+            {
+              label: 'Edit content',
+              onClick: () => onEdit(material),
+              icon: <PencilSimpleIcon weight="bold" className="h-4 w-4" />,
+            },
             {
               label: 'Generate from document',
-              onClick: onGenerate,
+              onClick: () => onGenerate(material),
               icon: <SparkleIcon weight="bold" className="h-4 w-4" />,
             },
-            { label: 'Repair equations', onClick: onRepair, icon: <WrenchIcon weight="bold" className="h-4 w-4" /> },
-            { label: 'Delete content', onClick: onDelete, icon: <TrashIcon weight="bold" className="h-4 w-4" /> },
+            {
+              label: 'Repair equations',
+              onClick: () => onRepair(material),
+              icon: <WrenchIcon weight="bold" className="h-4 w-4" />,
+            },
+            {
+              label: 'Delete content',
+              onClick: () => onDelete(material),
+              icon: <TrashIcon weight="bold" className="h-4 w-4" />,
+            },
           ]}
           className="px-1"
         />
       </div>
       <Collapse isOpen={isExpanded}>
-        <div className="border-t border-border px-4 py-4">
-          <StudyMaterialView material={material} />
-        </div>
+        {hasOpened ? (
+          <div className="border-t border-border px-4 py-4">
+            <StudyMaterialView material={material} />
+          </div>
+        ) : null}
       </Collapse>
     </article>
   );
-};
+});

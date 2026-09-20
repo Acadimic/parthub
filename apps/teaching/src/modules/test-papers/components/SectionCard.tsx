@@ -4,13 +4,12 @@ import { ArrowsInLineVerticalIcon, ArrowsOutLineVerticalIcon, PlusIcon, SparkleI
 import { Button, Menu, SplitButton } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
 import { type IMenuItem } from '@interfaces';
-import { type ITestPaperSection } from '@stores';
-import { useState } from 'react';
+import { type ITestPaperSection, useSectionQuestions } from '@stores';
+import { useCallback, useState } from 'react';
 import { QuestionCard } from './QuestionCard';
 
 interface IProps {
   section: ITestPaperSection;
-  questions: QuestionDto[];
   onAddQuestion: () => void;
   onGenerateQuestions: () => void;
   sectionMenuItems: IMenuItem[];
@@ -24,26 +23,30 @@ interface IProps {
  * Questions start collapsed so a long section scans as a list of stems; "Expand all" is there
  * for a review pass. The empty state carries the same two actions as the header, so the first
  * question is one click from the message that says there are none.
+ *
+ * The questions are subscribed here rather than passed in, so a drawer edit re-renders one section.
  */
 export const SectionCard = ({
   section,
-  questions,
   onAddQuestion,
   onGenerateQuestions,
   sectionMenuItems,
   onEditQuestion,
   onDeleteQuestion,
 }: IProps) => {
+  const questions = useSectionQuestions(section._id);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const allExpanded = questions.length > 0 && questions.every((question) => expanded.has(question._id));
 
-  const toggle = (id: string) =>
+  // Stable, because `QuestionCard` is memoised.
+  const toggle = useCallback((id: string) => {
     setExpanded((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+  }, []);
 
   const toggleAll = () => setExpanded(allExpanded ? new Set() : new Set(questions.map((question) => question._id)));
 
@@ -95,9 +98,9 @@ export const SectionCard = ({
               question={question}
               number={index + 1}
               isExpanded={expanded.has(question._id)}
-              onToggle={() => toggle(question._id)}
-              onEdit={() => onEditQuestion(question)}
-              onDelete={() => onDeleteQuestion(question)}
+              onToggle={toggle}
+              onEdit={onEditQuestion}
+              onDelete={onDeleteQuestion}
             />
           ))
         ) : (

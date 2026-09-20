@@ -18,7 +18,7 @@ import {
 import { errorToast, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useMaterialRepair } from '@hooks/material-repair.hook';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSetState } from 'react-use';
 import {
   AiMaterialDrawer,
@@ -71,13 +71,15 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const allExpanded = materials.length > 0 && materials.every((material) => expanded.has(material._id));
 
-  const toggle = (id: string) =>
+  // The row handlers below are stable, because `MaterialCard` is memoised.
+  const toggle = useCallback((id: string) => {
     setExpanded((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+  }, []);
   const toggleAll = () => setExpanded(allExpanded ? new Set() : new Set(materials.map((material) => material._id)));
 
   const onOpenAddModal = () => {
@@ -100,15 +102,28 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
     removeSelectedMaterialId();
   };
 
-  const editMaterial = (material: MaterialDto) => {
-    setSelectedMaterialId(material._id);
-    setState({ isOpenUpsertModal: true });
-  };
+  const editMaterial = useCallback(
+    (material: MaterialDto) => {
+      setSelectedMaterialId(material._id);
+      setState({ isOpenUpsertModal: true });
+    },
+    [setSelectedMaterialId, setState],
+  );
 
-  const generateMaterial = (material: MaterialDto) => {
-    setSelectedMaterialId(material._id);
-    setState({ isOpenGenerateModal: true });
-  };
+  const generateMaterial = useCallback(
+    (material: MaterialDto) => {
+      setSelectedMaterialId(material._id);
+      setState({ isOpenGenerateModal: true });
+    },
+    [setSelectedMaterialId, setState],
+  );
+
+  const requestDeleteMaterial = useCallback(
+    (material: MaterialDto) => {
+      setState({ materialToDelete: material });
+    },
+    [setState],
+  );
 
   const onCloseGenerateModal = () => {
     setState({ isOpenGenerateModal: false });
@@ -233,11 +248,11 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
               material={material}
               number={index + 1}
               isExpanded={expanded.has(material._id)}
-              onToggle={() => toggle(material._id)}
-              onEdit={() => editMaterial(material)}
-              onGenerate={() => generateMaterial(material)}
-              onRepair={() => onRepairMaterial(material)}
-              onDelete={() => setState({ materialToDelete: material })}
+              onToggle={toggle}
+              onEdit={editMaterial}
+              onGenerate={generateMaterial}
+              onRepair={onRepairMaterial}
+              onDelete={requestDeleteMaterial}
             />
           ))}
         </div>

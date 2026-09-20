@@ -228,6 +228,13 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
 /** The store's lookups, subscribed to its state. */
 export const useQuestionLookups = (): IQuestionState => useQuestionStore(useShallow((state) => state));
 
+/**
+ * One section's questions, subscribed. A section card reads this rather than taking an array from
+ * the screen above it, so a keystroke in the drawer re-renders one section and not the whole paper.
+ */
+export const useSectionQuestions = (sectionId: string): QuestionDto[] =>
+  useQuestionStore(useShallow((state) => state.getQuestionsBySectionId(sectionId)));
+
 /** The selected question, or `undefined`. */
 export const useSelectedQuestion = (): QuestionDto | undefined => {
   const selectedQuestionId = useSelectorStore((state) => state.selectedQuestionId);

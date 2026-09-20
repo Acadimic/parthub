@@ -18,7 +18,7 @@ const MIN_OPTIONS = 2;
  * student will read — the thing the author has in their head when they open the drawer.
  */
 export const AddQuestion = () => {
-  const { patchQuestion, addOption, removeOption } = useQuestionLookups();
+  const { patchQuestion, addOption } = useQuestionLookups();
   const selectedQuestion = useSelectedQuestion();
 
   if (!selectedQuestion) return null;
@@ -69,7 +69,6 @@ export const AddQuestion = () => {
                 questionId={selectedQuestion._id}
                 option={option}
                 index={index}
-                onRemove={(optionId) => removeOption(selectedQuestion._id, optionId)}
                 canRemove={options.length > MIN_OPTIONS}
               />
             ))}
