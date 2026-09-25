@@ -1,8 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
 import { DeleteObjectsCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { SecretsService } from '../../secrets/secrets.service';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Secrets } from '@secrets/secrets';
+import { SecretsService } from '../../secrets/secrets.service';
 
 @Injectable()
 export class S3Service {
@@ -49,35 +49,29 @@ export class S3Service {
   /**
    * Where a key lives in the bucket, and whether the caller may touch it.
    *
-   * Under the deployment prefix, every object sits in one of two folders: `orgs/<org id>/` for
-   * files an organization uploads, and `shared/` for platform files the support app uploads with
-   * no organization in context (a standard's logo, say). A caller hands in either a bare key —
-   * `<entity id>/<object id>`, which is placed in its own folder — or a stored key that already
-   * carries the folders, which is checked: with an organization in context, only that
-   * organization's folder and `shared/` may be read or written. Without one (a private route),
-   * anything under the prefix may.
+   * Every object belongs to an organization. Under the deployment prefix it sits in
+   * `orgs/<org id>/`, and a bare key — `<entity id>/<object id>` — is placed there. A stored key
+   * that already carries the folder is checked instead: only the caller's own organization may
+   * write it. A private route is no exception, because it runs as the service account in
+   * `PRIVATE_API_EMAIL` and therefore has an organization like any other caller.
+   *
+   * `isAnyOrgReadable` lifts the ownership check for the read path. Standards, subjects and
+   * published courses are platform reference data every app renders, and their files sit in
+   * whichever organization uploaded them, so a read cannot be scoped to the caller's own.
    */
-  resolveKey(key: string, orgId?: string): string {
+  resolveKey(key: string, orgId: string, isAnyOrgReadable = false): string {
     const bare = key.replace(/^\/+/, '');
     const relative = this.prefix && bare.startsWith(this.prefix) ? bare.slice(this.prefix.length) : bare;
-    const isStored =
-      relative.startsWith(`${S3Service.ORG_FOLDER}/`) || relative.startsWith(`${S3Service.SHARED_FOLDER}/`);
-    if (!isStored) {
-      const folder = orgId ? `${S3Service.ORG_FOLDER}/${orgId}/` : `${S3Service.SHARED_FOLDER}/`;
-      return `${this.prefix}${folder}${relative}`;
-    }
-    const isAllowed =
-      !orgId ||
-      relative.startsWith(`${S3Service.SHARED_FOLDER}/`) ||
-      relative.startsWith(`${S3Service.ORG_FOLDER}/${orgId}/`);
+    const isStored = relative.startsWith(`${S3Service.ORG_FOLDER}/`);
+    if (!isStored) return `${this.prefix}${S3Service.ORG_FOLDER}/${orgId}/${relative}`;
+    const isAllowed = isAnyOrgReadable || relative.startsWith(`${S3Service.ORG_FOLDER}/${orgId}/`);
     if (!isAllowed) throw new ForbiddenException('That file belongs to another organization.');
     return `${this.prefix}${relative}`;
   }
 
   private static readonly ORG_FOLDER = 'orgs';
-  private static readonly SHARED_FOLDER = 'shared';
 
-  async deleteObjects(keys: string[], orgId?: string): Promise<void> {
+  async deleteObjects(keys: string[], orgId: string): Promise<void> {
     if (!keys.length) return;
     const command = new DeleteObjectsCommand({
       Bucket: this.bucketName,
@@ -88,7 +82,7 @@ export class S3Service {
     await this.s3Client.send(command);
   }
 
-  async getPreSignedPUTUrl(key: string, contentType: string, isPublic = false, orgId?: string): Promise<string> {
+  async getPreSignedPUTUrl(key: string, contentType: string, orgId: string, isPublic = false): Promise<string> {
     const command = new PutObjectCommand({
       Bucket: isPublic ? this.publicBucketName : this.bucketName,
       Key: this.resolveKey(key, orgId),
@@ -97,8 +91,8 @@ export class S3Service {
     return getSignedUrl(this.s3Client, command, { expiresIn: 1800 });
   }
 
-  async getPreSignedGETUrl(key: string, isPublic = false, orgId?: string): Promise<string> {
-    const resolved = this.resolveKey(key, orgId);
+  async getPreSignedGETUrl(key: string, orgId: string, isPublic = false, isAnyOrgReadable = false): Promise<string> {
+    const resolved = this.resolveKey(key, orgId, isAnyOrgReadable);
     // The regional host: the bare `s3.amazonaws.com` form redirects outside us-east-1, and a
     // redirected image request is one a browser may refuse.
     if (isPublic) return `https://${this.publicBucketName}.s3.${this.region}.amazonaws.com/${resolved}`;

@@ -46,6 +46,16 @@ export class CommonController {
     return { standards, subjects, mappings };
   }
 
+  /**
+   * The caller's organization — the folder their objects live in.
+   *
+   * Works on a private route too: `AuthGuard` resolves the `PRIVATE_API_EMAIL` service account and
+   * puts its organization in the context, so a machine-to-machine caller is scoped like any other.
+   */
+  private orgId(): string {
+    return this.requestContextService.getOrgId().toString();
+  }
+
   /** The reference data every app loads once an organization is selected. */
   @Get('initial-data')
   @Subdomains(Subdomain.SUPPORT, Subdomain.TEACH, Subdomain.LEARN)
@@ -72,16 +82,17 @@ export class CommonController {
   @Permissions()
   async getPreSignedPUTUrls(@Body() payload: PresignedPutUrlsDto): Promise<IPresignedUrl[]> {
     // The organization in context is the folder the files go to, and the only one they can come from.
-    const orgId = this.requestContextService.getOrgIdSafe()?.toString();
-    const data = await this.commonService.getPreSignedPUTUrls(payload.files, payload.isPublic, orgId);
+    const data = await this.commonService.getPreSignedPUTUrls(payload.files, this.orgId(), payload.isPublic);
     return data;
   }
 
   @Post('presigned-GET-urls')
   @Permissions()
   async getPreSignedGETUrls(@Body() payload: PresignedGetUrlsDto): Promise<IPresignedUrl[]> {
-    const orgId = this.requestContextService.getOrgIdSafe()?.toString();
-    const data = await this.commonService.getPreSignedGETUrls(payload.keys, payload.isPublic, orgId);
+    // Reads are open across organizations: a standard's logo, a subject's icon and a published
+    // course's cover all live in whichever organization uploaded them, and every app renders them.
+    // Writes stay scoped — `presigned-PUT-urls` and `delete-objects` grant no such allowance.
+    const data = await this.commonService.getPreSignedGETUrls(payload.keys, this.orgId(), payload.isPublic, true);
     return data;
   }
 
@@ -92,8 +103,7 @@ export class CommonController {
   @Post('delete-objects')
   @Permissions()
   async deleteObjects(@Body() payload: DeleteObjectsDto): Promise<{ deleted: number }> {
-    const orgId = this.requestContextService.getOrgIdSafe()?.toString();
-    await this.commonService.deleteObjects(payload.keys, orgId);
+    await this.commonService.deleteObjects(payload.keys, this.orgId());
     return { deleted: payload.keys.length };
   }
 
@@ -115,7 +125,7 @@ export class CommonController {
   @Private()
   @Post('private-presigned-PUT-urls')
   async privateGetPreSignedPUTUrls(@Body() payload: PresignedPutUrlsDto): Promise<IPresignedUrl[]> {
-    const data = await this.commonService.getPreSignedPUTUrls(payload.files, payload.isPublic);
+    const data = await this.commonService.getPreSignedPUTUrls(payload.files, this.orgId(), payload.isPublic);
     return data;
   }
 
@@ -125,7 +135,7 @@ export class CommonController {
   @Private()
   @Post('private-presigned-GET-urls')
   async privateGetPreSignedGETUrls(@Body() payload: PresignedGetUrlsDto): Promise<IPresignedUrl[]> {
-    const data = await this.commonService.getPreSignedGETUrls(payload.keys, payload.isPublic);
+    const data = await this.commonService.getPreSignedGETUrls(payload.keys, this.orgId(), payload.isPublic);
     return data;
   }
 }
