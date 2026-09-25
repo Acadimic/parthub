@@ -85,6 +85,9 @@ export const Button = ({
   type = 'button',
   ...rest
 }: IButtonProps) => {
+  // An icon-only button renders no label slot at all: the slot's spacing and padding are what put
+  // a gap after the icon and pushed it off centre.
+  const label = text || children;
   return (
     <button
       className={getButtonClass({ isRound, isSecondary, isSubtle, isLoading, isFull, className })}
@@ -93,17 +96,19 @@ export const Button = ({
       disabled={disabled || isLoading}
       {...rest}
     >
-      <div className="flex space-x-2.5 items-center">
+      <div className="flex items-center justify-center gap-2.5">
         {leftSection ? <div className="flex items-center">{leftSection}</div> : null}
-        <div
-          className={cn(
-            'text-inherit',
-            isFull && isLoading ? 'hidden' : 'flex-1',
-            getSectionPadding(leftSection, rightSection),
-          )}
-        >
-          {text || children}
-        </div>
+        {label ? (
+          <div
+            className={cn(
+              'text-inherit',
+              isFull && isLoading ? 'hidden' : 'flex-1',
+              getSectionPadding(leftSection, rightSection),
+            )}
+          >
+            {label}
+          </div>
+        ) : null}
         <TrailingSlot
           isLoading={isLoading}
           hideLoadingIcon={hideLoadingIcon}

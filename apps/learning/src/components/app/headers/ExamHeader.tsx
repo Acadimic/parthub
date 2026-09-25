@@ -1,6 +1,7 @@
-import { DotsNineIcon } from '@phosphor-icons/react';
+import { Button, ToggleTheme } from '@repo/ui/app';
+import { Badge } from '@repo/ui/core';
+import { XIcon } from '@phosphor-icons/react';
 import { useTestPaperLookups } from '@stores';
-import { ToggleTheme } from '@repo/ui/app';
 import { Timer } from './';
 
 interface IProps {
@@ -8,38 +9,42 @@ interface IProps {
   toggleTimer: () => void;
   isActiveTimer: boolean;
   handleSubmitTest: () => void;
+  openExit: () => void;
 }
 
-export const ExamHeader = ({ isPractice, toggleTimer, isActiveTimer, handleSubmitTest }: IProps) => {
+/** The sitting's top bar: which mode this is, the paper, the clock, and the way out. */
+export const ExamHeader = ({ isPractice, toggleTimer, isActiveTimer, handleSubmitTest, openExit }: IProps) => {
   const testPaperStore = useTestPaperLookups();
-  const { exam } = testPaperStore;
+  const { exam, getAttemptedCount } = testPaperStore;
   if (!exam) return null;
-  const { title } = exam;
+  const { title, numberOfQuestions } = exam;
+  const attempted = getAttemptedCount();
+  const percent = numberOfQuestions ? (attempted / numberOfQuestions) * 100 : 0;
 
   return (
-    <>
-      <div className="w-full h-14 xl:h-16 header-shadow relative border-b border-border">
-        <div className="px-4 md:px-8 h-full">
-          <div className="flex justify-between items-center h-full space-x-6">
-            <div
-              className={`flex ${
-                isPractice ? 'w-[80%]' : 'w-[50%]'
-              } justify-start items-center font-bold text-sm space-x-2`}
-            >
-              <div className="">
-                <DotsNineIcon weight="bold" className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <div className="truncate">{title}</div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className={`${isPractice ? 'hidden' : 'flex items-center space-x-4'}`}>
-                <Timer isActiveTimer={isActiveTimer} toggleTimer={toggleTimer} handleSubmitTest={handleSubmitTest} />
-              </div>
-              <ToggleTheme />
-            </div>
-          </div>
+    <header className="relative h-14 border-b border-border bg-background xl:h-16">
+      <div className="flex h-full items-center gap-2 px-3 md:gap-3 md:px-6">
+        <Badge tone={isPractice ? 'info' : 'primary'} className="shrink-0">
+          {isPractice ? 'Practice' : 'Test'}
+        </Badge>
+        <div className="min-w-0 flex-1 truncate text-sm font-semibold md:text-base">{title}</div>
+        {/* Mounted in practice too: its tick is what counts each question's reply time. */}
+        <div className={isPractice ? 'hidden' : undefined}>
+          <Timer isActiveTimer={isActiveTimer} toggleTimer={toggleTimer} handleSubmitTest={handleSubmitTest} />
         </div>
+        <ToggleTheme />
+        <Button
+          isSubtle
+          aria-label="Exit"
+          className="rounded-full p-1.5"
+          onClick={openExit}
+          leftsection={<XIcon weight="bold" className="h-5 w-5" />}
+        />
       </div>
-    </>
+      {/* How much of the paper is answered, as a hairline along the bottom edge. */}
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-0.5 bg-muted">
+        <div className="h-full bg-primary transition-[width] duration-300" style={{ width: `${percent}%` }} />
+      </div>
+    </header>
   );
 };

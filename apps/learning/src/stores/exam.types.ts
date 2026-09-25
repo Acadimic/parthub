@@ -30,6 +30,8 @@ export interface ISummaryCount {
 export interface IExam {
   _id: string;
   testPaper: string;
+  /** The course the paper was opened from; the save goes through it. */
+  course: string;
   title: string;
   instruction: IRichText;
   questionWiseSpendTime: IQuestionWiseTimeTakenMap;

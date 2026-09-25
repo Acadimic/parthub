@@ -15,6 +15,11 @@ export interface IButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
   rightsection?: React.ReactNode;
   className?: string;
   isFull?: boolean;
+  /**
+   * Classes for the label's wrapper. A label that hides itself below a breakpoint should hide
+   * this wrapper rather than its own text, or its spacing stays behind and the icon sits off centre.
+   */
+  labelClassName?: string;
 }
 
 export type ButtonVariant = Pick<
@@ -85,8 +90,12 @@ export const Button = ({
   className,
   isFull,
   isDestructive,
+  labelClassName,
   ...rest
 }: IButtonProps) => {
+  // An icon-only button renders no label slot at all: the slot's spacing and padding are what put
+  // a gap after the icon and pushed it off centre.
+  const label = text || children;
   return (
     <button
       // Everything else — `title`, `aria-*`, `id`, `form` — reaches the element. Without this an
@@ -97,13 +106,15 @@ export const Button = ({
       onClick={onClick}
       disabled={disabled || isLoading}
     >
-      <div className="flex space-x-2.5 items-center">
+      <div className="flex items-center justify-center gap-2.5">
         {leftsection ? <div className="flex items-center">{leftsection}</div> : null}
-        <div
-          className={`text-inherit ${isFull && isLoading ? 'hidden' : 'flex-1'} ${getSectionPadding(leftsection, rightsection)}`}
-        >
-          {text || children}
-        </div>
+        {label ? (
+          <div
+            className={`text-inherit ${isFull && isLoading ? 'hidden' : 'flex-1'} ${getSectionPadding(leftsection, rightsection)} ${labelClassName ?? ''}`}
+          >
+            {label}
+          </div>
+        ) : null}
         <TrailingSlot
           isLoading={isLoading}
           hideLoadingIcon={hideLoadingIcon}

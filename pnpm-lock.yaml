@@ -98,6 +98,9 @@ importers:
       dayjs:
         specifier: ^1.11.21
         version: 1.11.21
+      katex:
+        specifier: ^0.18.7
+        version: 0.18.7
       lucide-react:
         specifier: ^1.25.0
         version: 1.25.0(react@19.2.8)

@@ -1,5 +1,6 @@
 import { type ISelectItem } from '@interfaces';
 import { Label } from '@repo/ui/app';
+import { getOutcome, SelectionRow } from './SelectionRow';
 
 interface IProps {
   label?: string;
@@ -11,6 +12,7 @@ interface IProps {
   selectedClassName?: string;
 }
 
+/** Any number of choices from a list, each option a full-width row that is the click target. */
 export const CheckboxSelection = ({
   label,
   required,
@@ -20,37 +22,36 @@ export const CheckboxSelection = ({
   isDisabled,
   selectedClassName,
 }: IProps) => {
-  const handleChange = (option: ISelectItem) => {
-    handleClick(option.value);
-  };
-
   const isSelected = (option: ISelectItem) => selectedValues.includes(option.value);
 
   return (
     <fieldset>
       {label && (
-        <legend>
+        <legend className="mb-2">
           <Label label={label} required={required} />
         </legend>
       )}
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-2">
         {options.map((option) => (
-          <label
+          <SelectionRow
             key={option.value}
-            onClick={() => handleChange(option)}
-            className={`flex items-center gap-2 py-1 cursor-pointer ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
+            kind="checkbox"
+            isSelected={isSelected(option)}
+            isDisabled={Boolean(isDisabled)}
+            outcome={getOutcome(option.color)}
+            className={isSelected(option) ? selectedClassName : undefined}
+            input={
+              <input
+                type="checkbox"
+                name={option.value}
+                checked={isSelected(option)}
+                onChange={() => handleClick(option.value)}
+                disabled={isDisabled}
+              />
+            }
           >
-            <input
-              type="checkbox"
-              checked={isSelected(option)}
-              name={option.value}
-              readOnly
-              className={`h-4 w-4 rounded border-border ${
-                isSelected(option) && selectedClassName ? selectedClassName : option.color || 'text-primary'
-              }`}
-            />
-            <span className="text-foreground text-sm font-medium">{option.label}</span>
-          </label>
+            {option.label}
+          </SelectionRow>
         ))}
       </div>
     </fieldset>

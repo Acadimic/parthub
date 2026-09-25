@@ -1,6 +1,5 @@
 import { Button } from '@repo/ui/app';
-import { SubmitButton } from '@components/exam';
-import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
+import { ArrowCounterClockwiseIcon, CaretLeftIcon, CaretRightIcon, EraserIcon, FlagIcon } from '@phosphor-icons/react';
 import { useTestPaperLookups } from '@stores';
 
 interface IProps {
@@ -12,6 +11,44 @@ interface IProps {
   toggleTimer: () => void;
 }
 
+/** A footer button whose text shows from `sm` up and whose icon stands alone below that. */
+const FooterButton = ({
+  label,
+  icon,
+  onClick,
+  disabled,
+  isPrimary,
+  isPressed,
+  trailing,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  isPrimary?: boolean;
+  isPressed?: boolean;
+  /** Puts the icon after the label, for "Next". */
+  trailing?: boolean;
+}) => (
+  <Button
+    isSecondary={!isPrimary}
+    aria-label={label}
+    aria-pressed={isPressed}
+    disabled={disabled}
+    className="px-2.5 py-1.5 sm:px-3"
+    labelClassName="hidden sm:block"
+    onClick={onClick}
+    leftsection={trailing ? undefined : icon}
+    rightsection={trailing ? icon : undefined}
+  >
+    {label}
+  </Button>
+);
+
+/**
+ * The bar under the paper. Left: back. Middle: what can be done to the question on screen. Right:
+ * the way out of the paper, then forward — the same places in every mode, so nothing jumps.
+ */
 export const ExamFooter = ({
   isResultPage,
   openResultPage,
@@ -27,6 +64,7 @@ export const ExamFooter = ({
   const { isPractice, isSubmitted } = exam;
   const {
     clearResponse,
+    isFirstQuestion,
     isLastQuestion,
     isSelectedQuestionMarkedForReview,
     isSelectedQuestionResponded,
@@ -41,76 +79,76 @@ export const ExamFooter = ({
     if (exam.isPractice) toggleTimer();
   };
 
-  return (
-    <>
-      <div className="h-14 xl:h-16 footer-shadow border-t border-border">
-        <div className="flex justify-between items-center h-full space-x-3">
-          <div className="flex items-center w-full h-full px-4 md:px-8">
-            {isResultPage ? (
-              <div className="flex justify-between items-center w-full">
-                <Button isSubtle text="Exit" onClick={openExit} />
-                <Button text="View Solutions" onClick={handleViewSolutionsClick} />
-                <div>&nbsp;</div>
-              </div>
-            ) : (
-              <>
-                <div className="flex grow w-full items-center justify-center">
-                  <div className="flex justify-start w-full items-center space-x-2.5 md:space-x-4">
-                    <div>
-                      <Button
-                        isRound
-                        text="Prev"
-                        onClick={selectPrevQuestion}
-                        leftsection={<CaretLeftIcon weight="bold" className="w-4 h-4" />}
-                      />
-                    </div>
-                    {isPractice || isSubmitted ? null : (
-                      <Button
-                        isSubtle
-                        text={isSelectedQuestionMarkedForReview() ? 'Clear From Review' : 'Mark For Review'}
-                        onClick={toggleSelectedQuestionMarkForReview}
-                        className="text-xs text-primary"
-                      />
-                    )}
-                    {!isSelectedQuestionResponded() || isSubmitted ? null : (
-                      <Button
-                        isSubtle
-                        text={isPractice ? 'Reset Answer' : 'Clear'}
-                        onClick={isPractice ? resetResponse : clearResponse}
-                        className="text-xs text-primary"
-                      />
-                    )}
-                    <div className="xl:hidden">
-                      {isSubmitted && !isLastQuestion() ? (
-                        <Button isSubtle text="View Result" onClick={openResultPage} />
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="flex justify-end items-center space-x-3">
-                    <div className="whitespace-nowrap">
-                      {isLastQuestion() ? (
-                        <SubmitButton openSubmitSummary={openSubmitSummary} openResultPage={openResultPage} />
-                      ) : (
-                        <Button
-                          isRound
-                          rightsection={<CaretRightIcon weight="bold" className="w-4 h-4" />}
-                          text="Next"
-                          onClick={selectNextQuestion}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className={`hidden flex-none xl:flex w-[360px] justify-end ${isLastQuestion() ? 'opacity-0' : ''}`}
-                >
-                  <SubmitButton openSubmitSummary={openSubmitSummary} openResultPage={openResultPage} />
-                </div>
-              </>
-            )}
-          </div>
+  if (isResultPage) {
+    return (
+      <div className="h-14 border-t border-border bg-background xl:h-16">
+        <div className="flex h-full items-center justify-between px-3 md:px-6">
+          <Button isSecondary text="Exit" onClick={openExit} />
+          <Button text="View solutions" onClick={handleViewSolutionsClick} />
         </div>
       </div>
-    </>
+    );
+  }
+
+  const isMarked = isSelectedQuestionMarkedForReview();
+  const isLast = isLastQuestion();
+
+  // What the finishing button does depends on where the sitting is. It is outlined while there
+  // are questions ahead and filled on the last one, where it becomes the natural next step.
+  const getFinishAction = () => {
+    if (isSubmitted) return { label: 'View result', onClick: openResultPage };
+    if (isPractice) return { label: 'View analytics', onClick: openResultPage };
+    return { label: 'Submit', onClick: openSubmitSummary };
+  };
+  const finish = getFinishAction();
+
+  return (
+    <div className="h-14 border-t border-border bg-background xl:h-16">
+      <div className="flex h-full items-center gap-2 px-3 md:gap-3 md:px-6">
+        <FooterButton
+          label="Previous"
+          icon={<CaretLeftIcon weight="bold" className="h-4 w-4" />}
+          disabled={isFirstQuestion()}
+          onClick={selectPrevQuestion}
+        />
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+          {isPractice || isSubmitted ? null : (
+            <FooterButton
+              label={isMarked ? 'Marked for review' : 'Mark for review'}
+              icon={<FlagIcon weight={isMarked ? 'fill' : 'bold'} className="h-4 w-4" />}
+              isPressed={isMarked}
+              onClick={toggleSelectedQuestionMarkForReview}
+            />
+          )}
+          {isSubmitted ? null : (
+            <FooterButton
+              label={isPractice ? 'Reset answer' : 'Clear answer'}
+              icon={
+                isPractice ? (
+                  <ArrowCounterClockwiseIcon weight="bold" className="h-4 w-4" />
+                ) : (
+                  <EraserIcon weight="bold" className="h-4 w-4" />
+                )
+              }
+              disabled={!isSelectedQuestionResponded()}
+              onClick={isPractice ? resetResponse : clearResponse}
+            />
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button isSecondary={!isLast} className="px-3 py-1.5" onClick={finish.onClick}>
+            {finish.label}
+          </Button>
+          <FooterButton
+            label="Next"
+            icon={<CaretRightIcon weight="bold" className="h-4 w-4" />}
+            isPrimary={!isLast}
+            trailing
+            disabled={isLast}
+            onClick={selectNextQuestion}
+          />
+        </div>
+      </div>
+    </div>
   );
 };

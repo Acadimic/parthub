@@ -23,7 +23,7 @@ export const TestPaperItem = ({ testPaper }: IProps) => {
   };
 
   return (
-    <div className="p-4 w-[360px]">
+    <div className="w-full max-w-md p-4">
       <TestPaperCard paper={testPaper} handleOpen={handleOpenTestPaper} />
       <FullScreenModal
         isOpen={isOpen}

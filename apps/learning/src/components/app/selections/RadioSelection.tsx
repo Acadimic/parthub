@@ -1,6 +1,7 @@
 import { type ISelectItem } from '@interfaces';
 import * as React from 'react';
 import { Label } from '@repo/ui/app';
+import { getOutcome, SelectionRow } from './SelectionRow';
 
 interface IProps {
   label?: string;
@@ -12,6 +13,7 @@ interface IProps {
   selectedClassName?: string;
 }
 
+/** One choice from a list, each option a full-width row that is the click target. */
 export const RadioSelection = ({
   label,
   required,
@@ -21,37 +23,38 @@ export const RadioSelection = ({
   isDisabled,
   selectedClassName,
 }: IProps) => {
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    handleClick(event.target.value);
-  };
-
+  const groupName = React.useId();
   const isSelected = (option: ISelectItem) => option.value === selectedValue;
 
   return (
     <fieldset>
       {label && (
-        <legend>
+        <legend className="mb-2">
           <Label label={label} required={required} />
         </legend>
       )}
-      <div className="flex flex-col" role="radiogroup" aria-labelledby="controlled-radio-buttons-group">
+      <div className="flex flex-col gap-2" role="radiogroup">
         {options.map((option) => (
-          <label
+          <SelectionRow
             key={option.value}
-            className={`flex items-center gap-2 py-1 cursor-pointer ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
+            kind="radio"
+            isSelected={isSelected(option)}
+            isDisabled={Boolean(isDisabled)}
+            outcome={getOutcome(option.color)}
+            className={isSelected(option) ? selectedClassName : undefined}
+            input={
+              <input
+                type="radio"
+                name={groupName}
+                value={option.value}
+                checked={isSelected(option)}
+                onChange={(event) => handleClick(event.target.value)}
+                disabled={isDisabled}
+              />
+            }
           >
-            <input
-              type="radio"
-              name="controlled-radio-buttons-group"
-              value={option.value}
-              checked={isSelected(option)}
-              onChange={handleChange}
-              className={`h-4 w-4 border-border ${
-                isSelected(option) && selectedClassName ? selectedClassName : option.color || 'text-primary'
-              }`}
-            />
-            <span className="text-foreground text-sm font-medium">{option.label}</span>
-          </label>
+            {option.label}
+          </SelectionRow>
         ))}
       </div>
     </fieldset>

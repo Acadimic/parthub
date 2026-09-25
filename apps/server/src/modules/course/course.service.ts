@@ -3,6 +3,7 @@ import { MaterialService } from '@modules/material/material.service';
 import { MeetService } from '@modules/meet/meet.service';
 import { PlanService } from '@modules/plan/plan.service';
 import { TestPaperService } from '@modules/test-paper/test-paper.service';
+import { TestPaperResultService } from '@modules/test-paper/test-paper-result.service';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { type TestPaperSectionsResponse } from '@repo/shared/contracts';
@@ -16,6 +17,7 @@ import {
   MeetDto,
   PlanDto,
   TestPaperDto,
+  TestPaperResultDto,
 } from '@repo/shared/validations';
 import { Model, Types } from 'mongoose';
 import { Course, CourseDocument } from './course.schema';
@@ -53,6 +55,7 @@ export class CourseService {
     private readonly planService: PlanService,
     private readonly materialService: MaterialService,
     private readonly testPaperService: TestPaperService,
+    private readonly testPaperResultService: TestPaperResultService,
     private readonly meetService: MeetService,
   ) {}
 
@@ -349,6 +352,25 @@ export class CourseService {
       .lean<CourseModuleDocument>();
     if (!courseModule) return null;
     return this.testPaperService.getSectionsWithQuestions(course.org, testPaperId);
+  }
+
+  /**
+   * Saves a sitting of a paper reached through a course. The same two checks as reading the paper
+   * — the course is visible to the caller and the paper sits in one of its modules — and then the
+   * marking reads the questions under the course owner's organization.
+   */
+  async upsertTestPaperResult(
+    org: Types.ObjectId,
+    userId: Types.ObjectId,
+    payload: TestPaperResultDto,
+  ): Promise<TestPaperResultDto | null> {
+    const course = await this.getVisibleCourse(org, payload.course);
+    if (!course) return null;
+    const courseModule = await this.courseModuleModel
+      .findOne({ course: payload.course, testPapers: payload.testPaper, _deleted: { $ne: true } })
+      .lean<CourseModuleDocument>();
+    if (!courseModule) return null;
+    return this.testPaperResultService.upsert(course.org, userId, payload);
   }
 
   /** Every module item the caller has marked complete or skipped, across their courses. */

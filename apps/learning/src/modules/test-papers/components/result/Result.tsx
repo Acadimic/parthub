@@ -1,9 +1,62 @@
-import { Card, CircularProgress, Tooltip } from '@repo/ui/app';
+import { Button, Card, CircularProgress, Spinner, Tooltip } from '@repo/ui/app';
+import { useRequest } from '@repo/ui/hooks';
 import { Marking } from '@enums';
-import { CheckIcon, MedalIcon, MinusIcon, PercentIcon, TimerIcon, XIcon } from '@phosphor-icons/react';
-import { useTestPaperLookups } from '@stores';
+import {
+  ArrowClockwiseIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  MedalIcon,
+  MinusIcon,
+  PercentIcon,
+  TimerIcon,
+  WarningCircleIcon,
+  XIcon,
+} from '@phosphor-icons/react';
+import { useTestPaperLookups, useTestPaperStore } from '@stores';
 import { getMinutesString, getRatingItem, splitCamelCase } from '@utils/helpers';
 import { SubjectGraph } from './graphs';
+
+/** Whether the submitted sitting reached the server, with a way to try again if it did not. */
+const SaveStatus = () => {
+  const { exam, submitExam } = useTestPaperLookups();
+  const request = useRequest(useTestPaperStore, 'submitResult');
+  if (!exam || exam.isPractice || !exam.isSubmitted) return null;
+  if (request.isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <Spinner className="h-4 w-4" />
+        Saving your result…
+      </div>
+    );
+  }
+  if (request.isFailed) {
+    return (
+      <div className="flex flex-col items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm sm:flex-row">
+        <span className="flex items-center gap-2">
+          <WarningCircleIcon weight="fill" className="h-5 w-5 shrink-0 text-destructive" />
+          Your result could not be saved. {request.error}
+        </span>
+        <Button
+          isSecondary
+          className="shrink-0 px-3 py-1.5"
+          onClick={submitExam}
+          leftsection={<ArrowClockwiseIcon weight="bold" className="h-4 w-4" />}
+        >
+          Try again
+        </Button>
+      </div>
+    );
+  }
+  if (request.isLoaded) {
+    return (
+      <div className="flex items-center justify-center gap-2 text-sm text-success">
+        <CheckCircleIcon weight="fill" className="h-5 w-5" />
+        Result saved to your account
+      </div>
+    );
+  }
+  return null;
+};
 
 export const Result = () => {
   const testPaperStore = useTestPaperLookups();
@@ -66,6 +119,7 @@ export const Result = () => {
     <div className="w-full h-full flex justify-center items-center py-4 md:py-6">
       <div className="max-w-2xl w-full h-full">
         <div className="flex flex-col pb-8 gap-6">
+          <SaveStatus />
           <div className="flex justify-center space-x-6 md:space-x-12 items-center">
             <div className="flex flex-col items-center justify-center gap-3">
               <CircularProgress

@@ -15,6 +15,7 @@ export type { MarkingsDto } from '../dtos/validations/question/question.dto';
 export type { SubjectDto } from '../dtos/validations/subject/subject.dto';
 export type { TestPaperDto } from '../dtos/validations/test-paper/test-paper.dto';
 export type { TestPaperSectionDto } from '../dtos/validations/test-paper/test-paper-section.dto';
+export type { TestPaperResultDto } from '../dtos/validations/test-paper/test-paper-result.dto';
 export type { MeetDto } from '../dtos/validations/meet/meet.dto';
 export type { PlanDto } from '../dtos/validations/plan/plan.dto';
 export type { StandardDto } from '../dtos/validations/standard/standard.dto';

@@ -29,3 +29,4 @@ export * from './invite/accept-invite.dto';
 export * from './activity-log-query.dto';
 export * from './rich-text.dto';
 export * from './test-paper/test-paper-section.dto';
+export * from './test-paper/test-paper-result.dto';

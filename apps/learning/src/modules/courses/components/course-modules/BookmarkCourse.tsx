@@ -22,6 +22,8 @@ export const BookmarkCourse = ({ collectionItem, collectionRef }: IProps) => {
         isRound
         isSecondary
         aria-pressed={isSaved}
+        aria-label={isSaved ? 'Saved' : 'Save'}
+        labelClassName="hidden sm:block"
         isLoading={isLoadingBookmark}
         hideLoadingIcon
         className="px-3.5 py-1.5"
@@ -30,8 +32,7 @@ export const BookmarkCourse = ({ collectionItem, collectionRef }: IProps) => {
           <BookmarkSimpleIcon weight={isSaved ? 'fill' : 'bold'} className={cn('h-4 w-4', isSaved && 'text-warning')} />
         }
       >
-        <span className="hidden sm:inline">{isSaved ? 'Saved' : 'Save'}</span>
-        <span className="sr-only sm:hidden">{isSaved ? 'Saved' : 'Save'}</span>
+        {isSaved ? 'Saved' : 'Save'}
       </Button>
     </Tooltip>
   );

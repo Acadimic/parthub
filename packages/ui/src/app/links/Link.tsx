@@ -8,6 +8,8 @@ interface IProps extends IButtonProps {
   children: React.ReactNode;
   linkClassName?: string;
   target?: HTMLAttributeAnchorTarget;
+  /** Classes for the label's wrapper; see `Button`. */
+  labelClassName?: string;
 }
 
 /**
@@ -35,8 +37,10 @@ export const Link = ({
   leftsection,
   rightsection,
   className,
+  labelClassName,
 }: IProps) => {
   const isInert = disabled || isLoading;
+  const label = text || children;
   return (
     <NextLink
       href={href}
@@ -44,10 +48,14 @@ export const Link = ({
       aria-disabled={isInert || undefined}
       tabIndex={isInert ? -1 : undefined}
       onClick={isInert ? (event) => event.preventDefault() : undefined}
-      className={`${linkClassName ?? ''} ${getButtonClass({ isRound, isSecondary, isSubtle, isDestructive, isLoading, isFull, className })} inline-flex items-center space-x-2.5 no-underline ${isInert ? 'pointer-events-none opacity-50' : ''}`}
+      className={`${linkClassName ?? ''} ${getButtonClass({ isRound, isSecondary, isSubtle, isDestructive, isLoading, isFull, className })} inline-flex items-center justify-center gap-2.5 no-underline ${isInert ? 'pointer-events-none opacity-50' : ''}`}
     >
       {leftsection ? <span className="flex items-center">{leftsection}</span> : null}
-      <span className={`text-inherit ${getSectionPadding(leftsection, rightsection)}`}>{text || children}</span>
+      {label ? (
+        <span className={`text-inherit ${getSectionPadding(leftsection, rightsection)} ${labelClassName ?? ''}`}>
+          {label}
+        </span>
+      ) : null}
       {isLoading && !hideLoadingIcon ? <Spinner /> : null}
       {!isLoading && rightsection ? <span className="flex items-center">{rightsection}</span> : null}
     </NextLink>

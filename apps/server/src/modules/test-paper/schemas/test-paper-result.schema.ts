@@ -10,6 +10,16 @@ export class TestPaperResult extends BaseSchema {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'TestPaper', required: true })
   testPaper: string;
 
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Course', required: true })
+  course: string;
+
+  @Prop({ type: Boolean, default: false })
+  isPractice: boolean;
+
+  /** Summed by the server from `resultMaps` and each question's markings. */
+  @Prop({ type: Number, default: 0 })
+  marksObtained: number;
+
   @Prop({ type: String, required: true, trim: true })
   title: string;
 
@@ -82,3 +92,4 @@ export const TestPaperResultSchema = SchemaFactory.createForClass(TestPaperResul
 
 TestPaperResultSchema.index({ org: 1, _deleted: 1 });
 TestPaperResultSchema.index({ createdBy: 1, _deleted: 1 });
+TestPaperResultSchema.index({ createdBy: 1, testPaper: 1, _deleted: 1 });

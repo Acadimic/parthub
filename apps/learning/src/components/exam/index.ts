@@ -1,3 +1,3 @@
 export * from './ExamSidebar';
 export * from './Instruction';
-export * from './SubmitButton';
+export * from './PaletteTile';

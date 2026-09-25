@@ -1,48 +1,47 @@
 import { Button } from '@repo/ui/app';
-import { SubmitButton } from '@components/exam';
+import { cn } from '@repo/ui/lib';
 import { Marking } from '@enums';
 import { TestPaperSection } from '@modules/test-papers/components/exam-items';
-import { CaretDoubleRightIcon } from '@phosphor-icons/react';
+import { CaretDoubleRightIcon, InfoIcon } from '@phosphor-icons/react';
 import { useSelectorLookups, useTestPaperLookups } from '@stores';
 import { getPlural } from '@utils/helpers';
 import { useState } from 'react';
-import {
-  Answered,
-  AnsweredReviewed,
-  NotAnswered,
-  NotVisited,
-  Reviewed,
-} from '../../modules/test-papers/components/summary-items';
+import { PALETTE_LABELS, PaletteTile, type PaletteStatus } from './PaletteTile';
 
 interface IProps {
   closeExamSummary: () => void;
   openInstruction: () => void;
-  openSubmitSummary: () => void;
-  openResultPage: () => void;
   isResultPage: boolean;
 }
 
-export const ExamSidebar = ({
-  isResultPage,
-  closeExamSummary,
-  openInstruction,
-  openSubmitSummary,
-  openResultPage,
-}: IProps) => {
+const RESULT_STATUS: Record<Marking, PaletteStatus> = {
+  [Marking.CORRECT]: 'correct',
+  [Marking.INCORRECT]: 'incorrect',
+  [Marking.PARTIALLY_CORRECT]: 'partial',
+  [Marking.UNATTEMPTED]: 'unattempted',
+};
+
+const LegendItem = ({ status, count }: { status: PaletteStatus; count: number }) => (
+  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+    <PaletteTile status={status} value={count} size="sm" />
+    <span className="truncate">{PALETTE_LABELS[status]}</span>
+  </div>
+);
+
+/**
+ * The question palette: a legend of how many questions are in each state, then every question as
+ * a tile to jump to. A fixed pane from `xl` up, a sheet below that.
+ */
+export const ExamSidebar = ({ isResultPage, closeExamSummary, openInstruction }: IProps) => {
   const testPaperStore = useTestPaperLookups();
-  const selectorStore = useSelectorLookups();
+  const { setSelectedQuestionId, selectedQuestionId } = useSelectorLookups();
   const [isOpen, setIsOpen] = useState(true);
   const { exam, getTestPaperSectionById } = testPaperStore;
-  const { setSelectedQuestionId } = selectorStore;
 
   if (isResultPage || !exam) return <></>;
 
-  const handleClick = () => {
-    setIsOpen(!isOpen);
-  };
-
   const { isSubmitted, isPractice, sections } = exam;
-
+  const isMarked = isSubmitted || isPractice;
   const {
     getQuestionIdsBySectionId,
     getQuestionIndexByQuestionId,
@@ -61,126 +60,100 @@ export const ExamSidebar = ({
     closeExamSummary?.();
   };
 
-  const getQuestionItem = (questionId: string) => {
-    const value = getQuestionIndexByQuestionId(questionId) + 1;
-    const isMarkForReview = isMarkedForReview(questionId);
-    const isAnswered = isResponded(questionId);
-    if (isMarkForReview && isAnswered) {
-      return <AnsweredReviewed count={value} isLarge />;
-    }
-    if (isMarkForReview) {
-      return <Reviewed count={value} isLarge />;
-    }
-    if (isAnswered) {
-      return <Answered count={value} isLarge />;
-    }
-    if (isVisited(questionId)) {
-      return <NotAnswered count={value} isLarge />;
-    }
-    return <NotVisited count={value} isLarge />;
+  const getStatus = (questionId: string): PaletteStatus => {
+    if (isMarked) return RESULT_STATUS[getResultByQuestionId(questionId)];
+    const marked = isMarkedForReview(questionId);
+    const answered = isResponded(questionId);
+    if (marked && answered) return 'answeredMarked';
+    if (marked) return 'marked';
+    if (answered) return 'answered';
+    if (isVisited(questionId)) return 'notAnswered';
+    return 'notVisited';
   };
 
-  const getAnsweredItem = (questionId: string) => {
-    const result = getResultByQuestionId(questionId);
-    const value = getQuestionIndexByQuestionId(questionId) + 1;
-    if (result === Marking.UNATTEMPTED) {
-      return <NotVisited count={value} isLarge />;
-    }
-    if (result === Marking.CORRECT) {
-      return <Answered count={value} isLarge />;
-    }
-    if (result === Marking.PARTIALLY_CORRECT) {
-      return <Reviewed count={value} isLarge />;
-    }
-    return <NotAnswered count={value} isLarge />;
-  };
+  const legend: { status: PaletteStatus; count: number }[] = isMarked
+    ? [
+        { status: 'correct', count: getResultCounts()[Marking.CORRECT] },
+        { status: 'incorrect', count: getResultCounts()[Marking.INCORRECT] },
+        { status: 'partial', count: getResultCounts()[Marking.PARTIALLY_CORRECT] },
+        { status: 'unattempted', count: getResultCounts()[Marking.UNATTEMPTED] },
+      ]
+    : [
+        { status: 'answered', count: getSummaryCounts().answered },
+        { status: 'notAnswered', count: getSummaryCounts().notAnswered },
+        { status: 'marked', count: getSummaryCounts().markedForReview },
+        { status: 'answeredMarked', count: getSummaryCounts().answeredAndMarkedForReview },
+        { status: 'notVisited', count: getSummaryCounts().notVisited },
+      ];
 
   return (
     <div
-      className={`bg-background ${
-        isOpen ? 'w-full xl:w-[380px] max-w-full xl:max-w-[380px]' : 'w-0'
-      } h-full duration-300 xl:border-l border-border transition-width transition-slowest ease`}
+      className={cn(
+        'relative h-full bg-background transition-all duration-300 xl:border-l xl:border-border',
+        isOpen ? 'w-full max-w-full xl:w-[380px] xl:max-w-[380px]' : 'w-0',
+      )}
     >
-      <div className={`w-full h-full relative`}>
-        <div className="hidden xl:block absolute top-[calc(50%-20px)] -ml-6">
-          <button
-            className="bg-blue-gradient h-10 w-6 flex justify-center items-center rounded-l-md app-shadow"
-            onClick={handleClick}
-          >
-            <CaretDoubleRightIcon weight="bold" className={`text-white w-4 h-4 ${isOpen ? '' : 'rotate-180'}`} />
-          </button>
+      <div className="absolute -ml-6 hidden xl:block" style={{ top: 'calc(50% - 20px)' }}>
+        <button
+          type="button"
+          aria-label={isOpen ? 'Hide question palette' : 'Show question palette'}
+          className="flex h-10 w-6 items-center justify-center rounded-l-md bg-primary text-primary-foreground shadow-md"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <CaretDoubleRightIcon weight="bold" className={cn('h-4 w-4', !isOpen && 'rotate-180')} />
+        </button>
+      </div>
+      <div className={cn('flex h-full flex-col', !isOpen && 'hidden')}>
+        <div className="border-b border-border px-4 py-4">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
+            {legend.map((item) => (
+              <LegendItem key={item.status} status={item.status} count={item.count} />
+            ))}
+          </div>
+          <div className="mt-3">
+            <Button
+              isSubtle
+              className="px-2 py-1 text-xs text-primary"
+              onClick={openInstruction}
+              leftsection={<InfoIcon weight="bold" className="h-4 w-4" />}
+            >
+              View instructions
+            </Button>
+          </div>
         </div>
-        <div className={`${isOpen ? 'block' : 'hidden'} flex flex-col h-full transition-slowest`}>
-          <div className={`${isOpen ? 'block' : 'hidden'} flex-none`}>
-            <div className={`pl-4 py-6 grid grid-cols-3 gap-x-1.5 gap-y-2.5`}>
-              {isSubmitted || isPractice ? (
-                <>
-                  <Answered title="Correct" count={getResultCounts()[Marking.CORRECT]} />
-                  <NotAnswered title="Incorrect" count={getResultCounts()[Marking.INCORRECT]} />
-                  <NotVisited title="Unattempted" count={getResultCounts()[Marking.UNATTEMPTED]} />
-                  <div className="col-span-2 max-w-[150px]">
-                    <Reviewed title="Partially Correct" count={getResultCounts()[Marking.PARTIALLY_CORRECT]} />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Answered title="Answered" count={getSummaryCounts().answered} />
-                  <NotAnswered title="Not Answered" count={getSummaryCounts().notAnswered} />
-                  <NotVisited title="Not Visited" count={getSummaryCounts().notVisited} />
-                  <Reviewed title="Marked for Review" count={getSummaryCounts().markedForReview} />
-                  <div className="col-span-2 max-w-[150px]">
-                    <AnsweredReviewed
-                      title="Answered & Marked for Review"
-                      count={getSummaryCounts().answeredAndMarkedForReview}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="px-4 pb-2.5 pt-0.5 flex justify-center">
-            <Button isSecondary isRound text="View Instructions" className="text-xs px-4" onClick={openInstruction} />
-          </div>
-          <div className="grow flex flex-col h-full overflow-auto">
-            {sections.map((sectionId: string) => {
-              const section = getTestPaperSectionById(sectionId);
-              const questionIds = getQuestionIdsBySectionId(sectionId);
-              if (!section) return null;
-              return (
-                <div className="flex flex-col h-full" key={sectionId}>
-                  <div className="flex flex-none space-x-4 px-4 py-2.5">
-                    <div className="flex justify-start items-center text-sm font-medium gap-2 flex-wrap">
-                      <div className="text-xs flex flex-nowrap">Section :</div>
-                      <TestPaperSection section={section} />
-                      <div className="text-xs text-muted-foreground font-medium">
-                        {questionIds.length} {getPlural(questionIds.length, 'Question')}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grow px-3 py-6 border-y border-border border-dotted">
-                    <div className="grid grid-cols-5 gap-3">
-                      {questionIds.map((questionId: string, index: number) => {
-                        return (
-                          <button
-                            className={`flex justify-center items-start`}
-                            key={index}
-                            onClick={() => handleQuestionChange(questionId)}
-                          >
-                            <div>
-                              {isSubmitted || isPractice ? getAnsweredItem(questionId) : getQuestionItem(questionId)}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+        <div className="min-h-0 flex-1 overflow-auto">
+          {sections.map((sectionId: string) => {
+            const section = getTestPaperSectionById(sectionId);
+            const questionIds = getQuestionIdsBySectionId(sectionId);
+            if (!section) return null;
+            return (
+              <div key={sectionId} className="border-b border-border px-4 py-4">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <TestPaperSection section={section} />
+                  <span className="text-xs text-muted-foreground">
+                    {questionIds.length} {getPlural(questionIds.length, 'question')}
+                  </span>
                 </div>
-              );
-            })}
-            <div className="flex flex-none xl:hidden justify-center py-12">
-              <SubmitButton openResultPage={openResultPage} openSubmitSummary={openSubmitSummary} />
-            </div>
-          </div>
+                <div className="grid grid-cols-6 gap-2 xl:grid-cols-5">
+                  {questionIds.map((questionId: string) => (
+                    <button
+                      key={questionId}
+                      type="button"
+                      aria-current={questionId === selectedQuestionId ? 'true' : undefined}
+                      className="flex justify-center"
+                      onClick={() => handleQuestionChange(questionId)}
+                    >
+                      <PaletteTile
+                        status={getStatus(questionId)}
+                        value={getQuestionIndexByQuestionId(questionId) + 1}
+                        isCurrent={questionId === selectedQuestionId}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

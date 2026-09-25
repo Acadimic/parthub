@@ -2,6 +2,7 @@ import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Public } from '@decorators/public.decorator';
+import { TestPaperResultService } from '@modules/test-paper/test-paper-result.service';
 import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common';
 import { type TestPaperSectionsResponse } from '@repo/shared/contracts';
 import { CourseService, type ICourseModuleContents } from './course.service';
@@ -14,6 +15,7 @@ import {
   CourseWithPlansDto,
   LinkCourseModuleDto,
   PlanDto,
+  TestPaperResultDto,
 } from '@repo/shared/validations';
 
 @Controller('course')
@@ -21,6 +23,7 @@ export class CourseController {
   constructor(
     private readonly courseService: CourseService,
     private readonly requestContextService: RequestContextService,
+    private readonly testPaperResultService: TestPaperResultService,
   ) {}
 
   @Post('upsert')
@@ -127,6 +130,25 @@ export class CourseController {
   async upsertCompletedModule(@Body() payload: CompletedModuleDto): Promise<CompletedModuleDto> {
     const org = this.requestContextService.getOrgId();
     return this.courseService.upsertCompletedModule(org, this.requestContextService.getUserId(), payload);
+  }
+
+  /** The caller's own sittings, newest first. */
+  @Get('test-paper/results')
+  @Subdomains(Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_TEST_PAPER)
+  async getTestPaperResults(): Promise<TestPaperResultDto[]> {
+    return this.testPaperResultService.getByUser(this.requestContextService.getUserId());
+  }
+
+  /** Saves and marks a sitting. Idempotent on the client-minted `_id`, so a retried save is safe. */
+  @Post('test-paper/result/upsert')
+  @Subdomains(Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_TEST_PAPER)
+  async upsertTestPaperResult(@Body() payload: TestPaperResultDto): Promise<TestPaperResultDto> {
+    const org = this.requestContextService.getOrgId();
+    const result = await this.courseService.upsertTestPaperResult(org, this.requestContextService.getUserId(), payload);
+    if (!result) throw new NotFoundException('Test paper not found in this course.');
+    return result;
   }
 
   /**

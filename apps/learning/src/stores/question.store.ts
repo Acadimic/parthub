@@ -53,6 +53,8 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
     return map;
   }, {});
 
+const byOrder = (a: { order?: number }, b: { order?: number }): number => (a.order ?? 0) - (b.order ?? 0);
+
 export const useQuestionStore = create<IQuestionState>()((set, get) => ({
   questionMap: {},
   ...createRequestSlice(['questions'], set, get),
@@ -66,11 +68,14 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
     return questionIds.map((id) => questionMap[id]).filter((row): row is IQuestion => !!row);
   },
 
+  // In the paper's order: the map keeps insertion order, which depends on which payload carried a
+  // question first, so two loads of the same paper could number the questions differently.
   getQuestionsBySectionId: (sectionId) =>
     sectionId
       ? get()
           .getQuestions()
           .filter((question) => question.section === sectionId)
+          .sort(byOrder)
       : [],
 
   getQuestionsBySectionIds: (sectionIds) =>
@@ -78,6 +83,7 @@ export const useQuestionStore = create<IQuestionState>()((set, get) => ({
       ? get()
           .getQuestions()
           .filter((question) => !!question.section && sectionIds.includes(question.section))
+          .sort(byOrder)
       : [],
 
   getSolutionByQuestionId: (questionId) => get().getQuestionById(questionId)?.solution?.body,

@@ -1,9 +1,10 @@
-import { PauseCircleIcon, PlayCircleIcon } from '@phosphor-icons/react';
+import { Button } from '@repo/ui/app';
+import { cn } from '@repo/ui/lib';
+import { PauseIcon, PlayIcon, TimerIcon } from '@phosphor-icons/react';
 import { useTestPaperLookups } from '@stores';
 import { getTimeString } from '@utils/helpers';
 import { useEffect, useRef } from 'react';
 import { useSetState } from 'react-use';
-import { Button } from '@repo/ui/app';
 
 interface IProps {
   isActiveTimer: boolean;
@@ -15,6 +16,9 @@ interface IState {
   timeLeft: number;
   timeLeftString: string;
 }
+
+/** Under this many seconds left, the clock turns red. */
+const WARNING_SECONDS = 5 * 60;
 
 export const Timer = ({ toggleTimer, isActiveTimer, handleSubmitTest }: IProps) => {
   const testPaperStore = useTestPaperLookups();
@@ -60,18 +64,37 @@ export const Timer = ({ toggleTimer, isActiveTimer, handleSubmitTest }: IProps) 
 
   if (!exam) return null;
 
+  const isLow = !exam.isSubmitted && state.timeLeft > 0 && state.timeLeft < WARNING_SECONDS;
+
   return (
-    <div className="flex items-center space-x-1">
-      {exam.isSubmitted ? null : (
-        <Button onClick={toggleTimer} isSubtle className="px-1 md:px-4">
-          {isActiveTimer ? (
-            <PauseCircleIcon className="w-6 h-6 text-primary" />
-          ) : (
-            <PlayCircleIcon className="w-6 h-6 text-primary" />
-          )}
-        </Button>
+    <div
+      className={cn(
+        'flex items-center gap-1 rounded-full border px-2 py-1',
+        isLow
+          ? 'border-destructive/40 bg-destructive/10 text-destructive'
+          : 'border-border bg-muted/50 text-foreground',
       )}
-      <div className="w-16 blue-gradient text-sm font-semibold">{state.timeLeftString}</div>
+    >
+      {exam.isSubmitted ? (
+        <TimerIcon weight="bold" className="h-4 w-4 text-muted-foreground" />
+      ) : (
+        <Button
+          onClick={toggleTimer}
+          isSubtle
+          aria-label={isActiveTimer ? 'Pause the test' : 'Resume the test'}
+          className="rounded-full p-0.5"
+          leftsection={
+            isActiveTimer ? (
+              <PauseIcon weight="fill" className="h-4 w-4" />
+            ) : (
+              <PlayIcon weight="fill" className="h-4 w-4" />
+            )
+          }
+        />
+      )}
+      <span className="w-[4.5rem] text-center font-mono text-sm font-semibold tabular-nums">
+        {state.timeLeftString}
+      </span>
     </div>
   );
 };

@@ -6,6 +6,8 @@ import { AuthLayout, PageLayout, PageNavigationLayout, PublicLayout, SidebarLayo
 import { ToastContainer } from '@modules/toasts';
 import { useStandardStore, useUserLookups } from '@stores';
 import '@styles/globals.scss';
+// KaTeX's stylesheet hides its MathML twin of every equation; without it each formula shows twice.
+import 'katex/dist/katex.min.css';
 import { loadFirebaseUser } from '@utils/firebase';
 import { getToken, IS_WINDOW_UNDEFINED } from '@utils/helpers';
 import { MathJaxContext } from 'better-react-mathjax';

@@ -1,4 +1,4 @@
-import { type TestPaperDto, type TestPaperSectionDto } from '@repo/shared/contracts';
+import { type TestPaperDto, type TestPaperResultDto, type TestPaperSectionDto } from '@repo/shared/contracts';
 import { type IRequestSlice, createEmptyRichText, createRequestSlice } from '@repo/shared/utils';
 import { type ISubjectGraphData } from '@repo/shared/interfaces';
 import { create } from 'zustand';
@@ -7,6 +7,7 @@ import { Marking } from '../enums';
 import { ReactionService, TestPaperService } from '../services';
 import { getMinutesString, getObjectId, groupBy } from '../utils/helpers';
 import { useQuestionStore } from './question.store';
+import { markResponse, toResultPayload } from './exam.marking';
 import { useSelectorStore } from './selector.store';
 import { useStandardStore } from './standard.store';
 
@@ -35,13 +36,15 @@ import {
 } from './exam.types';
 
 /** The fetches this store tracks. */
-type TestPaperFetch = 'testPapers' | 'testPaperSections' | 'exam';
+type TestPaperFetch = 'testPapers' | 'testPaperSections' | 'exam' | 'results' | 'submitResult';
 
 export interface ITestPaperState extends IRequestSlice<TestPaperFetch> {
   testPaperMap: Record<string, ITestPaper>;
   testPaperSectionMap: Record<string, ITestPaperSection>;
   /** The sitting in progress, or `null` between exams. */
   exam: IExam | null;
+  /** The learner's saved sittings, by id. */
+  resultMap: Record<string, TestPaperResultDto>;
 
   getTestPaperById: (testPaperId: string) => ITestPaper | undefined;
   getTestPaperSectionById: (sectionId: string) => ITestPaperSection | undefined;
@@ -91,7 +94,12 @@ export interface ITestPaperState extends IRequestSlice<TestPaperFetch> {
   toggleSelectedQuestionMarkForReview: () => void;
   /** Adds a second to the selected question, and to its reply time while it is still unanswered. */
   increaseSelectedQuestionTimeSpend: () => void;
-  submitExam: () => void;
+  /** Marks the sitting submitted and saves it; the server's marking then replaces the client's. */
+  submitExam: () => Promise<void>;
+  addResults: (results: TestPaperResultDto[]) => void;
+  loadMyResults: () => Promise<void>;
+  /** The learner's real attempts at a paper, newest first — practice sittings are left out. */
+  getMyAttemptsByTestPaperId: (testPaperId: string) => TestPaperResultDto[];
   getSummaryCounts: () => ISummaryCount;
   getResultCounts: () => IResultCount;
   getMarksObtained: () => number;
@@ -119,6 +127,13 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
 
 const selectedQuestionId = (): string => useSelectorStore.getState().selectedQuestionId;
 
+/**
+ * Which `loadAndSetExam` call is the current one. The layout's mount effect runs twice in
+ * development, and both runs fetch; without this the slower one finished a second or two after the
+ * first and replaced the sitting with a fresh one, wiping whatever the learner had answered.
+ */
+let examLoadToken = 0;
+
 type QuestionStore = ReturnType<typeof useQuestionStore.getState>;
 
 /** Section id to its question ids, in section order. */
@@ -139,7 +154,8 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
   testPaperMap: {},
   testPaperSectionMap: {},
   exam: null,
-  ...createRequestSlice(['testPapers', 'testPaperSections', 'exam'], set, get),
+  resultMap: {},
+  ...createRequestSlice(['testPapers', 'testPaperSections', 'exam', 'results', 'submitResult'], set, get),
 
   getTestPaperById: (testPaperId) => (testPaperId ? get().testPaperMap[testPaperId] : undefined),
 
@@ -226,10 +242,14 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
       questionStore.addQuestions(questions);
     }),
 
-  loadAndSetExam: (testPaperId, isPractice) =>
-    get().run('exam', async () => {
+  loadAndSetExam: (testPaperId, isPractice) => {
+    examLoadToken += 1;
+    const token = examLoadToken;
+    return get().run('exam', async () => {
       set({ exam: null });
       await get().loadTestPaperSectionsWithQuestions(testPaperId);
+      // A newer load has started since; its sitting is the one that counts.
+      if (token !== examLoadToken) return;
       const testPaper = get().getTestPaperById(testPaperId);
       if (!testPaper) return;
       // `TestPaperDto` leaves these optional because one class serves both directions and a write
@@ -256,6 +276,7 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
         exam: {
           _id: getObjectId(),
           testPaper: testPaperId,
+          course: useSelectorStore.getState().selectedCourseId,
           title: testPaper.name,
           instruction: testPaper.instruction ?? createEmptyRichText(),
           questionWiseSpendTime: zeroTimes,
@@ -287,7 +308,8 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
           paperType,
         },
       });
-    }),
+    });
+  },
 
   unsetExam: () => {
     set({ exam: null });
@@ -357,16 +379,8 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
     if (!exam || !questionId) return;
     const answers = get().getAnswersByQuestionId(questionId);
     // Mark it in the same breath as recording the response, which is what `setResult` did.
-    let result = Marking.UNATTEMPTED;
-    if (responses.length) {
-      if (answers.some((answer) => !responses.includes(answer)) || responses.length > answers.length) {
-        result = Marking.INCORRECT;
-      } else if (answers.length === responses.length) {
-        result = Marking.CORRECT;
-      } else {
-        result = Marking.PARTIALLY_CORRECT;
-      }
-    }
+    // The server marks the same way on submit (`test-paper-result.marking.ts`).
+    const result = markResponse(questionId, responses, answers);
     get().patchExam({
       responseMaps: { ...exam.responseMaps, [questionId]: responses },
       resultMaps: { ...exam.resultMaps, [questionId]: result },
@@ -449,9 +463,33 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
     });
   },
 
-  submitExam: () => {
-    get().patchExam({ isSubmitted: true });
+  submitExam: () =>
+    get().run('submitResult', async () => {
+      const exam = get().exam;
+      if (!exam) return;
+      get().patchExam({ isSubmitted: true });
+      const payload = toResultPayload(exam, get().getMarksObtained());
+      const result = await TestPaperService.upsertTestPaperResult(payload);
+      if (!result?.data) return;
+      get().addResults([result.data]);
+      // The server marked the sitting from the stored questions; its verdict is the one shown.
+      get().patchExam({ resultMaps: result.data.resultMaps, answerMaps: result.data.answerMaps });
+    }),
+
+  addResults: (results) => {
+    set((state) => ({ resultMap: { ...state.resultMap, ...keyById(results) } }));
   },
+
+  loadMyResults: () =>
+    get().run('results', async () => {
+      const result = await TestPaperService.getMyTestPaperResults();
+      if (result?.data) get().addResults(result.data);
+    }),
+
+  getMyAttemptsByTestPaperId: (testPaperId) =>
+    Object.values(get().resultMap)
+      .filter((row) => row.testPaper === testPaperId && !row.isPractice && !row._deleted)
+      .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? '')),
 
   getSummaryCounts: () => {
     const exam = get().exam;

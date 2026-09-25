@@ -1,8 +1,10 @@
 import { RichTextView } from '@repo/ui/content';
+import { Badge } from '@repo/ui/core';
+import { cn } from '@repo/ui/lib';
 import { type MarkingType } from '@repo/shared/interfaces';
 import { Bookmark } from '@components/common';
 import { CollectionType, Marking, QuestionType } from '@enums';
-import { CaretDownIcon } from '@phosphor-icons/react';
+import { CaretDownIcon, ClockIcon } from '@phosphor-icons/react';
 import { useQuestionLookups, useSelectedQuestion, useTestPaperLookups } from '@stores';
 import { splitCamelCase } from '@utils/helpers';
 import { useEffect, useState } from 'react';
@@ -19,8 +21,8 @@ interface IProps {
 }
 
 /**
- * The score line beside a question: what the learner actually scored once the question is answered,
- * and what is on offer before that.
+ * The marks beside a question: what is on offer before it is answered, and what it actually
+ * scored once it is marked.
  */
 const QuestionScore = ({
   isCompleted,
@@ -34,16 +36,16 @@ const QuestionScore = ({
   if (!isCompleted) {
     return (
       <>
-        <div className="text-success">+{markings[Marking.CORRECT]}</div>
-        <div className="text-destructive">-{-markings[Marking.INCORRECT]}</div>
+        <Badge tone="success">+{markings[Marking.CORRECT]}</Badge>
+        <Badge tone="destructive">{markings[Marking.INCORRECT]}</Badge>
       </>
     );
   }
   return (
-    <div className={`${marks > 0 ? 'text-success' : 'text-destructive'}`}>
+    <Badge tone={marks > 0 ? 'success' : 'destructive'} appearance="solid">
       {marks > 0 ? '+' : ''}
       {marks}
-    </div>
+    </Badge>
   );
 };
 
@@ -88,93 +90,87 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
 
   // `partiallyCorrect` is optional on `MarkingType`, so a paper that does not define it scores 0.
   const marks = selectedQuestion.markings[getResultByQuestionId(selectedQuestion._id)] ?? 0;
+  const isCompleted = isSelectedQuestionCompleted();
+  const isTypedAnswer =
+    !selectedQuestion.questionType ||
+    ![QuestionType.BOOLEAN, QuestionType.SINGLE_CHOICE, QuestionType.MULTIPLE_CHOICE].includes(
+      selectedQuestion.questionType,
+    );
+
+  if (isResultPage) return <Result />;
 
   return (
-    <>
-      {isResultPage ? (
-        <Result />
-      ) : (
-        <>
-          <div className="flex flex-col min-h-full py-4 md:py-6">
-            <div className="grow-0 mb-3">
-              <div className="flex space-x-4 items-start justify-between">
-                <div className="px-0 md:px-12 flex flex-wrap justify-start items-center text-sm font-medium gap-1.5 md:gap-2">
-                  <div className="hidden md:block">Sections :</div>
-                  {sectionObjects.map((section) => (
-                    <TestPaperSection section={section} key={section._id} />
-                  ))}
-                </div>
-                <div className="px-2 md:px-12 flex xl:hidden items-center space-x-3" onClick={openExamSummary}>
-                  <div className="text-sm blue-gradient font-semibold flex space-x-1 items-center">
-                    <div className="">{getCurrentQuestionIndex() + 1}</div>
-                    <div>/</div>
-                    <div className="">{numberOfQuestions}</div>
-                  </div>
-                  <div>
-                    <CaretDownIcon weight="bold" className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="box-shadow grow-0 px-4 md:px-12 py-2 bg-background">
-              <div className="flex justify-between items-center text-sm md:text-base font-medium">
-                <div className="flex justify-start items-center space-x-3">
-                  <div className="">
-                    {window.innerWidth < 768 ? 'Que' : 'Question'} {getCurrentQuestionIndex() + 1} :
-                  </div>
-                  <div className="text-chart-4 text-xs md:text-sm capitalize">
-                    {splitCamelCase(selectedQuestion.questionType)}
-                  </div>
-                </div>
-                <div className="flex justify-start items-center text-xs font-semibold space-x-3">
-                  <div className="blue-gradient">{getSelectedQuestionReplyTime()}</div>
-                  <QuestionScore
-                    isCompleted={isSelectedQuestionCompleted()}
-                    marks={marks}
-                    markings={selectedQuestion.markings}
-                  />
-                  <Bookmark collectionItem={selectedQuestion._id} collectionRef={CollectionType.QUESTION} />
-                </div>
-              </div>
-            </div>
-            <div className="grow py-0 h-0 w-full mt-2">
-              <div className="box-shadow overflow-auto py-3 h-full px-4 md:px-12 bg-background">
-                <div className="">
-                  <RichTextView value={selectedQuestion.body} />
-                </div>
-                <div className="mt-4">
-                  <Options
-                    question={selectedQuestion}
-                    selectedValues={getResponsesByQuestionId(selectedQuestion._id)}
-                    handleResponses={handleResponses}
-                    isDisabled={isSelectedQuestionCompleted()}
-                    answers={isSelectedQuestionCompleted() ? getAnswersByQuestionId(selectedQuestion._id) : []}
-                  />
-                </div>
-                <div
-                  className={`mt-8 mb-4 transition-all duration-500 ${isSelectedQuestionCompleted() ? 'opacity-100' : 'opacity-0'}`}
-                >
-                  {isSelectedQuestionCompleted() && selectedQuestion ? (
-                    <Answer
-                      correctOptionIndexes={getCorrectOptionIndexes(selectedQuestion._id)}
-                      solution={getSolutionByQuestionId(selectedQuestion._id)}
-                      answers={getQuestionOptions(selectedQuestion._id)
-                        .filter((option) => getAnswersByQuestionId(selectedQuestion._id).includes(option._id))
-                        .map((option) => option.body)}
-                      isAnswer={
-                        !selectedQuestion.questionType ||
-                        ![QuestionType.BOOLEAN, QuestionType.SINGLE_CHOICE, QuestionType.MULTIPLE_CHOICE].includes(
-                          selectedQuestion.questionType,
-                        )
-                      }
-                    />
-                  ) : null}
-                </div>
-              </div>
-            </div>
+    <div className="flex h-full flex-col gap-3 py-3 md:py-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
+          <span className="hidden text-muted-foreground md:inline">Sections</span>
+          {sectionObjects.map((section) => (
+            <TestPaperSection section={section} key={section._id} />
+          ))}
+        </div>
+        {/* Below `xl` the palette is a sheet; this is what opens it. */}
+        <button
+          type="button"
+          onClick={openExamSummary}
+          className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 font-mono text-sm font-semibold hover:bg-accent xl:hidden"
+        >
+          <span>
+            {getCurrentQuestionIndex() + 1}
+            <span className="text-muted-foreground"> / {numberOfQuestions}</span>
+          </span>
+          <CaretDownIcon weight="bold" className="h-4 w-4 text-muted-foreground" />
+        </button>
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border px-4 py-3 md:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="text-base font-semibold">
+              Question {getCurrentQuestionIndex() + 1}
+              <span className="font-normal text-muted-foreground"> of {numberOfQuestions}</span>
+            </span>
+            <Badge tone="neutral" appearance="outline" className="capitalize">
+              {splitCamelCase(selectedQuestion.questionType)}
+            </Badge>
           </div>
-        </>
-      )}
-    </>
+          <div className="flex items-center gap-2">
+            {getSelectedQuestionReplyTime() ? (
+              <span className="flex items-center gap-1 font-mono text-xs text-muted-foreground">
+                <ClockIcon weight="bold" className="h-3.5 w-3.5" />
+                {getSelectedQuestionReplyTime()}
+              </span>
+            ) : null}
+            <QuestionScore isCompleted={isCompleted} marks={marks} markings={selectedQuestion.markings} />
+            <Bookmark collectionItem={selectedQuestion._id} collectionRef={CollectionType.QUESTION} />
+          </div>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto px-4 py-4 md:px-6 md:py-5">
+          <div className="text-base leading-relaxed">
+            <RichTextView value={selectedQuestion.body} />
+          </div>
+          <div className="mt-5">
+            <Options
+              question={selectedQuestion}
+              selectedValues={getResponsesByQuestionId(selectedQuestion._id)}
+              handleResponses={handleResponses}
+              isDisabled={isCompleted}
+              answers={isCompleted ? getAnswersByQuestionId(selectedQuestion._id) : []}
+            />
+          </div>
+          <div className={cn('mt-6 transition-opacity duration-500', isCompleted ? 'opacity-100' : 'opacity-0')}>
+            {isCompleted ? (
+              <Answer
+                correctOptionIndexes={getCorrectOptionIndexes(selectedQuestion._id)}
+                solution={getSolutionByQuestionId(selectedQuestion._id)}
+                answers={getQuestionOptions(selectedQuestion._id)
+                  .filter((option) => getAnswersByQuestionId(selectedQuestion._id).includes(option._id))
+                  .map((option) => option.body)}
+                isAnswer={isTypedAnswer}
+              />
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

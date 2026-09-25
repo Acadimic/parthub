@@ -1,14 +1,16 @@
-import { CheckCircleIcon, type Icon, MinusCircleIcon, RadioButtonIcon, TimerIcon } from '@phosphor-icons/react';
+import { CheckCircleIcon, FlagIcon, type Icon, MinusCircleIcon, TimerIcon } from '@phosphor-icons/react';
 import { useTestPaperLookups } from '@stores';
-import { getTimeString, getTwoDigit } from '@utils/helpers';
+import { getTimeString } from '@utils/helpers';
 
 interface IRow {
   label: string;
-  value: string;
-  className?: string;
+  value: string | number;
   icon: Icon;
+  /** Draws attention to a count the learner may want to act on before handing in. */
+  isWarning?: boolean;
 }
 
+/** The state of the sitting, shown once more before it is handed in. */
 export const TestPaperSummary = () => {
   const testPaperStore = useTestPaperLookups();
   const { exam } = testPaperStore;
@@ -16,50 +18,38 @@ export const TestPaperSummary = () => {
   if (!exam) return <></>;
 
   const { numberOfQuestions, markedForReviews } = exam;
-
   const { getAttemptedCount, getTimeLeft } = testPaperStore;
+  const unattempted = numberOfQuestions - getAttemptedCount();
 
-  const rows = [
-    { icon: TimerIcon, label: 'Time Left', value: getTimeString(getTimeLeft()), className: 'w-16' },
-    { icon: CheckCircleIcon, label: 'Attempted', value: String(getTwoDigit(getAttemptedCount())), className: '' },
+  const rows: IRow[] = [
+    { icon: TimerIcon, label: 'Time left', value: getTimeString(getTimeLeft()) },
+    { icon: CheckCircleIcon, label: 'Attempted', value: getAttemptedCount() },
+    { icon: MinusCircleIcon, label: 'Unattempted', value: unattempted, isWarning: unattempted > 0 },
     {
-      icon: MinusCircleIcon,
-      label: 'Unattempted',
-      value: String(getTwoDigit(numberOfQuestions - getAttemptedCount())),
-      className: '',
-    },
-    {
-      icon: RadioButtonIcon,
-      label: 'Marked For Review',
-      value: String(getTwoDigit(markedForReviews.length)),
-      className: '',
+      icon: FlagIcon,
+      label: 'Marked for review',
+      value: markedForReviews.length,
+      isWarning: markedForReviews.length > 0,
     },
   ];
 
   return (
-    <div className="w-full">
-      <div className="w-full px-2 py-6">
-        <div className="">
-          {rows.map((row: IRow) => {
-            return (
-              <div key={row.label} className="px-1 flex justify-between border-b border-border py-2">
-                <div>
-                  <div className="flex items-center space-x-2 blue-gradient">
-                    <row.icon className="w-5 font-bold text-muted-foreground" />
-                    <div className="text-sm font-semibold">{row.label}</div>
-                  </div>
-                </div>
-                <div className={`flex justify-end pr-0.5 purple-gradient`}>
-                  <div className={`${row.className} whitespace-nowrap text-sm font-semibold`}>{row.value}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <div className="mt-6 mb-2">
-          <div className="text-center text-sm font-semibold">Are you sure want to submit the test?</div>
-        </div>
+    <div className="flex flex-col gap-4 py-2">
+      <div className="divide-y divide-border rounded-lg border border-border">
+        {rows.map((row) => (
+          <div key={row.label} className="flex items-center justify-between px-4 py-2.5">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <row.icon weight="bold" className="h-4 w-4 text-muted-foreground" />
+              {row.label}
+            </div>
+            <div className={`font-mono text-sm font-semibold ${row.isWarning ? 'text-warning' : ''}`}>{row.value}</div>
+          </div>
+        ))}
       </div>
+      <p className="text-center text-sm">
+        Submit the test now?{' '}
+        <span className="text-muted-foreground">You will not be able to change your answers afterwards.</span>
+      </p>
     </div>
   );
 };

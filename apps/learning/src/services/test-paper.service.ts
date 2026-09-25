@@ -1,4 +1,4 @@
-import { type TestPaperSectionsResponse } from '@repo/shared/contracts';
+import { type TestPaperResultDto, type TestPaperSectionsResponse } from '@repo/shared/contracts';
 import { type IQuestion, type ITestPaper, type ITestPaperSection } from '@stores';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
@@ -31,6 +31,16 @@ class TestPaperService {
       : `test-paper/sections-with-questions/${testPaperId}`;
     const resData = await callAuthApi<ITestPaperSectionsResponse>(url, API.GET);
     return resData;
+  };
+
+  /** Saves a sitting; the server marks it and answers with the marked row. */
+  upsertTestPaperResult = async (payload: TestPaperResultDto) => {
+    return await callAuthApi<TestPaperResultDto>('course/test-paper/result/upsert', API.POST, payload);
+  };
+
+  /** The caller's own sittings, newest first. */
+  getMyTestPaperResults = async () => {
+    return await callAuthApi<TestPaperResultDto[]>('course/test-paper/results', API.GET);
   };
 }
 

@@ -69,9 +69,10 @@ export const CourseModules = () => {
               isSubtle
               aria-label="Back to course overview"
               className="shrink-0 px-2 py-1.5 text-foreground"
+              labelClassName="hidden sm:inline"
               leftsection={<ArrowLeftIcon weight="bold" className="h-4 w-4" />}
             >
-              <span className="hidden sm:inline">Overview</span>
+              Overview
             </Link>
             <div className="hidden min-w-0 flex-1 md:block">
               <Breadcrumb items={crumbs} />

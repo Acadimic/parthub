@@ -63,6 +63,7 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
             toggleTimer={toggleTimer}
             isActiveTimer={isActiveTimer}
             handleSubmitTest={handleSubmitTest}
+            openExit={openExit}
           />
         </div>
         <div className="overflow-auto h-[100vh] py-14 xl:py-16">
@@ -79,8 +80,6 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
               <ExamSidebar
                 openInstruction={openInstruction}
                 closeExamSummary={closeExamSummary}
-                openSubmitSummary={openSubmitSummary}
-                openResultPage={openResultPage}
                 isResultPage={isResultPage}
               />
             </div>
@@ -105,19 +104,30 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
           <ExamSidebar
             openInstruction={openInstruction}
             closeExamSummary={closeExamSummary}
-            openSubmitSummary={openSubmitSummary}
-            openResultPage={openResultPage}
             isResultPage={isResultPage}
           />
         }
         onClose={closeExamSummary}
       />
       <Modal
-        title="Confirm Exit"
+        title={isPractice || exam.isSubmitted ? 'Leave this paper?' : 'Leave the test?'}
         isOpen={isExit}
-        component={<div className="font-medium py-8">Are you sure want to exit?</div>}
+        component={
+          <p className="py-4 text-sm text-muted-foreground">
+            {isPractice || exam.isSubmitted
+              ? 'You can open it again from the course at any time.'
+              : 'The test has not been submitted. Your answers so far will be lost.'}
+          </p>
+        }
         onClose={closeExit}
-        footer={<ModalFooter onSave={confirmExit} onCancel={closeExit} saveText="Yes" cancelText="No" />}
+        footer={
+          <ModalFooter
+            onSave={confirmExit}
+            onCancel={closeExit}
+            saveText={isPractice || exam.isSubmitted ? 'Leave' : 'Leave without submitting'}
+            cancelText="Stay"
+          />
+        }
       />
       <Modal
         title="Instructions"

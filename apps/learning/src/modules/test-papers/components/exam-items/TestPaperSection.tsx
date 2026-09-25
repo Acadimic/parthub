@@ -1,4 +1,5 @@
 import { Tooltip } from '@repo/ui/app';
+import { Badge } from '@repo/ui/core';
 import { type ITestPaperSection } from '@stores';
 
 interface IProps {
@@ -8,12 +9,9 @@ interface IProps {
 export const TestPaperSection = ({ section }: IProps) => {
   return (
     <Tooltip title={section.name}>
-      <div
-        className="bg-gradient max-w-[200px] truncate px-2 text-[11px] font-medium rounded-full border border-border text-chart-5"
-        key={section._id}
-      >
-        {section.name}
-      </div>
+      <Badge tone="neutral" appearance="outline" className="max-w-[200px]">
+        <span className="truncate">{section.name}</span>
+      </Badge>
     </Tooltip>
   );
 };
