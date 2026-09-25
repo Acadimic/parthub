@@ -89,6 +89,15 @@ export class TestPaperService {
       .then((testPaper) => (testPaper ? this.getTransformedTestPaper(testPaper) : null));
   }
 
+  /** The test papers a course module embeds, fetched in one round trip rather than one id at a time. */
+  async getByIds(org: Types.ObjectId, ids: string[]): Promise<TestPaperDto[]> {
+    if (!ids.length) return [];
+    return this.testPaperModel
+      .find({ _id: { $in: ids }, org, _deleted: { $ne: true } })
+      .lean<TestPaperDocument[]>()
+      .then((testPapers) => this.getTransformedTestPapers(testPapers));
+  }
+
   /**
    * A paper's sections and their questions, in one round trip.
    *

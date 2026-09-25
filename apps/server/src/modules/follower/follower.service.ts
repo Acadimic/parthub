@@ -32,9 +32,11 @@ export class FollowerService {
     return this.followerModel.find({ follower: userId.toString(), _deleted: { $ne: true } }).lean<FollowerDocument[]>();
   }
 
-  async getFollowersCount(userId: Types.ObjectId): Promise<number> {
+  /** A malformed id is nobody, and nobody has followers — answered rather than thrown as a cast error. */
+  async getFollowersCount(userId: string): Promise<number> {
+    if (!Types.ObjectId.isValid(userId)) return 0;
     return this.followerModel.countDocuments({
-      following: userId.toString(),
+      following: userId,
       _deleted: { $ne: true },
     });
   }

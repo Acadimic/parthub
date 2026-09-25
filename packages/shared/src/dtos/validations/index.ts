@@ -21,6 +21,7 @@ export * from './attachment.dto';
 export * from './base-owned.dto';
 export * from './course/course.dto';
 export * from './course/course-module.dto';
+export * from './course/completed-module.dto';
 export * from './user/register.dto';
 export * from './user/user.dto';
 export * from './invite/invite.dto';

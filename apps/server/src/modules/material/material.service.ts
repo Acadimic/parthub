@@ -98,6 +98,15 @@ export class MaterialService {
       .then((material) => (material ? this.getTransformedMaterial(material) : null));
   }
 
+  /** The materials a course module embeds, fetched in one round trip rather than one id at a time. */
+  async getByIds(org: Types.ObjectId, ids: string[]): Promise<MaterialDto[]> {
+    if (!ids.length) return [];
+    return this.materialModel
+      .find({ _id: { $in: ids }, org, _deleted: { $ne: true } })
+      .lean<MaterialDocument[]>()
+      .then((materials) => this.getTransformedMaterials(materials));
+  }
+
   async findByCourse(org: Types.ObjectId, courseId: string) {
     return this.materialModel
       .find({ course: courseId, org, _deleted: { $ne: true } })
