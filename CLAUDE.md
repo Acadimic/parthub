@@ -20,6 +20,7 @@ having to be remembered. Each one is split into **must** (a violation is a defec
 | `add-server-module`     | creating a server module, a Mongoose schema, or editing `app.module` |
 | `query-with-mongoose`   | any query, schema or index in `apps/server`                          |
 | `define-data-shape`     | declaring any interface, enum, DTO, store entity or Mongoose schema  |
+| `type-strictly`         | writing `?`, a parameter default, `!`, `as`, or a boolean parameter  |
 | `write-comments`        | writing comments, docblocks, or any suppression that needs a reason  |
 | `extend-a-package`      | editing a `packages/*` manifest, export, or adding a dependency      |
 | `upgrade-a-dependency`  | bumping any version, or recovering from a breaking upgrade           |
@@ -136,7 +137,7 @@ pnpm --filter @repo/ui <script>
 ### Server (`apps/server`) — NestJS 12 + Fastify 5
 
 - **Module structure:** One NestJS module per domain (Auth, User, Firebase, Org, Standard, Subject, Chapter, Course, Plan, Material, TestPaper, Question, Meet, Batch, and Common for cross-cutting routes). Each has controller → service → Mongoose schema.
-- **Files:** uploads go straight to S3 through presigned URLs issued by `common/presigned-PUT-urls` and read through `common/presigned-GET-urls`; `common/delete-objects` removes what an attachment no longer points at, and `common/verify-links` checks the addresses an AI reply cites. Keys are scoped per organization under `S3_PREFIX` (`<prefix>orgs/<orgId>/…`, `<prefix>shared/…` for private routes) by `S3Service.resolveKey`, which refuses another organization's key. Env: `S3_BUCKET_NAME`, `S3_PUBLIC_BUCKET_NAME`, `S3_PREFIX`. Uploads happen only when a form saves, and are rolled back if the record write fails.
+- **Files:** uploads go straight to S3 through presigned URLs issued by `common/presigned-PUT-urls` and read through `common/presigned-GET-urls`; `common/delete-objects` removes what an attachment no longer points at, and `common/verify-links` checks the addresses an AI reply cites. Every key lives in exactly one organization's folder under `S3_PREFIX` — `<prefix>orgs/<orgId>/…` — resolved by `S3Service.resolveKey`. A private route is no exception: it runs as the `PRIVATE_API_EMAIL` service account and carries that account's organization, so nothing is ever written outside an org. **Writes are scoped, reads are not**: standards, subjects and published courses are platform reference data every app renders, and their files sit wherever they were uploaded, so `presigned-GET-urls` signs any key while `presigned-PUT-urls` and `delete-objects` stay inside the caller's own folder. There is no shared or platform folder: every object belongs to an organization, without exception. Env: `S3_BUCKET_NAME`, `S3_PUBLIC_BUCKET_NAME`, `S3_PREFIX`. Uploads happen only when a form saves, and are rolled back if the record write fails.
 - **Database:** MongoDB via Mongoose 9. Base schema in `src/database/base.schema.ts`, and two global
   plugins attached to the connection (change tracking, activity logging). See the
   `query-with-mongoose` skill — Mongoose 9 pre-middleware is async, with no `next()`. Every unique
@@ -147,6 +148,15 @@ pnpm --filter @repo/ui <script>
 - **Errors:** `HttpExceptionFilter` renders Nest exceptions as `{ error: { code, message } }`, and
   `MongoDuplicateKeyFilter` turns a duplicate-key error into a 409 that names the colliding field.
 - **Auth:** Firebase Admin SDK validates JWTs via `passport-firebase-jwt`. Global `FirebaseAuthGuard` applied via `APP_GUARD`. Use `@Public()` decorator to exempt endpoints.
+- **Request context:** `AuthGuard` writes one complete `IRequestContext` into CLS on every route —
+  no optional fields — and `RequestContextService` reads it with getters that **throw rather than
+  return undefined**, because an absent context means the guard did not run. Three branches fill
+  it: authenticated (the signed-in user), `@Private()` (the `PRIVATE_API_EMAIL` service account,
+  so a machine caller carries a real organization), and `@Public()` (no identity — `userId` and
+  `orgId` are empty strings, so `getUserId`/`getOrgId` throw there and nothing public may write).
+  Every request must send `app`, `timezone` and `timezone-offset`; a `@Public()` route is the
+  exception only because `getRequest` fills `PUBLIC_HEADER_DEFAULTS` in behind what arrived, which
+  is what keeps `/` and `/health` answerable to a load balancer that sends no headers at all.
 - **HTTP:** Fastify adapter with Brotli compression and Helmet. Global `ValidationPipe` with whitelist/transform.
 - **Logging:** nestjs-pino with pino-pretty in dev. Authorization headers redacted.
 - **Config:** `@nestjs/config` with typed `AppConfigService`.
