@@ -22,12 +22,10 @@ export interface IGetCompletedModule {
 export interface ICourseFilter {
   standards: string[];
   subjects: string[];
-  topics: string[];
 }
 
-/** The values each filter may offer: standard and subject ids, and topic names. */
+/** The standard and subject ids each filter may offer. */
 export interface ICourseFilterOptions {
   standards: string[];
   subjects: string[];
-  topics: string[];
 }

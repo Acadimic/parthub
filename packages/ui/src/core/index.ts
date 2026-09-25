@@ -19,6 +19,9 @@ export type { ICardProps } from './Card';
 export { Checkbox } from './Checkbox';
 export type { ICheckboxProps } from './Checkbox';
 
+export { Chip } from './Chip';
+export type { IChipProps } from './Chip';
+
 export { Select } from './Select';
 export type { ISelectProps } from './Select';
 

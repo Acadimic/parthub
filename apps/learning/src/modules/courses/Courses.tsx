@@ -12,7 +12,7 @@ interface IProps {
   isFilter?: boolean;
 }
 
-const NO_FILTER: ICourseFilter = { standards: [], subjects: [], topics: [] };
+const NO_FILTER: ICourseFilter = { standards: [], subjects: [] };
 
 const CourseGridSkeleton = () => (
   <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
@@ -34,7 +34,7 @@ export const Courses = ({ isFilter }: IProps) => {
   const groupedCoursesByStandardId = courseStore.getGroupedCoursesByStandardId(isFilter ? filter : undefined);
 
   const standardIds = Object.keys(groupedCoursesByStandardId);
-  const isFiltering = Boolean(filter.standards.length || filter.subjects.length || filter.topics.length);
+  const isFiltering = Boolean(filter.standards.length || filter.subjects.length);
 
   // Three states, where there used to be one: the grid rendered nothing at all while the request
   // was in flight, and nothing at all when it came back empty.

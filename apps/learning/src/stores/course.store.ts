@@ -17,11 +17,8 @@ import { useUserStore } from './user.store';
 /**
  * A course in the store. `isLoadedContents` is client-only — it records whether this course's
  * modules have been fetched — and `CLIENT_ONLY_KEYS` strips it from every request.
- *
- * `topics` is what the course's modules cover, read off them by `course/published` rather than
- * stored on the course. Only the catalogue sends it, so a course loaded any other way has none.
  */
-export type ICourse = CourseDto & { isLoadedContents?: boolean; topics?: string[] };
+export type ICourse = CourseDto & { isLoadedContents?: boolean };
 export type ICourseModule = ICourseModuleFields & { isNew?: boolean };
 export type ICourseStats = NonNullable<ICourse['stats']>;
 
@@ -142,21 +139,17 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
       .getCourses()
       .filter(
         (course) =>
-          matchesFilter(course.standards, filter.standards) &&
-          matchesFilter(course.subjects, filter.subjects) &&
-          matchesFilter(course.topics, filter.topics),
+          matchesFilter(course.standards, filter.standards) && matchesFilter(course.subjects, filter.subjects),
       ),
 
-  // Each list is drawn from the courses the filters *above* it have already kept, so a learner is
-  // never offered a subject or topic that would empty the grid.
+  // Subjects are drawn from the courses the standard filter has already kept, so a learner is never
+  // offered one that would empty the grid.
   getCourseFilterOptions: (filter) => {
     const { getCourses, getFilteredCourses } = get();
-    const byStandard = getFilteredCourses({ ...filter, subjects: [], topics: [] });
-    const bySubject = getFilteredCourses({ ...filter, topics: [] });
+    const byStandard = getFilteredCourses({ ...filter, subjects: [] });
     return {
       standards: distinct(getCourses().flatMap((course) => course.standards ?? [])),
       subjects: distinct(byStandard.flatMap((course) => course.subjects ?? [])),
-      topics: distinct(bySubject.flatMap((course) => course.topics ?? [])),
     };
   },
 
