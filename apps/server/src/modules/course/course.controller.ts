@@ -4,7 +4,7 @@ import { Permissions } from '@decorators/permissions.decorator';
 import { Public } from '@decorators/public.decorator';
 import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common';
 import { type TestPaperSectionsResponse } from '@repo/shared/contracts';
-import { CourseService, type ICourseModuleContents, type IPublishedCourse } from './course.service';
+import { CourseService, type ICourseModuleContents } from './course.service';
 import { RequestContextService } from '../../context/request-context.service';
 import {
   BulkUpsertCourseModulesDto,
@@ -135,7 +135,7 @@ export class CourseController {
    */
   @Public()
   @Get('published')
-  async getPublishedCourses(): Promise<IPublishedCourse[]> {
+  async getPublishedCourses(): Promise<CourseDto[]> {
     return this.courseService.getPublishedCourses();
   }
 

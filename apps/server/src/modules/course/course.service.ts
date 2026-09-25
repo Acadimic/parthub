@@ -35,15 +35,11 @@ export interface ICourseModuleContents extends Omit<CourseModuleDto, 'materials'
 }
 
 /**
- * A course as the catalogue lists it: the course, plus the topics its modules cover.
- *
- * `topics` is read from the modules rather than stored on the course, so it cannot drift from what
- * the course actually teaches. It is what the learning app's topic filter offers, which is why the
- * catalogue carries it and the single-course routes do not.
+ * Dropped from the catalogue read. These are the AI generator's syllabus arrays — a line per topic,
+ * so dozens on a generated course — and no screen in the learning app reads any of them. Stated as
+ * an exclusion rather than a field list so the transform keeps the ownership fields it needs.
  */
-export interface IPublishedCourse extends CourseDto {
-  topics: string[];
-}
+const CATALOGUE_EXCLUDED_FIELDS = { outline: 0, outcomes: 0, prerequisites: 0 } as const;
 
 @Injectable()
 export class CourseService {
@@ -134,39 +130,12 @@ export class CourseService {
    * organization's own opt-in to being listed, and the catalogue is browsed by anonymous visitors
    * who have no organization at all.
    */
-  async getPublishedCourses(): Promise<IPublishedCourse[]> {
-    const courses = await this.courseModel
-      .find({ isPublished: true, _deleted: { $ne: true } })
+  async getPublishedCourses(): Promise<CourseDto[]> {
+    return this.courseModel
+      .find({ isPublished: true, _deleted: { $ne: true } }, CATALOGUE_EXCLUDED_FIELDS)
       .sort({ publishedDate: -1 })
-      .lean<CourseDocument[]>();
-    const topicsByCourseId = await this.getTopicsByCourseId(courses.map((course) => String(course._id)));
-    return courses.map((course) => ({
-      ...this.getTransformedCourse(course),
-      topics: topicsByCourseId.get(String(course._id)) ?? [],
-    }));
-  }
-
-  /**
-   * The distinct topics each course's modules cover, in the order the modules list them.
-   *
-   * One query for every course rather than one per course: the catalogue is unbounded, so a lookup
-   * inside the map would grow with it.
-   */
-  private async getTopicsByCourseId(courseIds: string[]): Promise<Map<string, string[]>> {
-    if (!courseIds.length) return new Map();
-    const courseModules = await this.courseModuleModel
-      .find({ course: { $in: courseIds }, _deleted: { $ne: true } }, { course: 1, topics: 1 })
-      .sort({ day: 1 })
-      .lean<Pick<CourseModuleDocument, 'course' | 'topics'>[]>();
-    return courseModules.reduce((byCourseId, courseModule) => {
-      const courseId = String(courseModule.course);
-      const topics = byCourseId.get(courseId) ?? [];
-      (courseModule.topics ?? []).forEach((topic) => {
-        if (topic && !topics.includes(topic)) topics.push(topic);
-      });
-      byCourseId.set(courseId, topics);
-      return byCourseId;
-    }, new Map<string, string[]>());
+      .lean<CourseDocument[]>()
+      .then((courses) => this.getTransformedCourses(courses));
   }
 
   async getCoursesByStandardIds(org: Types.ObjectId, standardIds: string[]): Promise<CourseDto[]> {
