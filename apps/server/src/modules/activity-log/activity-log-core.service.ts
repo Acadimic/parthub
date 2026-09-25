@@ -19,30 +19,25 @@ export interface ActivityLogData {
 
 @Injectable()
 export class ActivityLogCoreService {
+  // Each `prepare*` reads the context through the throwing getters, so a log is only ever built
+  // for a request that has one. The `return null` guards below are unreachable as a result: they
+  // predate the getters throwing, when a missing context meant the log was quietly skipped.
   constructor(private readonly contextService: RequestContextService) {}
 
-  private getApiRoute(): string | undefined {
-    try {
-      return this.contextService.getApiRoute();
-    } catch {
-      return undefined;
-    }
+  private getApiRoute(): string {
+    return this.contextService.getApiRoute();
   }
 
-  private getAccessType(): AccessType | undefined {
-    try {
-      return this.contextService.getAccessType();
-    } catch {
-      return undefined;
-    }
+  private getAccessType(): AccessType {
+    return this.contextService.getAccessType();
   }
 
-  private getUserIdSafe(): Types.ObjectId | undefined {
-    return this.contextService.getUserIdSafe();
+  private getUserId(): Types.ObjectId {
+    return this.contextService.getUserId();
   }
 
-  private getOrgIdSafe(): Types.ObjectId | undefined {
-    return this.contextService.getOrgIdSafe();
+  private getOrgId(): Types.ObjectId {
+    return this.contextService.getOrgId();
   }
 
   prepareCreateLog(
@@ -50,8 +45,8 @@ export class ActivityLogCoreService {
     entityId: Types.ObjectId,
     newState: Record<string, unknown>,
   ): ActivityLogData | null {
-    const userId = this.getUserIdSafe();
-    const org = this.getOrgIdSafe();
+    const userId = this.getUserId();
+    const org = this.getOrgId();
     const apiRoute = this.getApiRoute();
     const accessType = this.getAccessType();
     if (!userId || !org || !apiRoute || !accessType) return null;
@@ -81,8 +76,8 @@ export class ActivityLogCoreService {
       return null;
     }
 
-    const userId = this.getUserIdSafe();
-    const org = this.getOrgIdSafe();
+    const userId = this.getUserId();
+    const org = this.getOrgId();
     const apiRoute = this.getApiRoute();
     const accessType = this.getAccessType();
     if (!userId || !org || !apiRoute || !accessType) return null;
@@ -107,8 +102,8 @@ export class ActivityLogCoreService {
     entityId: Types.ObjectId,
     previousState: Record<string, unknown>,
   ): ActivityLogData | null {
-    const userId = this.getUserIdSafe();
-    const org = this.getOrgIdSafe();
+    const userId = this.getUserId();
+    const org = this.getOrgId();
     const apiRoute = this.getApiRoute();
     const accessType = this.getAccessType();
     if (!userId || !org || !apiRoute || !accessType) return null;
@@ -131,8 +126,8 @@ export class ActivityLogCoreService {
     entityId: Types.ObjectId,
     newState: Record<string, unknown>,
   ): ActivityLogData | null {
-    const userId = this.getUserIdSafe();
-    const org = this.getOrgIdSafe();
+    const userId = this.getUserId();
+    const org = this.getOrgId();
     const apiRoute = this.getApiRoute();
     const accessType = this.getAccessType();
     if (!userId || !org || !apiRoute || !accessType) return null;

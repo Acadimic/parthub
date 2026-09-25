@@ -16,6 +16,19 @@ import { DecodedIdToken } from 'firebase-admin/auth';
 import { ClsService } from 'nestjs-cls';
 import { IRequestContext } from '../context/request-context.interface';
 
+/**
+ * What a `@Public()` route is allowed to arrive without.
+ *
+ * `/`, `/health` and `/sync-indexes` are called by load balancers, uptime checks and a terminal —
+ * none of which sends the headers an app does. SUPPORT is the stand-in because these are platform
+ * and operations routes rather than anything a learner or teacher reaches.
+ */
+const PUBLIC_HEADER_DEFAULTS: Record<string, string> = {
+  app: Subdomain.SUPPORT,
+  timezone: 'UTC',
+  'timezone-offset': '0',
+};
+
 /** The parts of the incoming request this guard reads. */
 interface AuthRequest {
   url: string;
@@ -40,26 +53,6 @@ interface ContextPayload {
   timezoneOffset: string;
 }
 
-/**
- * What `setMinimalRequestContext` takes — the public and private branches share it.
- *
- * The three headers widen back to `| undefined` here, and only here, because a `@Public()` route
- * cannot require them: `/` and `/health` are called by load balancers and uptime checks that send
- * no headers at all, and `common/public-data` is fetched by an anonymous visitor through
- * `callUnAuthApi`. Requiring `app` on that path once rejected every public request. The private
- * branch passes the strict values anyway.
- *
- * `userId`/`orgId` are stated by the caller rather than defaulted inside the function: the private
- * branch resolves a real service account, the public branch passes empty strings to mean "nobody".
- */
-interface MinimalContextPayload extends Omit<ContextPayload, 'subdomain' | 'timezone' | 'timezoneOffset'> {
-  userId: string;
-  orgId: string;
-  subdomain: Subdomain | undefined;
-  timezone: string | undefined;
-  timezoneOffset: string | undefined;
-}
-
 @Injectable()
 export class AuthGuard implements CanActivate {
   // NestJS injects collaborators through the constructor, so the count reflects this class's
@@ -73,8 +66,19 @@ export class AuthGuard implements CanActivate {
     private secretsService: SecretsService,
   ) {}
 
+  /**
+   * The live request, with `PUBLIC_HEADER_DEFAULTS` filled in behind whatever the caller sent.
+   *
+   * Only for a `@Public()` route: an authenticated or private caller that cannot say which app it
+   * is must still be refused, and defaulting here for everyone would let a missing `app` header
+   * read as SUPPORT. Headers are merged in place rather than copied because `validateAndGetUser`
+   * assigns `request.user` on the object this returns.
+   */
   getRequest(context: ExecutionContext): AuthRequest {
-    return context.switchToHttp().getRequest<AuthRequest>();
+    const request = context.switchToHttp().getRequest<AuthRequest>();
+    if (!this.getValue(context, IS_PUBLIC_KEY)) return request;
+    request.headers = { ...PUBLIC_HEADER_DEFAULTS, ...request.headers };
+    return request;
   }
 
   getValue(context: ExecutionContext, key: string) {
@@ -89,24 +93,12 @@ export class AuthGuard implements CanActivate {
   }
 
   /**
-   * The app the request came from, or undefined when the header was not sent. An unrecognised
-   * value is always refused, so a typo cannot silently read as "no app".
-   *
-   * It used to be parsed out of the request path, which never worked: no client URL carries a
-   * `learn`/`teach`/`support` segment and no global prefix adds one, so every `@Subdomains` route
-   * was refused.
-   *
-   * Public routes read it through here rather than `getApp`: none of them declares `@Subdomains`,
-   * and an anonymous visitor calls them through `callUnAuthApi`, which sends no app header.
-   * Requiring it there rejected every public request.
-   */
-  /**
    * A header the caller must send. Throws rather than returning undefined, so a missing value
    * surfaces at the edge instead of becoming an empty string three layers down.
    *
-   * Only used on the authenticated and private paths. `@Public()` routes stay tolerant on purpose:
-   * `/` and `/health` are hit by load balancers and uptime checks that send no headers at all, and
-   * `common/public-data` is fetched by an anonymous visitor.
+   * Every branch reads through here, public included. A `@Public()` route survives a caller that
+   * sends nothing — a load balancer, an uptime check — because `getRequest` has already filled in
+   * `PUBLIC_HEADER_DEFAULTS` behind whatever arrived, not because this is lenient.
    */
   getRequiredHeader(context: ExecutionContext, key: string): string {
     const value = this.getHeaderValue(context, key) as string | undefined;
@@ -114,20 +106,20 @@ export class AuthGuard implements CanActivate {
     return value;
   }
 
-  readApp(context: ExecutionContext): Subdomain | undefined {
-    const value = this.getHeaderValue(context, 'app') as string | undefined;
-    if (!value) return undefined;
-    if (!(Object.values(Subdomain) as string[]).includes(value)) {
-      throw new UnauthorizedException(`Unknown app: ${value}`);
-    }
-    return value as Subdomain;
-  }
-
-  /** The app header, required. Every authenticated route must say which app it is (@Subdomains). */
+  /**
+   * The app the request came from. Required on every branch, and checked against the enum, so a
+   * typo is refused by name rather than travelling on as a `Subdomain` nothing will ever match.
+   *
+   * It used to be parsed out of the request path, which never worked: no client URL carries a
+   * `learn`/`teach`/`support` segment and no global prefix adds one, so every `@Subdomains` route
+   * was refused.
+   */
   getApp(context: ExecutionContext): Subdomain {
-    const app = this.readApp(context);
-    if (!app) throw new UnauthorizedException('The app header is required.');
-    return app;
+    const app = this.getRequiredHeader(context, 'app');
+    if (!(Object.values(Subdomain) as string[]).includes(app)) {
+      throw new UnauthorizedException(`Unknown app: ${app}`);
+    }
+    return app as Subdomain;
   }
 
   setRequestContext(payload: UserDto | RegisterUserDto, otherPayload: ContextPayload) {
@@ -154,9 +146,9 @@ export class AuthGuard implements CanActivate {
    * The account is expected to belong to exactly one organization; `getUsersByEmail` returns a row
    * per org, and the first is taken.
    */
-  private privateIdentity?: { userId: string; orgId: string };
+  private privateIdentity?: { userId: string; orgId: string; permission: DefaultRole };
 
-  private async getPrivateIdentity(): Promise<{ userId: string; orgId: string }> {
+  private async getPrivateIdentity(): Promise<{ userId: string; orgId: string; permission: DefaultRole }> {
     if (this.privateIdentity) return this.privateIdentity;
 
     const email = this.secretsService.get(Secrets.PRIVATE_API_EMAIL) as string;
@@ -166,15 +158,11 @@ export class AuthGuard implements CanActivate {
     const user = users?.[0];
     if (!user) throw new UnauthorizedException(`Private API service account ${email} was not found.`);
 
-    this.privateIdentity = { userId: String(user._id), orgId: String(user.org) };
+    this.privateIdentity = { userId: String(user._id), orgId: String(user.org), permission: user.permission };
     return this.privateIdentity;
   }
 
-  setMinimalRequestContext(otherPayload: MinimalContextPayload) {
-    const requestContext: IRequestContext = {
-      permission: DefaultRole.ADMIN,
-      ...otherPayload,
-    };
+  setWholeRequestContext(requestContext: IRequestContext) {
     this.clsService.set('requestContext', requestContext);
   }
 
@@ -227,7 +215,7 @@ export class AuthGuard implements CanActivate {
     const { url } = request;
     const { method } = request;
     const apiRoute = `${method} ${url}`;
-    const subdomain = this.readApp(context);
+    const subdomain = this.getApp(context);
     const timezone = this.getHeaderValue(context, 'timezone') as string;
     const timezoneOffset = this.getHeaderValue(context, 'timezone-offset') as string;
 
@@ -238,8 +226,10 @@ export class AuthGuard implements CanActivate {
 
     if (isPublic) {
       accessType = AccessType.PUBLIC;
-      // No identity: a public route has no user and no organization.
-      this.setMinimalRequestContext({
+      // No identity: a public route has no user and no organization. The empty strings are the
+      // only place a context id is not a real ObjectId, which is why `getUserId`/`getOrgId` throw
+      // here — nothing on a public route may write, and a write is what those getters serve.
+      this.setWholeRequestContext({
         apiRoute,
         accessType,
         subdomain,
@@ -247,6 +237,7 @@ export class AuthGuard implements CanActivate {
         timezoneOffset,
         userId: '',
         orgId: '',
+        permission: DefaultRole.ADMIN,
       });
       return true;
     }
@@ -262,12 +253,13 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('Invalid API key.');
       }
       const identity = await this.getPrivateIdentity();
-      // Re-read strictly: a private caller is one of our apps, so it must identify itself the same
-      // way an authenticated one does. The tolerant values above exist for the public branch.
-      this.setMinimalRequestContext({
+      // Re-read the two timezone headers strictly: a private caller is one of our apps, so it must
+      // identify itself the way an authenticated one does rather than inherit a public default.
+      // `identity` supplies userId, orgId and permission, so it is spread last.
+      this.setWholeRequestContext({
         apiRoute,
         accessType,
-        subdomain: this.getApp(context),
+        subdomain,
         timezone: this.getRequiredHeader(context, 'timezone'),
         timezoneOffset: this.getRequiredHeader(context, 'timezone-offset'),
         ...identity,

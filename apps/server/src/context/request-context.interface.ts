@@ -6,7 +6,7 @@ export interface IRequestContext {
   permission: DefaultRole;
   apiRoute: string;
   accessType: AccessType;
-  subdomain?: Subdomain;
-  timezone?: string;
-  timezoneOffset?: string;
+  subdomain: Subdomain;
+  timezone: string;
+  timezoneOffset: string;
 }

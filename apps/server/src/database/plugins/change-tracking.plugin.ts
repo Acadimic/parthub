@@ -67,11 +67,12 @@ const INSERT_SEEDED_FIELDS = ['org', 'createdBy'] as const;
  * default (Mongoose applies defaults on upsert-insert via `setDefaultsOnInsert`, on by default).
  */
 export function createChangeTrackingPlugin(contextService: RequestContextService) {
-  // Safe accessors: public and private routes run with a minimal context whose ids are empty
-  // strings, and background work has no context at all. The throwing getters would surface a
-  // BSONError from deep inside a write instead of the guard messages below.
-  const userId = () => contextService.getUserIdSafe();
-  const orgId = () => contextService.getOrgIdSafe();
+  // Both throw when there is no usable context: missing entirely (background work) raises from
+  // `getContext`, and a `@Public()` route's empty-string ids raise a BSONError from `ObjectId`.
+  // A write therefore cannot reach the database unowned — which is the point — but it means the
+  // `missingOrg` guards below no longer fire, since neither accessor can return a falsy value.
+  const userId = () => contextService.getUserId();
+  const orgId = () => contextService.getOrgId();
 
   const missingOrg = (operation: string) =>
     new Error(`Organization (org) is required from the request context for ${operation}`);
