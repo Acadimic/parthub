@@ -1,4 +1,10 @@
+import { useId } from 'react';
+
 export const PointerSvg = () => {
+  // The pattern id was a literal ":R55im:" — a React-generated id that had been pasted in, so two
+  // of these on one page referenced the same <pattern>. `useId` keeps it unique per instance.
+  const patternId = useId();
+
   return (
     <div className="text-foreground">
       <svg
@@ -9,7 +15,7 @@ export const PointerSvg = () => {
       >
         <defs>
           <pattern
-            id=":R55im:"
+            id={patternId}
             width="15"
             height="15"
             patternUnits="userSpaceOnUse"
@@ -17,10 +23,10 @@ export const PointerSvg = () => {
             x="0"
             y="0"
           >
-            <circle id="pattern-circle" cx="1" cy="1" r="1"></circle>
+            <circle cx="1" cy="1" r="1"></circle>
           </pattern>
         </defs>
-        <rect width="100%" height="100%" stroke-width="0" fill="url(#:R55im:)"></rect>
+        <rect width="100%" height="100%" strokeWidth={0} fill={`url(#${patternId})`}></rect>
       </svg>
     </div>
   );

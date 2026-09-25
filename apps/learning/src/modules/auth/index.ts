@@ -1,3 +1,2 @@
-export * from './OnboardingBanner';
-export * from './SignIn2';
-export * from './SignUp2';
+export * from './SignIn';
+export * from './SignUp';

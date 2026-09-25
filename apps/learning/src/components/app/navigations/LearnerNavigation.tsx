@@ -1,4 +1,4 @@
-import { BookIcon, HouseIcon, type Icon, PaperPlaneIcon, VideoIcon } from '@phosphor-icons/react';
+import { GearIcon, HouseIcon, type Icon, PaperPlaneIcon, VideoCameraIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
 import { Link } from '@repo/ui/app';
 
@@ -9,16 +9,12 @@ interface INavigation {
   disabled?: boolean;
 }
 
+/** Each route needs a page under `src/pages`; `/learning` and `/sessions` had none and answered 404. */
 export const learnerRoutes: INavigation[] = [
   {
     name: 'Home',
     route: '/',
     icon: HouseIcon,
-  },
-  {
-    name: 'Learning',
-    route: '/learning',
-    icon: BookIcon,
   },
   {
     name: 'Courses',
@@ -28,7 +24,12 @@ export const learnerRoutes: INavigation[] = [
   {
     name: 'Sessions',
     route: '/sessions',
-    icon: VideoIcon,
+    icon: VideoCameraIcon,
+  },
+  {
+    name: 'Account',
+    route: '/account-settings',
+    icon: GearIcon,
   },
 ];
 

@@ -65,21 +65,21 @@ const Home = () => {
   return (
     <div className="">
       <Container>
-        <div className="w-full flex flex-col-reverse lg:flex-row items-start lg:items-center justify-center py-4 relative min-h-[500px]">
-          <div className="text-left z-10">
-            <div className="text-3xl md:text-6xl font-medium max-w-full md:max-w-[800px]">
+        <div className="relative grid min-h-[500px] w-full grid-cols-1 items-center gap-10 py-12 lg:grid-cols-2 lg:gap-16 lg:py-16">
+          <div className="z-10 order-2 text-left lg:order-1">
+            <h1 className="text-4xl font-semibold tracking-tight md:text-5xl xl:text-6xl">
               Academic Courses That Drive Results
-            </div>
-            <div className="mt-2 max-w-[500px]">
+            </h1>
+            <p className="mt-5 max-w-xl text-base text-muted-foreground md:text-lg">
               Accelerate your career with 10,000+ courses from leading educators and institutions.
-            </div>
-            <div className="flex justify-start space-x-3 mt-6">
-              <Link className="px-6 md:px-8 py-3" href="/sign-in">
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link className="px-6 py-3 md:px-8" href="/sign-in">
                 Join For Free
               </Link>
               <Link
                 isSecondary
-                className="px-6 md:px-8 py-3 text-foreground"
+                className="px-6 py-3 text-foreground md:px-8"
                 href="https://teach.acadimic.com"
                 target="_blank"
               >
@@ -87,8 +87,19 @@ const Home = () => {
               </Link>
             </div>
           </div>
-          <div className="z-10 flex justify-center lg:justify-end w-full">
-            <img src="/images/banner.png" alt="Banner" className="h-auto" />
+          <div className="z-10 order-1 flex justify-center lg:order-2 lg:justify-end">
+            {/* A transparent cut-out, so it carries no frame: a ring or shadow would trace the empty
+                corners rather than the subject. Intrinsic size is set because this is the LCP
+                element and the copy beside it would otherwise shift as the image decodes. */}
+            <img
+              src="/images/banner.png"
+              alt="A teacher discussing a book with a student"
+              width={512}
+              height={512}
+              loading="eager"
+              fetchPriority="high"
+              className="h-auto w-full max-w-[360px] sm:max-w-[420px] lg:max-w-[512px]"
+            />
           </div>
         </div>
         <BannerImg />

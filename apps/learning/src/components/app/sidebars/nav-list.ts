@@ -1,15 +1,4 @@
-import {
-  CalendarBlankIcon,
-  ChatsCircleIcon,
-  ColumnsIcon,
-  FileTextIcon,
-  FolderIcon,
-  GridFourIcon,
-  HouseIcon,
-  LifebuoyIcon,
-  UsersThreeIcon,
-  UsersFourIcon,
-} from '@phosphor-icons/react';
+import { GearIcon, GridFourIcon, ShieldCheckIcon, UserCircleIcon, VideoCameraIcon } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 
 interface ISidebarMenu {
@@ -25,70 +14,44 @@ interface ISidebarRoute {
   menus: ISidebarMenu[];
 }
 
+/**
+ * Every route here must resolve to a page under `src/pages`. The list previously carried the
+ * teaching app's menu (students, batches, classes, study materials, community), so seven of its
+ * nine entries answered 404 in this app.
+ */
 export const Routes: ISidebarRoute[] = [
   {
-    type: 'App',
+    type: 'Learn',
     menus: [
-      {
-        name: 'Home',
-        route: '/',
-        icon: HouseIcon,
-      },
-      {
-        name: 'Students',
-        route: '/students',
-        icon: UsersThreeIcon,
-      },
-      {
-        name: 'Collaborators',
-        route: '/collaborators',
-        icon: UsersFourIcon,
-      },
-      {
-        name: 'Batches',
-        route: '/batches',
-        icon: ColumnsIcon,
-      },
-    ],
-  },
-  {
-    type: 'Manage',
-    menus: [
-      {
-        name: 'Classes',
-        route: '/classes',
-        icon: CalendarBlankIcon,
-      },
-      {
-        name: 'Test Papers',
-        route: '/test-papers',
-        icon: FileTextIcon,
-      },
-      {
-        name: 'Study Materials',
-        route: '/study-materials',
-        icon: FolderIcon,
-      },
       {
         name: 'Courses',
         route: '/courses',
         icon: GridFourIcon,
       },
+      {
+        name: 'Sessions',
+        route: '/sessions',
+        icon: VideoCameraIcon,
+      },
     ],
   },
   {
-    type: 'General',
+    type: 'Account',
     menus: [
       {
-        name: 'Community',
-        route: '/community',
-        icon: ChatsCircleIcon,
+        name: 'Account',
+        route: '/account-settings',
+        icon: GearIcon,
       },
       {
-        name: 'Support',
-        route: 'https://www.parthhub.com/contact-us',
-        icon: LifebuoyIcon,
-        isOpenInNewTab: true,
+        name: 'Profile',
+        route: '/account-settings/profile',
+        icon: UserCircleIcon,
+      },
+      {
+        name: 'Security',
+        route: '/account-settings/security',
+        icon: ShieldCheckIcon,
       },
     ],
   },

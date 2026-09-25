@@ -1,5 +1,6 @@
 import { type MeetDto } from '@repo/shared/contracts';
 import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
+import { MeetService } from '../services';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -15,6 +16,10 @@ export interface IMeetState extends IRequestSlice<MeetFetch> {
 
   addMeets: (meets: MeetDto[]) => void;
   removeMeetById: (meetId: string) => void;
+
+  /** Sessions the signed-in learner attends, sorted by start time, soonest first. */
+  getMyMeetsSorted: () => MeetDto[];
+  loadMyMeets: () => Promise<void>;
   reset: () => void;
 }
 
@@ -47,6 +52,15 @@ export const useMeetStore = create<IMeetState>()((set, get) => ({
       return removed ? { meetMap } : state;
     });
   },
+
+  getMyMeetsSorted: () =>
+    [...get().getMeets()].sort((a, b) => new Date(a.startTime ?? 0).getTime() - new Date(b.startTime ?? 0).getTime()),
+
+  loadMyMeets: () =>
+    get().run('meets', async () => {
+      const result = await MeetService.getMyMeets();
+      if (result?.data) get().addMeets(result.data);
+    }),
 
   reset: () => {
     set({ meetMap: {} });

@@ -2,145 +2,176 @@ import { Button, FullLogo, Logo, ToggleTheme } from '@repo/ui/app';
 import { StorageKey } from '@enums';
 import { CaretDoubleRightIcon, CaretLeftIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { ProfileDropdown } from './components';
 import { Routes } from './nav-list';
 
-const drawerWidth = 240;
+const DRAWER_WIDTH = 240;
+const RAIL_WIDTH = 65;
+
+interface IDrawerContentProps {
+  open: boolean;
+  route: string;
+  onNavigate: (route: string, isOpenInNewTab?: boolean) => void;
+  onToggle: () => void;
+}
+
+/**
+ * Kept at module scope. Declared inside `AppSidebar` it was a new component type on every render,
+ * so React unmounted and remounted the whole drawer — losing focus and replaying the transition.
+ */
+const DrawerContent = ({ open, route, onNavigate, onToggle }: IDrawerContentProps) => (
+  <div className="bg-background flex min-h-screen flex-col items-stretch justify-between border-r border-border">
+    <div className="grow">
+      <div className="flex h-16 items-center gap-2 px-4">
+        {open ? (
+          <>
+            <FullLogo />
+            <span className="blue-gradient text-xs font-semibold">Learning</span>
+          </>
+        ) : (
+          <div className="mx-auto">
+            <Logo />
+          </div>
+        )}
+      </div>
+      <hr className="border-border" />
+      <nav>
+        {Routes.map((item) => (
+          <div key={item.type} className="py-3">
+            {/* At the rail width there is no room for the label, and `truncate` renders it as "M…". */}
+            {open ? (
+              <div className="mx-5 my-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {item.type}
+              </div>
+            ) : (
+              <hr className="mx-3 my-3 border-border" />
+            )}
+            <div className="flex flex-col gap-0.5 px-2">
+              {item.menus.map((menu) => {
+                const isActive = menu.route === route;
+                return (
+                  <button
+                    key={menu.name}
+                    title={open ? undefined : menu.name}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`flex w-full items-center rounded-md py-2.5 transition-colors ${
+                      open ? 'px-3' : 'px-0'
+                    } ${isActive ? 'bg-accent text-primary' : 'text-foreground hover:bg-accent/60'}`}
+                    onClick={() => onNavigate(menu.route, menu.isOpenInNewTab)}
+                  >
+                    <span className={`flex items-center justify-center ${open ? 'mr-3' : 'mx-auto'}`}>
+                      <menu.icon
+                        weight={isActive ? 'fill' : 'regular'}
+                        className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
+                      />
+                    </span>
+                    {open && <span className="truncate text-sm font-medium">{menu.name}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+    </div>
+    <div className={`p-4 ${open ? 'flex justify-end' : 'flex justify-center'}`}>
+      <button
+        onClick={onToggle}
+        aria-label={open ? 'Collapse sidebar' : 'Expand sidebar'}
+        className="rounded p-1 hover:bg-accent"
+      >
+        <CaretDoubleRightIcon weight="bold" className={`h-5 w-5 transition ${open ? 'rotate-180' : 'text-primary'}`} />
+      </button>
+    </div>
+  </div>
+);
 
 interface IProps {
   children: ReactNode;
 }
 
 export const AppSidebar = ({ children }: IProps) => {
-  const [isLargeDevice, setIsLargeDevice] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsLargeDevice(window.innerWidth >= 640);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  const collapsed = typeof window !== 'undefined' ? localStorage.getItem(StorageKey.COLLAPSED) : null;
-  const isOpen = collapsed ? collapsed === 'true' : isLargeDevice;
-  const [open, setOpen] = useState<boolean>(isOpen);
+  // Starts closed so the server and the first client render agree; the stored preference (or the
+  // viewport, on a first visit) is applied on mount. Reading localStorage during render both
+  // risked a hydration mismatch and pinned `open` to the pre-measurement value, which is why the
+  // drawer used to open collapsed on a desktop.
+  const [open, setOpen] = useState(false);
   const { route, push, query, back } = useRouter();
   const name = query?.name as string;
 
-  const handleDrawerClick = () => {
-    localStorage.setItem(StorageKey.COLLAPSED, open ? 'false' : 'true');
-    setOpen(!open);
-  };
-
-  const allRoutes = useMemo(() => {
-    const routes: string[] = [];
-    Routes.forEach((item) => {
-      item.menus.forEach((menu) => {
-        routes.push(menu.route);
-      });
-    });
-    return routes;
+  useEffect(() => {
+    const stored = localStorage.getItem(StorageKey.COLLAPSED);
+    setOpen(stored === null ? window.innerWidth >= 640 : stored === 'true');
   }, []);
 
-  const DrawerContent = () => (
-    <div className="bg-background min-h-screen flex flex-col justify-between items-stretch border-r border-border">
-      <div className="grow">
-        <div className="flex items-end w-full space-x-2 p-4 h-16">
-          <FullLogo />
-          <div className="blue-gradient font-semibold text-xs">Learning</div>
-        </div>
-        <hr className="border-border" />
-        <nav>
-          {Routes.map((item) => (
-            <div key={item.type} className="py-3">
-              <div className="text-xs font-semibold my-3 mx-5 text-muted-foreground truncate">{item.type}</div>
-              <div>
-                {item.menus.map((menu) => (
-                  <button
-                    key={menu.name}
-                    className="w-full flex items-center px-2.5 py-3 hover:bg-accent"
-                    onClick={() => {
-                      if (menu.isOpenInNewTab) {
-                        window.open(menu.route, '_blank');
-                      } else {
-                        push(menu.route);
-                      }
-                    }}
-                  >
-                    <span
-                      className={`flex items-center justify-center ${open ? 'mr-3' : 'mx-auto'}`}
-                      style={{ minWidth: 0 }}
-                    >
-                      <menu.icon className={`w-5 h-5 ${menu.route === route ? 'text-primary' : 'text-foreground'}`} />
-                    </span>
-                    {open && (
-                      <span className={`text-sm font-semibold ${menu.route === route ? 'blue-gradient' : ''}`}>
-                        {menu.name}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </nav>
-      </div>
-      <div className="p-4 flex justify-end">
-        <button onClick={handleDrawerClick} className="p-1 rounded hover:bg-accent">
-          <CaretDoubleRightIcon
-            weight="bold"
-            className={`w-5 h-5 transition ${open ? 'rotate-180' : 'text-primary'}`}
-          />
-        </button>
-      </div>
-    </div>
+  const handleDrawerClick = () => {
+    setOpen((current) => {
+      localStorage.setItem(StorageKey.COLLAPSED, current ? 'false' : 'true');
+      return !current;
+    });
+  };
+
+  const handleNavigate = useCallback(
+    (target: string, isOpenInNewTab?: boolean) => {
+      if (isOpenInNewTab) {
+        window.open(target, '_blank');
+        return;
+      }
+      push(target);
+      if (window.innerWidth < 640) setOpen(false);
+    },
+    [push],
   );
+
+  const allRoutes = useMemo(() => Routes.flatMap((item) => item.menus.map((menu) => menu.route)), []);
+
+  const drawer = <DrawerContent open={open} route={route} onNavigate={handleNavigate} onToggle={handleDrawerClick} />;
 
   return (
     <div className="flex">
       {/* Mobile drawer overlay */}
-      {open && <div className="fixed inset-0 bg-black/50 z-40 sm:hidden" onClick={handleDrawerClick} />}
+      {open && <div className="fixed inset-0 z-40 bg-black/50 sm:hidden" onClick={handleDrawerClick} />}
       {/* Mobile drawer */}
       <aside
-        className={`fixed top-0 left-0 h-full z-50 sm:hidden transition-transform duration-300 ${
+        className={`fixed left-0 top-0 z-50 h-full transition-transform duration-300 sm:hidden ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
-        style={{ width: drawerWidth }}
+        style={{ width: DRAWER_WIDTH }}
       >
-        <DrawerContent />
+        {drawer}
       </aside>
       {/* Desktop drawer */}
       <aside
-        className={`hidden sm:block flex-shrink-0 transition-all duration-300 overflow-hidden`}
-        style={{ width: open ? drawerWidth : 65 }}
+        className="hidden flex-shrink-0 overflow-hidden transition-all duration-300 sm:block"
+        style={{ width: open ? DRAWER_WIDTH : RAIL_WIDTH }}
       >
-        <div className="fixed top-0 left-0 h-full overflow-hidden" style={{ width: open ? drawerWidth : 65 }}>
-          <DrawerContent />
+        <div className="fixed left-0 top-0 h-full overflow-hidden" style={{ width: open ? DRAWER_WIDTH : RAIL_WIDTH }}>
+          {drawer}
         </div>
       </aside>
       {/* Main content */}
-      <main className="flex-1 h-screen w-full">
+      <main className="h-screen w-full flex-1 overflow-auto">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-background border-b border-border">
-          <div className="flex justify-between items-center w-full px-4 h-16">
+        <header className="sticky top-0 z-30 border-b border-border bg-background">
+          <div className="flex h-16 w-full items-center justify-between px-4">
             <div className="flex items-center">
               <button
                 aria-label="open drawer"
                 onClick={handleDrawerClick}
-                className={`hover:bg-transparent p-0 ${open ? 'hidden sm:hidden' : 'block sm:hidden'} mr-5`}
+                className={`p-0 hover:bg-transparent ${open ? 'hidden sm:hidden' : 'block sm:hidden'} mr-5`}
               >
                 <Logo />
               </button>
             </div>
-            <div className="w-full flex justify-between items-center space-x-2">
-              <div className="text-lg font-bold capitalize flex items-center space-x-2">
+            <div className="flex w-full items-center justify-between space-x-2">
+              <div className="flex items-center space-x-2 text-lg font-bold capitalize">
                 {allRoutes.includes(route) ? (
                   <>{name || route?.slice(1).split('-').join(' ')}</>
                 ) : (
                   <Button
                     className="px-0"
-                    leftsection={<CaretLeftIcon weight="bold" className="w-6 h-6" />}
+                    leftsection={<CaretLeftIcon weight="bold" className="h-6 w-6" />}
                     isSubtle
                     onClick={back}
                   >
@@ -159,9 +190,7 @@ export const AppSidebar = ({ children }: IProps) => {
             </div>
           </div>
         </header>
-        <div className="overflow-y-auto" style={{ height: 'calc(100vh - 64px)' }}>
-          <div className="py-4 px-4 md:py-4 md:px-4 bg-muted min-h-full">{children}</div>
-        </div>
+        <div className="min-h-full bg-muted p-4 md:p-6">{children}</div>
       </main>
     </div>
   );

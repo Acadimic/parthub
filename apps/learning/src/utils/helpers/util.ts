@@ -38,12 +38,15 @@ export const getStandardSelectItem = (standard: StandardDto): ISelectItem => {
   return { label: standard.name, value: standard._id, group: standard.group };
 };
 
-export const validateFieldValues = (obj: Record<string, unknown>, fields: string[]): string[] => {
+// Generic rather than `Record<string, unknown>`, which an `interface` is not assignable to: every
+// form's state is declared as one, so the parameter type rejected the callers it exists for.
+export const validateFieldValues = <T extends object>(obj: T, fields: string[]): string[] => {
+  const values = obj as Record<string, unknown>;
   const errorFields: string[] = [];
   for (const field of fields) {
-    if (obj[field] === undefined || obj[field] === null || obj[field] === '') {
+    if (values[field] === undefined || values[field] === null || values[field] === '') {
       errorFields.push(field);
-    } else if (Array.isArray(obj[field]) && obj[field].length === 0) {
+    } else if (Array.isArray(values[field]) && values[field].length === 0) {
       errorFields.push(field);
     }
   }
