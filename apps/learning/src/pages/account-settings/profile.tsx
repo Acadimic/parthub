@@ -5,6 +5,6 @@ function ProfilePage() {
   return <AccountSettings />;
 }
 
-ProfilePage.layout = Layout.PAGE;
+ProfilePage.layout = Layout.PAGE_NAVIGATION;
 
 export default ProfilePage;

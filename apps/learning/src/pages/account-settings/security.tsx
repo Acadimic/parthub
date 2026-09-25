@@ -5,6 +5,6 @@ function SecurityPage() {
   return <AccountSettings />;
 }
 
-SecurityPage.layout = Layout.PAGE;
+SecurityPage.layout = Layout.PAGE_NAVIGATION;
 
 export default SecurityPage;

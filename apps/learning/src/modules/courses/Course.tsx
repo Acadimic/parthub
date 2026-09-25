@@ -1,7 +1,8 @@
-import { FullScreenLoader } from '@repo/ui/app';
+import { BlankState } from '@components/others';
+import { useCourse } from '@hooks/course.hook';
 import { useCourseLookups, useSelectedCourse, useSelectedUser, useSelectorLookups } from '@stores';
 import { useEffect, useState } from 'react';
-import { CourseModules, CoursePreview } from './components';
+import { CourseModules, CourseModulesSkeleton, CoursePreview, CoursePreviewSkeleton } from './components';
 
 interface IProps {
   courseId: string;
@@ -11,23 +12,23 @@ interface IProps {
 export const Course = ({ courseId, isPreview }: IProps) => {
   const courseStore = useCourseLookups();
   const selectorStore = useSelectorLookups();
-  const { loadCourseModules, loadCourses, loadCompletedModules } = courseStore;
+  const { loadCourseModules, loadCourses, loadCompletedModules, getCourseById } = courseStore;
   const { setSelectedCourseId } = selectorStore;
+  const { getSelectedItemIndex, selectResumeItem } = useCourse();
   const selectedCourse = useSelectedCourse();
   const selectedUser = useSelectedUser();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchCourseData = async () => {
-    if (isLoading || !selectedUser) return;
+    if (!selectedUser) return;
     setIsLoading(true);
     // The course list has to land before the modules load: `loadCourseModules` reads the course
-    // back out of the store and returns early when it is not there yet. These used to be three
-    // `const promise = ...` bindings awaited further down, which starts all three at once — the
-    // modules fetch then found no course and silently skipped, so the page showed "No Module".
-    if (!selectedCourse) await loadCourses();
+    // back out of the store and returns early when it is not there yet.
+    if (!getCourseById(courseId)) await loadCourses();
+    const course = getCourseById(courseId);
     await Promise.all([
-      selectedCourse?.isLoadedContents ? Promise.resolve() : loadCourseModules(courseId),
-      selectedUser?.isLoadedCompletedModules ? Promise.resolve() : loadCompletedModules(),
+      course?.isLoadedContents ? Promise.resolve() : loadCourseModules(courseId),
+      selectedUser.isLoadedCompletedModules ? Promise.resolve() : loadCompletedModules(),
     ]);
     setSelectedCourseId(courseId);
     setIsLoading(false);
@@ -36,11 +37,24 @@ export const Course = ({ courseId, isPreview }: IProps) => {
   useEffect(() => {
     if (!courseId) return;
     fetchCourseData();
-  }, [courseId]);
+  }, [courseId, selectedUser?._id]);
 
-  let content = <CourseModules />;
-  if (isLoading || !selectedCourse) content = <FullScreenLoader loading={isLoading} withHeader={true} />;
-  else if (isPreview) content = <CoursePreview />;
+  // The learning view needs an item on screen. After a fresh load — a hard refresh, a shared link —
+  // nothing is selected, so it opens on the first lesson the learner has not finished.
+  useEffect(() => {
+    if (isLoading || isPreview || !selectedCourse) return;
+    if (getSelectedItemIndex(courseId) === -1) selectResumeItem(courseId);
+  }, [isLoading, isPreview, selectedCourse?._id]);
 
-  return <>{content}</>;
+  if (isLoading) return isPreview ? <CoursePreviewSkeleton /> : <CourseModulesSkeleton />;
+  if (!selectedCourse) {
+    return (
+      <BlankState
+        className="py-24"
+        label="Course not found"
+        description="It may have been unpublished, or the link is no longer valid."
+      />
+    );
+  }
+  return isPreview ? <CoursePreview /> : <CourseModules />;
 };

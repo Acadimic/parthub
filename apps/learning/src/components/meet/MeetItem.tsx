@@ -24,9 +24,10 @@ export const MeetItem = ({ meet, isSmallJoinable = false, isCopyIconOnly = false
           <MeetingTitle meet={meet} />
         </div>
         <div className="text-xs text-muted-foreground font-medium text-center md:max-w-[36%]">
+          {/* The session's own date: this used to print today's date in front of the session's time. */}
           <div>
-            {getStringFormattedDate(new Date())} {meet.startTime ? getFormattedTime(meet.startTime) : ''} -{' '}
-            {meet.endTime ? getFormattedTime(meet.endTime) : ''}
+            {meet.startTime ? `${getStringFormattedDate(meet.startTime)} ${getFormattedTime(meet.startTime)}` : ''}
+            {meet.endTime ? ` - ${getFormattedTime(meet.endTime)}` : ''}
           </div>
           {meet.startTime ? <div>{getFrequencyText([...(meet.weekDays ?? [])], meet.startTime)}</div> : null}
         </div>

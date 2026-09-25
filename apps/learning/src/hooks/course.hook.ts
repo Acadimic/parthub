@@ -1,55 +1,86 @@
-import { CourseItemType, ModuleContentType } from '@enums';
-import { type ICourseModuleItem } from '@interfaces';
-import { type IMaterial, type ITestPaper, useMaterialLookups, useSelectorLookups } from '@stores';
+import { ModuleContentType } from '@enums';
+import { type ICourseModuleItem, type ICourseProgress } from '@interfaces';
+import {
+  type ICourseModule,
+  type IMaterial,
+  type ITestPaper,
+  useCourseLookups,
+  useMaterialLookups,
+  useSelectorLookups,
+  useTestPaperLookups,
+} from '@stores';
 import { useRouter } from 'next/router';
-import { useApp } from './app.hook';
-import { useWindowDimensions } from './dimensions.hook';
+
+/** Modules in the order a learner works through them: by day, then as the server listed them. */
+const sortByDay = (modules: ICourseModule[]) => [...modules].sort((a, b) => a.day - b.day);
 
 export const useCourse = () => {
   const selectorStore = useSelectorLookups();
+  const courseStore = useCourseLookups();
   const materialStore = useMaterialLookups();
+  const testPaperStore = useTestPaperLookups();
   const {
-    setSelectedCourseItem,
     setSelectedCourseModuleId,
-    removeSelectedCourseModuleId,
     setIsCourseMenuOpen,
     setSelectedMaterialId,
     setSelectedTestPaperId,
     removeSelectedTestPaperId,
     removeSelectedMaterialId,
     removeSelectedContent,
-    selectedCourseItem,
     selectedCourseModuleId,
+    selectedMaterialId,
+    selectedTestPaperId,
     isCourseMenuOpen,
   } = selectorStore;
-  const { getMaterialVideos } = materialStore;
-  const { scrollToDiv } = useApp();
+  const { getCourseModuleByCourseId, isCourseModuleItemCompleted } = courseStore;
+  const { getMaterialVideos, getMaterialsByIds } = materialStore;
+  const { getTestPapersByIds } = testPaperStore;
   const { push } = useRouter();
 
-  const { isSmallScreen } = useWindowDimensions();
-  // const collapsed = localStorage.getItem(StorageKey.COLLAPSED);
-  // const isOpen = collapsed ? collapsed === 'true' : !isSmallScreen;
-  // const [isCourseMenuOpen, setIsCourseMenuOpen] = useState<boolean>(isOpen);
+  const getCourseModules = (courseId: string) => sortByDay(getCourseModuleByCourseId(courseId));
 
-  const onSelectCourseItem = (courseItem: CourseItemType) => {
-    if (isSmallScreen) handleCourseMenuClick();
-    setSelectedCourseItem(courseItem);
-    removeSelectedCourseModuleId();
+  /** Every material and test paper of a course, flattened in syllabus order. */
+  const getCourseItems = (courseId: string): ICourseModuleItem[] =>
+    getCourseModules(courseId).flatMap((courseModule) => [
+      ...getMaterialsByIds(courseModule.materials ?? []).map((material) => ({
+        courseId,
+        courseModuleId: courseModule._id,
+        material,
+      })),
+      ...getTestPapersByIds(courseModule.testPapers ?? []).map((testPaper) => ({
+        courseId,
+        courseModuleId: courseModule._id,
+        testPaper,
+      })),
+    ]);
+
+  const getItemId = (item: ICourseModuleItem) => item.material?._id ?? item.testPaper?._id ?? '';
+
+  const isItemCompleted = (item: ICourseModuleItem) =>
+    isCourseModuleItemCompleted({
+      course: item.courseId,
+      courseModule: item.courseModuleId,
+      collectionItem: getItemId(item),
+    });
+
+  const isItemSelected = (item: ICourseModuleItem) =>
+    item.courseModuleId === selectedCourseModuleId &&
+    ((!!item.material && item.material._id === selectedMaterialId) ||
+      (!!item.testPaper && item.testPaper._id === selectedTestPaperId));
+
+  const getCourseProgress = (courseId: string): ICourseProgress => {
+    const items = getCourseItems(courseId);
+    const completed = items.filter(isItemCompleted).length;
+    return { completed, total: items.length, percent: items.length ? (completed / items.length) * 100 : 0 };
   };
 
-  const onSelectCourseModule = (courseModuleId: string) => {
-    if (isSmallScreen) handleCourseMenuClick();
-    setSelectedCourseItem(CourseItemType.COURSE_MATERIALS);
-    setSelectedCourseModuleId(courseModuleId);
-    scrollToDiv(courseModuleId);
-  };
+  const getSelectedItemIndex = (courseId: string) => getCourseItems(courseId).findIndex(isItemSelected);
 
   const handleCourseMenuClick = () => {
-    // localStorage.setItem(StorageKey.COLLAPSED, isCourseMenuOpen ? 'false' : 'true');
     setIsCourseMenuOpen(!isCourseMenuOpen);
   };
 
-  const onClickCourseModuleItem = (item: ICourseModuleItem) => {
+  const selectItem = (item: ICourseModuleItem) => {
     const { material, testPaper, courseModuleId } = item;
     setSelectedCourseModuleId(courseModuleId);
     if (material) {
@@ -62,32 +93,60 @@ export const useCourse = () => {
     removeSelectedContent();
   };
 
-  const onClickCoursePreviewModuleItem = (item: ICourseModuleItem) => {
-    const { courseId } = item;
-    onClickCourseModuleItem(item);
+  /** The item to land on when nothing is selected: the first one not yet completed, else the first. */
+  const getResumeItem = (courseId: string): ICourseModuleItem | undefined => {
+    const items = getCourseItems(courseId);
+    return items.find((item) => !isItemCompleted(item)) ?? items[0];
+  };
+
+  const selectResumeItem = (courseId: string) => {
+    const item = getResumeItem(courseId);
+    if (item) selectItem(item);
+    return item;
+  };
+
+  /** Moves the selection one item along the syllabus; a no-op at either end. */
+  const selectAdjacentItem = (courseId: string, direction: 1 | -1) => {
+    const items = getCourseItems(courseId);
+    const index = getSelectedItemIndex(courseId);
+    const next = items[index + direction];
+    if (next) selectItem(next);
+  };
+
+  /** From the preview page: select the item, then open the learning view. */
+  const openItem = (item: ICourseModuleItem) => {
+    selectItem(item);
+    push(`/courses/${item.courseId}/modules`);
+  };
+
+  const openCourse = (courseId: string) => {
+    selectResumeItem(courseId);
     push(`/courses/${courseId}/modules`);
   };
 
   const getModuleContentType = (material?: IMaterial, testPaper?: ITestPaper) => {
-    if (material) {
-      const videos = getMaterialVideos(material);
-      // console.log('@@@@videos: ', videos.length, material.name);
-      if (videos.length) return ModuleContentType.VIDEO;
-      return ModuleContentType.READING;
-    }
+    if (material) return getMaterialVideos(material).length ? ModuleContentType.VIDEO : ModuleContentType.READING;
     if (testPaper) return ModuleContentType.TEST_PAPER;
     return ModuleContentType.COMPLETED;
   };
 
   return {
-    onSelectCourseItem,
-    onSelectCourseModule,
-    selectedCourseItem,
     selectedCourseModuleId,
-    handleCourseMenuClick,
     isCourseMenuOpen,
-    onClickCourseModuleItem,
-    onClickCoursePreviewModuleItem,
+    handleCourseMenuClick,
+    getCourseModules,
+    getCourseItems,
+    getItemId,
+    isItemCompleted,
+    isItemSelected,
+    getCourseProgress,
+    getSelectedItemIndex,
+    getResumeItem,
+    selectItem,
+    selectResumeItem,
+    selectAdjacentItem,
+    openItem,
+    openCourse,
     getModuleContentType,
   };
 };

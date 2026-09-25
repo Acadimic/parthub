@@ -35,6 +35,8 @@ export interface ISelectorState {
   selectedCourseItem: CourseItemType;
   selectedUpsertQuestionStep: number;
   isCourseMenuOpen: boolean;
+  /** The Explore sheet on a small screen; opened from the tab bar and the header's search icon. */
+  isExploreOpen: boolean;
   selectedContent: IRichText | null;
   /** The attachment the learner is viewing. Held whole, not by id — it is a subdocument. */
   selectedAttachment: AttachmentDto | null;
@@ -56,6 +58,7 @@ export interface ISelectorState {
   setSelectedCourseItem: (value: CourseItemType) => void;
   setSelectedUpsertQuestionStep: (value: number) => void;
   setIsCourseMenuOpen: (value: boolean) => void;
+  setIsExploreOpen: (value: boolean) => void;
   setSelectedContent: (value: IRichText | null) => void;
   setSelectedAttachment: (value: AttachmentDto | null) => void;
   removeSelectedTestPaperId: () => void;
@@ -95,7 +98,8 @@ const INITIAL = {
   selectedQuestionType: QuestionType.SINGLE_CHOICE,
   selectedCourseItem: CourseItemType.COURSE_MATERIALS,
   selectedUpsertQuestionStep: 0,
-  isCourseMenuOpen: true,
+  isCourseMenuOpen: false,
+  isExploreOpen: false,
   selectedContent: null,
   selectedAttachment: null,
 };
@@ -156,6 +160,9 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
   },
   setIsCourseMenuOpen: (value) => {
     set({ isCourseMenuOpen: value });
+  },
+  setIsExploreOpen: (value) => {
+    set({ isExploreOpen: value });
   },
   setSelectedContent: (value) => {
     set({ selectedContent: value });

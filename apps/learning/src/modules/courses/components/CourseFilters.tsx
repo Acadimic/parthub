@@ -22,11 +22,16 @@ interface IChipOption {
  * Decorative: the chip's own label already names the row, so the image carries no alt text and
  * needs no screen-reader twin.
  */
-const Logo = ({ url }: { url?: string | null }) => {
+const Logo = ({ url, name }: { url?: string | null; name: string }) => {
   if (!url) return null;
   return (
     <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-background">
-      <PresignedImage url={url} className="object-contain" noOpen />
+      <PresignedImage
+        url={url}
+        className="object-contain"
+        noOpen
+        fallback={<span className="text-xs font-semibold text-muted-foreground">{name.trim().charAt(0)}</span>}
+      />
     </span>
   );
 };
@@ -73,7 +78,7 @@ export const CourseFilters = ({ filter, onChange }: IProps) => {
               key={option.value}
               label={option.name}
               isSelected={filter.standards.includes(option.value)}
-              leftSection={<Logo url={option.logo} />}
+              leftSection={<Logo url={option.logo} name={option.name} />}
               onClick={() => handleToggleStandard(option.value)}
             />
           ))}
@@ -99,7 +104,7 @@ export const CourseFilters = ({ filter, onChange }: IProps) => {
                     key={option.value}
                     label={option.name}
                     isSelected={filter.subjects.includes(option.value)}
-                    leftSection={<Logo url={option.logo} />}
+                    leftSection={<Logo url={option.logo} name={option.name} />}
                     onClick={() => onChange({ subjects: toggle(filter.subjects, option.value) })}
                   />
                 ))}

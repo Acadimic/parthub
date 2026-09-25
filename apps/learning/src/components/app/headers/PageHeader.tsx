@@ -1,80 +1,155 @@
-import { Button, FullLogo, HamburgerIcon, Link, ToggleTheme } from '@repo/ui/app';
-import { CaretDownIcon, MagnifyingGlassIcon } from '@phosphor-icons/react';
-import { useSelectedUser } from '@stores';
+import { FullLogo, Link, TextInput, ToggleTheme } from '@repo/ui/app';
+import { cn } from '@repo/ui/lib';
+import { MagnifyingGlassIcon } from '@phosphor-icons/react';
+import { useSelectedUser, useSelectorLookups } from '@stores';
+import NextLink from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { isRouteActive, learnerRoutes } from '../navigations';
 import { ProfileDropdown } from '../sidebars/components';
+import { EXPLORE_SEARCH_ATTRIBUTE, ExploreMenu } from './explore';
 
-const SearchBar = () => {
+interface ISearchBarProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmitted?: () => void;
+}
+
+/**
+ * Searches the catalogue: submits to `/courses?q=`, which the grid filters by name and description.
+ * Marked as the Explore popover's driver, so a click into it keeps that panel open.
+ */
+const SearchBar = ({ value, onChange, onSubmitted }: ISearchBarProps) => {
+  const { push } = useRouter();
+
+  const handleSubmit = (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    const q = value.trim();
+    push({ pathname: '/courses', query: q ? { q } : {} });
+    onSubmitted?.();
+  };
+
   return (
-    <div className="w-full max-w-xl">
-      <div className="flex items-center rounded-full bg-background border border-border">
-        <input
-          type="text"
-          placeholder="Find courses, materials, papers"
-          className="flex-1 pl-4 py-3 pr-0 text-sm bg-transparent outline-none rounded-l-full"
-        />
-        <button className="bg-primary hover:bg-primary/90 rounded-full p-2 mr-2" aria-label="search">
-          <MagnifyingGlassIcon weight="bold" className="w-4 h-4 text-primary-foreground" />
-        </button>
-      </div>
-    </div>
+    <form role="search" onSubmit={handleSubmit} className="w-full" {...{ [EXPLORE_SEARCH_ATTRIBUTE]: '' }}>
+      <TextInput
+        name="q"
+        type="search"
+        className="[&::-webkit-search-cancel-button]:hidden"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Search courses, materials, papers"
+        aria-label="Search courses"
+        leftsection={<MagnifyingGlassIcon weight="bold" className="h-4 w-4 text-muted-foreground" />}
+      />
+    </form>
   );
 };
 
+/** The primary routes, as text links with an active underline. Account is reached via the avatar. */
+const DesktopNav = () => {
+  const { pathname } = useRouter();
+  return (
+    <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
+      {learnerRoutes
+        .filter((nav) => nav.route !== '/account-settings')
+        .map((nav) => {
+          const isActive = isRouteActive(pathname, nav.route);
+          return (
+            <NextLink
+              key={nav.route}
+              href={nav.route}
+              aria-current={isActive ? 'page' : undefined}
+              className={cn(
+                'relative rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-foreground lg:px-3',
+                isActive ? 'text-primary' : 'text-muted-foreground',
+                isActive &&
+                  'after:absolute after:inset-x-2.5 after:-bottom-[13px] after:h-0.5 after:bg-primary lg:after:inset-x-3',
+              )}
+            >
+              {nav.name}
+            </NextLink>
+          );
+        })}
+    </nav>
+  );
+};
+
+/**
+ * The top bar on every learner page. Three widths: a phone gets the logo, a search icon that
+ * opens the Explore sheet, the theme and the account; a tablet adds the routes and the Explore
+ * popover; a wide screen adds the search box, which drives that popover as the learner types.
+ *
+ * No `backdrop-blur` here: a filter on this fixed element would make it the containing block for
+ * the fixed `Modal`, which then renders inside the bar.
+ */
 export const PageHeader = () => {
   const selectedUser = useSelectedUser();
+  const { setIsExploreOpen } = useSelectorLookups();
+  const { asPath, query } = useRouter();
+  const [isExploreMenuOpen, setIsExploreMenuOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  // Closes on navigation rather than on click: the shared `Link` owns its click, so the panel
+  // could not otherwise know a link in it was followed.
+  useEffect(() => {
+    setIsExploreMenuOpen(false);
+  }, [asPath]);
+
+  // Keeps the box in step with the address, so a back navigation shows the query it came from.
+  useEffect(() => {
+    setSearch(typeof query.q === 'string' ? query.q : '');
+  }, [query.q]);
+
+  // Typing opens the Explore panel on what has been typed so far; clearing the box closes it.
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setIsExploreMenuOpen(value.trim().length > 0);
+  };
 
   return (
-    <div>
-      <header className="fixed top-0 left-0 right-0 z-40">
-        <div className="bg-background px-4">
-          <div className="flex justify-between items-center w-full space-x-6 h-16">
-            <div className="flex items-center space-x-3">
-              <div className="flex md:hidden">
-                <HamburgerIcon />
-              </div>
-              <div>
-                <FullLogo className="h-12 md:h-8" />
-              </div>
-            </div>
-            <div className="hidden md:block">
-              <div>
-                <Button
-                  isSubtle
-                  className="text-foreground px-3 ml-4 hover:border hover:border-border py-1.5"
-                  rightsection={<CaretDownIcon weight="bold" className="w-4 h-4 text-foreground" />}
-                >
-                  Explore
-                </Button>
-              </div>
-            </div>
-            <div className="w-full flex justify-between items-center space-x-2">
-              <div className="flex-1 items-center space-x-4 hidden md:flex">
-                <SearchBar />
-              </div>
-              <div className="w-full flex justify-end items-center space-x-2 md:w-auto">
-                <div>
-                  <ToggleTheme />
-                </div>
-                {selectedUser ? (
-                  <div>
-                    <ProfileDropdown />
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <div className="hidden md:block">
-                      <Link isSecondary className="text-foreground px-4 py-1.5" href="/sign-up">
-                        Sign Up
-                      </Link>
-                    </div>
-                    <Link href="/sign-in">Sign In</Link>
-                  </div>
-                )}
-              </div>
-            </div>
+    <header className="fixed left-0 right-0 top-0 z-40 border-b border-border bg-background">
+      <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-2 px-4 sm:h-16 md:gap-3 lg:gap-4 lg:px-6">
+        <div className="flex shrink-0 items-center">
+          <FullLogo className="h-8 md:h-9" />
+        </div>
+        <div className="hidden h-6 w-px bg-border md:block" />
+        <DesktopNav />
+        <div className="hidden md:block">
+          <ExploreMenu isOpen={isExploreMenuOpen} onOpenChange={setIsExploreMenuOpen} query={search} />
+        </div>
+        <div className="hidden min-w-0 flex-1 justify-center lg:flex">
+          <div className="w-full max-w-md">
+            <SearchBar value={search} onChange={handleSearchChange} onSubmitted={() => setIsExploreMenuOpen(false)} />
           </div>
         </div>
-        <hr className="border-border" />
-      </header>
-    </div>
+        <div className="ml-auto flex shrink-0 items-center gap-1 md:gap-2">
+          {/* Below the wide layout there is no room for the search box; the icon opens the Explore
+              sheet, which carries its own. */}
+          <button
+            type="button"
+            aria-label="Search"
+            className="rounded-full p-2 text-foreground hover:bg-accent lg:hidden"
+            onClick={() => setIsExploreOpen(true)}
+          >
+            <MagnifyingGlassIcon weight="bold" className="h-5 w-5" />
+          </button>
+          <ToggleTheme />
+          {selectedUser ? (
+            <ProfileDropdown />
+          ) : (
+            <>
+              <div className="hidden lg:block">
+                <Link isSubtle className="px-3 py-1.5 text-foreground" href="/sign-up">
+                  Sign Up
+                </Link>
+              </div>
+              <Link className="px-3 py-1.5 md:px-4" href="/sign-in">
+                Sign In
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
   );
 };

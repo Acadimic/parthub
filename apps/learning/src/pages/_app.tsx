@@ -94,7 +94,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
         );
       case Layout.PAGE:
         return (
-          <PageLayout>
+          <PageLayout withTabBar={false}>
             <Component {...pageProps} />
           </PageLayout>
         );
@@ -173,7 +173,9 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     if (useStandardStore.getState().shouldLoad('publicData')) loadPublicData();
   }, [loadPublicData]);
 
-  if (!mode || !isReady || (isLoadedLoggedInUsers && !initialData.isLoaded)) return null;
+  // A spinner rather than nothing: the sign-in and reference loads take long enough on a cold start
+  // that a blank page reads as broken.
+  if (!mode || !isReady || (isLoadedLoggedInUsers && !initialData.isLoaded)) return <FullScreenLoader loading />;
 
   return (
     <>

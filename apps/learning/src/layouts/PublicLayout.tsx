@@ -7,8 +7,9 @@ interface IProps {
 
 export const PublicLayout = ({ children }: IProps) => {
   return (
-    <PageLayout withNavigation={true}>
-      {children} <PageFooter />
+    <PageLayout withTabBar>
+      {children}
+      <PageFooter />
     </PageLayout>
   );
 };

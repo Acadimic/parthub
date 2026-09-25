@@ -5,6 +5,6 @@ function AccountSettingsPage() {
   return <AccountSettings />;
 }
 
-AccountSettingsPage.layout = Layout.PAGE;
+AccountSettingsPage.layout = Layout.PAGE_NAVIGATION;
 
 export default AccountSettingsPage;

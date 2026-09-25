@@ -5,5 +5,5 @@ interface IProps {
 }
 
 export const PageNavigationLayout = ({ children }: IProps) => {
-  return <PageLayout withNavigation={true}>{children}</PageLayout>;
+  return <PageLayout withTabBar>{children}</PageLayout>;
 };

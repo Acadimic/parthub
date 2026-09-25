@@ -7,9 +7,14 @@ interface IProps {
   className?: string;
   isStatic?: boolean;
   noOpen?: boolean; // If true, the image will not open in a new tab on click
+  /**
+   * What to show when there is no image to draw — no address, one that could not be signed, or
+   * one that failed to load. Defaults to the generic picture icon; a logo tile passes an initial.
+   */
+  fallback?: React.ReactNode;
 }
 
-const PresignedImageComponent = ({ url, className, isStatic, noOpen }: IProps) => {
+const PresignedImageComponent = ({ url, className, isStatic, noOpen, fallback }: IProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [presignedUrl, setPresignedUrl] = useState<string>('');
   // A signed URL can still point at nothing — an object removed from the bucket, or one whose row
@@ -54,8 +59,8 @@ const PresignedImageComponent = ({ url, className, isStatic, noOpen }: IProps) =
       onClick={onClick}
     >
       {isLoading || !url || !presignedUrl || hasFailed ? (
-        <div className="bg-muted w-full h-full">
-          <Img weight="light" className={`w-full h-full ${className ? className : ''}`} />
+        <div className="flex h-full w-full items-center justify-center bg-muted">
+          {fallback ?? <Img weight="light" className={`w-full h-full ${className ? className : ''}`} />}
         </div>
       ) : (
         <img

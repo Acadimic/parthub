@@ -1,15 +1,40 @@
+import { Button } from '@repo/ui/app';
 import { ShareFatIcon } from '@phosphor-icons/react';
+import { successToast } from '@utils/helpers';
 
 interface IProps {
   courseId: string;
+  /** Icon-only, for a crowded action row. */
+  isCompact?: boolean;
 }
 
-// The share action is not implemented yet; `courseId` is the identifier it will need.
-export const ShareCourse = (_props: IProps) => {
+/** Copies the course's public preview address, which any learner on any organization can open. */
+export const ShareCourse = ({ courseId, isCompact }: IProps) => {
+  const handleShare = async () => {
+    const url = `${window.location.origin}/courses/${courseId}/preview`;
+    const canShare = typeof navigator.share === 'function';
+    if (canShare) {
+      try {
+        await navigator.share({ url });
+        return;
+      } catch {
+        // The learner dismissed the share sheet, or it is not allowed here; fall back to copying.
+      }
+    }
+    await navigator.clipboard.writeText(url);
+    successToast({ message: 'Course link copied to clipboard.' });
+  };
+
   return (
-    <div className="cursor-pointer flex items-center space-x-2 rounded-full bg-accent border border-border py-1.5 px-4">
-      <ShareFatIcon weight="bold" className="h-5 w-5" />
-      <div className="text-sm font-medium pr-1">Share</div>
-    </div>
+    <Button
+      isSecondary
+      isRound
+      aria-label="Share course"
+      className={isCompact ? 'p-2' : 'px-4 py-1.5'}
+      onClick={handleShare}
+      leftsection={<ShareFatIcon weight="bold" className="h-5 w-5" />}
+    >
+      {isCompact ? null : 'Share'}
+    </Button>
   );
 };

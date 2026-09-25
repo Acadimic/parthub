@@ -29,3 +29,11 @@ export interface ICourseFilterOptions {
   standards: string[];
   subjects: string[];
 }
+
+/** How far a learner is through a course, counted over its materials and test papers. */
+export interface ICourseProgress {
+  completed: number;
+  total: number;
+  /** 0–100, and 0 for a course with no items. */
+  percent: number;
+}

@@ -1,78 +1,87 @@
-import { Breadcrumb, type IBreadcrumbItem, Modal } from '@repo/ui/app';
-import { StandardWithLogo } from '@components/common';
-import { useWindowDimensions } from '@hooks/dimensions.hook';
-import { ListIcon } from '@phosphor-icons/react';
-import { House } from '@phosphor-icons/react/dist/ssr';
-import { useSelectedCourse, useStandardLookups } from '@stores';
-import { useState } from 'react';
+import { PositionType } from '@repo/shared/enums';
+import { Breadcrumb, Button, type IBreadcrumbItem, Modal } from '@repo/ui/app';
+import { Progress } from '@repo/ui/core';
+import { useCourse } from '@hooks/course.hook';
+import { type ICourseModuleItem } from '@interfaces';
+import { HouseIcon, ListBulletsIcon } from '@phosphor-icons/react';
+import { type ICourse, useSelectedCourse } from '@stores';
 import { CourseModuleContent } from './course-modules/CourseModuleContent';
-import { SelectedCourseModules } from './SelectedCourseModules';
+import { CourseOutline } from './CourseOutline';
+
+/** The outline's header: the course name and how far through it the learner is. */
+const OutlineHeader = ({ course }: { course: ICourse }) => {
+  const { getCourseProgress } = useCourse();
+  const progress = getCourseProgress(course._id);
+  return (
+    <div className="flex flex-col gap-2 border-b border-border px-4 py-4">
+      <div className="truncate text-sm font-semibold">{course.name}</div>
+      <div className="flex items-center gap-3">
+        <Progress value={progress.percent} className="flex-1" />
+        <span className="shrink-0 font-mono text-xs text-muted-foreground">
+          {progress.completed}/{progress.total}
+        </span>
+      </div>
+    </div>
+  );
+};
 
 export const CourseModules = () => {
-  const standardStore = useStandardLookups();
   const selectedCourse = useSelectedCourse();
-  const { getStandardById } = standardStore;
-  const { isSmallScreen } = useWindowDimensions();
-  const [isOpenCourseOverView, setIsOpenCourseOverview] = useState(false);
-
-  const openCourseOverview = () => {
-    setIsOpenCourseOverview(true);
-  };
-
-  const closeCourseOverview = () => {
-    setIsOpenCourseOverview(false);
-  };
+  const { selectItem, isCourseMenuOpen, handleCourseMenuClick } = useCourse();
 
   if (!selectedCourse) return null;
 
+  const crumbs: IBreadcrumbItem[] = [
+    { label: 'Home', href: '/', icon: <HouseIcon weight="bold" className="h-3 w-3" /> },
+    { label: 'Courses', href: '/courses' },
+    { label: selectedCourse.name, href: `/courses/${selectedCourse._id}/preview` },
+    { label: 'Learn', href: '#' },
+  ];
+
+  const handleSelect = (item: ICourseModuleItem) => {
+    selectItem(item);
+    if (isCourseMenuOpen) handleCourseMenuClick();
+  };
+
+  const outline = <CourseOutline courseId={selectedCourse._id} isPreview={false} onSelectItem={handleSelect} />;
+
   return (
-    <div className="relative">
-      <div className="flex">
-        <div className="w-full md:w-[70%] py-2 px-4 md:px-6 overflow-auto h-[calc(100vh-4rem)]">
-          <div>
-            <Breadcrumb
-              items={
-                [
-                  isSmallScreen
-                    ? {
-                        label: 'Menu',
-                        href: '#',
-                        icon: <ListIcon weight="bold" className="w-4 h-4" />,
-                        onClick: openCourseOverview,
-                      }
-                    : null,
-                  { label: 'Home', href: '/', icon: <House weight="bold" className="w-3 h-3" /> },
-                  { label: 'Courses', href: '/courses' },
-                  { label: `${selectedCourse.name}`, href: `/courses/${selectedCourse._id}/preview` },
-                  { label: `Modules`, href: `#` },
-                ].filter(Boolean) as IBreadcrumbItem[]
-              }
-            />
-          </div>
-          <div>
-            <CourseModuleContent />
-          </div>
-        </div>
-        <div className="hidden md:block md:w-[30%] overflow-auto h-[calc(100vh-4rem)] bg-background py-4 border-l border-border">
-          <div>
-            <div className="px-4">
-              <StandardWithLogo standard={selectedCourse && getStandardById(selectedCourse.standards?.[0] ?? '')} />
+    <div className="flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]">
+      <div className="min-w-0 flex-1 overflow-y-auto">
+        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 md:px-6">
+          <div className="flex items-center justify-between gap-3">
+            <Breadcrumb items={crumbs} />
+            <div className="lg:hidden">
+              <Button
+                isSecondary
+                className="px-3 py-1.5"
+                onClick={handleCourseMenuClick}
+                leftsection={<ListBulletsIcon weight="bold" className="h-4 w-4" />}
+              >
+                Contents
+              </Button>
             </div>
-            <SelectedCourseModules closeCourseOverview={closeCourseOverview} isPreview={false} />
           </div>
+          <CourseModuleContent />
         </div>
-        <Modal
-          title="Modules"
-          isOpen={isOpenCourseOverView}
-          onClose={closeCourseOverview}
-          component={
-            isOpenCourseOverView && (
-              <SelectedCourseModules closeCourseOverview={closeCourseOverview} isPreview={false} />
-            )
-          }
-          childrenClassName="px-0"
-        />
       </div>
+      <aside className="hidden w-[360px] shrink-0 flex-col border-l border-border bg-background lg:flex xl:w-[400px]">
+        <OutlineHeader course={selectedCourse} />
+        <div className="min-h-0 flex-1 overflow-y-auto">{outline}</div>
+      </aside>
+      <Modal
+        title="Course contents"
+        position={PositionType.RIGHT}
+        isOpen={isCourseMenuOpen}
+        onClose={handleCourseMenuClick}
+        childrenClassName="px-0"
+        component={
+          <div className="flex flex-col">
+            <OutlineHeader course={selectedCourse} />
+            {outline}
+          </div>
+        }
+      />
     </div>
   );
 };

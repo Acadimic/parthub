@@ -5,6 +5,6 @@ function SessionsPage() {
   return <Sessions />;
 }
 
-SessionsPage.layout = Layout.PAGE;
+SessionsPage.layout = Layout.PAGE_NAVIGATION;
 
 export default SessionsPage;
