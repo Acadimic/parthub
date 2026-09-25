@@ -1,7 +1,9 @@
-import { Spinner, Tooltip } from '@repo/ui/app';
+import { Button, Tooltip } from '@repo/ui/app';
+import { cn } from '@repo/ui/lib';
 import { CollectionType } from '@enums';
 import { ThumbsUpIcon } from '@phosphor-icons/react';
 import { type IMaterial, type ITestPaper, useMaterialLookups, useResourceLookups, useTestPaperLookups } from '@stores';
+import { errorToast, getPlural } from '@utils/helpers';
 import { useEffect } from 'react';
 
 interface IProps {
@@ -9,19 +11,23 @@ interface IProps {
   collectionRef: CollectionType;
 }
 
+/** A thumbs-up that fills when the learner has liked the item, with the running count beside it. */
 export const LikeCourse = ({ collectionItem, collectionRef }: IProps) => {
   const resourceStore = useResourceLookups();
   const { loadReactionsCount: loadMaterialReactionsCount } = useMaterialLookups();
   const { loadReactionsCount: loadTestPaperReactionsCount } = useTestPaperLookups();
   const { isReacted, toggleReaction } = resourceStore;
-  const isToggleReaction = resourceStore.isLoading('toggleReaction');
+  const isToggling = resourceStore.isLoading('toggleReaction');
   const collectionItemId = collectionItem._id;
+  const isLiked = isReacted(collectionItemId);
+  const count = collectionItem.reactionsCount ?? 0;
+  const isCounting = Boolean(collectionItem.isLoadingReactionsCount);
 
-  const isReactedOnItem = isReacted(collectionItemId);
-
-  const handleLike = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    toggleReaction(collectionItemId, collectionRef);
+  // `run` folds a failure into the request status rather than throwing, so surface it here.
+  const handleToggle = async () => {
+    await toggleReaction(collectionItemId, collectionRef);
+    const error = resourceStore.getError('toggleReaction');
+    if (error) errorToast({ message: error });
   };
 
   useEffect(() => {
@@ -32,16 +38,31 @@ export const LikeCourse = ({ collectionItem, collectionRef }: IProps) => {
   }, [collectionItemId, collectionRef, collectionItem.isLoadedReactionsCount]);
 
   return (
-    <Tooltip title={isReactedOnItem ? 'Liked' : 'Like'}>
-      <div className="rounded-full flex items-center bg-accent border border-border">
-        <div className="cursor-pointer h-full w-full py-1.5 px-4" onClick={handleLike}>
-          <ThumbsUpIcon weight={isReactedOnItem ? 'fill' : 'bold'} className="w-5 h-5" />
-        </div>
-        <div className="h-6 w-px bg-border" />
-        <div className="text-sm font-bold px-4 min-w-14 text-center">
-          {isToggleReaction || collectionItem.isLoadingReactionsCount ? <Spinner /> : collectionItem.reactionsCount}
-        </div>
-      </div>
+    <Tooltip title={isLiked ? 'Unlike' : 'Like'}>
+      <Button
+        isRound
+        isSecondary={!isLiked}
+        aria-pressed={isLiked}
+        isLoading={isToggling}
+        hideLoadingIcon
+        className="px-3.5 py-1.5"
+        onClick={handleToggle}
+        leftsection={<ThumbsUpIcon weight={isLiked ? 'fill' : 'bold'} className="h-4 w-4" />}
+      >
+        <span className="flex items-center gap-1.5">
+          <span className="hidden sm:inline">{isLiked ? 'Liked' : 'Like'}</span>
+          <span
+            className={cn(
+              'min-w-[1.25rem] rounded-full px-1.5 text-center font-mono text-xs',
+              isLiked ? 'bg-primary-foreground/20' : 'bg-muted',
+              isCounting && 'animate-pulse',
+            )}
+            aria-label={`${count} ${getPlural(count, 'like')}`}
+          >
+            {count}
+          </span>
+        </span>
+      </Button>
     </Tooltip>
   );
 };

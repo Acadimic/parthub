@@ -1,6 +1,9 @@
+import { Button, Link } from '@repo/ui/app';
+import { useRequest } from '@repo/ui/hooks';
 import { BlankState } from '@components/others';
 import { useCourse } from '@hooks/course.hook';
-import { useCourseLookups, useSelectedCourse, useSelectedUser, useSelectorLookups } from '@stores';
+import { ArrowClockwiseIcon } from '@phosphor-icons/react';
+import { useCourseLookups, useCourseStore, useSelectedCourse, useSelectedUser, useSelectorLookups } from '@stores';
 import { useEffect, useState } from 'react';
 import { CourseModules, CourseModulesSkeleton, CoursePreview, CoursePreviewSkeleton } from './components';
 
@@ -17,6 +20,8 @@ export const Course = ({ courseId, isPreview }: IProps) => {
   const { getSelectedItemIndex, selectResumeItem } = useCourse();
   const selectedCourse = useSelectedCourse();
   const selectedUser = useSelectedUser();
+  const coursesRequest = useRequest(useCourseStore, 'courses');
+  const modulesRequest = useRequest(useCourseStore, 'courseModules');
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchCourseData = async () => {
@@ -47,12 +52,39 @@ export const Course = ({ courseId, isPreview }: IProps) => {
   }, [isLoading, isPreview, selectedCourse?._id]);
 
   if (isLoading) return isPreview ? <CoursePreviewSkeleton /> : <CourseModulesSkeleton />;
+
+  // The store swallows a failed request into its status, so the page has to look for it: a course
+  // that never arrived, or one whose modules did not.
+  const failure = coursesRequest.isFailed ? coursesRequest : modulesRequest;
+  if (failure.isFailed) {
+    return (
+      <BlankState
+        className="py-24"
+        label="Could not load this course"
+        description={failure.error || 'Something went wrong on our side. Please try again.'}
+        action={
+          <Button
+            isSecondary
+            onClick={fetchCourseData}
+            leftsection={<ArrowClockwiseIcon weight="bold" className="h-4 w-4" />}
+          >
+            Try again
+          </Button>
+        }
+      />
+    );
+  }
   if (!selectedCourse) {
     return (
       <BlankState
         className="py-24"
         label="Course not found"
         description="It may have been unpublished, or the link is no longer valid."
+        action={
+          <Link href="/courses" isSecondary>
+            Browse courses
+          </Link>
+        }
       />
     );
   }

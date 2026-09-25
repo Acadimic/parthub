@@ -1,5 +1,6 @@
 import { RectangleSkeleton } from '@repo/ui/app';
 import { type IUser, useUserLookups } from '@stores';
+import { getPlural } from '@utils/helpers';
 import { useEffect } from 'react';
 
 interface IProps {
@@ -14,11 +15,13 @@ export const Followers = ({ user }: IProps) => {
   }, [user._id, user.isLoadedFollowersCount, loadFollowersCount]);
 
   return (
-    <div className="flex items-center gap-2 mt-1 h-[16px]">
+    <div className="flex h-4 items-center">
       {user.isLoadingFollowersCount ? (
-        <RectangleSkeleton width={100} height={16} />
+        <RectangleSkeleton width={80} height={12} />
       ) : (
-        <div className="text-xs font-medium text-muted-foreground">{user.followersCount} followers</div>
+        <div className="text-xs text-muted-foreground">
+          {user.followersCount ?? 0} {getPlural(user.followersCount ?? 0, 'follower')}
+        </div>
       )}
     </div>
   );

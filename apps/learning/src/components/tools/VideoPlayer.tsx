@@ -1,4 +1,5 @@
 import { Loader } from '@repo/ui/app';
+import { BlankState } from '@components/others';
 import { useAttachment } from '@hooks/attachment.hook';
 import { useEffect, useState } from 'react';
 import ReactPlayer from 'react-player';
@@ -10,7 +11,8 @@ interface IProps {
 }
 
 export const VideoPlayer = ({ url, isStatic }: IProps) => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  // Starts loading unless the address is usable as is, so the error state cannot flash first.
+  const [isLoading, setIsLoading] = useState<boolean>(!isStatic);
   const [presignedUrl, setPresignedUrl] = useState<string>('');
   const { getPresignedUrls } = useAttachment();
 
@@ -29,10 +31,19 @@ export const VideoPlayer = ({ url, isStatic }: IProps) => {
     else fetchAndSetPresignedUrl();
   }, [url]);
 
+  if (isLoading) return <Loader isLoading />;
+  if (!presignedUrl) {
+    return (
+      <BlankState
+        className="h-full justify-center"
+        label="This video could not be opened"
+        description="The file may have been removed, or the link is no longer valid."
+      />
+    );
+  }
   return (
-    <div className={`w-full h-full`}>
-      {isLoading || !url ? <Loader isLoading={isLoading} /> : null}
-      {presignedUrl ? <ReactPlayer playing controls src={presignedUrl} width="100%" height="100%" /> : <div>Error</div>}
+    <div className="h-full w-full">
+      <ReactPlayer playing controls src={presignedUrl} width="100%" height="100%" />
     </div>
   );
 };

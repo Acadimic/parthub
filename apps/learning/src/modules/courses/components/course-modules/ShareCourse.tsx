@@ -30,11 +30,11 @@ export const ShareCourse = ({ courseId, isCompact }: IProps) => {
       isSecondary
       isRound
       aria-label="Share course"
-      className={isCompact ? 'p-2' : 'px-4 py-1.5'}
+      className={isCompact ? 'p-2' : 'px-3.5 py-1.5'}
       onClick={handleShare}
-      leftsection={<ShareFatIcon weight="bold" className="h-5 w-5" />}
+      leftsection={<ShareFatIcon weight="bold" className={isCompact ? 'h-5 w-5' : 'h-4 w-4'} />}
     >
-      {isCompact ? null : 'Share'}
+      {isCompact ? null : <span className="hidden sm:inline">Share</span>}
     </Button>
   );
 };

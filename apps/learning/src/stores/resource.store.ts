@@ -131,9 +131,11 @@ export const useResourceStore = create<IResourceState>()((set, get) => ({
     const selectedCourseId = useSelectorStore.getState().selectedCourseId;
     if (!selectedCourseId) return;
     const existing = get().getBookmarkByItemId(selectedCourseId, collectionItem);
-    // The API removes a row by upserting it with `_deleted`; every read filters those out.
+    // The API removes a row by upserting it with `_deleted`; every read filters those out. Only
+    // the DTO's fields go back: a row read from the API carries `__v` and the audit fields, which
+    // the server's whitelist rejects.
     const payload: BookmarkDto = existing
-      ? { ...existing, _deleted: !existing._deleted }
+      ? { _id: existing._id, collectionItem, collectionRef, course: selectedCourseId, _deleted: !existing._deleted }
       : { _id: getObjectId(), collectionItem, collectionRef, course: selectedCourseId };
     const result = await BookmarkService.upsertBookmark(payload);
     if (result?.data) get().addBookmarks([result.data]);
@@ -144,8 +146,9 @@ export const useResourceStore = create<IResourceState>()((set, get) => ({
       const selectedCourseId = useSelectorStore.getState().selectedCourseId;
       if (!selectedCourseId) return;
       const existing = get().getReactionByItemId(selectedCourseId, collectionItem);
+      // Only the DTO's fields, for the same reason as `toggleBookmark`.
       const payload: ReactionDto = existing
-        ? { ...existing, _deleted: !existing._deleted }
+        ? { _id: existing._id, collectionItem, collectionRef, course: selectedCourseId, _deleted: !existing._deleted }
         : { _id: getObjectId(), collectionItem, collectionRef, course: selectedCourseId };
       const result = await ReactionService.upsertReaction(payload);
       if (result?.data) get().addReactions([result.data]);
@@ -163,8 +166,9 @@ export const useResourceStore = create<IResourceState>()((set, get) => ({
       const userStore = useUserStore.getState();
       if (!selectedUserId || !userStore.getUserById(followingId)) return;
       const existing = get().getFollowerFollowingMap(selectedUserId, followingId);
+      // Only the DTO's fields, for the same reason as `toggleBookmark`.
       const payload: FollowerDto = existing
-        ? { ...existing, _deleted: !existing._deleted }
+        ? { _id: existing._id, follower: selectedUserId, following: followingId, _deleted: !existing._deleted }
         : { _id: getObjectId(), follower: selectedUserId, following: followingId };
       const result = await FollowerService.upsertFollower(payload);
       if (result?.data) get().addFollowings([result.data]);

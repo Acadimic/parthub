@@ -13,10 +13,15 @@ export class FollowerService {
   // Mongoose 9's query filters enforce the declared type; 8's did not.
   async upsert(userId: Types.ObjectId, payload: FollowerDto): Promise<FollowerDocument> {
     const follower = userId.toString();
+    // The row is found by its natural key, so a client that never saw it sends a fresh `_id`;
+    // applying that to an existing row is an immutable-field update and a 500.
+    const { _id, ...fields } = payload;
+    // A payload without `_deleted` means "make it active": the client only ever sees active rows,
+    // so its insert-shaped payload may well land on a soft-deleted one that must come back.
     return this.followerModel
       .findOneAndUpdate(
         { follower, following: payload.following },
-        { ...payload, follower },
+        { $set: { ...fields, follower, _deleted: fields._deleted ?? false }, $setOnInsert: { _id } },
         { returnDocument: 'after', upsert: true, runValidators: true },
       )
       .lean<FollowerDocument>();

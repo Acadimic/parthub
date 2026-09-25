@@ -1,3 +1,5 @@
+import { Loader } from '@repo/ui/app';
+import { BlankState } from '@components/others';
 import { VideoPlayer, ViewTextContent, ViewUrlContent } from '@components/tools';
 import { DocumentType, LinkType } from '@enums';
 import { type IMaterial, useSelectorLookups } from '@stores';
@@ -21,9 +23,21 @@ export const MaterialItem = ({ material }: IProps) => {
     }
   }, [selectedAttachment?.key, material?._id]);
 
+  const hasLesson = Boolean(material.content) || Boolean(material.attachments?.length);
+
   const getAttachmentItem = () => {
+    if (!hasLesson) {
+      return (
+        <BlankState
+          className="h-full justify-center"
+          label="Nothing here yet"
+          description="This lesson has no written content or attachments."
+        />
+      );
+    }
     if (selectedContent) return <ViewTextContent content={selectedContent} />;
-    if (!selectedAttachment) return null;
+    // The effect above picks what to show after the first paint; until then, a spinner.
+    if (!selectedAttachment) return <Loader isLoading />;
     if (selectedAttachment?.documentType === DocumentType.FILE && selectedAttachment.isUploaded) {
       return <ViewUrlContent url={selectedAttachment.url} isStatic={!selectedAttachment.isUploaded} />;
     }
