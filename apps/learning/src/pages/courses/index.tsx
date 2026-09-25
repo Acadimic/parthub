@@ -2,7 +2,7 @@ import { Layout } from '@enums';
 import { Courses } from '@modules/courses';
 
 function CoursesPage() {
-  return <Courses />;
+  return <Courses isFilter />;
 }
 
 CoursesPage.layout = Layout.PUBLIC;

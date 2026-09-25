@@ -191,12 +191,20 @@ export const useUserStore = create<IUserState>()((set, get) => ({
 
   createCollaborator: (permission) => get().getNewUser(permission),
 
+  // Settles the row whether or not the request succeeds: an unhandled rejection here escaped to
+  // the page, and the skeleton it left behind never stopped spinning.
   loadFollowersCount: async (userId) => {
     if (!userId) return;
     get().patchUser(userId, { isLoadingFollowersCount: true });
-    const result = await FollowerService.getFollowersCount(userId);
+    let followersCount = 0;
+    try {
+      const result = await FollowerService.getFollowersCount(userId);
+      followersCount = result?.data ?? 0;
+    } catch {
+      followersCount = 0;
+    }
     get().patchUser(userId, {
-      followersCount: result?.data ?? 0,
+      followersCount,
       isLoadedFollowersCount: true,
       isLoadingFollowersCount: false,
     });

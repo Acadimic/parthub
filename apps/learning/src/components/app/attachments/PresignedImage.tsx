@@ -12,6 +12,9 @@ interface IProps {
 const PresignedImageComponent = ({ url, className, isStatic, noOpen }: IProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [presignedUrl, setPresignedUrl] = useState<string>('');
+  // A signed URL can still point at nothing — an object removed from the bucket, or one whose row
+  // predates the current key layout. Without this the browser draws its own broken-image box.
+  const [hasFailed, setHasFailed] = useState<boolean>(false);
   const { getPresignedUrls } = useAttachment();
 
   const fetchAndSetPresignedUrl = async () => {
@@ -32,6 +35,7 @@ const PresignedImageComponent = ({ url, className, isStatic, noOpen }: IProps) =
   // recycles row components across rows, so the same instance is handed a different logo after a
   // sort, filter or search; the old guard (`!presignedUrl`) kept the previous row's image on it.
   useEffect(() => {
+    setHasFailed(false);
     if (!url) {
       setPresignedUrl('');
       return;
@@ -49,12 +53,17 @@ const PresignedImageComponent = ({ url, className, isStatic, noOpen }: IProps) =
       className={`flex items-center justify-center w-full h-full text-muted-foreground ${noOpen ? '' : 'cursor-pointer'}`}
       onClick={onClick}
     >
-      {isLoading || !url || !presignedUrl ? (
+      {isLoading || !url || !presignedUrl || hasFailed ? (
         <div className="bg-muted w-full h-full">
           <Img weight="light" className={`w-full h-full ${className ? className : ''}`} />
         </div>
       ) : (
-        <img src={presignedUrl} alt="img" className={`w-full h-full ${className ? className : ''}`} />
+        <img
+          src={presignedUrl}
+          alt=""
+          onError={() => setHasFailed(true)}
+          className={`w-full h-full ${className ? className : ''}`}
+        />
       )}
     </div>
   );

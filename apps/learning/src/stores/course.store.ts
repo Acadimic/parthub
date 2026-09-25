@@ -1,7 +1,7 @@
 import { type CourseDto, type PlanDto } from '@repo/shared/contracts';
 import { type ICompletedModuleFields, type ICourseModuleFields } from '@repo/shared/interfaces';
 import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
-import { type IGetCompletedModule } from '@interfaces';
+import { type ICourseFilter, type ICourseFilterOptions, type IGetCompletedModule } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { type CollectionType, PeriodType, CurrencyType } from '../enums';
@@ -17,8 +17,11 @@ import { useUserStore } from './user.store';
 /**
  * A course in the store. `isLoadedContents` is client-only — it records whether this course's
  * modules have been fetched — and `CLIENT_ONLY_KEYS` strips it from every request.
+ *
+ * `topics` is what the course's modules cover, read off them by `course/published` rather than
+ * stored on the course. Only the catalogue sends it, so a course loaded any other way has none.
  */
-export type ICourse = CourseDto & { isLoadedContents?: boolean };
+export type ICourse = CourseDto & { isLoadedContents?: boolean; topics?: string[] };
 export type ICourseModule = ICourseModuleFields & { isNew?: boolean };
 export type ICourseStats = NonNullable<ICourse['stats']>;
 
@@ -40,8 +43,12 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   getCoursesByIds: (courseIds: string[]) => ICourse[];
   getCourseModuleByCourseId: (courseId: string) => ICourseModule[];
   getPlansByCourseId: (courseId: string) => PlanDto[];
+  /** The catalogue narrowed by the learner's filters; an empty list on a field does not filter it. */
+  getFilteredCourses: (filter: ICourseFilter) => ICourse[];
+  /** What each filter may offer, given the ones above it. */
+  getCourseFilterOptions: (filter: ICourseFilter) => ICourseFilterOptions;
   /** Courses keyed by each standard they belong to; a course appears under every one of them. */
-  getGroupedCoursesByStandardId: () => Record<string, ICourse[]>;
+  getGroupedCoursesByStandardId: (filter?: ICourseFilter) => Record<string, ICourse[]>;
   getCompletedModule: (data: IGetCompletedModule) => ICompletedModuleFields | undefined;
   isCourseModuleItemCompleted: (data: IGetCompletedModule) => boolean;
   isCourseModuleItemSkipped: (data: IGetCompletedModule) => boolean;
@@ -66,6 +73,13 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   loadCompletedModules: () => Promise<void>;
   reset: () => void;
 }
+
+/** The distinct values in first-seen order; the filter options are built from these. */
+const distinct = (values: string[]): string[] => [...new Set(values)];
+
+/** Whether a course's values meet a filter. Nothing selected means the filter is not applied. */
+const matchesFilter = (values: string[] | undefined, selected: string[]): boolean =>
+  !selected.length || (values ?? []).some((value) => selected.includes(value));
 
 const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
   rows.reduce<Record<string, T>>((map, row) => {
@@ -123,15 +137,44 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
       .getPlans()
       .filter((plan) => (plan.courses ?? []).includes(courseId)),
 
-  getGroupedCoursesByStandardId: () =>
+  getFilteredCourses: (filter) =>
     get()
       .getCourses()
-      .reduce<Record<string, ICourse[]>>((grouped, course) => {
-        (course.standards ?? []).forEach((standardId) => {
+      .filter(
+        (course) =>
+          matchesFilter(course.standards, filter.standards) &&
+          matchesFilter(course.subjects, filter.subjects) &&
+          matchesFilter(course.topics, filter.topics),
+      ),
+
+  // Each list is drawn from the courses the filters *above* it have already kept, so a learner is
+  // never offered a subject or topic that would empty the grid.
+  getCourseFilterOptions: (filter) => {
+    const { getCourses, getFilteredCourses } = get();
+    const byStandard = getFilteredCourses({ ...filter, subjects: [], topics: [] });
+    const bySubject = getFilteredCourses({ ...filter, topics: [] });
+    return {
+      standards: distinct(getCourses().flatMap((course) => course.standards ?? [])),
+      subjects: distinct(byStandard.flatMap((course) => course.subjects ?? [])),
+      topics: distinct(bySubject.flatMap((course) => course.topics ?? [])),
+    };
+  },
+
+  getGroupedCoursesByStandardId: (filter) =>
+    (filter ? get().getFilteredCourses(filter) : get().getCourses()).reduce<Record<string, ICourse[]>>(
+      (grouped, course) => {
+        // Only the standards the filter kept: a course on two standards would otherwise still show
+        // up under the one the learner filtered out.
+        const standardIds = filter?.standards.length
+          ? (course.standards ?? []).filter((standardId) => filter.standards.includes(standardId))
+          : (course.standards ?? []);
+        standardIds.forEach((standardId) => {
           grouped[standardId] = [...(grouped[standardId] ?? []), course];
         });
         return grouped;
-      }, {}),
+      },
+      {},
+    ),
 
   getCompletedModule: ({ course, courseModule, collectionItem }) =>
     get()
@@ -245,15 +288,12 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
     return completedModule;
   },
 
+  // The catalogue is every published course, whichever organization authored it, so this needs no
+  // session and no standard filter. It replaced a call to `course/standards`, a route the server
+  // does not have — it 404'd, and the course list was empty for everyone as a result.
   loadCourses: () =>
     get().run('courses', async () => {
-      // The learner's courses are the ones on the standards they are enrolled on.
-      const selectedUserId = useSelectorStore.getState().selectedUserId;
-      const standardIds = useUserStore
-        .getState()
-        .getStudentStandardMappingsByStudentId(selectedUserId)
-        .map((mapping) => mapping.standard);
-      const result = await CourseService.getCoursesByStandardIds(standardIds);
+      const result = await CourseService.getPublishedCourses();
       if (result?.data) get().addCourses(result.data);
     }),
 
@@ -267,16 +307,21 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
     get().run('courseModules', async () => {
       const course = get().getCourseById(courseId);
       if (!course) return;
+      const meetIds = course.meets ?? [];
       const [modulesResult, meetsResult] = await Promise.all([
         CourseService.getCourseModulesContentsByCourseId(courseId),
-        MeetService.getMeetsByIds(courseId, course.meets ?? []),
+        // `meet/by-ids` requires a non-empty list, and a course with no sessions has nothing to ask
+        // for. Skipping keeps a 400 out of a page that is not showing sessions anyway.
+        meetIds.length ? MeetService.getMeetsByIds(meetIds) : Promise.resolve(null),
       ]);
-      if (!modulesResult?.data || !meetsResult?.data) return;
+      // The sessions are a separate concern from the syllabus: this used to bail when either call
+      // came back empty, so a failed meets fetch threw away modules that had loaded perfectly.
+      if (!modulesResult?.data) return;
       // The modules arrive with their test papers, materials and meets embedded. Each collection
       // goes to the store that owns it and the module keeps only ids, which is what the rest of the
       // app reads.
       const courseModules = modulesResult.data.map(distributeCourseModule);
-      useMeetStore.getState().addMeets(meetsResult.data);
+      if (meetsResult?.data) useMeetStore.getState().addMeets(meetsResult.data);
       get().addCourseModules(courseModules);
       const firstModuleId = courseModules[0]?._id;
       if (firstModuleId) useSelectorStore.getState().setSelectedCourseModuleId(firstModuleId);

@@ -20,11 +20,15 @@ export const Course = ({ courseId, isPreview }: IProps) => {
   const fetchCourseData = async () => {
     if (isLoading || !selectedUser) return;
     setIsLoading(true);
-    const promise1 = !selectedCourse ? loadCourses() : Promise.resolve();
-    const promise2 = !selectedCourse?.isLoadedContents ? loadCourseModules(courseId) : Promise.resolve();
-    const promise3 = !selectedUser?.isLoadedCompletedModules ? loadCompletedModules() : Promise.resolve();
-    await promise1;
-    await Promise.all([promise2, promise3]);
+    // The course list has to land before the modules load: `loadCourseModules` reads the course
+    // back out of the store and returns early when it is not there yet. These used to be three
+    // `const promise = ...` bindings awaited further down, which starts all three at once — the
+    // modules fetch then found no course and silently skipped, so the page showed "No Module".
+    if (!selectedCourse) await loadCourses();
+    await Promise.all([
+      selectedCourse?.isLoadedContents ? Promise.resolve() : loadCourseModules(courseId),
+      selectedUser?.isLoadedCompletedModules ? Promise.resolve() : loadCompletedModules(),
+    ]);
     setSelectedCourseId(courseId);
     setIsLoading(false);
   };

@@ -213,7 +213,10 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
 
   loadTestPaperSectionsWithQuestions: (testPaperId) =>
     get().run('testPaperSections', async () => {
-      const result = await TestPaperService.getTestPaperSectionsWithQuestions(testPaperId);
+      // The course on screen, when there is one: a paper in a course another organization
+      // published is only readable through that course.
+      const courseId = useSelectorStore.getState().selectedCourseId || undefined;
+      const result = await TestPaperService.getTestPaperSectionsWithQuestions(testPaperId, courseId);
       if (!result?.data) return;
       const { sections, questions } = result.data;
       get().addTestPaperSections(sections);

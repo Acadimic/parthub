@@ -18,8 +18,17 @@ class TestPaperService {
     return await callAuthApi<ITestPaper[]>('test-paper/all', API.GET);
   };
 
-  getTestPaperSectionsWithQuestions = async (testPaperId: string) => {
-    const url = `test-paper/sections-with-questions/${testPaperId}`;
+  /**
+   * A paper's sections and questions — through the course when one is open.
+   *
+   * `test-paper/sections-with-questions` reads under the caller's own organization, so it answers
+   * with an empty paper for a course another organization published. The course route checks that
+   * the course is visible and that the paper belongs to it, then reads under the course's owner.
+   */
+  getTestPaperSectionsWithQuestions = async (testPaperId: string, courseId?: string) => {
+    const url = courseId
+      ? `course/test-paper/sections/${courseId}/${testPaperId}`
+      : `test-paper/sections-with-questions/${testPaperId}`;
     const resData = await callAuthApi<ITestPaperSectionsResponse>(url, API.GET);
     return resData;
   };

@@ -2,7 +2,7 @@ import { type MeetDto } from '@repo/shared/contracts';
 import { type ICompletedModuleFields } from '@repo/shared/interfaces';
 import { type ICourse, type ICourseModule, type IMaterial, type ITestPaper } from '@stores';
 import { API } from '../enums';
-import { callAuthApi } from './http.service';
+import { callAuthApi, callUnAuthApi } from './http.service';
 
 /**
  * `course/course/modules/:courseId` returns each module with its test papers, materials and meets
@@ -24,9 +24,10 @@ class CourseService {
     return await callAuthApi(`course/${id}`, API.GET);
   };
 
-  getCoursesByStandardIds = async (standardIds: string[]) => {
-    const url = 'course/standards';
-    const resData = await callAuthApi<ICourse[]>(url, API.POST, standardIds);
+  /** The public catalogue: published courses from every organization. Needs no session. */
+  getPublishedCourses = async () => {
+    const url = 'course/published';
+    const resData = await callUnAuthApi<ICourse[]>(url, API.GET);
     return resData;
   };
 

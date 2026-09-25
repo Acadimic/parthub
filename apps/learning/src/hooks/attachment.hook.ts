@@ -3,7 +3,7 @@ import { getFileExtension } from '@repo/shared/utils';
 import { DocumentType, StorageKey } from '@enums';
 import { CommonService } from '@services';
 import { useSelectorLookups } from '@stores';
-import { errorToast, getObjectId, isPresignedUrlExpired, successToast } from '@utils/helpers';
+import { errorToast, getObjectId, getToken, isPresignedUrlExpired, successToast } from '@utils/helpers';
 import { useState } from 'react';
 
 /**
@@ -70,6 +70,10 @@ export const useAttachment = () => {
       })
       .filter(Boolean);
     if (existingPresignedUrls.length === urls.length) return existingPresignedUrls;
+    // The course catalogue is public, so an anonymous visitor renders cards whose images cannot be
+    // signed — `common/presigned-GET-urls` is authenticated. Bail quietly and let the caller show
+    // its placeholder, rather than raising one error toast per card.
+    if (!getToken()) return [];
     try {
       const keys = urls.map(toObjectKey);
       const { data: presignedUrls } = await CommonService.getPreSignedGETUrls({ keys });

@@ -1,6 +1,7 @@
 export * from './course-modules';
 export * from './course-sidebar';
 export * from './CourseCard';
+export * from './CourseFilters';
 export * from './CourseInfo';
 export * from './CourseModuleItem';
 export * from './CourseModuleList';

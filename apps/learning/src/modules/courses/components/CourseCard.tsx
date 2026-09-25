@@ -24,7 +24,13 @@ export const CourseCard = ({ course }: { course: ICourse }) => {
       <Card className="rounded border-2">
         <div className="flex flex-col space-y-2 w-full">
           <div className="h-60 w-full">
-            <PresignedImage className="rounded-t object-cover" url={(course.attachments ?? [])[0].url} noOpen />
+            {/* `?? null` rather than `[0].url`: the catalogue lists every organization's published
+                courses, and one saved without a cover threw on the whole grid. */}
+            <PresignedImage
+              className="rounded-t object-cover"
+              url={(course.attachments ?? [])[0]?.url ?? null}
+              noOpen
+            />
           </div>
           <div className="p-3 flex flex-col space-y-3">
             {/* <div className="text-xs text-muted-foreground font-medium flex items-center space-x-2">

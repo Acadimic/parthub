@@ -42,7 +42,6 @@ export const CourseModules = () => {
                       }
                     : null,
                   { label: 'Home', href: '/', icon: <House weight="bold" className="w-3 h-3" /> },
-                  { label: 'Learning', href: '/learning' },
                   { label: 'Courses', href: '/courses' },
                   { label: `${selectedCourse.name}`, href: `/courses/${selectedCourse._id}/preview` },
                   { label: `Modules`, href: `#` },
