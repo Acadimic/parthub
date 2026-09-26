@@ -122,15 +122,27 @@ export const uiPreset = {
         width: 'width',
         height: 'height',
       },
+      // The accordion's clock, so its chevron can name the same length the panel animates for.
+      transitionDuration: {
+        250: '250ms',
+      },
 
       keyframes: {
+        // The panel grows and fades in together; the fade is what stops the text looking as if it
+        // was simply uncovered. Closing only collapses: the text stays solid and the edge covers
+        // it, which reads cleaner than text that thins out while the panel shrinks.
         'accordion-down': {
-          from: { height: '0' },
-          to: { height: 'var(--radix-accordion-content-height)' },
+          from: { height: '0', opacity: '0' },
+          to: { height: 'var(--radix-accordion-content-height)', opacity: '1' },
         },
         'accordion-up': {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' },
+        },
+        // The panel's text settles into place from a few pixels up, so the open reads as a reveal.
+        'accordion-content-in': {
+          from: { opacity: '0', transform: 'translateY(-6px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
         },
         // Drives a toast's remaining-time bar. Declared here rather than inline so the duration
         // stays the component's to set and `animation-play-state` can freeze it on hover.
@@ -163,8 +175,13 @@ export const uiPreset = {
       },
 
       animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
+        // One clock for the panel, its text and the chevron (see `accordion.tsx`): the same length
+        // and the same symmetric curve, so opening and closing each read as one movement.
+        'accordion-down': 'accordion-down 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        // `forwards` holds the panel at zero height until Radix unmounts it; without it the panel
+        // pops back to full height for the one frame between the animation ending and the unmount.
+        'accordion-up': 'accordion-up 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+        'accordion-content-in': 'accordion-content-in 0.25s cubic-bezier(0.4, 0, 0.2, 1) both',
         'fade-in': 'fade-in 0.2s ease-out both',
         'zoom-in': 'zoom-in 0.2s ease-out both',
         // The drawer easing is the iOS sheet curve: fast out of the edge, soft at rest.

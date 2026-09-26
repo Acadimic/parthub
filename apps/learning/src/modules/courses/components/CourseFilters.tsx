@@ -192,7 +192,7 @@ export const CourseFilters = ({ filter, onChange }: IProps) => {
               <Chip
                 label={
                   <span className="flex items-center gap-1.5">
-                    <span className="hidden sm:inline">Subjects</span>
+                    <span className="hidden sm:inline">Filter</span>
                     {/* Always in the layout, so the chip keeps its width and the row does not shift. */}
                     <Badge
                       tone="primary"

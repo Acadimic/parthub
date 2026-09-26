@@ -1,7 +1,6 @@
 import { DynamicSlider } from '@repo/ui/app';
 import React from 'react';
 import { Avatar } from '../app/avatars';
-import { Container } from './Container';
 
 interface TestimonialProps {
   name: string;
@@ -34,7 +33,7 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
 
 const TestimonialCard: React.FC<TestimonialProps> = ({ name, role, content, rating, image }) => {
   return (
-    <div className="rounded-xl md:px-6">
+    <div className="h-full rounded-xl border border-border bg-background p-5 md:p-6">
       <div className="flex items-center space-x-4 mb-4">
         <Avatar avatar={image} name={name} id={name} size={40} />
         <div>
@@ -55,19 +54,17 @@ const TestimonialCard: React.FC<TestimonialProps> = ({ name, role, content, rati
 
 export const Testimonials: React.FC<TestimonialsProps> = ({ testimonials }) => {
   return (
-    <Container>
-      <section className="py-8 mt-4 px-4 border-t border-border">
-        <div className="max-w-7xl mx-auto ">
-          <div className="py-4">
-            <DynamicSlider
-              showDots={false}
-              items={testimonials.map((testimonial, index) => (
-                <TestimonialCard key={index} {...testimonial} />
-              ))}
-            />
-          </div>
+    <section className="pb-12 pt-6 md:pb-16">
+      <div className="max-w-7xl mx-auto ">
+        <div className="py-4">
+          <DynamicSlider
+            showDots={false}
+            items={testimonials.map((testimonial, index) => (
+              <TestimonialCard key={index} {...testimonial} />
+            ))}
+          />
         </div>
-      </section>
-    </Container>
+      </div>
+    </section>
   );
 };
