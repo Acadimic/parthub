@@ -1,8 +1,7 @@
 import { Container } from '@components/others';
 import { useCourse } from '@hooks/course.hook';
 import { useMeetLookups, useSelectedCourse } from '@stores';
-import { getPlural } from '@utils/helpers';
-import { Sessions } from './course-modules';
+import { CourseSessions } from '@modules/sessions';
 import { CourseHero, CourseHighlights, CourseSummaryCard } from './course-preview';
 import { CourseOutline } from './CourseOutline';
 
@@ -37,17 +36,8 @@ export const CoursePreview = () => {
                 <CourseOutline courseId={selectedCourse._id} isPreview onSelectItem={openItem} />
               </div>
             </section>
-            {meets.length ? (
-              <section className="flex flex-col gap-3">
-                <h2 className="text-lg font-semibold">
-                  Live sessions{' '}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    ({meets.length} {getPlural(meets.length, 'session')})
-                  </span>
-                </h2>
-                <Sessions meets={meets} isSmallJoinable isCopyIconOnly />
-              </section>
-            ) : null}
+            {/* The same card the learning view shows, so a visitor sees what a seat buys. */}
+            <CourseSessions meets={meets} />
           </div>
           <aside className="hidden lg:block">
             <div className="sticky top-20">

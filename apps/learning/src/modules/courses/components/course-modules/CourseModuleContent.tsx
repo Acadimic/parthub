@@ -1,5 +1,5 @@
 import { type AttachmentDto } from '@repo/shared/contracts';
-import { Button, SimpleAccordions } from '@repo/ui/app';
+import { Button } from '@repo/ui/app';
 import { useLoadOnce } from '@repo/ui/hooks';
 import { Badge } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
@@ -31,7 +31,7 @@ import {
   useSelectorLookups,
   useUserLookups,
 } from '@stores';
-import { getPlural } from '@utils/helpers';
+
 import { useEffect, useRef, useState } from 'react';
 import { BookmarkCourse } from './BookmarkCourse';
 import { Content } from './content';
@@ -39,8 +39,8 @@ import { FollowButton } from './FollowButton';
 import { Followers } from './Followers';
 import { LikeCourse } from './LikeCourse';
 import { MarkCompleteButton } from './MarkCompleteButton';
-import { Sessions } from './Sessions';
 import { ShareCourse } from './ShareCourse';
+import { CourseSessions, NextSessionBanner } from '@modules/sessions';
 
 /** An item is a material or a test paper; both carry a duration, and only one is ever set. */
 const getDurationMins = (material?: IMaterial, testPaper?: ITestPaper) =>
@@ -260,6 +260,7 @@ export const CourseModuleContent = () => {
 
   return (
     <div ref={topRef} className="flex flex-col gap-4 md:gap-5">
+      <NextSessionBanner meets={meets} />
       {/* The lesson's name and place come first, unboxed, so the frame below is the first thing
           with any weight on the screen. */}
       <LessonHeader
@@ -318,30 +319,7 @@ export const CourseModuleContent = () => {
 
       <UpNext />
 
-      {meets.length ? (
-        <Card className="px-4 md:px-5">
-          <SimpleAccordions
-            openIndexes={[0]}
-            items={[
-              {
-                title: (
-                  <span>
-                    Live sessions{' '}
-                    <span className="text-xs font-normal text-muted-foreground">
-                      ({meets.length} {getPlural(meets.length, 'session')})
-                    </span>
-                  </span>
-                ),
-                component: (
-                  <div className="pb-4">
-                    <Sessions meets={meets} isSmallJoinable isCopyIconOnly />
-                  </div>
-                ),
-              },
-            ]}
-          />
-        </Card>
-      ) : null}
+      <CourseSessions meets={meets} />
     </div>
   );
 };

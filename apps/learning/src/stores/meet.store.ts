@@ -5,7 +5,7 @@ import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 
 /** The fetches this store tracks. */
-type MeetFetch = 'meets';
+type MeetFetch = 'meets' | 'courseMeets';
 
 export interface IMeetState extends IRequestSlice<MeetFetch> {
   meetMap: Record<string, MeetDto>;
@@ -20,6 +20,8 @@ export interface IMeetState extends IRequestSlice<MeetFetch> {
   /** Sessions the signed-in learner attends, sorted by start time, soonest first. */
   getMyMeetsSorted: () => MeetDto[];
   loadMyMeets: () => Promise<void>;
+  /** The sessions a set of courses point at, for the sessions page, which lists them by course. */
+  loadMeetsByIds: (meetIds: string[]) => Promise<void>;
   reset: () => void;
 }
 
@@ -31,7 +33,7 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
 
 export const useMeetStore = create<IMeetState>()((set, get) => ({
   meetMap: {},
-  ...createRequestSlice(['meets'], set, get),
+  ...createRequestSlice(['meets', 'courseMeets'], set, get),
 
   getMeetById: (meetId) => (meetId ? get().meetMap[meetId] : undefined),
 
@@ -59,6 +61,13 @@ export const useMeetStore = create<IMeetState>()((set, get) => ({
   loadMyMeets: () =>
     get().run('meets', async () => {
       const result = await MeetService.getMyMeets();
+      if (result?.data) get().addMeets(result.data);
+    }),
+
+  loadMeetsByIds: (meetIds) =>
+    get().run('courseMeets', async () => {
+      if (!meetIds.length) return;
+      const result = await MeetService.getMeetsByIds(meetIds);
       if (result?.data) get().addMeets(result.data);
     }),
 
