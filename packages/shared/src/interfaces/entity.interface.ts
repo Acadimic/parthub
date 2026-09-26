@@ -36,6 +36,9 @@ export interface ICompletedModuleFields {
   collectionRef: CollectionType;
   isCompleted?: boolean;
   isSkipped?: boolean;
+  /** Mongoose's timestamps, present on every stored row; the activity screen orders by them. */
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /** `course/schemas/course-module.schema.ts`, whose wire shape is `CourseModuleDto`. */

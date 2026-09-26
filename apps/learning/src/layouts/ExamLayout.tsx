@@ -1,7 +1,7 @@
-import { Button, FullScreenLoader, Modal, ModalFooter } from '@repo/ui/app';
+import { Button, Modal, ModalFooter } from '@repo/ui/app';
 import { ExamFooter } from '@components/app/footers';
 import { ExamHeader } from '@components/app/headers';
-import { ExamSidebar, Instruction } from '@components/exam';
+import { ExamSidebar, ExamSkeleton, Instruction } from '@components/exam';
 import { BlankState } from '@components/others';
 import { useExam } from '@hooks/exam.hook';
 import { TestPaperSummary } from '@modules/test-papers/components/TestPaperSummary';
@@ -50,7 +50,7 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
     loadAndSetExam(testPaperId, isPractice);
   }, [testPaperId, isPractice]);
 
-  if (isSettingExam) return <FullScreenLoader loading={isSettingExam} />;
+  if (isSettingExam) return <ExamSkeleton isPractice={isPractice} />;
 
   if (!exam) return <BlankState label="No Exam Found." />;
 

@@ -1,4 +1,11 @@
-import { GearIcon, GridFourIcon, ShieldCheckIcon, UserCircleIcon, VideoCameraIcon } from '@phosphor-icons/react';
+import {
+  ChartLineUpIcon,
+  GearIcon,
+  GridFourIcon,
+  ShieldCheckIcon,
+  UserCircleIcon,
+  VideoCameraIcon,
+} from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 
 interface ISidebarMenu {
@@ -32,6 +39,11 @@ export const Routes: ISidebarRoute[] = [
         name: 'Sessions',
         route: '/sessions',
         icon: VideoCameraIcon,
+      },
+      {
+        name: 'Activity',
+        route: '/activity',
+        icon: ChartLineUpIcon,
       },
     ],
   },

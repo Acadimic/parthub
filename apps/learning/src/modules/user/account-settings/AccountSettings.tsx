@@ -3,7 +3,7 @@ import { Breadcrumb, Card, type IBreadcrumbItem, MenuList } from '@repo/ui/app';
 import { AccountSettingsType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { type IMenuItem } from '@interfaces';
-import { GearSixIcon, LockKeyIcon, UserIcon } from '@phosphor-icons/react';
+import { ChartLineUpIcon, GearSixIcon, LockKeyIcon, UserIcon } from '@phosphor-icons/react';
 import { UserService } from '@services';
 import { useSelectedUser, useUserLookups } from '@stores';
 import { AccountSettingsRoutes } from '@utils/constants';
@@ -51,6 +51,12 @@ export const AccountSettings = () => {
       onClick: () => push(AccountSettingsRoutes[AccountSettingsType.SECURITY]),
       icon: <LockKeyIcon weight="bold" className="w-5 h-5 text-inherit" />,
       isCurrent: isSecurity,
+    },
+    // On a phone this list is the way to the activity page; the header links only show from `md`.
+    {
+      label: 'Activity',
+      onClick: () => push('/activity'),
+      icon: <ChartLineUpIcon weight="bold" className="w-5 h-5 text-inherit" />,
     },
   ];
 

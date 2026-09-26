@@ -2,7 +2,7 @@ import { Avatar } from '@components/app/avatars';
 import { AccountSettingsType } from '@enums';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IMenuItem } from '@interfaces';
-import { CheckIcon, GearSixIcon, SignOutIcon } from '@phosphor-icons/react';
+import { ChartLineUpIcon, CheckIcon, GearSixIcon, SignOutIcon } from '@phosphor-icons/react';
 import { type IUser, useSelectedUser, useSelectorLookups, useUserLookups } from '@stores';
 import { AccountSettingsRoutes } from '@utils/constants';
 import { capitalize, logOut } from '@utils/helpers';
@@ -35,6 +35,11 @@ export const ProfileDropdown = () => {
           push(AccountSettingsRoutes[AccountSettingsType.PROFILE]);
         }
       },
+    },
+    {
+      label: 'My activity',
+      icon: <ChartLineUpIcon className="w-4 h-4" />,
+      onClick: () => push('/activity'),
     },
     {
       label: 'Logout',

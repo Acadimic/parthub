@@ -26,3 +26,4 @@ export type {
 
 export * from '@repo/ui/types';
 export * from './course.interface';
+export * from './activity.interface';

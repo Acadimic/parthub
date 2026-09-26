@@ -5,7 +5,7 @@ import { useSelectedUser, useSelectorLookups } from '@stores';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { isRouteActive, learnerRoutes } from '../navigations';
+import { activityRoute, isRouteActive, learnerRoutes } from '../navigations';
 import { ProfileDropdown } from '../sidebars/components';
 import { EXPLORE_SEARCH_ATTRIBUTE, ExploreMenu } from './explore';
 
@@ -50,26 +50,24 @@ const DesktopNav = () => {
   const { pathname } = useRouter();
   return (
     <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
-      {learnerRoutes
-        .filter((nav) => nav.route !== '/account-settings')
-        .map((nav) => {
-          const isActive = isRouteActive(pathname, nav.route);
-          return (
-            <NextLink
-              key={nav.route}
-              href={nav.route}
-              aria-current={isActive ? 'page' : undefined}
-              className={cn(
-                'relative rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-foreground lg:px-3',
-                isActive ? 'text-primary' : 'text-muted-foreground',
-                isActive &&
-                  'after:absolute after:inset-x-2.5 after:-bottom-[13px] after:h-0.5 after:bg-primary lg:after:inset-x-3',
-              )}
-            >
-              {nav.name}
-            </NextLink>
-          );
-        })}
+      {[...learnerRoutes.filter((nav) => nav.route !== '/account-settings'), activityRoute].map((nav) => {
+        const isActive = isRouteActive(pathname, nav.route);
+        return (
+          <NextLink
+            key={nav.route}
+            href={nav.route}
+            aria-current={isActive ? 'page' : undefined}
+            className={cn(
+              'relative rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-foreground lg:px-3',
+              isActive ? 'text-primary' : 'text-muted-foreground',
+              isActive &&
+                'after:absolute after:inset-x-2.5 after:-bottom-[13px] after:h-0.5 after:bg-primary lg:after:inset-x-3',
+            )}
+          >
+            {nav.name}
+          </NextLink>
+        );
+      })}
     </nav>
   );
 };

@@ -1,5 +1,13 @@
 import { cn } from '@repo/ui/lib';
-import { CompassIcon, GearIcon, HouseIcon, type Icon, PaperPlaneIcon, VideoCameraIcon } from '@phosphor-icons/react';
+import {
+  ChartLineUpIcon,
+  CompassIcon,
+  GearIcon,
+  HouseIcon,
+  type Icon,
+  PaperPlaneIcon,
+  VideoCameraIcon,
+} from '@phosphor-icons/react';
 import { useSelectorLookups } from '@stores';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
@@ -17,6 +25,9 @@ export const learnerRoutes: INavigation[] = [
   { name: 'Sessions', route: '/sessions', icon: VideoCameraIcon },
   { name: 'Account', route: '/account-settings', icon: GearIcon },
 ];
+
+/** The learner's own record. In the header and the account menu, not the phone's tab bar. */
+export const activityRoute: INavigation = { name: 'Activity', route: '/activity', icon: ChartLineUpIcon };
 
 /** Active for the route itself and anything under it, so `/courses/:id/preview` lights "Courses". */
 export const isRouteActive = (current: string, route: string) =>
@@ -61,7 +72,11 @@ export const LearnerNavigation = () => {
         <span>Explore</span>
       </button>
       <Tab nav={sessions} isActive={isRouteActive(pathname, sessions.route)} />
-      <Tab nav={account} isActive={isRouteActive(pathname, account.route)} />
+      {/* Activity is reached from the account screen on a phone, so it counts as Account here. */}
+      <Tab
+        nav={account}
+        isActive={isRouteActive(pathname, account.route) || isRouteActive(pathname, activityRoute.route)}
+      />
     </nav>
   );
 };
