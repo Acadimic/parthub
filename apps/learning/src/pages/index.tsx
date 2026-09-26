@@ -106,7 +106,7 @@ const Home = () => {
       </Container>
       <div className="py-8 bg-background">
         <Title title="Explore Courses" subtitle="Discover paths to your personal and professional growth" />
-        <Courses isFilter />
+        <Courses isFilter withHeading={false} />
       </div>
       <div className="py-8 bg-background">
         <Title

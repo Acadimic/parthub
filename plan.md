@@ -56,3 +56,14 @@ Let's first functionality:
    Whatever we need to feed AI model we can write them in md file or any suitable suggestion you can provide me.
    Our system also need some ids of standard/subject or any extra details so we can keep all these info in the JSON and from the JSON our system insert/update those questions in the DB. Also, we attach tag and level with each question for some extra insight later.
    Also, please use your method to make this generation a very high level (top level) test paper generator.
+
+#####################
+Teacher Dashboard: Any org users can create courses and publish.
+Learning Dashboard:
+
+1. Published courses from different orgs should be visible to any org student.
+2. Learner can access published course content.
+3. Student can add filter to filter courses based on standard and subject and topics.
+4. Later we'll ask student interest and show courses bases on interest. Standard basically are standards.
+5. Later we'll lock course content if learner don't have access. Learner should purchase the paid courses and should get access.
+6. Later published and free courses should be accessible.

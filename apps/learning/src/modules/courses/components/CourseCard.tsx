@@ -1,111 +1,170 @@
-import { Card } from '@repo/ui/app';
+import { Badge, Progress } from '@repo/ui/core';
+import { cn } from '@repo/ui/lib';
 import { PresignedImage } from '@components/app/attachments';
-import { StandardWithLogo } from '@components/common';
+import { ArrowRightIcon, BookOpenTextIcon, ClockIcon, FileTextIcon, VideoCameraIcon } from '@phosphor-icons/react';
 import { type ICourse, useSelectorLookups, useStandardLookups } from '@stores';
 import Link from 'next/link';
-import { CourseInfo } from './';
+import { type ReactNode } from 'react';
 
-export const CourseCard = ({ course }: { course: ICourse }) => {
-  // const { push } = useRouter();
-  const selectorStore = useSelectorLookups();
-  const standardStore = useStandardLookups();
-  const { setSelectedCourseId } = selectorStore;
-  const { getStandardsByIds } = standardStore;
+interface IProps {
+  course: ICourse;
+  /** 0–100 for a course the learner has started, and `null` for one they have not. */
+  progress: number | null;
+}
 
-  const onClickCourse = () => {
-    setSelectedCourseId(course._id);
-    // const pathname = ``;
-    // const params = { pathname, query: { courseId: course._id } };
-    // push(params, pathname);
-  };
+/** Five fills for a course without a cover, picked by id so a course keeps its colour. */
+const COVER_FILLS = [
+  'from-chart-1 to-chart-1/70',
+  'from-chart-2 to-chart-2/70',
+  'from-chart-3 to-chart-3/70',
+  'from-chart-4 to-chart-4/70',
+  'from-chart-5 to-chart-5/70',
+];
 
+const getCoverFill = (id: string) => {
+  const sum = Array.from(id).reduce((total, char) => total + char.charCodeAt(0), 0);
+  return COVER_FILLS[sum % COVER_FILLS.length];
+};
+
+/** "7h 20m", or "45m"; nothing for a course with no timed content yet. */
+const getDuration = (mins: number) => {
+  if (!mins) return '';
+  const hours = Math.floor(mins / 60);
+  const rest = mins % 60;
+  if (!hours) return `${rest}m`;
+  return rest ? `${hours}h ${rest}m` : `${hours}h`;
+};
+
+const getCallToAction = (isStarted: boolean, isDone: boolean) => {
+  if (isDone) return 'Review course';
+  if (isStarted) return 'Continue learning';
+  return 'View course';
+};
+
+/** The course name over a coloured field, standing in for a cover that was never uploaded. */
+const CoverFallback = ({ course }: { course: ICourse }) => (
+  <div
+    className={cn(
+      'flex h-full w-full items-end bg-gradient-to-br p-4 text-primary-foreground',
+      getCoverFill(course._id),
+    )}
+  >
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute -right-4 -top-6 select-none font-mono text-[9rem] font-bold leading-none opacity-15"
+    >
+      {course.name.trim().charAt(0).toUpperCase()}
+    </span>
+    <span className="relative line-clamp-2 text-lg font-semibold leading-tight">{course.name}</span>
+  </div>
+);
+
+const Stat = ({ icon, children }: { icon: ReactNode; children: ReactNode }) => (
+  <span className="flex items-center gap-1 whitespace-nowrap">
+    {icon}
+    {children}
+  </span>
+);
+
+/** What is inside the course, as icon-and-count pairs. Zero counts are left out. */
+const StatsRow = ({ course }: { course: ICourse }) => {
+  const stats = course.stats;
+  if (!stats) return null;
+  const duration = getDuration(stats.testsDurationMins + stats.materialsDurationMins + stats.meetsDurationMins);
+  const items = [
+    { key: 'videos', count: stats.videosCount, icon: <VideoCameraIcon weight="bold" className="h-3.5 w-3.5" /> },
+    { key: 'readings', count: stats.readingsCount, icon: <BookOpenTextIcon weight="bold" className="h-3.5 w-3.5" /> },
+    { key: 'tests', count: stats.testsCount, icon: <FileTextIcon weight="bold" className="h-3.5 w-3.5" /> },
+  ].filter((item) => item.count > 0);
+  if (!items.length && !duration) {
+    return <span className="text-xs text-muted-foreground">Content coming soon</span>;
+  }
   return (
-    <Link href={`/courses/${course._id}/preview`} onClick={onClickCourse}>
-      <Card className="rounded border-2">
-        <div className="flex flex-col space-y-2 w-full">
-          <div className="h-60 w-full">
-            {/* `?? null` rather than `[0].url`: the catalogue lists every organization's published
-                courses, and one saved without a cover threw on the whole grid. */}
-            <PresignedImage
-              className="rounded-t object-cover"
-              url={(course.attachments ?? [])[0]?.url ?? null}
-              noOpen
-            />
-          </div>
-          <div className="p-3 flex flex-col space-y-3">
-            {/* <div className="text-xs text-muted-foreground font-medium flex items-center space-x-2">
-              <div className="p-0.5 border border-border rounded-md">
-                <div className="h-8 w-8">
-                  {org?.logo ? (
-                    <PresignedImage className="rounded-2xl" url={org.logo} />
-                  ) : (
-                    <BuildingApartment weight="light" className="w-full h-full text-muted-foreground" />
-                  )}
-                </div>
-              </div>
-              <div>{org?.name}</div>
-            </div> */}
-            <StandardWithLogo standard={getStandardsByIds(course.standards ?? [])[0]} />
-            <div>
-              <div className="font-medium truncate">{course.name}</div>
-              <div className="text-sm text-muted-foreground truncate">{course.description}</div>
-            </div>
-            <div className="text-xs text-muted-foreground">
-              <CourseInfo courseStats={course.stats} />
-            </div>
-          </div>
-        </div>
-      </Card>
-    </Link>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+      {items.map((item) => (
+        <Stat key={item.key} icon={item.icon}>
+          {item.count} {item.key}
+        </Stat>
+      ))}
+      {duration ? <Stat icon={<ClockIcon weight="bold" className="h-3.5 w-3.5" />}>{duration}</Stat> : null}
+    </div>
   );
 };
 
-// import { Button } from '@repo/ui/app';
-// import { DotsNineIcon } from '@phosphor-icons/react';
-// import { ICourse } from '@stores';
-// import { useRouter } from 'next/router';
+/**
+ * One course in the catalogue: the cover with the standard on it, the name and blurb, what it
+ * holds, and either how far the learner has got or an invitation to start.
+ */
+export const CourseCard = ({ course, progress }: IProps) => {
+  const { setSelectedCourseId } = useSelectorLookups();
+  const { getStandardsByIds, getSubjectsByIds } = useStandardLookups();
+  const standard = getStandardsByIds(course.standards ?? [])[0];
+  const subjects = getSubjectsByIds(course.subjects ?? []).slice(0, 2);
+  const cover = (course.attachments ?? [])[0]?.url ?? null;
+  const isStarted = progress !== null;
+  const isDone = progress !== null && progress >= 100;
 
-// const InfoItem = ({ name, value }: { name: string; value: any }) => {
-//   return (
-//     <div className="flex text-gradient flex-col text-center">
-//       <div className="text-sm font-bold">{value}</div>
-//       <div className="text-xs font-semibold">{name}</div>
-//     </div>
-//   );
-// };
-
-// export const CourseCard = ({ course }: { course: ICourse }) => {
-//   const { push } = useRouter();
-
-//   const onClickAttempt = () => {
-//     const pathname = '/attempt';
-//     const params = { pathname, query: { id: course._id } };
-//     push(params, pathname);
-//   };
-
-//   const onClickPractice = () => {
-//     const pathname = '/practice';
-//     const params = { pathname, query: { id: course._id, isPractice: true } };
-//     push(params, pathname);
-//   };
-
-//   return (
-//     <>
-//       <div className="box-shadow border border-border rounded-sm flex flex-col space-y-6 p-4 bg-muted">
-//         <div className="flex justify-start items-center space-x-3">
-//           <DotsNineIcon className="w-4 h-4 text-primary" />
-//           <div className="text-sm font-semibold truncate">{course.name}</div>
-//         </div>
-//         <div className="flex justify-center space-x-8 items-center">
-//           <InfoItem name="Days" value={course.daysCount} />
-//           <InfoItem name="Materials" value={course.materialsCount} />
-//           <InfoItem name="Tests" value={course.testPapersCount} />
-//         </div>
-//         <div className="flex justify-around">
-//           <Button text="Practice" onClick={onClickPractice} />
-//           <Button text="Attempt" onClick={onClickAttempt} />
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
+  return (
+    <Link
+      href={`/courses/${course._id}/preview`}
+      onClick={() => setSelectedCourseId(course._id)}
+      className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-background transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    >
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+        {cover ? (
+          <PresignedImage
+            url={cover}
+            noOpen
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            fallback={<CoverFallback course={course} />}
+          />
+        ) : (
+          <CoverFallback course={course} />
+        )}
+        {standard ? (
+          <Badge tone="neutral" appearance="solid" className="absolute left-3 top-3 bg-background/90 text-foreground">
+            {standard.name}
+          </Badge>
+        ) : null}
+        {isDone ? (
+          <Badge tone="success" appearance="solid" className="absolute right-3 top-3">
+            Completed
+          </Badge>
+        ) : null}
+      </div>
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex flex-col gap-1">
+          <h3 className="line-clamp-2 text-base font-semibold leading-snug group-hover:text-primary">{course.name}</h3>
+          {course.description ? (
+            <p className="line-clamp-2 text-sm text-muted-foreground">{course.description}</p>
+          ) : null}
+        </div>
+        {subjects.length ? (
+          <div className="flex flex-wrap gap-1.5">
+            {subjects.map((subject) => (
+              <Badge key={subject._id} tone="neutral" appearance="outline">
+                {subject.name}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
+        <div className="mt-auto flex flex-col gap-3 pt-1">
+          <StatsRow course={course} />
+          {isStarted ? (
+            <div className="flex items-center gap-3">
+              <Progress value={progress} className="h-1.5 flex-1" />
+              <span className="shrink-0 font-mono text-xs text-muted-foreground">{Math.round(progress)}%</span>
+            </div>
+          ) : null}
+          <span className="flex items-center gap-1 text-sm font-medium text-primary">
+            {getCallToAction(isStarted, isDone)}
+            <ArrowRightIcon
+              weight="bold"
+              className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+            />
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+};
