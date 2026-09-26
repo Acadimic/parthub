@@ -265,7 +265,9 @@ export const useResourceStore = create<IResourceState>()((set, get) => ({
       const followed = userStore.getUserById(followingId);
       // Shown at once, as for reactions; the follower count is nudged locally and re-read later.
       get().addFollowings([payload]);
-      userStore.patchUser(followingId, { followersCount: Math.max(0, (followed?.followersCount ?? 0) + (isFollowing ? 1 : -1)) });
+      userStore.patchUser(followingId, {
+        followersCount: Math.max(0, (followed?.followersCount ?? 0) + (isFollowing ? 1 : -1)),
+      });
       try {
         const result = await FollowerService.upsertFollower(payload);
         if (result?.data) get().addFollowings([result.data]);

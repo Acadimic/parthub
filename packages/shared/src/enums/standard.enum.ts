@@ -12,4 +12,6 @@ export enum StandardGroup {
   POST_GRADUATE = 'post graduate',
   /** Self-paced levelled tracks independent of any degree or exam — one standard per level. */
   LEARNING_TRACKS = 'learning tracks',
+  /** Language tracks: one standard per language (Spanish, Sanskrit, ...), its levels are the subjects. */
+  LANGUAGES = 'languages',
 }
