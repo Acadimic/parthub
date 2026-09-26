@@ -1,37 +1,36 @@
+import { FullLogo, Link, ToggleTheme } from '@repo/ui/app';
 import { useRouter } from 'next/router';
-import { ToggleTheme, Link, FullLogo } from '@repo/ui/app';
+import { DesktopNav } from './PageHeader';
 
+/**
+ * The bar over the sign-in and sign-up screens: the page header's shell, logo and routes, with
+ * the one action that makes sense here — the other half of the pair — where the account sits.
+ */
 export const AuthHeader = () => {
   const { pathname } = useRouter();
+  const isSignUp = pathname.includes('/sign-up');
 
   return (
-    <>
-      <div className={`bg-background w-full`}>
-        <div className="px-4 md:px-8 py-1.5 border-b border-border">
-          <div className="flex justify-between items-center h-12">
-            <div className="flex justify-start items-center space-x-2">
-              {/* <div className="block md:hidden">
-                <Logo />
-              </div> */}
-              <div>
-                <FullLogo className="h-6 md:h-7" />
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <ToggleTheme />
-              {pathname?.includes('/sign-up') ? (
-                <Link isSubtle linkClassName="font-medium text-sm text-foreground" href="/sign-in">
-                  SIGN IN
-                </Link>
-              ) : (
-                <Link isSubtle linkClassName="font-medium text-sm text-foreground" href="/sign-up">
-                  SIGN UP
-                </Link>
-              )}
-            </div>
+    <header className="border-b border-border bg-background">
+      <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-2 px-4 sm:h-16 md:gap-3 lg:gap-4 lg:px-6">
+        <div className="flex shrink-0 items-center">
+          <FullLogo className="h-6 md:h-7" />
+        </div>
+        <div className="hidden h-6 w-px bg-border md:block" />
+        <DesktopNav />
+        <div className="ml-auto flex shrink-0 items-center gap-3 md:gap-4">
+          <ToggleTheme />
+          {/* The hint and its button read as one phrase, so they sit closer to each other than to the toggle. */}
+          <div className="flex items-center gap-3">
+            <span className="hidden text-sm text-muted-foreground lg:block">
+              {isSignUp ? 'Already have an account?' : 'New here?'}
+            </span>
+            <Link className="px-4 py-2" href={isSignUp ? '/sign-in' : '/sign-up'}>
+              {isSignUp ? 'Sign In' : 'Sign Up'}
+            </Link>
           </div>
         </div>
       </div>
-    </>
+    </header>
   );
 };

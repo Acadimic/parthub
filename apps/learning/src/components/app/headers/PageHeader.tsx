@@ -1,6 +1,6 @@
+import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { FullLogo, Link, TextInput, ToggleTheme } from '@repo/ui/app';
 import { cn } from '@repo/ui/lib';
-import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { useSelectedUser, useSelectorLookups } from '@stores';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
@@ -46,7 +46,8 @@ const SearchBar = ({ value, onChange, onSubmitted }: ISearchBarProps) => {
 };
 
 /** The primary routes, as text links with an active underline. Account is reached via the avatar. */
-const DesktopNav = () => {
+/** The learner routes as header links, from `md` up; shared with the auth header so both bars match. */
+export const DesktopNav = () => {
   const { pathname } = useRouter();
   return (
     <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
@@ -108,7 +109,7 @@ export const PageHeader = () => {
     <header className="fixed left-0 right-0 top-0 z-40 border-b border-border bg-background">
       <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-2 px-4 sm:h-16 md:gap-3 lg:gap-4 lg:px-6">
         <div className="flex shrink-0 items-center">
-          <FullLogo className="h-8 md:h-9" />
+          <FullLogo className="h-6 md:h-7" />
         </div>
         <div className="hidden h-6 w-px bg-border md:block" />
         <DesktopNav />
