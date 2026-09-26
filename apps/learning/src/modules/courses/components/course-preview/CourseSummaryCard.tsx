@@ -1,6 +1,6 @@
 import { Badge, Progress } from '@repo/ui/core';
 import { Button } from '@repo/ui/app';
-import { PresignedImage } from '@components/app/attachments';
+import { CourseCover } from '../CourseCover';
 import { useCourse } from '@hooks/course.hook';
 import {
   BookOpenTextIcon,
@@ -77,8 +77,8 @@ export const CourseSummaryCard = ({ course }: IProps) => {
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
-      <div className="relative aspect-video w-full bg-muted">
-        <PresignedImage className="object-cover" url={(course.attachments ?? [])[0]?.url ?? null} noOpen />
+      <div className="relative aspect-video w-full overflow-hidden bg-muted">
+        <CourseCover course={course} imageClassName="" />
         {/* The AI tag is spelled out beside the title by the hero; any other tag is shown as it is. */}
         {course.tag && course.tag !== AI_GENERATED_COURSE_TAG ? (
           <div className="absolute left-3 top-3">

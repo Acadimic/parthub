@@ -9,6 +9,6 @@ const CoursePreviewPage = () => {
   return <Course courseId={courseId as string} isPreview={true} />;
 };
 
-CoursePreviewPage.layout = Layout.PAGE;
+CoursePreviewPage.layout = Layout.PAGE_NAVIGATION;
 
 export default CoursePreviewPage;

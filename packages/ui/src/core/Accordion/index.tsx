@@ -3,7 +3,8 @@ import { cn } from '../../lib/cn';
 import * as React from 'react';
 
 export interface IAccordionItem {
-  title: string;
+  /** Plain text, or a composed heading such as a numbered row with a subtitle. */
+  title: React.ReactNode;
   component: React.ReactNode;
   icon?: React.ReactNode;
 }
@@ -13,10 +14,19 @@ interface IAccordionProps {
   openIndexes?: number[];
   isIconLast?: boolean;
   className?: string;
+  /** Replaces the panel's default padding, for content that brings its own. */
+  contentClassName?: string;
   type?: 'single' | 'multiple';
 }
 
-export const Accordion = ({ items, openIndexes, isIconLast, className, type = 'multiple' }: IAccordionProps) => {
+export const Accordion = ({
+  items,
+  openIndexes,
+  isIconLast,
+  className,
+  contentClassName,
+  type = 'multiple',
+}: IAccordionProps) => {
   const defaultValues = openIndexes?.map(String) ?? [];
 
   if (type === 'single') {
@@ -27,12 +37,12 @@ export const Accordion = ({ items, openIndexes, isIconLast, className, type = 'm
             <AccordionTrigger
               className={cn('text-sm font-semibold py-3 px-3 hover:no-underline', isIconLast && 'flex-row-reverse')}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
                 {item.icon}
-                <span>{item.title}</span>
+                <span className="min-w-0 flex-1">{item.title}</span>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="px-3 pb-3">{item.component}</AccordionContent>
+            <AccordionContent className={contentClassName ?? 'px-3 pb-3'}>{item.component}</AccordionContent>
           </AccordionItem>
         ))}
       </ShadcnAccordion>
@@ -46,12 +56,12 @@ export const Accordion = ({ items, openIndexes, isIconLast, className, type = 'm
           <AccordionTrigger
             className={cn('text-sm font-semibold py-3 px-3 hover:no-underline', isIconLast && 'flex-row-reverse')}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
               {item.icon}
-              <span>{item.title}</span>
+              <span className="min-w-0 flex-1">{item.title}</span>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="px-3 pb-3">{item.component}</AccordionContent>
+          <AccordionContent className={contentClassName ?? 'px-3 pb-3'}>{item.component}</AccordionContent>
         </AccordionItem>
       ))}
     </ShadcnAccordion>

@@ -7,9 +7,11 @@ import { useEffect } from 'react';
 
 interface IProps {
   material: IMaterial;
+  isFullScreen: boolean;
+  onFullScreenChange: (isFullScreen: boolean) => void;
 }
 
-export const MaterialItem = ({ material }: IProps) => {
+export const MaterialItem = ({ material, isFullScreen, onFullScreenChange }: IProps) => {
   const selectorStore = useSelectorLookups();
   const { selectedContent, selectedAttachment, setSelectedContent, removeSelectedAttachment } = selectorStore;
 
@@ -35,11 +37,26 @@ export const MaterialItem = ({ material }: IProps) => {
         />
       );
     }
-    if (selectedContent) return <ViewTextContent content={selectedContent} />;
+    if (selectedContent) {
+      return (
+        <ViewTextContent
+          content={selectedContent}
+          isFullScreen={isFullScreen}
+          onFullScreenChange={onFullScreenChange}
+        />
+      );
+    }
     // The effect above picks what to show after the first paint; until then, a spinner.
     if (!selectedAttachment) return <Loader isLoading />;
     if (selectedAttachment?.documentType === DocumentType.FILE && selectedAttachment.isUploaded) {
-      return <ViewUrlContent url={selectedAttachment.url} isStatic={!selectedAttachment.isUploaded} />;
+      return (
+        <ViewUrlContent
+          url={selectedAttachment.url}
+          isStatic={!selectedAttachment.isUploaded}
+          isFullScreen={isFullScreen}
+          onFullScreenChange={onFullScreenChange}
+        />
+      );
     }
     if (
       selectedAttachment?.documentType === DocumentType.LINK &&
@@ -49,7 +66,14 @@ export const MaterialItem = ({ material }: IProps) => {
     ) {
       return <VideoPlayer url={selectedAttachment.url} isStatic={true} />;
     }
-    return <ViewUrlContent url={selectedAttachment.url} isStatic={!selectedAttachment.isUploaded} />;
+    return (
+      <ViewUrlContent
+        url={selectedAttachment.url}
+        isStatic={!selectedAttachment.isUploaded}
+        isFullScreen={isFullScreen}
+        onFullScreenChange={onFullScreenChange}
+      />
+    );
   };
 
   return (

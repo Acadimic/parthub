@@ -7,12 +7,17 @@ interface IProps {
   courseModuleId: string;
   material?: IMaterial;
   testPaper?: ITestPaper;
+  /** The frame's full-screen state; the toggle lives in the frame's toolbar, not in the viewer. */
+  isFullScreen: boolean;
+  onFullScreenChange: (isFullScreen: boolean) => void;
 }
 
-export const Content = ({ material, testPaper }: IProps) => {
+export const Content = ({ material, testPaper, isFullScreen, onFullScreenChange }: IProps) => {
   return (
     <div className="h-full w-full flex justify-center items-center relative">
-      {material && <MaterialItem material={material} />}
+      {material && (
+        <MaterialItem material={material} isFullScreen={isFullScreen} onFullScreenChange={onFullScreenChange} />
+      )}
       {!material && testPaper && <TestPaperItem testPaper={testPaper} />}
     </div>
   );

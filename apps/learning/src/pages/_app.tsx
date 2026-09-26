@@ -2,7 +2,7 @@ import { ErrorBoundaryFallback, FullScreenLoader, InternetStatus } from '@repo/u
 import { useRequest } from '@repo/ui/hooks';
 import { ColorModeContext } from '@repo/ui/contexts';
 import { Layout, StorageKey, Theme } from '@enums';
-import { AuthLayout, PageLayout, PageNavigationLayout, PublicLayout, SidebarLayout } from '@layouts';
+import { AuthLayout, PageLayout, PageNavigationLayout, PublicLayout, SidebarLayout, FocusLayout } from '@layouts';
 import { ToastContainer } from '@modules/toasts';
 import { useStandardStore, useUserLookups } from '@stores';
 import '@styles/globals.scss';
@@ -111,6 +111,12 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
           <PublicLayout>
             <Component {...pageProps} />
           </PublicLayout>
+        );
+      case Layout.FOCUS:
+        return (
+          <FocusLayout>
+            <Component {...pageProps} />
+          </FocusLayout>
         );
       default:
         return <Component {...pageProps} />;

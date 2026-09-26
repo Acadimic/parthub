@@ -2,19 +2,20 @@ import { FullScreenModal, Loader } from '@repo/ui/app';
 import { useAttachment } from '@hooks/attachment.hook';
 import { useEffect, useMemo, useState } from 'react';
 import { HandleContentError } from './HandleContentError';
-import { ViewToolbar } from './ViewToolbar';
+import { FullScreenBar } from './FullScreenBar';
 
 interface IProps {
   url: string;
-  className?: string;
   isStatic?: boolean;
+  /** Owned by the frame around the viewer, whose toolbar carries the toggle. */
+  isFullScreen: boolean;
+  onFullScreenChange: (isFullScreen: boolean) => void;
 }
 
-export const ViewUrlContent = ({ url, isStatic }: IProps) => {
+export const ViewUrlContent = ({ url, isStatic, isFullScreen, onFullScreenChange }: IProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [presignedUrl, setPresignedUrl] = useState<string>('');
   const { getPresignedUrls } = useAttachment();
-  const [isFullScreen, setIsFullScreen] = useState(false);
 
   const fetchAndSetPresignedUrl = async () => {
     if (!url) return;
@@ -61,17 +62,14 @@ export const ViewUrlContent = ({ url, isStatic }: IProps) => {
   return (
     <div className="w-full h-full overflow-hidden">
       {isLoading || !url ? <Loader isLoading={isLoading} /> : null}
-      <>
-        <ViewToolbar setIsFullScreen={setIsFullScreen} isFullScreen={isFullScreen} />
-      </>
       {IFRAME}
       <FullScreenModal
         isOpen={isFullScreen}
-        onClose={() => setIsFullScreen(false)}
+        onClose={() => onFullScreenChange(false)}
         component={
-          <div className="w-full h-full overflow-hidden">
-            <ViewToolbar setIsFullScreen={setIsFullScreen} isFullScreen={isFullScreen} />
-            {IFRAME}
+          <div className="flex h-full w-full flex-col overflow-hidden">
+            <FullScreenBar onExit={() => onFullScreenChange(false)} />
+            <div className="min-h-0 flex-1">{IFRAME}</div>
           </div>
         }
       />

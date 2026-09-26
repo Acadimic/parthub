@@ -1,41 +1,36 @@
-import { RichTextView } from '@repo/ui/content';
 import { FullScreenModal } from '@repo/ui/app';
+import { RichTextView } from '@repo/ui/content';
 import { type IRichText } from '@repo/shared/interfaces';
-import { useMemo, useState } from 'react';
-import { ViewToolbar } from './ViewToolbar';
+import { useMemo } from 'react';
+import { FullScreenBar } from './FullScreenBar';
 
 interface IProps {
   content?: IRichText | null;
-  className?: string;
-  isStatic?: boolean;
+  /** Owned by the frame around the viewer, whose toolbar carries the toggle. */
+  isFullScreen: boolean;
+  onFullScreenChange: (isFullScreen: boolean) => void;
 }
 
-export const ViewTextContent = ({ content }: IProps) => {
-  const [isFullScreen, setIsFullScreen] = useState(false);
-
-  const CONTENT = useMemo(() => {
-    return (
-      <>
-        <div className="pt-6 pb-16 px-4">
-          <RichTextView value={content} fallback="No content available. Please check next tab." />
-        </div>
-      </>
-    );
-  }, [content]);
+export const ViewTextContent = ({ content, isFullScreen, onFullScreenChange }: IProps) => {
+  const CONTENT = useMemo(
+    () => (
+      <div className="px-4 pb-10 pt-6 md:px-8">
+        <RichTextView value={content} fallback="No content available. Please check next tab." />
+      </div>
+    ),
+    [content],
+  );
 
   return (
-    <div className="w-full h-full overflow-auto">
-      <>
-        <ViewToolbar setIsFullScreen={setIsFullScreen} isFullScreen={isFullScreen} />
-      </>
+    <div className="h-full w-full overflow-auto">
       {CONTENT}
       <FullScreenModal
         isOpen={isFullScreen}
-        onClose={() => setIsFullScreen(false)}
+        onClose={() => onFullScreenChange(false)}
         component={
-          <div className="w-full h-full">
-            <ViewToolbar setIsFullScreen={setIsFullScreen} isFullScreen={isFullScreen} />
-            {CONTENT}
+          <div className="flex h-full w-full flex-col">
+            <FullScreenBar onExit={() => onFullScreenChange(false)} />
+            <div className="mx-auto w-full max-w-4xl flex-1 overflow-auto">{CONTENT}</div>
           </div>
         }
       />

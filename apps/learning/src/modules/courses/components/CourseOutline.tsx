@@ -1,4 +1,4 @@
-import { Accordions } from '@repo/ui/app';
+import { Accordion } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
 import { BlankState } from '@components/others';
 import { ModuleContentType } from '@enums';
@@ -28,11 +28,11 @@ interface IRowProps {
   onSelect: (item: ICourseModuleItem) => void;
 }
 
-/** The mark's fill: done beats selected beats idle. */
+/** The mark's fill: done is a quiet tinted tick, so a finished list does not shout; selected beats idle. */
 const getMarkClass = (isCompleted: boolean, isSelected: boolean) => {
-  if (isCompleted) return 'bg-success text-success-foreground';
-  if (isSelected) return 'bg-primary text-primary-foreground';
-  return 'bg-muted text-muted-foreground';
+  if (isCompleted) return 'h-6 w-6 bg-success/15 text-success';
+  if (isSelected) return 'h-8 w-8 bg-primary text-primary-foreground';
+  return 'h-8 w-8 bg-muted text-muted-foreground';
 };
 
 const OutlineItem = ({ item, isPreview, onSelect }: IRowProps) => {
@@ -53,13 +53,16 @@ const OutlineItem = ({ item, isPreview, onSelect }: IRowProps) => {
         isSelected ? 'border-primary bg-accent' : 'border-transparent',
       )}
     >
-      <span
-        className={cn(
-          'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-          getMarkClass(isCompleted, isSelected),
-        )}
-      >
-        <RowIcon weight="bold" className="h-4 w-4" />
+      {/* A fixed slot keeps the text column aligned whatever size the mark inside it is. */}
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center">
+        <span
+          className={cn(
+            'flex items-center justify-center rounded-full transition-colors',
+            getMarkClass(isCompleted, isSelected),
+          )}
+        >
+          <RowIcon weight="bold" className={isCompleted ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+        </span>
       </span>
       <span className="min-w-0 flex-1">
         <span className={cn('block truncate text-sm', isSelected ? 'font-semibold' : 'font-medium')}>
@@ -91,7 +94,7 @@ const ModuleTitle = ({
       <span
         className={cn(
           'flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-xs font-semibold',
-          isDone ? 'bg-success text-success-foreground' : 'bg-primary/10 text-primary',
+          isDone ? 'bg-success/15 text-success' : 'bg-primary/10 text-primary',
         )}
       >
         {isDone ? <CheckIcon weight="bold" className="h-3.5 w-3.5" /> : index + 1}
@@ -121,9 +124,11 @@ export const CourseOutline = ({ courseId, isPreview, onSelectItem }: IProps) => 
   }
 
   return (
-    <Accordions
-      isIconLast
+    <Accordion
+      type="multiple"
       openIndexes={courseModules.map((_, index) => index)}
+      contentClassName="px-0 pb-0"
+      className="[&>div:last-child]:border-b-0 [&_button]:px-4 [&_button]:py-3"
       items={courseModules.map((courseModule, index) => {
         const items: ICourseModuleItem[] = [
           ...getMaterialsByIds(courseModule.materials ?? []).map((material) => ({

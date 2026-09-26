@@ -1,30 +1,15 @@
 import { Badge, Progress } from '@repo/ui/core';
-import { cn } from '@repo/ui/lib';
-import { PresignedImage } from '@components/app/attachments';
 import { ArrowRightIcon, BookOpenTextIcon, ClockIcon, FileTextIcon, VideoCameraIcon } from '@phosphor-icons/react';
 import { type ICourse, useSelectorLookups, useStandardLookups } from '@stores';
 import Link from 'next/link';
 import { type ReactNode } from 'react';
+import { CourseCover } from './CourseCover';
 
 interface IProps {
   course: ICourse;
   /** 0–100 for a course the learner has started, and `null` for one they have not. */
   progress: number | null;
 }
-
-/** Five fills for a course without a cover, picked by id so a course keeps its colour. */
-const COVER_FILLS = [
-  'from-chart-1 to-chart-1/70',
-  'from-chart-2 to-chart-2/70',
-  'from-chart-3 to-chart-3/70',
-  'from-chart-4 to-chart-4/70',
-  'from-chart-5 to-chart-5/70',
-];
-
-const getCoverFill = (id: string) => {
-  const sum = Array.from(id).reduce((total, char) => total + char.charCodeAt(0), 0);
-  return COVER_FILLS[sum % COVER_FILLS.length];
-};
 
 /** "7h 20m", or "45m"; nothing for a course with no timed content yet. */
 const getDuration = (mins: number) => {
@@ -40,24 +25,6 @@ const getCallToAction = (isStarted: boolean, isDone: boolean) => {
   if (isStarted) return 'Continue learning';
   return 'View course';
 };
-
-/** The course name over a coloured field, standing in for a cover that was never uploaded. */
-const CoverFallback = ({ course }: { course: ICourse }) => (
-  <div
-    className={cn(
-      'flex h-full w-full items-end bg-gradient-to-br p-4 text-primary-foreground',
-      getCoverFill(course._id),
-    )}
-  >
-    <span
-      aria-hidden="true"
-      className="pointer-events-none absolute -right-4 -top-6 select-none font-mono text-[9rem] font-bold leading-none opacity-15"
-    >
-      {course.name.trim().charAt(0).toUpperCase()}
-    </span>
-    <span className="relative line-clamp-2 text-lg font-semibold leading-tight">{course.name}</span>
-  </div>
-);
 
 const Stat = ({ icon, children }: { icon: ReactNode; children: ReactNode }) => (
   <span className="flex items-center gap-1 whitespace-nowrap">
@@ -100,7 +67,6 @@ export const CourseCard = ({ course, progress }: IProps) => {
   const { getStandardsByIds, getSubjectsByIds } = useStandardLookups();
   const standard = getStandardsByIds(course.standards ?? [])[0];
   const subjects = getSubjectsByIds(course.subjects ?? []).slice(0, 2);
-  const cover = (course.attachments ?? [])[0]?.url ?? null;
   const isStarted = progress !== null;
   const isDone = progress !== null && progress >= 100;
 
@@ -111,16 +77,7 @@ export const CourseCard = ({ course, progress }: IProps) => {
       className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-background transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
-        {cover ? (
-          <PresignedImage
-            url={cover}
-            noOpen
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-            fallback={<CoverFallback course={course} />}
-          />
-        ) : (
-          <CoverFallback course={course} />
-        )}
+        <CourseCover course={course} imageClassName="transition-transform duration-300 group-hover:scale-[1.03]" />
         {standard ? (
           <Badge tone="neutral" appearance="solid" className="absolute left-3 top-3 bg-background/90 text-foreground">
             {standard.name}

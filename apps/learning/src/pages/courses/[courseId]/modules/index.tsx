@@ -9,6 +9,6 @@ const CourseModulesPage = () => {
   return <Course courseId={courseId as string} isPreview={false} />;
 };
 
-CourseModulesPage.layout = Layout.PAGE;
+CourseModulesPage.layout = Layout.FOCUS;
 
 export default CourseModulesPage;

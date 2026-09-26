@@ -1,3 +1,4 @@
+export * from './FullScreenBar';
 export * from './HandleContentError';
 export * from './VideoPlayer';
 export * from './ViewTextContent';

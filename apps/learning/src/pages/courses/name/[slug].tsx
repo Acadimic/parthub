@@ -9,6 +9,6 @@ const CoursePreviewPageByName = () => {
   return <Course courseId={slug as string} isPreview={true} />;
 };
 
-CoursePreviewPageByName.layout = Layout.PAGE;
+CoursePreviewPageByName.layout = Layout.PAGE_NAVIGATION;
 
 export default CoursePreviewPageByName;
