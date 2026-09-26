@@ -6,7 +6,7 @@ import {
   MoonStarsIcon,
   VideoCameraIcon,
 } from '@phosphor-icons/react';
-import { SectionHeading } from './SectionHeading';
+import { SectionHeading } from '@components/app/sections';
 
 const FEATURES = [
   {

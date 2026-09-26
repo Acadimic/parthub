@@ -1,5 +1,5 @@
 import { Accordion } from '@repo/ui/core';
-import { SectionHeading } from './SectionHeading';
+import { SectionHeading } from '@components/app/sections';
 
 const QUESTIONS = [
   {

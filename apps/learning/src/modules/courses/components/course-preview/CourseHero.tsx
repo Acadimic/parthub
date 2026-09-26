@@ -2,8 +2,9 @@ import { Breadcrumb, type IBreadcrumbItem } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
 import { Avatar } from '@components/app/avatars';
 import { useCourse } from '@hooks/course.hook';
-import { CalendarBlankIcon, ClockIcon, HouseIcon, StackIcon } from '@phosphor-icons/react';
+import { CalendarBlankIcon, ClockIcon, HouseIcon, SparkleIcon, StackIcon } from '@phosphor-icons/react';
 import { type ICourse, useStandardLookups, useUserLookups } from '@stores';
+import { AI_GENERATED_COURSE_TAG } from '@utils/constants';
 import { getPlural, getStringFormattedDate } from '@utils/helpers';
 
 interface IProps {
@@ -22,9 +23,17 @@ const CatalogueBadges = ({ course }: IProps) => {
   const { getStandardsByIds, getSubjectsByIds } = useStandardLookups();
   const standards = getStandardsByIds(course.standards ?? []);
   const subjects = getSubjectsByIds(course.subjects ?? []);
-  if (!standards.length && !subjects.length) return null;
+  const isAiAssisted = course.tag === AI_GENERATED_COURSE_TAG;
+  if (!standards.length && !subjects.length && !isAiAssisted) return null;
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {/* The Terms promise this label on every course a model helped draft; the teacher reviewed it. */}
+      {isAiAssisted ? (
+        <Badge tone="info" className="gap-1">
+          <SparkleIcon weight="fill" className="h-3 w-3" />
+          Prepared with AI assistance
+        </Badge>
+      ) : null}
       {standards.map((standard) => (
         <Badge key={standard._id} tone="primary">
           {standard.name}

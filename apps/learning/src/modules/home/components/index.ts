@@ -3,8 +3,6 @@ export * from './Faq';
 export * from './Features';
 export * from './Hero';
 export * from './HowItWorks';
-export * from './SectionHeading';
 export * from './StandardsGrid';
 export * from './TeachBanner';
-export * from './Band';
 export * from './Testimonials';

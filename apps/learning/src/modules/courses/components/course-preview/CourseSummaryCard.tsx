@@ -13,6 +13,7 @@ import {
 import { type ICourse } from '@stores';
 import { getPlural } from '@utils/helpers';
 import { ShareCourse } from '../course-modules';
+import { AI_GENERATED_COURSE_TAG } from '@utils/constants';
 
 interface IProps {
   course: ICourse;
@@ -78,7 +79,8 @@ export const CourseSummaryCard = ({ course }: IProps) => {
     <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
       <div className="relative aspect-video w-full bg-muted">
         <PresignedImage className="object-cover" url={(course.attachments ?? [])[0]?.url ?? null} noOpen />
-        {course.tag ? (
+        {/* The AI tag is spelled out beside the title by the hero; any other tag is shown as it is. */}
+        {course.tag && course.tag !== AI_GENERATED_COURSE_TAG ? (
           <div className="absolute left-3 top-3">
             <Badge tone="brand" appearance="solid">
               {course.tag}

@@ -1,14 +1,13 @@
 import { Container } from '@components/others';
 import { Courses } from '@modules/courses';
 import { TESTIMONIALS } from './testimonials';
+import { Band, SectionHeading } from '@components/app/sections';
 import {
-  Band,
   ContinueLearning,
   Faq,
   Features,
   Hero,
   HowItWorks,
-  SectionHeading,
   StandardsGrid,
   TeachBanner,
   Testimonials,

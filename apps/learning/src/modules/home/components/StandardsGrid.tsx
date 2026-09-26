@@ -3,7 +3,7 @@ import { ArrowRightIcon } from '@phosphor-icons/react';
 import { useCourseLookups, useStandardLookups } from '@stores';
 import { getPlural } from '@utils/helpers';
 import Link from 'next/link';
-import { SectionHeading } from './SectionHeading';
+import { SectionHeading } from '@components/app/sections';
 
 /** How many standards the grid shows; the rest are a click away on the catalogue. */
 const MAX_TILES = 12;

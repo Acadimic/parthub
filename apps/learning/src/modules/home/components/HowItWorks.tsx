@@ -1,5 +1,5 @@
 import { BookOpenTextIcon, ChartLineUpIcon, CompassIcon, ExamIcon } from '@phosphor-icons/react';
-import { SectionHeading } from './SectionHeading';
+import { SectionHeading } from '@components/app/sections';
 
 const STEPS = [
   {

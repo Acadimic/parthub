@@ -1,100 +1,107 @@
-import { Container } from '@components/others';
-import Link from 'next/link';
-import React from 'react';
 import { FullLogo } from '@repo/ui/app';
+import { Container } from '@components/others';
+import { ArrowUpRightIcon, EnvelopeSimpleIcon } from '@phosphor-icons/react';
+import { COMPANY } from '@utils/constants';
+import Link from 'next/link';
 
-interface FooterSection {
-  title: string;
-  links: {
-    text: string;
-    href: string;
-  }[];
+interface IFooterLink {
+  text: string;
+  href: string;
+  /** Opens in a new tab and carries the outward arrow. */
+  isExternal: boolean;
 }
 
-const footerSections: FooterSection[] = [
+interface IFooterSection {
+  title: string;
+  links: IFooterLink[];
+}
+
+/** Every route here resolves to a page; the columns list only what exists. */
+const SECTIONS: IFooterSection[] = [
+  {
+    title: 'Learn',
+    links: [
+      { text: 'Courses', href: '/courses', isExternal: false },
+      { text: 'Live sessions', href: '/sessions', isExternal: false },
+      { text: 'Your activity', href: '/activity', isExternal: false },
+      { text: 'Help Center', href: '/help', isExternal: false },
+    ],
+  },
   {
     title: 'Company',
     links: [
-      { text: 'About Us', href: '/about' },
-      { text: 'Careers', href: '/careers' },
-      { text: 'Blog', href: '/blog' },
-      { text: 'Contact', href: '/contact' },
+      { text: 'About us', href: '/about', isExternal: false },
+      { text: 'Contact us', href: '/contact', isExternal: false },
+      { text: 'Teach on Acadimic', href: COMPANY.teachUrl, isExternal: true },
     ],
   },
   {
-    title: 'Resources',
+    title: 'Legal',
     links: [
-      { text: 'Documentation', href: '/docs' },
-      { text: 'Help Center', href: '/help' },
-      { text: 'Community', href: '/community' },
-      { text: 'Terms of Service', href: '/terms' },
-    ],
-  },
-  {
-    title: 'Solutions',
-    links: [
-      { text: 'For Students', href: '/students' },
-      { text: 'For Teachers', href: '/teachers' },
-      { text: 'For Institutions', href: '/institutions' },
-      { text: 'Enterprise', href: '/enterprise' },
+      { text: 'Privacy Policy', href: '/privacy', isExternal: false },
+      { text: 'Terms of Service', href: '/terms', isExternal: false },
+      { text: 'Cookie Policy', href: '/cookies', isExternal: false },
     ],
   },
 ];
 
-export const PageFooter: React.FC = () => {
-  const currentYear = new Date().getFullYear();
+const FooterLink = ({ link }: { link: IFooterLink }) => (
+  <Link
+    href={link.href}
+    target={link.isExternal ? '_blank' : undefined}
+    rel={link.isExternal ? 'noreferrer' : undefined}
+    className="inline-flex items-center gap-1 whitespace-nowrap text-sm text-muted-foreground transition-colors hover:text-foreground"
+  >
+    {link.text}
+    {link.isExternal ? <ArrowUpRightIcon weight="bold" className="h-3.5 w-3.5" /> : null}
+  </Link>
+);
+
+export const PageFooter = () => {
+  const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-background py-12 border-t border-border px-1">
+    <footer className="border-t border-border bg-muted/30">
       <Container>
-        <div className="flex flex-wrap justify-between gap-8 w-full">
-          {/* Logo and Description */}
-          <div className="w-full md:w-1/3 lg:w-1/4">
-            <div className="mb-6">
-              <FullLogo className="h-6" />
-            </div>
-            <p className="text-sm mb-4">
-              Empowering education through innovative learning solutions. Join us in transforming the way people learn
-              and grow.
+        {/* The brand block takes its own row on a tablet and a wide first column on a desktop, with a clear
+            gap before the link columns either way. */}
+        <div className="grid grid-cols-1 gap-10 py-12 md:grid-cols-3 md:gap-x-8 md:gap-y-12 md:py-16 lg:grid-cols-[1.1fr_repeat(3,0.7fr)] lg:gap-x-28 xl:gap-x-36">
+          <div className="max-w-xs md:col-span-3 lg:col-span-1">
+            <FullLogo className="h-7" />
+            <p className="mt-4 text-sm text-muted-foreground">
+              Day-by-day courses with readings, videos, live sessions and marked test papers, built by teachers for the
+              standard you are studying.
             </p>
+            <a
+              href={`mailto:${COMPANY.supportEmail}`}
+              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+            >
+              <EnvelopeSimpleIcon weight="bold" className="h-4 w-4" />
+              {COMPANY.supportEmail}
+            </a>
           </div>
-
-          {/* Footer Sections */}
-          <div className="flex flex-wrap flex-1 md:justify-end gap-4 sm:gap-0 md:gap-8 lg:gap-24">
-            {footerSections.map((section) => (
-              <div key={section.title} className="w-auto sm:w-auto">
-                <h3 className="text-sm font-semibold mb-4">{section.title}</h3>
-                <ul className="space-y-3">
-                  {section.links.map((link) => (
-                    <li key={link.text}>
-                      <Link
-                        href={link.href}
-                        className="text-sm hover:opacity-90 transition-colors text-muted-foreground font-medium"
-                      >
-                        {link.text}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          {SECTIONS.map((section) => (
+            <nav key={section.title} aria-label={section.title}>
+              <h3 className="mb-4 text-xs font-semibold uppercase tracking-caps text-muted-foreground">
+                {section.title}
+              </h3>
+              <ul className="flex flex-col gap-3">
+                {section.links.map((link) => (
+                  <li key={link.text}>
+                    <FooterLink link={link} />
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
         </div>
-
-        {/* Copyright and Bottom Links */}
-        <div className="mt-12 py-6 border-t border-border flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-          <p className="text-sm">© {currentYear} Acadimic. All rights reserved.</p>
-          <div className="flex flex-wrap gap-4 md:gap-6">
-            <a href="/privacy" className="text-sm hover:opacity-90 transition-colors">
-              Privacy Policy
-            </a>
-            <a href="/terms" className="text-sm hover:opacity-90 transition-colors">
-              Terms of Service
-            </a>
-            <a href="/cookies" className="text-sm hover:opacity-90 transition-colors">
-              Cookie Policy
-            </a>
-          </div>
+        <div className="flex flex-col gap-3 border-t border-border py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            © {year} {COMPANY.legalName}. All rights reserved.
+          </p>
+          <p>
+            Courses may be prepared with AI assistance and are reviewed by their teachers. See the Terms of Service.
+          </p>
         </div>
       </Container>
     </footer>

@@ -3,7 +3,7 @@ import { cn } from '@repo/ui/lib';
 import { Avatar } from '@components/app/avatars';
 import { StarIcon } from '@phosphor-icons/react';
 import { type ITestimonial } from '../testimonials';
-import { SectionHeading } from './SectionHeading';
+import { SectionHeading } from '@components/app/sections';
 
 const Stars = ({ rating, className }: { rating: number; className?: string }) => (
   <div className={cn('flex items-center gap-0.5', className)} aria-label={`${rating} out of 5`}>

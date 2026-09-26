@@ -1,7 +1,7 @@
 import { CourseCard } from '@modules/courses/components/CourseCard';
 import { type ICourse, useCourseLookups, useSelectedUser } from '@stores';
 import { useEffect } from 'react';
-import { SectionHeading } from './SectionHeading';
+import { SectionHeading } from '@components/app/sections';
 
 /** How many started courses the strip shows; the activity page lists them all. */
 const MAX_CARDS = 3;
