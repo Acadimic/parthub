@@ -86,8 +86,10 @@ export const CourseModules = () => {
 
   return (
     <div className="flex h-[100vh]">
-      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto bg-muted/40">
-        <div className="sticky top-0 z-10 border-b border-border bg-background">
+      {/* The top bar sits outside the column's scroller, so the scrollbar runs under it rather than
+          beside it and the bar meets the outline pane with no gap. */}
+      <div className="flex min-w-0 flex-1 flex-col bg-muted/40">
+        <div className="shrink-0 border-b border-border bg-background">
           <div className={cn('mx-auto flex h-14 items-center gap-2 px-3 md:px-6', columnWidth)}>
             <Link
               href={previewHref}
@@ -122,33 +124,41 @@ export const CourseModules = () => {
               </div>
               <ToggleTheme />
               <ProfileDropdown />
+              <div className="hidden lg:block">
+                <Button
+                  isSubtle
+                  aria-label={isOutlineHidden ? 'Show course contents' : 'Hide course contents'}
+                  aria-expanded={!isOutlineHidden}
+                  className="rounded-full p-2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setIsOutlineHidden(!isOutlineHidden)}
+                  leftsection={
+                    <CaretDoubleRightIcon
+                      weight="bold"
+                      className={cn('h-4 w-4 transition-transform duration-300', isOutlineHidden && 'rotate-180')}
+                    />
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>
-        <div className={cn('mx-auto w-full flex-1 px-3 py-4 md:px-6 md:py-6', columnWidth)}>
-          <div className="flex flex-col gap-4 md:gap-5">
-            <CourseCompleteBanner course={selectedCourse} />
-            <CourseModuleContent />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className={cn('mx-auto w-full px-3 py-4 md:px-6 md:py-6', columnWidth)}>
+            <div className="flex flex-col gap-4 md:gap-5">
+              <CourseCompleteBanner course={selectedCourse} />
+              <CourseModuleContent />
+            </div>
           </div>
         </div>
       </div>
-      {/* The outline pane folds to nothing but its handle, the same tab the exam palette uses, so
-          the lesson can take the whole width and the outline is one click away at the edge. */}
+      {/* The outline pane folds to nothing from the toggle at the end of the top bar, so the lesson
+          can take the whole width and the outline is one click away. */}
       <aside
         className={cn(
-          'relative hidden shrink-0 flex-col bg-background transition-[width] duration-300 lg:flex',
+          'hidden shrink-0 flex-col bg-background transition-[width] duration-300 lg:flex',
           isOutlineHidden ? 'w-0' : 'w-[360px] border-l border-border xl:w-[400px]',
         )}
       >
-        <button
-          type="button"
-          aria-label={isOutlineHidden ? 'Show course contents' : 'Hide course contents'}
-          aria-expanded={!isOutlineHidden}
-          className="absolute -left-6 top-1/2 z-10 flex h-10 w-6 -translate-y-1/2 items-center justify-center rounded-l-md bg-primary text-primary-foreground shadow-md"
-          onClick={() => setIsOutlineHidden(!isOutlineHidden)}
-        >
-          <CaretDoubleRightIcon weight="bold" className={cn('h-4 w-4', isOutlineHidden && 'rotate-180')} />
-        </button>
         <div className={cn('flex h-full min-h-0 flex-col', isOutlineHidden && 'hidden')}>
           <OutlineHeader course={selectedCourse} />
           <div className="min-h-0 flex-1 overflow-y-auto">{outline}</div>
