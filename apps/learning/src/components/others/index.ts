@@ -4,6 +4,5 @@ export * from './Container';
 export * from './HorizontalLineWithText';
 export * from './Policy';
 export * from './RenderEquation';
-export * from './Testimonials';
 export * from './Title';
 export * from './VerticalLineWithText';

@@ -1,4 +1,4 @@
-import { Container, Testimonials } from '@components/others';
+import { Container } from '@components/others';
 import { Courses } from '@modules/courses';
 import { TESTIMONIALS } from './testimonials';
 import {
@@ -11,6 +11,7 @@ import {
   SectionHeading,
   StandardsGrid,
   TeachBanner,
+  Testimonials,
 } from './components';
 
 /** The landing page: the pitch, the catalogue, and the reasons to trust it. */
@@ -43,14 +44,6 @@ export const Home = () => (
       <TeachBanner />
     </Container>
     <Band className="border-t border-border bg-muted/30">
-      <div className="pt-12 md:pt-16">
-        <SectionHeading
-          eyebrow="Learners"
-          title="What students say"
-          subtitle="From people who finished a course here."
-          action={null}
-        />
-      </div>
       <Testimonials testimonials={TESTIMONIALS} />
     </Band>
     <Container>

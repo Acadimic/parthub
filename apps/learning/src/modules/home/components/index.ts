@@ -7,3 +7,4 @@ export * from './SectionHeading';
 export * from './StandardsGrid';
 export * from './TeachBanner';
 export * from './Band';
+export * from './Testimonials';
