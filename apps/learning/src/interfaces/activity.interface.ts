@@ -67,3 +67,19 @@ export interface IActivityDay {
   date: string;
   count: number;
 }
+
+export type SavedItemKind = 'lesson' | 'test' | 'question';
+
+/** A bookmark resolved against the stores: what it points at, and where it lives. */
+export interface ISavedItem {
+  /** The bookmark row's id. */
+  id: string;
+  kind: SavedItemKind;
+  /** The item's name, or a plain-text preview for a question; a stand-in when the item is not loaded. */
+  title: string;
+  courseId: string;
+  courseName: string;
+  /** ISO timestamp of when it was saved; empty when the row carries none. */
+  savedAt: string;
+  collectionItem: string;
+}

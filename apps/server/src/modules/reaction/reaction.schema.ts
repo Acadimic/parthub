@@ -21,3 +21,5 @@ export const ReactionSchema = SchemaFactory.createForClass(Reaction);
 
 ReactionSchema.index({ createdBy: 1, collectionItem: 1, collectionRef: 1 }, { unique: true });
 ReactionSchema.index({ org: 1, _deleted: 1 });
+// `getReactionsCount` filters by the item, which the unique index (led by `createdBy`) cannot serve.
+ReactionSchema.index({ collectionItem: 1, collectionRef: 1, _deleted: 1 });

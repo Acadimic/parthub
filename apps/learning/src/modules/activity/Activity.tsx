@@ -3,8 +3,14 @@ import { Tabs } from '@repo/ui/core';
 import { useLoadOnce } from '@repo/ui/hooks';
 import { BlankState, Container } from '@components/others';
 import { useActivity } from '@hooks/activity.hook';
-import { ChartLineUpIcon, ClipboardTextIcon, GearSixIcon, ListDashesIcon } from '@phosphor-icons/react';
-import { useCourseLookups, useCourseStore, useTestPaperStore } from '@stores';
+import {
+  BookmarkSimpleIcon,
+  ChartLineUpIcon,
+  ClipboardTextIcon,
+  GearSixIcon,
+  ListDashesIcon,
+} from '@phosphor-icons/react';
+import { useCourseLookups, useCourseStore, useResourceLookups, useResourceStore, useTestPaperStore } from '@stores';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
 import {
@@ -14,17 +20,18 @@ import {
   ActivityTimeline,
   AttemptsTable,
   CourseProgressCards,
+  SavedItems,
 } from './components';
 
-const VIEWS = ['overview', 'timeline', 'tests'] as const;
+const VIEWS = ['overview', 'timeline', 'tests', 'saved'] as const;
 type View = (typeof VIEWS)[number];
 
 const isView = (value: unknown): value is View => VIEWS.includes(value as View);
 
 /**
  * The learner's own record: what they have finished, how their tests went, and when they were
- * active. Three views of the same events — a summary, a day-by-day timeline, and a table of
- * attempts — chosen through `?view=`, so a view can be linked to.
+ * active, plus what they have saved. Four views — a summary, a day-by-day timeline, a table of
+ * attempts, and the bookmarks — chosen through `?view=`, so a view can be linked to.
  */
 export const Activity = () => {
   const { query, replace } = useRouter();
@@ -32,23 +39,32 @@ export const Activity = () => {
   const coursesRequest = useLoadOnce(useCourseStore, 'courses', (state) => state.loadCourses);
   const completedRequest = useLoadOnce(useCourseStore, 'completedModules', (state) => state.loadCompletedModules);
   const resultsRequest = useLoadOnce(useTestPaperStore, 'results', (state) => state.loadMyResults);
+  const bookmarksRequest = useLoadOnce(useResourceStore, 'bookmarks', (state) => state.loadBookmarks);
+  const { getBookmarks } = useResourceLookups();
   const { events, attempts, courses, summary, days } = useActivity();
   const requestedContents = useRef(new Set<string>());
   const view: View = isView(query.view) ? query.view : 'overview';
 
-  // A completed lesson is only an id until its course's contents are in the store; fetch them for
-  // every course the learner has touched, once each.
+  // A completed lesson or a bookmark is only an id until its course's contents are in the store;
+  // fetch them for every course the learner has touched or saved from, once each.
+  const bookmarkCourseIds = getBookmarks()
+    .filter((bookmark) => !bookmark._deleted && bookmark.course)
+    .map((bookmark) => bookmark.course as string);
+  const touchedCourseIds = [...new Set([...courses.map((row) => row.courseId), ...bookmarkCourseIds])];
   useEffect(() => {
-    courses.forEach((row) => {
-      const course = getCourseById(row.courseId);
-      if (!course || course.isLoadedContents || requestedContents.current.has(row.courseId)) return;
-      requestedContents.current.add(row.courseId);
-      loadCourseModules(row.courseId);
+    touchedCourseIds.forEach((courseId) => {
+      const course = getCourseById(courseId);
+      if (!course || course.isLoadedContents || requestedContents.current.has(courseId)) return;
+      requestedContents.current.add(courseId);
+      loadCourseModules(courseId);
     });
-  }, [courses.length]);
+  }, [touchedCourseIds.join(',')]);
 
-  const isLoading = coursesRequest.isLoading || completedRequest.isLoading || resultsRequest.isLoading;
-  const failed = [coursesRequest, completedRequest, resultsRequest].find((request) => request.isFailed);
+  const isLoading =
+    coursesRequest.isLoading || completedRequest.isLoading || resultsRequest.isLoading || bookmarksRequest.isLoading;
+  const failed = [coursesRequest, completedRequest, resultsRequest, bookmarksRequest].find(
+    (request) => request.isFailed,
+  );
 
   const setView = (index: number) => {
     replace({ pathname: '/activity', query: { view: VIEWS[index] } }, undefined, { shallow: true });
@@ -59,7 +75,7 @@ export const Activity = () => {
       return <BlankState label="Could not load your activity" description={failed.error || 'Please try again.'} />;
     }
     if (isLoading) return <ActivitySkeleton />;
-    if (!events.length && !courses.length) {
+    if (!events.length && !courses.length && !bookmarkCourseIds.length) {
       return (
         <BlankState
           className="py-16"
@@ -111,6 +127,11 @@ export const Activity = () => {
             label: 'Tests',
             icon: <ClipboardTextIcon weight="bold" className="h-4 w-4" />,
             component: <AttemptsTable attempts={attempts} />,
+          },
+          {
+            label: 'Saved',
+            icon: <BookmarkSimpleIcon weight="bold" className="h-4 w-4" />,
+            component: <SavedItems />,
           },
         ]}
       />

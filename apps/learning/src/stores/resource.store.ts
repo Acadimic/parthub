@@ -30,6 +30,10 @@ export interface IResourceState extends IRequestSlice<ResourceFetch> {
   isFollowing: (userId: string) => boolean;
 
   addBookmarks: (bookmarks: BookmarkDto[]) => void;
+  /** Forget a row that never reached the server, after an optimistic add failed. */
+  dropBookmark: (bookmarkId: string) => void;
+  dropReaction: (reactionId: string) => void;
+  dropFollowing: (followingId: string) => void;
   addReactions: (reactions: ReactionDto[]) => void;
   addFollowings: (followings: FollowerDto[]) => void;
 
@@ -38,10 +42,39 @@ export interface IResourceState extends IRequestSlice<ResourceFetch> {
   loadFollowings: () => Promise<void>;
   /** Adds the bookmark, or flips `_deleted` on the one already there. */
   toggleBookmark: (collectionItem: string, collectionRef: CollectionType) => Promise<void>;
+  /** Removes a bookmark by its row, for screens with no selected course, such as the activity page. */
+  removeBookmark: (bookmark: BookmarkDto) => Promise<void>;
   toggleReaction: (collectionItem: string, collectionRef: CollectionType) => Promise<void>;
   toggleFollowing: (followingId: string) => Promise<void>;
   reset: () => void;
 }
+
+/** Nudges the item's like count on whichever store holds the item, ahead of the server's answer. */
+const adjustReactionsCount = (collectionRef: CollectionType, collectionItem: string, delta: number) => {
+  if (collectionRef === CollectionType.MATERIAL) {
+    const material = useMaterialStore.getState().getMaterialById(collectionItem);
+    if (material) {
+      useMaterialStore.getState().patchMaterial(collectionItem, {
+        reactionsCount: Math.max(0, (material.reactionsCount ?? 0) + delta),
+      });
+    }
+  } else if (collectionRef === CollectionType.TEST_PAPER) {
+    const testPaper = useTestPaperStore.getState().getTestPaperById(collectionItem);
+    if (testPaper) {
+      useTestPaperStore.getState().patchTestPaper(collectionItem, {
+        reactionsCount: Math.max(0, (testPaper.reactionsCount ?? 0) + delta),
+      });
+    }
+  }
+};
+
+/** Re-reads the item's like count from the server, so the local nudge is corrected if it drifted. */
+const refreshReactionsCount = async (collectionRef: CollectionType, collectionItem: string) => {
+  if (collectionRef === CollectionType.MATERIAL) await useMaterialStore.getState().loadReactionsCount(collectionItem);
+  else if (collectionRef === CollectionType.TEST_PAPER) {
+    await useTestPaperStore.getState().loadReactionsCount(collectionItem);
+  }
+};
 
 const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
   rows.reduce<Record<string, T>>((map, row) => {
@@ -97,6 +130,27 @@ export const useResourceStore = create<IResourceState>()((set, get) => ({
     return !!following && !following._deleted;
   },
 
+  dropBookmark: (bookmarkId) => {
+    set((state) => {
+      const { [bookmarkId]: _dropped, ...bookmarkMap } = state.bookmarkMap;
+      return { bookmarkMap };
+    });
+  },
+
+  dropReaction: (reactionId) => {
+    set((state) => {
+      const { [reactionId]: _dropped, ...reactionMap } = state.reactionMap;
+      return { reactionMap };
+    });
+  },
+
+  dropFollowing: (followingId) => {
+    set((state) => {
+      const { [followingId]: _dropped, ...followingMap } = state.followingMap;
+      return { followingMap };
+    });
+  },
+
   addBookmarks: (bookmarks) => {
     set((state) => ({ bookmarkMap: { ...state.bookmarkMap, ...keyById(bookmarks) } }));
   },
@@ -137,8 +191,37 @@ export const useResourceStore = create<IResourceState>()((set, get) => ({
     const payload: BookmarkDto = existing
       ? { _id: existing._id, collectionItem, collectionRef, course: selectedCourseId, _deleted: !existing._deleted }
       : { _id: getObjectId(), collectionItem, collectionRef, course: selectedCourseId };
-    const result = await BookmarkService.upsertBookmark(payload);
-    if (result?.data) get().addBookmarks([result.data]);
+    // Shown at once and confirmed by the response; put back the way it was if the save fails.
+    get().addBookmarks([payload]);
+    try {
+      const result = await BookmarkService.upsertBookmark(payload);
+      if (result?.data) get().addBookmarks([result.data]);
+    } catch (error) {
+      if (existing) get().addBookmarks([existing]);
+      else get().dropBookmark(payload._id);
+      throw error;
+    }
+  },
+
+  removeBookmark: async (bookmark) => {
+    // Only the DTO's fields, for the same reason as `toggleBookmark`.
+    const payload: BookmarkDto = {
+      _id: bookmark._id,
+      collectionItem: bookmark.collectionItem,
+      collectionRef: bookmark.collectionRef,
+      course: bookmark.course,
+      _deleted: true,
+    };
+    // The row goes at once and comes back only if the save fails: the round trip to the database
+    // is long enough that a card lingering after "Remove" reads as the click not working.
+    get().addBookmarks([{ ...bookmark, _deleted: true }]);
+    try {
+      const result = await BookmarkService.upsertBookmark(payload);
+      if (result?.data) get().addBookmarks([result.data]);
+    } catch (error) {
+      get().addBookmarks([bookmark]);
+      throw error;
+    }
   },
 
   toggleReaction: (collectionItem, collectionRef) =>
@@ -150,13 +233,21 @@ export const useResourceStore = create<IResourceState>()((set, get) => ({
       const payload: ReactionDto = existing
         ? { _id: existing._id, collectionItem, collectionRef, course: selectedCourseId, _deleted: !existing._deleted }
         : { _id: getObjectId(), collectionItem, collectionRef, course: selectedCourseId };
-      const result = await ReactionService.upsertReaction(payload);
-      if (result?.data) get().addReactions([result.data]);
-      // The count lives on the row the reaction belongs to, so its own store refreshes it.
-      if (collectionRef === CollectionType.MATERIAL) {
-        await useMaterialStore.getState().loadReactionsCount(collectionItem);
-      } else if (collectionRef === CollectionType.TEST_PAPER) {
-        await useTestPaperStore.getState().loadReactionsCount(collectionItem);
+      const isLiking = !payload._deleted;
+      // Shown at once — the row and the count on the item — and confirmed by the response. The
+      // count is re-read afterwards without being waited for, so the button never sits on a spinner
+      // for a second round trip; if the save fails, both go back the way they were.
+      get().addReactions([payload]);
+      adjustReactionsCount(collectionRef, collectionItem, isLiking ? 1 : -1);
+      try {
+        const result = await ReactionService.upsertReaction(payload);
+        if (result?.data) get().addReactions([result.data]);
+        void refreshReactionsCount(collectionRef, collectionItem);
+      } catch (error) {
+        if (existing) get().addReactions([existing]);
+        else get().dropReaction(payload._id);
+        adjustReactionsCount(collectionRef, collectionItem, isLiking ? -1 : 1);
+        throw error;
       }
     }),
 
@@ -170,9 +261,21 @@ export const useResourceStore = create<IResourceState>()((set, get) => ({
       const payload: FollowerDto = existing
         ? { _id: existing._id, follower: selectedUserId, following: followingId, _deleted: !existing._deleted }
         : { _id: getObjectId(), follower: selectedUserId, following: followingId };
-      const result = await FollowerService.upsertFollower(payload);
-      if (result?.data) get().addFollowings([result.data]);
-      await userStore.loadFollowersCount(followingId);
+      const isFollowing = !payload._deleted;
+      const followed = userStore.getUserById(followingId);
+      // Shown at once, as for reactions; the follower count is nudged locally and re-read later.
+      get().addFollowings([payload]);
+      userStore.patchUser(followingId, { followersCount: Math.max(0, (followed?.followersCount ?? 0) + (isFollowing ? 1 : -1)) });
+      try {
+        const result = await FollowerService.upsertFollower(payload);
+        if (result?.data) get().addFollowings([result.data]);
+        void userStore.loadFollowersCount(followingId);
+      } catch (error) {
+        if (existing) get().addFollowings([existing]);
+        else get().dropFollowing(payload._id);
+        userStore.patchUser(followingId, { followersCount: followed?.followersCount ?? 0 });
+        throw error;
+      }
     }),
 
   reset: () => {

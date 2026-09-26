@@ -21,3 +21,5 @@ export const BookmarkSchema = SchemaFactory.createForClass(Bookmark);
 
 BookmarkSchema.index({ createdBy: 1, collectionItem: 1, collectionRef: 1 }, { unique: true });
 BookmarkSchema.index({ org: 1, _deleted: 1 });
+// A per-item read (how many saved this) filters by the item, which the unique index cannot serve.
+BookmarkSchema.index({ collectionItem: 1, collectionRef: 1, _deleted: 1 });
