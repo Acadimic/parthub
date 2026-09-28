@@ -173,33 +173,55 @@ a blind find-and-replace also rewrote user-visible strings, turning "Copy Link" 
 
 ## The current backlog
 
-The backend batch landed on 2026-09-08 and is done. **Re-run `pnpm outdated -r` rather than
+The patch-and-minor batch landed on 2026-09-28 and is done. **Re-run `pnpm outdated -r` rather than
 trusting any list here.**
 
-Already on their latest: NestJS 12.0.1 (core, common, platform-fastify, mongoose, config, cli,
-schematics), Mongoose 9.9.5, firebase-admin 14.3.0, class-validator 0.15.1, the pino stack
-(10.3.1 / 11 / 5.1.0 / 13.1.3), nestjs-cls 6.3, `@fastify/compress` 9.2, `@fastify/helmet` 13.1,
-AWS SDK 3.1127, env-cmd 11, ESLint 10.10, prettier 3.9.6, typescript-eslint 8.70, TypeScript 6.0.3.
-Node is pinned to 24.21.0 LTS via Volta.
+Already on their latest: NestJS 12.1.1 (core, common, platform-fastify) with config 12.0.1, cli
+12.0.8 and schematics 12.0.6, firebase-admin 14.5.0, class-validator 0.15.1, the pino stack
+(10.3.1 / 11 / 5.2.1 / 13.1.3), `@fastify/compress` 9.2, `@fastify/helmet` 13.1, AWS SDK 3.1141,
+env-cmd 11, ESLint 10.11, prettier 3.9.9, typescript-eslint 8.70.1, TypeScript 6.0.3, React 19.3.0
+and Next 16.3.6 across the three apps and `packages/ui`, Radix at its current patches, axios 1.20,
+sass 1.105, lucide-react 1.48, katex 0.18.9, dayjs 1.11.23. Node is pinned to 24.21.0 LTS via Volta.
 
 **Held back on purpose** — each waits on someone else's release, so re-check before "fixing" one:
 
 | Held | At | Blocked by |
 | ---- | -- | ---------- |
-| `fastify` | 5.12.1 | `@nestjs/platform-fastify@12.0.1` depends on that exact version |
-| `@types/node` | 24.x | the Node 24 LTS runtime |
-| `typescript` | 6.0.3 | `@typescript-eslint@8.70` peers `typescript <6.1.0`, and there is no 9.x |
+| `fastify` | 5.12.5 | `@nestjs/platform-fastify@12.1.1` depends on that exact version |
+| `@types/node` | 24.19.0 | the Node 24 LTS runtime |
+| `typescript` | 6.0.3 | `@typescript-eslint@8.70.1` peers `typescript <6.1.0`, and there is no 9.x |
 | `eslint-plugin-react` | removed | its latest release still peers `eslint ^9.7` |
+| `mongoose` | 9.9.5 (exact) | 9.10 added projection-aware `findOneAndUpdate` overloads returning `\| null`; re-check with a fix to the three `upsert` services |
+| `@firebase/app` | 0.10.x | 0.16 is breaking under 0.x semver; move with `@firebase/auth` as a set |
+| `autoprefixer` | 10.4.20 (exact) | exact pin carries no recorded reason — confirm it is deliberate before moving |
+
+`mongoose` is the one to look at first. `StandardService.upsert`,
+`SubjectService.upsert` and `StandardSubjectMappingService.upsert` all call
+`findOneAndUpdate(..., { returnDocument: 'after', upsert: true, projection: { __v: 0 } }).lean<T>()`
+and declare `Promise<TDocument>`. Under 9.10 the `projection` option selects a new overload typed
+`| null`, which `.lean<T>()` propagates, so all three fail `tsc`. With `upsert: true` the document
+cannot be null at runtime, so the fix is `.orFail()` or an explicit guard — not a cast.
 
 **Frontend, still pending**, in a sensible order:
 
+React 19.3.0 and Next 16.3.6 are current across the three apps and `packages/ui`, so those two rows
+are gone. What is left:
+
 | Upgrade | Hazard |
 | ------- | ------ |
-| `react` 19.0.0-rc → 19.2.x with `@types/react` 18 → 19 | Removes both the RC pin and the types mismatch. One commit, five manifests, then check `ls node_modules/.pnpm \| grep -E '^react@'` prints one version. |
-| `next` 15 → 16 | Pages Router behaviour. `next lint` is already out of the path, so that part is done. |
-| `zustand` 5 → 6, when it lands | The stores are the apps' spine. Check `useShallow`'s import path and whether `getInitialState` is still the SSR snapshot — the request hooks in `@repo/ui/hooks` rely on both. |
+| `react-error-boundary` 4 → 6 | Two majors at once, in all three apps. Declared but check it is imported before spending time on it. |
+| `react-dropzone` 19 → 20 | All three apps declare it; only some import it. |
+| `nestjs-cls` 6 → 7 | Tracks the Nest major, and Nest is on 12 — read its notes for whether 7 requires Nest 13 before taking it. |
+| `@fullcalendar/*` 6 → 7 | Teaching only, isolated to the calendar module. Eleven packages move as one set; only `core` and `react` currently show a 7.x. |
 | `tailwindcss` 3 → 4 | Config moves into CSS. `tw-colors` used to be the blocker and is gone — the palette is emitted as CSS variables by `packages/ui/src/themes/preset.ts`, which is already the v4-shaped form. The remaining work is the config itself and `tailwindcss-animate`. |
-| `@fullcalendar/*` 6 → 7 | Teaching only, isolated to the calendar module. |
+| `typescript` 6 → 7 | Blocked: `@typescript-eslint` peers `<6.1.0`. See the held table. |
+| `@types/node` 24 → 26 | Blocked by the Node 24 runtime. Moves only when Volta's pin moves. |
+| `zustand` 5 → 6, when it lands | The stores are the apps' spine. Check `useShallow`'s import path and whether `getInitialState` is still the SSR snapshot — the request hooks in `@repo/ui/hooks` rely on both. |
+
+One process note from the 2026-09-28 run, which silently produced a no-op:
+
+- **zsh does not word-split unquoted variables.** `pnpm -r update $LIST` passes one giant argument,
+  which pnpm ignores without error. Pass names literally, or pipe through `xargs -n 5`.
 
 ## Upgrading Node itself
 

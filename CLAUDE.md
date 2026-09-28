@@ -171,7 +171,7 @@ Shared React layer for the apps (see "Where shared code lives"). No build step; 
 
 ## Toolchain
 
-Pinned, and verified together as of 2026-09-11 — all six workspaces build, lint and
+Pinned, and verified together as of 2026-09-28 — all six workspaces build, lint and
 typecheck on Node 24.21.0. Runtime versions come from the root
 `package.json` (`volta.node`, `packageManager`).
 
@@ -180,19 +180,21 @@ typecheck on Node 24.21.0. Runtime versions come from the root
 | Node       | **24.21.0 LTS**, pinned via Volta                                                                                  |
 | pnpm       | 10.12.1 via `packageManager`                                                                                       |
 | TypeScript | **6.0.3** everywhere                                                                                               |
-| ESLint     | **10.10.0** everywhere, flat config only                                                                           |
-| Server     | NestJS **12.0.1** on Fastify **5.12.1**, Mongoose **9.9.5**, firebase-admin **14.3.0**, class-validator **0.15.1** |
-| Apps       | Next.js 16.3.4, React 19.2.8, Zustand 5, TailwindCSS 3                                                             |
+| ESLint     | **10.11.0** everywhere, flat config only                                                                           |
+| Server     | NestJS **12.1.1** on Fastify **5.12.5**, Mongoose **9.9.5**, firebase-admin **14.5.0**, class-validator **0.15.1** |
+| Apps       | Next.js 16.3.6, React 19.3.0, Zustand 5, TailwindCSS 3                                                             |
 
-Three dependencies are deliberately held back, each on someone else's release:
+Four dependencies are deliberately held back, each on someone else's release:
 
-- **`fastify` stays pinned exactly at 5.12.1**, because `@nestjs/platform-fastify@12.0.1` depends on
+- **`fastify` stays pinned exactly at 5.12.5**, because `@nestjs/platform-fastify@12.1.1` depends on
   that exact version. A caret resolves a different patch and the plugin types stop matching the
   adapter's — `app.register(compression)` fails to typecheck.
-- **`@types/node` stays on 24.x** to match the Node 24 runtime. Types ahead of the runtime describe
-  APIs that are not there.
-- **TypeScript stays on 6**, because `@typescript-eslint@8.70` is the newest release and peers
+- **`@types/node` stays on 24.x** (24.19.0) to match the Node 24 runtime. Types ahead of the runtime
+  describe APIs that are not there.
+- **TypeScript stays on 6**, because `@typescript-eslint@8.70.1` is the newest release and peers
   `typescript <6.1.0`. TypeScript 7 would break linting in all six workspaces.
+- **`mongoose` is pinned exactly at 9.9.5.** 9.10 added projection-aware `findOneAndUpdate`
+  overloads that return `| null`, which the three `upsert` services typed as non-null.
 
 Tailwind 4 is the frontend's remaining pending major. `tw-colors` used to block it and has been
 removed — the palette is now emitted as CSS variables by `packages/ui/src/themes/preset.ts`. Read
