@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.12.1",
   "scripts": {
     "bootstrap": "pnpm install && pnpm build:shared",
+    "reinstall": "sh tools/reinstall.sh",
     "start:learning": "pnpm --filter @repo/learning dev",
     "start:server": "pnpm --filter @repo/server start:dev",
     "build:shared": "pnpm --filter @repo/shared build",
