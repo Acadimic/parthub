@@ -7,7 +7,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { type CollectionType, PeriodType, CurrencyType } from '../enums';
 import { CourseService, MeetService, PlanService } from '../services';
 import { type ICourseModuleContents } from '../services/course.service';
-import { capitalize, getObjectId } from '../utils/helpers';
+import { capitalize, getObjectId, onceInFlight } from '../utils/helpers';
 import { useMaterialStore } from './material.store';
 import { useMeetStore } from './meet.store';
 import { useSelectorStore } from './selector.store';
@@ -15,10 +15,11 @@ import { useTestPaperStore } from './test-paper.store';
 import { useUserStore } from './user.store';
 
 /**
- * A course in the store. `isLoadedContents` is client-only — it records whether this course's
- * modules have been fetched — and `CLIENT_ONLY_KEYS` strips it from every request.
+ * A course in the store. `isLoadedContents` and `isLoadedOutline` are client-only — whether this
+ * course's modules have been fetched whole, or as a syllabus with no lesson bodies — and
+ * `CLIENT_ONLY_KEYS` strips them from every request.
  */
-export type ICourse = CourseDto & { isLoadedContents?: boolean };
+export type ICourse = CourseDto & { isLoadedContents?: boolean; isLoadedOutline?: boolean };
 export type ICourseModule = ICourseModuleFields & { isNew?: boolean };
 export type ICourseStats = NonNullable<ICourse['stats']>;
 
@@ -67,6 +68,8 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   loadCourses: () => Promise<void>;
   loadCoursePlans: (courseId: string) => Promise<void>;
   loadCourseModules: (courseId: string) => Promise<void>;
+  /** The syllabus alone. Enough for a preview or a list; the learning view needs the whole thing. */
+  loadCourseOutline: (courseId: string) => Promise<void>;
   loadCompletedModules: () => Promise<void>;
   reset: () => void;
 }
@@ -99,6 +102,42 @@ const distributeCourseModule = (courseModule: ICourseModuleContents) => {
     meets: courseModule.meets.map((meet) => meet._id),
   };
 };
+
+/**
+ * Fetches a course's modules, whole or as an outline, and files each embedded collection with the
+ * store that owns it. The one request key covers both shapes: a screen only ever waits on one.
+ */
+const loadModules = (courseId: string, shape: 'contents' | 'outline'): Promise<void> =>
+  useCourseStore.getState().run('courseModules', async () => {
+    const store = useCourseStore.getState();
+    const course = store.getCourseById(courseId);
+    if (!course) return;
+    const meetIds = course.meets ?? [];
+    const [modulesResult, meetsResult] = await Promise.all([
+      shape === 'outline'
+        ? CourseService.getCourseModulesOutlineByCourseId(courseId)
+        : CourseService.getCourseModulesContentsByCourseId(courseId),
+      // `meet/by-ids` requires a non-empty list, and a course with no sessions has nothing to ask
+      // for. Skipping keeps a 400 out of a page that is not showing sessions anyway.
+      meetIds.length ? MeetService.getMeetsByIds(meetIds) : Promise.resolve(null),
+    ]);
+    // The sessions are a separate concern from the syllabus: this used to bail when either call
+    // came back empty, so a failed meets fetch threw away modules that had loaded perfectly.
+    if (!modulesResult?.data) return;
+    // The modules arrive with their test papers, materials and meets embedded. Each collection
+    // goes to the store that owns it and the module keeps only ids, which is what the rest of the
+    // app reads.
+    const courseModules = modulesResult.data.map(distributeCourseModule);
+    if (meetsResult?.data) useMeetStore.getState().addMeets(meetsResult.data);
+    store.addCourseModules(courseModules);
+    const firstModuleId = courseModules[0]?._id;
+    if (firstModuleId) useSelectorStore.getState().setSelectedCourseModuleId(firstModuleId);
+    // An outline never downgrades a course whose whole contents are already here.
+    store.patchCourse(
+      courseId,
+      shape === 'outline' ? { isLoadedOutline: true } : { isLoadedContents: true, isLoadedOutline: true },
+    );
+  });
 
 export const useCourseStore = create<ICourseState>()((set, get) => ({
   courseMap: {},
@@ -285,50 +324,35 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   // session and no standard filter. It replaced a call to `course/standards`, a route the server
   // does not have — it 404'd, and the course list was empty for everyone as a result.
   loadCourses: () =>
-    get().run('courses', async () => {
-      const result = await CourseService.getPublishedCourses();
-      if (result?.data) get().addCourses(result.data);
-    }),
+    onceInFlight('courses', () =>
+      get().run('courses', async () => {
+        const result = await CourseService.getPublishedCourses();
+        if (result?.data) get().addCourses(result.data);
+      }),
+    ),
 
   loadCoursePlans: (courseId) =>
-    get().run('plans', async () => {
-      const result = await PlanService.getCoursePlans(courseId);
-      if (result?.data) get().addPlans(result.data);
-    }),
+    onceInFlight(`coursePlans:${courseId}`, () =>
+      get().run('plans', async () => {
+        const result = await PlanService.getCoursePlans(courseId);
+        if (result?.data) get().addPlans(result.data);
+      }),
+    ),
 
-  loadCourseModules: (courseId) =>
-    get().run('courseModules', async () => {
-      const course = get().getCourseById(courseId);
-      if (!course) return;
-      const meetIds = course.meets ?? [];
-      const [modulesResult, meetsResult] = await Promise.all([
-        CourseService.getCourseModulesContentsByCourseId(courseId),
-        // `meet/by-ids` requires a non-empty list, and a course with no sessions has nothing to ask
-        // for. Skipping keeps a 400 out of a page that is not showing sessions anyway.
-        meetIds.length ? MeetService.getMeetsByIds(meetIds) : Promise.resolve(null),
-      ]);
-      // The sessions are a separate concern from the syllabus: this used to bail when either call
-      // came back empty, so a failed meets fetch threw away modules that had loaded perfectly.
-      if (!modulesResult?.data) return;
-      // The modules arrive with their test papers, materials and meets embedded. Each collection
-      // goes to the store that owns it and the module keeps only ids, which is what the rest of the
-      // app reads.
-      const courseModules = modulesResult.data.map(distributeCourseModule);
-      if (meetsResult?.data) useMeetStore.getState().addMeets(meetsResult.data);
-      get().addCourseModules(courseModules);
-      const firstModuleId = courseModules[0]?._id;
-      if (firstModuleId) useSelectorStore.getState().setSelectedCourseModuleId(firstModuleId);
-      get().patchCourse(courseId, { isLoadedContents: true });
-    }),
+  loadCourseModules: (courseId) => onceInFlight(`courseModules:${courseId}`, () => loadModules(courseId, 'contents')),
+
+  loadCourseOutline: (courseId) => onceInFlight(`courseOutline:${courseId}`, () => loadModules(courseId, 'outline')),
 
   loadCompletedModules: () =>
-    get().run('completedModules', async () => {
-      const result = await CourseService.getCompletedModules();
-      if (!result?.data) return;
-      get().addCompletedModules(result.data);
-      const selectedUserId = useSelectorStore.getState().selectedUserId;
-      if (selectedUserId) useUserStore.getState().patchUser(selectedUserId, { isLoadedCompletedModules: true });
-    }),
+    onceInFlight('completedModules', () =>
+      get().run('completedModules', async () => {
+        const result = await CourseService.getCompletedModules();
+        if (!result?.data) return;
+        get().addCompletedModules(result.data);
+        const selectedUserId = useSelectorStore.getState().selectedUserId;
+        if (selectedUserId) useUserStore.getState().patchUser(selectedUserId, { isLoadedCompletedModules: true });
+      }),
+    ),
 
   reset: () => {
     set({ courseMap: {}, planMap: {}, courseModuleMap: {}, completedModuleMap: {} });

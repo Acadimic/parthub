@@ -12,8 +12,11 @@ export const handleError = (errorData: AxiosError, shouldNotThrowError?: boolean
     return;
   }
   if (errorData.response) {
-    const error = errorData.response.data as { message?: string | string[] };
-    const messages = error?.message || errorData?.message;
+    // `HttpExceptionFilter` renders a Nest exception as `{ error: { code, message } }`; a bare
+    // `{ message }` is what the validation pipe and older handlers send. Reading only the second
+    // form showed Axios's "Request failed with status code 400" in place of the server's reason.
+    const data = errorData.response.data as { message?: string | string[]; error?: { message?: string | string[] } };
+    const messages = data?.error?.message || data?.message || errorData?.message;
     message = Array.isArray(messages) ? messages.join('. ') : messages;
     errorToast({ message });
   } else if (errorData.request) {

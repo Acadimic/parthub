@@ -81,7 +81,9 @@ export const CourseModules = () => {
     if (isCourseMenuOpen) handleCourseMenuClick();
   };
 
-  const outline = <CourseOutline courseId={selectedCourse._id} isPreview={false} onSelectItem={handleSelect} />;
+  const outline = (
+    <CourseOutline courseId={selectedCourse._id} isPreview={false} isLocked={false} onSelectItem={handleSelect} />
+  );
   const columnWidth = isOutlineHidden ? 'max-w-6xl' : 'max-w-5xl';
 
   return (

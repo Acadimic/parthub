@@ -15,6 +15,8 @@ import { OtpModule } from '@modules/otp/otp.module';
 import { PermissionModule } from '@modules/permissions/permission.module';
 import { PlanModule } from '@modules/plan/plan.module';
 import { QuestionModule } from '@modules/question/question.module';
+import { EnrollmentModule } from '@modules/enrollment/enrollment.module';
+import { OrderModule } from '@modules/order/order.module';
 import { RazorpayModule } from '@modules/razorpay/razorpay.module';
 import { ReactionModule } from '@modules/reaction/reaction.module';
 import { S3Module } from '@modules/s3/s3.module';
@@ -120,6 +122,8 @@ import { SecretsService } from './secrets/secrets.service';
     S3Module,
     SendGridModule,
     RazorpayModule,
+    EnrollmentModule,
+    OrderModule,
     CommonModule,
   ],
   controllers: [AppController],

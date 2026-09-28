@@ -6,6 +6,7 @@ import CourseService from './course.service';
 import MappingService from './mapping.service';
 import MaterialService from './material.service';
 import MeetService from './meet.service';
+import OrderService from './order.service';
 import PlanService from './plan.service';
 import QuestionService from './question.service';
 import StandardService from './standard.service';
@@ -22,6 +23,7 @@ export {
   MappingService,
   MaterialService,
   MeetService,
+  OrderService,
   PlanService,
   QuestionService,
   StandardService,

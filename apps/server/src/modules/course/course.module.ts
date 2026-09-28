@@ -4,6 +4,7 @@ import { PlanModule } from '@modules/plan/plan.module';
 import { MaterialModule } from '@modules/material/material.module';
 import { TestPaperModule } from '@modules/test-paper/test-paper.module';
 import { MeetModule } from '@modules/meet/meet.module';
+import { EnrollmentModule } from '@modules/enrollment/enrollment.module';
 import { Course, CourseSchema } from './course.schema';
 // Aliased: the schema class and this file's Nest module are both called `CourseModule`. The alias
 // is only local — `CourseModuleEntity.name` is still 'CourseModule', which is the model name
@@ -26,6 +27,8 @@ import { CourseService } from './course.service';
     MaterialModule,
     TestPaperModule,
     MeetModule,
+    // Seats gate a paid course's contents, so the reads here ask it before answering.
+    EnrollmentModule,
   ],
   controllers: [CourseController],
   providers: [CourseService],

@@ -85,6 +85,16 @@ export class CourseController {
     return this.courseService.getOrgCourseModules(this.requestContextService.getOrgId(), courseId);
   }
 
+  /** The plans a visible course is sold on. `plan/course/:id` is teach-only and org-scoped. */
+  @Get('plans/:courseId')
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_COURSE)
+  async getCoursePlans(@Param('courseId') courseId: string): Promise<PlanDto[]> {
+    const plans = await this.courseService.getVisibleCoursePlans(this.requestContextService.getOrgId(), courseId);
+    if (!plans) throw new NotFoundException('Course not found.');
+    return plans;
+  }
+
   /** A course's modules with their materials, test papers and meets embedded. */
   @Get('course/modules/contents/:courseId')
   @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
@@ -92,6 +102,17 @@ export class CourseController {
   async getCourseModulesWithContents(@Param('courseId') courseId: string): Promise<ICourseModuleContents[]> {
     const org = this.requestContextService.getOrgId();
     const courseModules = await this.courseService.getCourseModulesWithContents(org, courseId);
+    if (!courseModules) throw new NotFoundException('Course not found.');
+    return courseModules;
+  }
+
+  /** The syllabus alone: modules and their items with no lesson bodies or files. */
+  @Get('course/modules/outline/:courseId')
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_COURSE)
+  async getCourseModulesOutline(@Param('courseId') courseId: string): Promise<ICourseModuleContents[]> {
+    const org = this.requestContextService.getOrgId();
+    const courseModules = await this.courseService.getCourseModulesWithContents(org, courseId, 'outline');
     if (!courseModules) throw new NotFoundException('Course not found.');
     return courseModules;
   }

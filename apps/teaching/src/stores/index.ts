@@ -2,6 +2,7 @@ export * from './batch.store';
 export * from './course.store';
 export * from './material.store';
 export * from './meet.store';
+export * from './order.store';
 export * from './question.store';
 export * from './selector.store';
 export * from './standard.store';

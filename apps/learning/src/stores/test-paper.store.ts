@@ -1,13 +1,14 @@
 import { type TestPaperDto, type TestPaperResultDto, type TestPaperSectionDto } from '@repo/shared/contracts';
-import { type IRequestSlice, createEmptyRichText, createRequestSlice } from '@repo/shared/utils';
+import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type ISubjectGraphData } from '@repo/shared/interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { Marking } from '../enums';
 import { ReactionService, TestPaperService } from '../services';
-import { getMinutesString, getObjectId, groupBy } from '../utils/helpers';
+import { getMinutesString, groupBy, onceInFlight } from '../utils/helpers';
 import { useQuestionStore } from './question.store';
 import { markResponse, toResultPayload } from './exam.marking';
+import { buildExam } from './exam.sitting';
 import { useSelectorStore } from './selector.store';
 import { useStandardStore } from './standard.store';
 
@@ -25,15 +26,7 @@ export type ITestPaperSection = TestPaperSectionDto &
   Required<Pick<TestPaperSectionDto, 'defaultMarkings' | 'sectionCategory'>> & { isNew?: boolean };
 
 export * from './exam.types';
-import {
-  type IAnswerMap,
-  type IExam,
-  type IQuestionWiseTimeTakenMap,
-  type IResultCount,
-  type IResultMap,
-  type ISectionWiseQuestionsMap,
-  type ISummaryCount,
-} from './exam.types';
+import { type IExam, type IResultCount, type ISummaryCount } from './exam.types';
 
 /** The fetches this store tracks. */
 type TestPaperFetch = 'testPapers' | 'testPaperSections' | 'exam' | 'results' | 'submitResult';
@@ -134,22 +127,6 @@ const selectedQuestionId = (): string => useSelectorStore.getState().selectedQue
  */
 let examLoadToken = 0;
 
-type QuestionStore = ReturnType<typeof useQuestionStore.getState>;
-
-/** Section id to its question ids, in section order. */
-const toSectionWiseQuestionIds = (sections: string[], questionStore: QuestionStore): ISectionWiseQuestionsMap =>
-  sections.reduce<ISectionWiseQuestionsMap>((maps, sectionId) => {
-    maps[sectionId] = questionStore.getQuestionsBySectionId(sectionId).map((question) => question._id);
-    return maps;
-  }, {});
-
-/** Question id to the ids of its correct options — the key the exam marks responses against. */
-const toAnswerMaps = (questions: { _id: string }[], questionStore: QuestionStore): IAnswerMap =>
-  questions.reduce<IAnswerMap>((answers, question) => {
-    answers[question._id] = questionStore.getCorrectOptions(question._id).map((option) => option._id);
-    return answers;
-  }, {});
-
 export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
   testPaperMap: {},
   testPaperSectionMap: {},
@@ -228,88 +205,40 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
     }),
 
   loadTestPaperSectionsWithQuestions: (testPaperId) =>
-    get().run('testPaperSections', async () => {
-      // The course on screen, when there is one: a paper in a course another organization
-      // published is only readable through that course.
-      const courseId = useSelectorStore.getState().selectedCourseId || undefined;
-      const result = await TestPaperService.getTestPaperSectionsWithQuestions(testPaperId, courseId);
-      if (!result?.data) return;
-      const { sections, questions } = result.data;
-      get().addTestPaperSections(sections);
-      // The questions arrive with the sections, so this store fills the question store — a one-way
-      // write between stores, which needs no subscription.
-      const questionStore = useQuestionStore.getState();
-      questionStore.addQuestions(questions);
-    }),
+    onceInFlight(`testPaperSections:${testPaperId}`, () =>
+      get().run('testPaperSections', async () => {
+        // The course on screen, when there is one: a paper in a course another organization
+        // published is only readable through that course.
+        const courseId = useSelectorStore.getState().selectedCourseId || undefined;
+        const result = await TestPaperService.getTestPaperSectionsWithQuestions(testPaperId, courseId);
+        if (!result?.data) return;
+        const { sections, questions } = result.data;
+        get().addTestPaperSections(sections);
+        // The questions arrive with the sections, so this store fills the question store — a one-way
+        // write between stores, which needs no subscription.
+        const questionStore = useQuestionStore.getState();
+        questionStore.addQuestions(questions);
+      }),
+    ),
 
-  loadAndSetExam: (testPaperId, isPractice) => {
-    examLoadToken += 1;
-    const token = examLoadToken;
-    return get().run('exam', async () => {
-      set({ exam: null });
-      await get().loadTestPaperSectionsWithQuestions(testPaperId);
-      // A newer load has started since; its sitting is the one that counts.
-      if (token !== examLoadToken) return;
-      const testPaper = get().getTestPaperById(testPaperId);
-      if (!testPaper) return;
-      // `TestPaperDto` leaves these optional because one class serves both directions and a write
-      // body need not send them; a stored paper always has them. Bail rather than open a sitting
-      // with zeroed marks or an unknown paper type — the other fields have a neutral default.
-      const { durationMins, maxMarks, paperCategory, paperType } = testPaper;
-      if (durationMins == null || maxMarks == null || !paperCategory || !paperType) return;
-      const questionStore = useQuestionStore.getState();
-      const sections = testPaper.sections ?? [];
-      const questions = questionStore.getQuestionsBySectionIds(sections);
-      if (!questions.length) return;
-
-      const sectionWiseQuestionIdsMaps = toSectionWiseQuestionIds(sections, questionStore);
-      const questionIds = Object.values(sectionWiseQuestionIdsMaps).flat();
-      const firstQuestionId = questionIds[0];
-      if (firstQuestionId) useSelectorStore.getState().setSelectedQuestionId(firstQuestionId);
-
-      const zeroTimes = questions.reduce<IQuestionWiseTimeTakenMap>((times, question) => {
-        times[question._id] = 0;
-        return times;
-      }, {});
-
-      set({
-        exam: {
-          _id: getObjectId(),
-          testPaper: testPaperId,
-          course: useSelectorStore.getState().selectedCourseId,
-          title: testPaper.name,
-          instruction: testPaper.instruction ?? createEmptyRichText(),
-          questionWiseSpendTime: zeroTimes,
-          questionWiseReplyTime: { ...zeroTimes },
-          totalSpendTime: 0,
-          answerMaps: toAnswerMaps(questions, questionStore),
-          responseMaps: questions.reduce<IAnswerMap>((responses, question) => {
-            responses[question._id] = [];
-            return responses;
-          }, {}),
-          visited: firstQuestionId ? [firstQuestionId] : [],
-          markedForReviews: [],
-          sectionWiseQuestionIdsMaps,
-          numberOfQuestions: questions.length,
-          durationMins,
-          maxMarks,
-          year: testPaper.year ?? 0,
-          sections: [...sections],
-          questions: questionIds,
-          standards: [...(testPaper.standards ?? [])],
-          subjects: [...(testPaper.subjects ?? [])],
-          resultMaps: questions.reduce<IResultMap>((results, question) => {
-            results[question._id] = Marking.UNATTEMPTED;
-            return results;
-          }, {}),
-          isPractice,
-          isSubmitted: false,
-          paperCategory,
-          paperType,
-        },
+  loadAndSetExam: (testPaperId, isPractice) =>
+    onceInFlight(`exam:${testPaperId}:${isPractice}`, async () => {
+      examLoadToken += 1;
+      const token = examLoadToken;
+      await get().run('exam', async () => {
+        set({ exam: null });
+        await get().loadTestPaperSectionsWithQuestions(testPaperId);
+        // A newer load has started since; its sitting is the one that counts.
+        if (token !== examLoadToken) return;
+        const testPaper = get().getTestPaperById(testPaperId);
+        if (!testPaper) return;
+        const exam = buildExam(testPaperId, testPaper, isPractice);
+        if (exam) set({ exam });
       });
-    });
-  },
+      // A newer load is still running: its finish sets the final status, not this stale one's,
+      // which would otherwise read as "loaded" with no sitting for a moment.
+      if (token !== examLoadToken) get().setRequest('exam', { status: 'loading' });
+    }),
 
   unsetExam: () => {
     set({ exam: null });

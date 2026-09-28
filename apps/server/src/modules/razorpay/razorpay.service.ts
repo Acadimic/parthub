@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SecretsService } from '../../secrets/secrets.service';
 import { Secrets } from '@secrets/secrets';
 import Razorpay from 'razorpay';
-import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils';
+import { validatePaymentVerification, validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils';
 
 @Injectable()
 export class RazorpayService {
@@ -14,6 +14,28 @@ export class RazorpayService {
     const keySecret = this.secretsService.get<string>(Secrets.RAZORPAY_SIGNATURE_SECRET);
     if (keyId && keySecret) {
       this.razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    }
+  }
+
+  /** Whether keys are present; without them no order can be created and checkout says so. */
+  isConfigured(): boolean {
+    return Boolean(this.razorpay);
+  }
+
+  /** The publishable key the browser checkout is opened with. */
+  getKeyId(): string {
+    return this.secretsService.get<string>(Secrets.RAZORPAY_API_KEY) ?? '';
+  }
+
+  /** Proves a payment belongs to one of our orders: the signature is an HMAC over both ids. */
+  verifyPayment(orderId: string, paymentId: string, signature: string): boolean {
+    const secret = this.secretsService.get<string>(Secrets.RAZORPAY_SIGNATURE_SECRET);
+    if (!secret) return false;
+    try {
+      return validatePaymentVerification({ order_id: orderId, payment_id: paymentId }, signature, secret);
+    } catch (error) {
+      this.logger.error('Payment signature validation failed', error);
+      return false;
     }
   }
 

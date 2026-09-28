@@ -4,6 +4,18 @@
 
 export type { BatchDto } from '../dtos/validations/batch/batch.dto';
 export type { BookmarkDto } from '../dtos/validations/bookmark/bookmark.dto';
+export type {
+  EnrollmentDto,
+  EnrollCourseDto,
+  VerifyEnrollmentPaymentDto,
+} from '../dtos/validations/enrollment/enrollment.dto';
+export type { CouponDto } from '../dtos/validations/order/coupon.dto';
+export type {
+  OrderDto,
+  CreateOrderDto,
+  ApplyOrderCouponDto,
+  VerifyOrderPaymentDto,
+} from '../dtos/validations/order/order.dto';
 export type { FollowerDto } from '../dtos/validations/follower/follower.dto';
 export type { ReactionDto } from '../dtos/validations/reaction/reaction.dto';
 export type { ChapterDto } from '../dtos/validations/chapter/chapter.dto';

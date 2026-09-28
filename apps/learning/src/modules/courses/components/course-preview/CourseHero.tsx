@@ -1,8 +1,8 @@
-import { Breadcrumb, type IBreadcrumbItem } from '@repo/ui/app';
-import { Badge } from '@repo/ui/core';
 import { Avatar } from '@components/app/avatars';
 import { useCourse } from '@hooks/course.hook';
 import { CalendarBlankIcon, ClockIcon, HouseIcon, SparkleIcon, StackIcon } from '@phosphor-icons/react';
+import { Breadcrumb, type IBreadcrumbItem } from '@repo/ui/app';
+import { Badge } from '@repo/ui/core';
 import { type ICourse, useStandardLookups, useUserLookups } from '@stores';
 import { AI_GENERATED_COURSE_TAG } from '@utils/constants';
 import { getPlural, getStringFormattedDate } from '@utils/helpers';
@@ -83,9 +83,9 @@ export const CourseHero = ({ course }: IProps) => {
       <Breadcrumb items={crumbs} />
       <CatalogueBadges course={course} />
       <div className="flex flex-col gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{course.name}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{course.name}</h1>
         {course.description ? (
-          <p className="max-w-2xl text-base text-muted-foreground md:text-lg">{course.description}</p>
+          <p className="max-w-2xl text-xs text-muted-foreground md:text-sm">{course.description}</p>
         ) : null}
       </div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">

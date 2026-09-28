@@ -15,10 +15,25 @@ interface IProps {
   onCloseExam: () => void;
 }
 
+/**
+ * Whether the sitting on screen is this paper's, and whether it is still on its way. Before the
+ * load effect has run the request is idle and `exam` is empty or a previous paper's, so neither may
+ * show the not-found state: the skeleton stays up until this paper's load has settled.
+ */
+const getExamReadiness = (store: ReturnType<typeof useTestPaperLookups>, testPaperId: string) => {
+  const isThisExam = store.exam?.testPaper === testPaperId;
+  const hasSettled = store.isLoaded('exam') || store.isFailed('exam');
+  return {
+    exam: isThisExam ? store.exam : null,
+    isSettingExam: store.isLoading('exam') || (!isThisExam && !hasSettled),
+    error: store.getError('exam') ?? 'It may have been removed, or it is not part of a course you can open.',
+  };
+};
+
 export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => {
   const testPaperStore = useTestPaperLookups();
-  const { exam, loadAndSetExam, unsetExam } = testPaperStore;
-  const isSettingExam = testPaperStore.isLoading('exam');
+  const { loadAndSetExam, unsetExam } = testPaperStore;
+  const { exam, isSettingExam, error } = getExamReadiness(testPaperStore, testPaperId);
   const {
     openInstruction,
     closeInstruction,
@@ -52,7 +67,16 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
 
   if (isSettingExam) return <ExamSkeleton isPractice={isPractice} />;
 
-  if (!exam) return <BlankState label="No Exam Found." />;
+  if (!exam) {
+    return (
+      <BlankState
+        className="py-24"
+        label="This test could not be opened"
+        description={error}
+        action={<Button isSecondary text="Go back" onClick={onCloseExam} />}
+      />
+    );
+  }
 
   return (
     <>

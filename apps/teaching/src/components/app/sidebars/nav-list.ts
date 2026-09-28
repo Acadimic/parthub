@@ -8,6 +8,7 @@ import {
   GridFourIcon,
   HouseIcon,
   LifebuoyIcon,
+  ReceiptIcon,
   UsersThreeIcon,
   UsersFourIcon,
 } from '@phosphor-icons/react';
@@ -79,6 +80,11 @@ const APP_ROUTES: ISidebarRoute[] = [
         name: 'Courses',
         route: '/courses',
         icon: GridFourIcon,
+      },
+      {
+        name: 'Orders',
+        route: '/orders',
+        icon: ReceiptIcon,
       },
     ],
   },

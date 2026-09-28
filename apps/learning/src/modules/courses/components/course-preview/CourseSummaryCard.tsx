@@ -7,13 +7,16 @@ import {
   ClockIcon,
   FileTextIcon,
   PlayCircleIcon,
+  SealCheckIcon,
   VideoCameraIcon,
   YoutubeLogoIcon,
 } from '@phosphor-icons/react';
-import { type ICourse } from '@stores';
+import { type ICourse, useCourseLookups, useEnrollmentLookups } from '@stores';
 import { getPlural } from '@utils/helpers';
 import { ShareCourse } from '../course-modules';
 import { AI_GENERATED_COURSE_TAG } from '@utils/constants';
+import { getStringFormattedDate } from '@utils/helpers';
+import { CoursePlans } from './CoursePlans';
 
 interface IProps {
   course: ICourse;
@@ -68,6 +71,12 @@ export const CourseSummaryCard = ({ course }: IProps) => {
   const modulesCount = getCourseModules(course._id).length;
   const hasStarted = progress.completed > 0;
   const isDone = progress.total > 0 && progress.completed === progress.total;
+  const { getPlansByCourseId } = useCourseLookups();
+  const { getActiveEnrollment } = useEnrollmentLookups();
+  const plans = getPlansByCourseId(course._id);
+  const enrollment = getActiveEnrollment(course._id);
+  // Opening goes through a seat whatever the course costs: a free one is granted on the spot, so
+  // the box still records the start, and a learner who began before seats existed just claims one.
 
   const getCtaLabel = () => {
     if (isDone) return 'Review course';
@@ -100,18 +109,36 @@ export const CourseSummaryCard = ({ course }: IProps) => {
             <Progress value={progress.percent} />
           </div>
         ) : null}
-        <div className="flex items-center gap-2">
-          <Button
-            isFull
-            className="flex-1 px-4 py-2.5"
-            disabled={progress.total === 0}
-            onClick={() => openCourse(course._id)}
-            leftsection={<PlayCircleIcon weight="fill" className="h-5 w-5" />}
-          >
-            {progress.total === 0 ? 'No content yet' : getCtaLabel()}
-          </Button>
-          <ShareCourse courseId={course._id} isCompact />
-        </div>
+        {enrollment ? (
+          <div className="flex items-center gap-2 rounded-lg bg-success/10 px-3 py-2 text-xs text-success">
+            <SealCheckIcon weight="fill" className="h-4 w-4 shrink-0" />
+            <span>
+              Enrolled
+              {enrollment.endsAt ? ` · access until ${getStringFormattedDate(enrollment.endsAt)}` : ''}
+            </span>
+          </div>
+        ) : null}
+        {enrollment ? (
+          <div className="flex items-center gap-2">
+            <Button
+              isFull
+              className="flex-1 px-4 py-2.5"
+              disabled={progress.total === 0}
+              onClick={() => openCourse(course._id)}
+              leftsection={<PlayCircleIcon weight="fill" className="h-5 w-5" />}
+            >
+              {progress.total === 0 ? 'No content yet' : getCtaLabel()}
+            </Button>
+            <ShareCourse courseId={course._id} isCompact />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <CoursePlans course={course} plans={plans} />
+            <div className="flex justify-end">
+              <ShareCourse courseId={course._id} isCompact />
+            </div>
+          </div>
+        )}
         <IncludesList course={course} modulesCount={modulesCount} />
       </div>
     </div>

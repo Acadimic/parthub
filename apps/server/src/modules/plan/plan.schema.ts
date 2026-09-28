@@ -22,16 +22,16 @@ export class Plan extends BaseSchema {
   @Prop({ type: Number, required: true })
   amount: number;
 
-  @Prop({ type: Number })
+  @Prop({ type: Number, required: true })
   realAmount: number;
 
-  @Prop({ type: String, enum: CurrencyType, default: CurrencyType.INR })
+  @Prop({ type: String, enum: CurrencyType, required: true })
   currency: CurrencyType;
 
-  @Prop({ type: Number, default: 1 })
+  @Prop({ type: Number, required: true })
   interval: number;
 
-  @Prop({ type: String, enum: PeriodType })
+  @Prop({ type: String, enum: PeriodType, required: true })
   period: PeriodType;
 
   @Prop({ type: String })

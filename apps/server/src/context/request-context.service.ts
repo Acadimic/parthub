@@ -55,11 +55,13 @@ export class RequestContextService {
     const cls = ClsServiceManager.getClsService();
     const context = this.getContext();
     const previousOrgId = context.orgId;
-    cls.set('requestContext', { ...context, org: String(org) });
+    // The context's field is `orgId`, which `getOrgId` and the plugin read. This used to set a
+    // stray `org` key, so every "write into another org" landed in the caller's own after all.
+    cls.set('requestContext', { ...context, orgId: String(org) });
     try {
       return await fn();
     } finally {
-      cls.set('requestContext', { ...this.getContext(), org: previousOrgId });
+      cls.set('requestContext', { ...this.getContext(), orgId: previousOrgId });
     }
   }
 

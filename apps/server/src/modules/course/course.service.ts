@@ -1,10 +1,13 @@
 import { getTransformedBaseFields } from '@database/base.transform';
 import { MaterialService } from '@modules/material/material.service';
 import { MeetService } from '@modules/meet/meet.service';
+import { Subdomain } from '@repo/shared/enums';
 import { PlanService } from '@modules/plan/plan.service';
+import { EnrollmentService } from '@modules/enrollment/enrollment.service';
+import { RequestContextService } from '../../context/request-context.service';
 import { TestPaperService } from '@modules/test-paper/test-paper.service';
 import { TestPaperResultService } from '@modules/test-paper/test-paper-result.service';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { type TestPaperSectionsResponse } from '@repo/shared/contracts';
 import {
@@ -43,6 +46,9 @@ export interface ICourseModuleContents extends Omit<CourseModuleDto, 'materials'
  */
 const CATALOGUE_EXCLUDED_FIELDS = { outline: 0, outcomes: 0, prerequisites: 0 } as const;
 
+/** Whether module contents arrive whole, or as a syllabus with no lesson bodies or files. */
+export type CourseModulesShape = 'contents' | 'outline';
+
 @Injectable()
 export class CourseService {
   // NestJS injects collaborators through the constructor, so the count reflects this class's
@@ -57,7 +63,25 @@ export class CourseService {
     private readonly testPaperService: TestPaperService,
     private readonly testPaperResultService: TestPaperResultService,
     private readonly meetService: MeetService,
+    private readonly enrollmentService: EnrollmentService,
+    private readonly requestContextService: RequestContextService,
   ) {}
+
+  /**
+   * Whether the caller may open a course's contents. A teacher reads their own courses from the
+   * teaching app without a seat; a learner needs one on any course that carries a price.
+   */
+  private async canOpen(course: CourseDocument): Promise<boolean> {
+    if (this.requestContextService.getSubdomain() !== Subdomain.LEARN) return true;
+    return this.enrollmentService.hasAccess(this.requestContextService.getUserId(), course);
+  }
+
+  /** The plans a visible course is sold on, for the learner to pick from. */
+  async getVisibleCoursePlans(org: Types.ObjectId, courseId: string): Promise<PlanDto[] | null> {
+    const course = await this.getVisibleCourse(org, courseId);
+    if (!course) return null;
+    return this.planService.getPlansByCourseId(course.org, courseId);
+  }
 
   /** The wire shape of a learner's progress row. */
   getTransformedCompletedModule(completedModule: CompletedModuleDocument): CompletedModuleDto {
@@ -286,15 +310,21 @@ export class CourseService {
 
   /**
    * A course's modules with their materials, test papers and meets embedded rather than as ids —
-   * the shape the learning app's course screen reads.
+   * the shape the learning app's course screen reads. `outline` is the same rows with every lesson
+   * body and file left out: what a preview or an activity list needs, at a fraction of the size.
    *
    * Contents are looked up under the **course's** organization, not the caller's: a published
    * course is visible across organizations, and scoping to the viewer would return a module whose
    * every item is missing.
    */
-  async getCourseModulesWithContents(org: Types.ObjectId, courseId: string): Promise<ICourseModuleContents[] | null> {
+  async getCourseModulesWithContents(
+    org: Types.ObjectId,
+    courseId: string,
+    shape: CourseModulesShape = 'contents',
+  ): Promise<ICourseModuleContents[] | null> {
     const course = await this.getVisibleCourse(org, courseId);
     if (!course) return null;
+    const isOutline = shape === 'outline';
 
     const courseOrg = course.org;
     const courseModules = await this.courseModuleModel
@@ -306,7 +336,9 @@ export class CourseService {
       ...new Set(courseModules.flatMap((courseModule) => (courseModule[key] ?? []).map(String))),
     ];
     const [materials, testPapers, meets] = await Promise.all([
-      this.materialService.getByIds(courseOrg, idsOf('materials')),
+      isOutline
+        ? this.materialService.getOutlineByIds(courseOrg, idsOf('materials'))
+        : this.materialService.getByIds(courseOrg, idsOf('materials')),
       this.testPaperService.getByIds(courseOrg, idsOf('testPapers')),
       // Meets are the one collection here with no transform step, so its lean documents stand in
       // for the contract. The wire shape is right — an ObjectId serialises to the string `MeetDto`
@@ -314,8 +346,16 @@ export class CourseService {
       this.meetService.getMeetsByIds(idsOf('meets')) as unknown as Promise<MeetDto[]>,
     ]);
 
+    // Without a seat the outline is still shown — names, kinds, durations — but a lesson arrives
+    // with no body or files, and the test and progress routes refuse below, so nothing is readable.
+    // An outline already carries no body, so the seat check is skipped along with the query it costs.
+    const isLocked = isOutline ? false : !(await this.canOpen(course));
+    const lockedMaterials = isLocked
+      ? materials.map((material) => ({ ...material, content: undefined, attachments: [] }))
+      : materials;
+
     const byId = <T extends { _id: string }>(rows: T[]) => new Map(rows.map((row) => [row._id, row]));
-    const materialById = byId(materials);
+    const materialById = byId(lockedMaterials);
     const testPaperById = byId(testPapers);
     const meetById = byId(meets);
 
@@ -347,6 +387,7 @@ export class CourseService {
   ): Promise<TestPaperSectionsResponse | null> {
     const course = await this.getVisibleCourse(org, courseId);
     if (!course) return null;
+    if (!(await this.canOpen(course))) throw new ForbiddenException('Enrol in this course to sit its test papers.');
     const courseModule = await this.courseModuleModel
       .findOne({ course: courseId, testPapers: testPaperId, _deleted: { $ne: true } })
       .lean<CourseModuleDocument>();
@@ -366,6 +407,7 @@ export class CourseService {
   ): Promise<TestPaperResultDto | null> {
     const course = await this.getVisibleCourse(org, payload.course);
     if (!course) return null;
+    if (!(await this.canOpen(course))) throw new ForbiddenException('Enrol in this course to sit its test papers.');
     const courseModule = await this.courseModuleModel
       .findOne({ course: payload.course, testPapers: payload.testPaper, _deleted: { $ne: true } })
       .lean<CourseModuleDocument>();
@@ -392,6 +434,10 @@ export class CourseService {
     userId: Types.ObjectId,
     payload: CompletedModuleDto,
   ): Promise<CompletedModuleDto> {
+    const course = await this.getVisibleCourse(org, payload.course);
+    if (!course || !(await this.canOpen(course))) {
+      throw new ForbiddenException('Enrol in this course to track progress.');
+    }
     const { _id } = payload;
     return this.completedModuleModel
       .findOneAndUpdate(

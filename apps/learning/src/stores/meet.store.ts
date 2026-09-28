@@ -1,6 +1,7 @@
 import { type MeetDto } from '@repo/shared/contracts';
 import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { MeetService } from '../services';
+import { onceInFlight } from '../utils/helpers';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -65,11 +66,13 @@ export const useMeetStore = create<IMeetState>()((set, get) => ({
     }),
 
   loadMeetsByIds: (meetIds) =>
-    get().run('courseMeets', async () => {
-      if (!meetIds.length) return;
-      const result = await MeetService.getMeetsByIds(meetIds);
-      if (result?.data) get().addMeets(result.data);
-    }),
+    onceInFlight(`meets:${meetIds.join(',')}`, () =>
+      get().run('courseMeets', async () => {
+        if (!meetIds.length) return;
+        const result = await MeetService.getMeetsByIds(meetIds);
+        if (result?.data) get().addMeets(result.data);
+      }),
+    ),
 
   reset: () => {
     set({ meetMap: {} });

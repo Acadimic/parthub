@@ -35,7 +35,7 @@ const isView = (value: unknown): value is View => VIEWS.includes(value as View);
  */
 export const Activity = () => {
   const { query, replace } = useRouter();
-  const { getCourseById, loadCourseModules } = useCourseLookups();
+  const { getCourseById, loadCourseOutline } = useCourseLookups();
   const coursesRequest = useLoadOnce(useCourseStore, 'courses', (state) => state.loadCourses);
   const completedRequest = useLoadOnce(useCourseStore, 'completedModules', (state) => state.loadCompletedModules);
   const resultsRequest = useLoadOnce(useTestPaperStore, 'results', (state) => state.loadMyResults);
@@ -54,9 +54,9 @@ export const Activity = () => {
   useEffect(() => {
     touchedCourseIds.forEach((courseId) => {
       const course = getCourseById(courseId);
-      if (!course || course.isLoadedContents || requestedContents.current.has(courseId)) return;
+      if (!course || course.isLoadedOutline || requestedContents.current.has(courseId)) return;
       requestedContents.current.add(courseId);
-      loadCourseModules(courseId);
+      loadCourseOutline(courseId);
     });
   }, [touchedCourseIds.join(',')]);
 

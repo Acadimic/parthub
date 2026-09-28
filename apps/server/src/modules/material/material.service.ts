@@ -107,6 +107,21 @@ export class MaterialService {
       .then((materials) => this.getTransformedMaterials(materials));
   }
 
+  /**
+   * The same rows without their bodies or files — what a syllabus needs. The projection keeps the
+   * rich text out of the query itself, which is what makes a long course's outline small.
+   */
+  async getOutlineByIds(org: Types.ObjectId, ids: string[]): Promise<MaterialDto[]> {
+    if (!ids.length) return [];
+    return this.materialModel
+      .find({ _id: { $in: ids }, org, _deleted: { $ne: true } })
+      .select('-content -attachments')
+      .lean<MaterialDocument[]>()
+      .then((materials) =>
+        this.getTransformedMaterials(materials).map((material) => ({ ...material, attachments: [] })),
+      );
+  }
+
   async findByCourse(org: Types.ObjectId, courseId: string) {
     return this.materialModel
       .find({ course: courseId, org, _deleted: { $ne: true } })

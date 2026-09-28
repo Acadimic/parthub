@@ -1,6 +1,6 @@
 import { Container } from '@components/others';
 import { useCourse } from '@hooks/course.hook';
-import { useMeetLookups, useSelectedCourse } from '@stores';
+import { useCourseLookups, useEnrollmentLookups, useMeetLookups, useSelectedCourse } from '@stores';
 import { CourseSessions } from '@modules/sessions';
 import { CourseHero, CourseHighlights, CourseSummaryCard } from './course-preview';
 import { CourseOutline } from './CourseOutline';
@@ -13,6 +13,11 @@ export const CoursePreview = () => {
   if (!selectedCourse) return null;
 
   const meets = getMeetsByIds(selectedCourse.meets ?? []);
+  const { getPlansByCourseId } = useCourseLookups();
+  const { isEnrolled } = useEnrollmentLookups();
+  // Rows lock on a priced course the learner has not bought; the buy box beside them opens it.
+  const isLocked =
+    getPlansByCourseId(selectedCourse._id).some((plan) => plan.amount > 0) && !isEnrolled(selectedCourse._id);
 
   return (
     <div className="relative pb-16">
@@ -33,7 +38,7 @@ export const CoursePreview = () => {
             <section className="flex flex-col gap-3">
               <h2 className="text-lg font-semibold">Syllabus</h2>
               <div className="rounded-xl border border-border bg-background">
-                <CourseOutline courseId={selectedCourse._id} isPreview onSelectItem={openItem} />
+                <CourseOutline courseId={selectedCourse._id} isPreview isLocked={isLocked} onSelectItem={openItem} />
               </div>
             </section>
             {/* The same card the learning view shows, so a visitor sees what a seat buys. */}

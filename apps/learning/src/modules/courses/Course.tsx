@@ -3,7 +3,16 @@ import { useRequest } from '@repo/ui/hooks';
 import { BlankState } from '@components/others';
 import { useCourse } from '@hooks/course.hook';
 import { ArrowClockwiseIcon } from '@phosphor-icons/react';
-import { useCourseLookups, useCourseStore, useSelectedCourse, useSelectedUser, useSelectorLookups } from '@stores';
+import {
+  type ICourse,
+  useCourseLookups,
+  useCourseStore,
+  useEnrollmentLookups,
+  useEnrollmentStore,
+  useSelectedCourse,
+  useSelectedUser,
+  useSelectorLookups,
+} from '@stores';
 import { useEffect, useState } from 'react';
 import { CourseModules, CourseModulesSkeleton, CoursePreview, CoursePreviewSkeleton } from './components';
 
@@ -15,7 +24,17 @@ interface IProps {
 export const Course = ({ courseId, isPreview }: IProps) => {
   const courseStore = useCourseLookups();
   const selectorStore = useSelectorLookups();
-  const { loadCourseModules, loadCourses, loadCompletedModules, getCourseById } = courseStore;
+  const {
+    loadCourseModules,
+    loadCourseOutline,
+    loadCourses,
+    loadCompletedModules,
+    loadCoursePlans,
+    getCourseById,
+    getPlansByCourseId,
+  } = courseStore;
+  const { getActiveEnrollment, loadMyEnrollments } = useEnrollmentLookups();
+  const enrollmentsRequest = useRequest(useEnrollmentStore, 'enrollments');
   const { setSelectedCourseId } = selectorStore;
   const { getSelectedItemIndex, selectResumeItem } = useCourse();
   const selectedCourse = useSelectedCourse();
@@ -23,6 +42,12 @@ export const Course = ({ courseId, isPreview }: IProps) => {
   const coursesRequest = useRequest(useCourseStore, 'courses');
   const modulesRequest = useRequest(useCourseStore, 'courseModules');
   const [isLoading, setIsLoading] = useState(true);
+
+  const loadModulesFor = (course: ICourse | undefined) => {
+    if (!course || course.isLoadedContents) return Promise.resolve();
+    if (isPreview) return course.isLoadedOutline ? Promise.resolve() : loadCourseOutline(courseId);
+    return loadCourseModules(courseId);
+  };
 
   const fetchCourseData = async () => {
     if (!selectedUser) return;
@@ -32,8 +57,12 @@ export const Course = ({ courseId, isPreview }: IProps) => {
     if (!getCourseById(courseId)) await loadCourses();
     const course = getCourseById(courseId);
     await Promise.all([
-      course?.isLoadedContents ? Promise.resolve() : loadCourseModules(courseId),
+      // The preview renders titles, so it asks for the outline; the learning view needs the bodies.
+      loadModulesFor(course),
       selectedUser.isLoadedCompletedModules ? Promise.resolve() : loadCompletedModules(),
+      // The plans say whether a seat is needed and the seats say whether the learner holds one.
+      loadCoursePlans(courseId),
+      enrollmentsRequest.isLoaded ? Promise.resolve() : loadMyEnrollments(),
     ]);
     setSelectedCourseId(courseId);
     setIsLoading(false);
@@ -83,6 +112,23 @@ export const Course = ({ courseId, isPreview }: IProps) => {
         action={
           <Link href="/courses" isSecondary>
             Browse courses
+          </Link>
+        }
+      />
+    );
+  }
+  // A priced course opens only on a seat. The server strips lesson bodies and refuses tests and
+  // progress without one, so this is the honest screen rather than a hollow lesson.
+  const isPaidCourse = getPlansByCourseId(courseId).some((plan) => plan.amount > 0);
+  if (!isPreview && isPaidCourse && !getActiveEnrollment(courseId)) {
+    return (
+      <BlankState
+        className="py-24"
+        label="Enrol to open this course"
+        description={`${selectedCourse.name} is a paid course. Choose a plan on its page to unlock the lessons and tests.`}
+        action={
+          <Link href={`/courses/${courseId}/preview`} isSecondary>
+            See plans
           </Link>
         }
       />

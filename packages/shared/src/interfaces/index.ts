@@ -16,3 +16,5 @@ export * from './rich-text.interface';
 export * from './ai-test-paper.interface';
 export * from './ai-study-material.interface';
 export * from './ai-course.interface';
+export * from './enrollment.interface';
+export * from './order.interface';

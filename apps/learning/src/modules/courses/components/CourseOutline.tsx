@@ -4,7 +4,7 @@ import { BlankState } from '@components/others';
 import { ModuleContentType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { type ICourseModuleItem } from '@interfaces';
-import { BookOpenTextIcon, CheckIcon, ClipboardTextIcon, VideoIcon } from '@phosphor-icons/react';
+import { BookOpenTextIcon, CheckIcon, ClipboardTextIcon, LockSimpleIcon, VideoIcon } from '@phosphor-icons/react';
 import { type ICourseModule, useCourseLookups, useMaterialLookups, useTestPaperLookups } from '@stores';
 import { getPlural } from '@utils/helpers';
 
@@ -19,12 +19,15 @@ interface IProps {
   courseId: string;
   /** Wider spacing and module descriptions; the learning view keeps it dense. */
   isPreview: boolean;
+  /** A priced course without a seat: rows show a lock instead of their kind, and do not open. */
+  isLocked: boolean;
   onSelectItem: (item: ICourseModuleItem) => void;
 }
 
 interface IRowProps {
   item: ICourseModuleItem;
   isPreview: boolean;
+  isLocked: boolean;
   onSelect: (item: ICourseModuleItem) => void;
 }
 
@@ -35,19 +38,20 @@ const getMarkClass = (isCompleted: boolean, isSelected: boolean) => {
   return 'h-8 w-8 bg-muted text-muted-foreground';
 };
 
-const OutlineItem = ({ item, isPreview, onSelect }: IRowProps) => {
+const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
   const { getModuleContentType, isItemCompleted, isItemSelected } = useCourse();
   const type = getModuleContentType(item.material, item.testPaper);
   const isCompleted = isItemCompleted(item);
   const isSelected = !isPreview && isItemSelected(item);
   const details = item.material ?? item.testPaper;
-  const RowIcon = ITEM_ICONS[isCompleted ? ModuleContentType.COMPLETED : type];
+  const RowIcon = isLocked ? LockSimpleIcon : ITEM_ICONS[isCompleted ? ModuleContentType.COMPLETED : type];
 
   return (
     <button
       type="button"
       aria-current={isSelected ? 'true' : undefined}
-      onClick={() => onSelect(item)}
+      aria-disabled={isLocked || undefined}
+      onClick={() => !isLocked && onSelect(item)}
       className={cn(
         'flex w-full items-center gap-3 border-l-2 px-3 py-2.5 text-left transition-colors hover:bg-accent/60',
         isSelected ? 'border-primary bg-accent' : 'border-transparent',
@@ -109,7 +113,7 @@ const ModuleTitle = ({
   );
 };
 
-export const CourseOutline = ({ courseId, isPreview, onSelectItem }: IProps) => {
+export const CourseOutline = ({ courseId, isPreview, isLocked, onSelectItem }: IProps) => {
   const { getCourseModules, isItemCompleted } = useCourse();
   const { isLoading } = useCourseLookups();
   const { getMaterialsByIds } = useMaterialLookups();
@@ -164,6 +168,7 @@ export const CourseOutline = ({ courseId, isPreview, onSelectItem }: IProps) => 
                     key={item.material?._id ?? item.testPaper?._id}
                     item={item}
                     isPreview={isPreview}
+                    isLocked={isLocked}
                     onSelect={onSelectItem}
                   />
                 ))}

@@ -28,6 +28,7 @@ export const CLIENT_ONLY_KEYS = [
   'isLoadedFollowersCount',
   'isLoadedCompletedModules',
   'isLoadedContents',
+  'isLoadedOutline',
   'reactionsCount',
   'followersCount',
   'photoUrl',

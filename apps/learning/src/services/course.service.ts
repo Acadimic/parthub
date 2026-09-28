@@ -37,6 +37,10 @@ class CourseService {
     return resData;
   };
 
+  /** The syllabus with no lesson bodies or files — a fraction of the contents payload. */
+  getCourseModulesOutlineByCourseId = async (courseId: string) =>
+    callAuthApi<ICourseModuleContents[]>(`course/course/modules/outline/${courseId}`, API.GET);
+
   upsertCompletedModule = async (payload: ICompletedModuleFields) => {
     const url = 'course/completed/module/upsert';
     const resData = await callAuthApi(url, API.POST, payload);
