@@ -143,8 +143,9 @@ pnpm --filter @repo/ui <script>
   `query-with-mongoose` skill — Mongoose 9 pre-middleware is async, with no `next()`. Every unique
   index is partial on `_deleted: false`, so a soft-deleted row never blocks a re-create. Mongoose
   never replaces an existing index on its own, so a changed index definition is applied by calling
-  `GET sync-indexes` (`@Public()` on `AppController`) rather than at boot — no module has a
-  `syncIndexes()` hook, and the route has no preview mode.
+  `GET sync-indexes` (`@Private()` on `AppController`, so it needs the `api-key`, `app`, `timezone`
+  and `timezone-offset` headers) rather than at boot — no module has a `syncIndexes()` hook, and
+  the route has no preview mode.
 - **Errors:** `HttpExceptionFilter` renders Nest exceptions as `{ error: { code, message } }`, and
   `MongoDuplicateKeyFilter` turns a duplicate-key error into a 409 that names the colliding field.
 - **Auth:** Firebase Admin SDK validates JWTs via `passport-firebase-jwt`. Global `FirebaseAuthGuard` applied via `APP_GUARD`. Use `@Public()` decorator to exempt endpoints.

@@ -19,9 +19,9 @@ import { IRequestContext } from '../context/request-context.interface';
 /**
  * What a `@Public()` route is allowed to arrive without.
  *
- * `/`, `/health` and `/sync-indexes` are called by load balancers, uptime checks and a terminal —
- * none of which sends the headers an app does. SUPPORT is the stand-in because these are platform
- * and operations routes rather than anything a learner or teacher reaches.
+ * `/` and `/health` are called by load balancers and uptime checks, which send none of the headers
+ * an app does. SUPPORT is the stand-in because these are platform routes rather than anything a
+ * learner or teacher reaches.
  */
 const PUBLIC_HEADER_DEFAULTS: Record<string, string> = {
   app: Subdomain.SUPPORT,

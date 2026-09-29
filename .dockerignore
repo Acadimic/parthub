@@ -1,0 +1,15 @@
+.git
+.github
+.claude
+.course-agent
+.vscode
+data
+tools
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/.vercel
+**/.env*
+**/*.tsbuildinfo
+*.md

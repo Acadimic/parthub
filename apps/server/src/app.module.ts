@@ -46,6 +46,11 @@ import { ActivityLogCoreService } from './modules/activity-log/activity-log-core
 import { SecretsModule } from './secrets/secrets.module';
 import { SecretsService } from './secrets/secrets.service';
 
+const isLocalLogging = process.env.APP_ENV === 'local';
+
+/** pino level labels whose Cloud Logging severity is not simply the upper-cased label. */
+const CLOUD_LOGGING_SEVERITY: Record<string, string> = { trace: 'DEBUG', warn: 'WARNING', fatal: 'CRITICAL' };
+
 @Module({
   imports: [
     SecretsModule,
@@ -85,17 +90,28 @@ import { SecretsService } from './secrets/secrets.service';
             return { ...req, headers };
           },
         },
-        transport:
-          process.env.APP_ENV === 'local'
-            ? {
-                target: 'pino-pretty',
-                options: {
-                  colorize: true,
-                  levelFirst: true,
-                  singleLine: true,
-                },
-              }
-            : undefined,
+        // Cloud Logging reads the level from `severity`, the text from `message` and the time from
+        // an RFC 3339 `time`; pino's defaults are a numeric `level`, `msg` and epoch millis.
+        // pino-pretty keys on pino's defaults, so local output is left alone.
+        ...(isLocalLogging
+          ? {}
+          : {
+              messageKey: 'message',
+              timestamp: pino.stdTimeFunctions.isoTime,
+              formatters: {
+                level: (label: string) => ({ severity: CLOUD_LOGGING_SEVERITY[label] ?? label.toUpperCase() }),
+              },
+            }),
+        transport: isLocalLogging
+          ? {
+              target: 'pino-pretty',
+              options: {
+                colorize: true,
+                levelFirst: true,
+                singleLine: true,
+              },
+            }
+          : undefined,
       },
     }),
     PermissionModule,
