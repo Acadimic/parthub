@@ -159,7 +159,7 @@ export class CourseService {
    */
   async getPublishedCourses(): Promise<CourseDto[]> {
     return this.courseModel
-      .find({}, CATALOGUE_EXCLUDED_FIELDS)
+      .find({ isPublished: true, _deleted: { $ne: true } }, CATALOGUE_EXCLUDED_FIELDS)
       .sort({ publishedDate: -1 })
       .lean<CourseDocument[]>()
       .then((courses) => this.getTransformedCourses(courses));
