@@ -49,7 +49,8 @@ export const Instruction = () => {
       </ul>
       {isRichTextEmpty(instruction) ? null : (
         <div className="rounded-lg border border-border p-4 text-sm">
-          <RichTextView value={instruction} prefix="Paper instructions:" />
+          <p className="font-semibold">Paper instructions</p>
+          <RichTextView value={instruction} className="[&>:first-child]:mt-1" />
         </div>
       )}
     </div>
