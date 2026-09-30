@@ -128,7 +128,6 @@ deploy from, so the projects live in a Pro team.
    | Name                                                               | Value                                                                     | Projects |
    | ------------------------------------------------------------------ | ------------------------------------------------------------------------- | -------- |
    | `NEXT_PUBLIC_BASE_URL`                                             | Cloud Run URL after the first server deploy, later `https://api.<domain>` | all      |
-   | `NEXT_PUBLIC_FILE_URL`                                             | prod public bucket URL                                                    | all      |
    | `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase web config                                                       | all      |
    | `NEXT_PUBLIC_LEARN_URL`                                            | `https://learn.<domain>` (teaching's order links open here)               | teaching |
    | `NEXT_PUBLIC_PRIVATE_API_KEY`                                      | the same value as the server's `PRIVATE_API_KEY`                          | support  |
