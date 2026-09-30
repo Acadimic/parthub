@@ -2,7 +2,7 @@ import { type BatchDto, type MeetDto } from '@repo/shared/contracts';
 import {
   addDaysToDate,
   capitalize,
-  clearLocalStorage,
+  clearBrowserStorage,
   getEndOfWeek,
   getStartOfDay,
   setTime,
@@ -15,7 +15,7 @@ import { errorToast } from './toasts';
 import { WEEK_DAYS_INTEGER_MAPPINGS } from '@repo/shared/utils';
 
 export const logOut = () => {
-  clearLocalStorage();
+  clearBrowserStorage();
   signOut();
   window.location.replace('/sign-in');
 };

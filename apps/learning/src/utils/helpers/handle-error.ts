@@ -1,13 +1,13 @@
 import { type AxiosError } from 'axios';
-import { StorageKey } from '../../enums';
+import { Subdomain } from '../../enums';
 import { errorToast } from './toasts';
-import { clearLocalStorage } from '@repo/ui/lib';
+import { clearBrowserStorage, getToken } from '@repo/ui/lib';
 
 export const handleError = (errorData: AxiosError, shouldNotThrowError?: boolean): void => {
   // handle unauthentication 401 error
   let message = '';
-  if (errorData?.response?.status === 401 && localStorage.getItem(StorageKey.TOKEN)) {
-    clearLocalStorage();
+  if (errorData?.response?.status === 401 && getToken(Subdomain.LEARN)) {
+    clearBrowserStorage();
     window.location.replace('/sign-in');
     return;
   }

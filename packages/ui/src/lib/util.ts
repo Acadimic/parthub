@@ -1,5 +1,5 @@
 import { type IPosition, type IScoreRating } from '@repo/shared/interfaces';
-import { StorageKey } from '@repo/shared/enums';
+import { StorageKey, type Subdomain } from '@repo/shared/enums';
 import ObjectID from 'bson-objectid';
 import randomColor from 'randomcolor';
 import { type IColor } from '../types';
@@ -9,17 +9,27 @@ export const DEFAULT_TIME_STRING = '00:00:00';
 
 export const IS_WINDOW_UNDEFINED = typeof window === 'undefined';
 
-export const getToken = () => {
-  const token = IS_WINDOW_UNDEFINED ? '' : localStorage.getItem(StorageKey.TOKEN);
+// Per tab rather than per browser; a new tab gets a fresh token once Firebase restores the session.
+// Keyed by app and environment so two apps on one origin, or two environments, never share one.
+// NEXT_PUBLIC_NODE_ENV names the environment (`local`, …); Next only allows NODE_ENV to be
+// development, production or test, so it is the fallback rather than the source.
+const tokenKey = (app: Subdomain) =>
+  `${StorageKey.TOKEN}_${app}_${process.env.NEXT_PUBLIC_NODE_ENV ?? process.env.NODE_ENV}`;
+
+export const getToken = (app: Subdomain) => {
+  const token = IS_WINDOW_UNDEFINED ? '' : sessionStorage.getItem(tokenKey(app));
   return token;
 };
 
-export const setToken = (token: string) => {
-  if (!IS_WINDOW_UNDEFINED) localStorage.setItem(StorageKey.TOKEN, token);
+export const setToken = (app: Subdomain, token: string) => {
+  if (!IS_WINDOW_UNDEFINED) sessionStorage.setItem(tokenKey(app), token);
 };
 
-export const clearLocalStorage = () => {
-  if (!IS_WINDOW_UNDEFINED) localStorage.clear();
+/** Clears the app's stored preferences (every tab) and this tab's session token. */
+export const clearBrowserStorage = () => {
+  if (IS_WINDOW_UNDEFINED) return;
+  localStorage.clear();
+  sessionStorage.clear();
 };
 
 export const formatPhoneNumber = (phoneNumber: string): string => {

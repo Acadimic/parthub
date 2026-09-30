@@ -1,7 +1,7 @@
 import { ErrorBoundaryFallback, FullScreenLoader, InternetStatus } from '@repo/ui/app';
 import { useRequest } from '@repo/ui/hooks';
 import { ColorModeContext } from '@repo/ui/contexts';
-import { Layout, StorageKey, Theme } from '@enums';
+import { Layout, StorageKey, Theme, Subdomain } from '@enums';
 import { AuthLayout, SidebarLayout } from '@layouts';
 import { ToastContainer } from '@modules/toasts';
 import { useStandardStore } from '@stores';
@@ -114,7 +114,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
 
   useEffect(() => {
     if (!isReady) return;
-    const token = getToken();
+    const token = getToken(Subdomain.SUPPORT);
     const redirectUri = encodeURIComponent(window.location.pathname + window.location.search);
     if (token) {
       if (layout === Layout.AUTH) {
@@ -135,7 +135,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   // long enough for its `useLoadOnce` to fire a request with no token and toast a 401 over the
   // sign-in form. Hold the loader instead until the redirect lands.
   const isProtectedLayout = ![Layout.AUTH, Layout.ERROR, Layout.NONE].includes(layout as Layout);
-  const isRedirectingToSignIn = isProtectedLayout && !getToken();
+  const isRedirectingToSignIn = isProtectedLayout && !getToken(Subdomain.SUPPORT);
 
   return (
     <>

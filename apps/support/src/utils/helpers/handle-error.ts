@@ -11,7 +11,7 @@ export const handleError = (errorData: AxiosError, shouldNotThrowError?: boolean
   // handle unauthentication 401 error
   let message = '';
   // if (errorData?.response?.status === 401 && localStorage.getItem(StorageKey.TOKEN)) {
-  //   clearLocalStorage();
+  //   clearBrowserStorage();
   //   window.location.replace('/signin');
   //   return;
   // }

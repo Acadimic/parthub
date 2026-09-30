@@ -27,6 +27,7 @@ import {
 } from '@firebase/auth';
 
 import { type ICreateFirebaseUser } from '../../interfaces';
+import { Subdomain } from '../../enums';
 import { setToken } from '../helpers';
 
 const firebaseConfig = {
@@ -85,7 +86,7 @@ export const generateAndSetNewToken = async (): Promise<string> => {
   const user = getFirebaseUser();
   if (!user) return '';
   return user.getIdToken().then(async (idToken) => {
-    setToken(idToken);
+    setToken(Subdomain.SUPPORT, idToken);
     return idToken;
   });
 };

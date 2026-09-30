@@ -1,7 +1,7 @@
 import { ErrorBoundaryFallback, FullScreenLoader, InternetStatus } from '@repo/ui/app';
 import { useRequest } from '@repo/ui/hooks';
 import { ColorModeContext } from '@repo/ui/contexts';
-import { Layout, StorageKey, Theme } from '@enums';
+import { Layout, StorageKey, Theme, Subdomain } from '@enums';
 import { AuthLayout, PageLayout, PageNavigationLayout, PublicLayout, SidebarLayout, FocusLayout } from '@layouts';
 import { ToastContainer } from '@modules/toasts';
 import { useStandardStore, useUserLookups } from '@stores';
@@ -158,7 +158,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
 
   useEffect(() => {
     if (!isReady) return;
-    const token = getToken();
+    const token = getToken(Subdomain.LEARN);
     const redirectUri = encodeURIComponent(window.location.pathname + window.location.search);
     if (token) {
       if (layout === Layout.AUTH) {

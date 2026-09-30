@@ -27,7 +27,7 @@ const createAxiosInstance = (isUnAuth: boolean) => {
   axiosInstance.interceptors.request.use(async (config) => {
     await generateAndSetNewToken();
     try {
-      const token = getToken();
+      const token = getToken(Subdomain.LEARN);
       if (config.headers && token) {
         config.headers.Authorization = `Bearer ${token}`;
         config.headers.organization = localStorage.getItem(StorageKey.ORGANIZATION);

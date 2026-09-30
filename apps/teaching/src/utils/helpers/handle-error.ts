@@ -1,7 +1,7 @@
 import { type AxiosError } from 'axios';
-import { StorageKey } from '../../enums';
+import { Subdomain } from '../../enums';
 import { errorToast } from './toasts';
-import { clearLocalStorage } from '@repo/ui/lib';
+import { clearBrowserStorage, getToken } from '@repo/ui/lib';
 
 /** An error this helper has already shown the user, carrying the text it showed. */
 interface IToastedError extends Error {
@@ -27,8 +27,8 @@ export const reportError = (error: unknown, fallbackMessage: string): void => {
 export const handleError = (errorData: AxiosError, shouldNotThrowError?: boolean): void => {
   // handle unauthentication 401 error
   let message = '';
-  if (errorData?.response?.status === 401 && localStorage.getItem(StorageKey.TOKEN)) {
-    clearLocalStorage();
+  if (errorData?.response?.status === 401 && getToken(Subdomain.TEACH)) {
+    clearBrowserStorage();
     window.location.replace('/sign-in');
     return;
   }

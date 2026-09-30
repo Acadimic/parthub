@@ -25,7 +25,7 @@ const createAxiosInstance = (isUnAuth: boolean, url: string) => {
   axiosInstance.interceptors.request.use(async (config) => {
     await generateAndSetNewToken();
     try {
-      const token = getToken();
+      const token = getToken(Subdomain.SUPPORT);
       if (config.headers && token) {
         // `api-key` is what @Private() routes check, and every endpoint this app calls is now one.
         // It comes from a NEXT_PUBLIC_ variable, so it is inlined into the browser bundle and
