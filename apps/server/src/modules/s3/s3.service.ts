@@ -4,6 +4,9 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Secrets } from '@secrets/secrets';
 import { SecretsService } from '../../secrets/secrets.service';
 
+/** Two days: how long a signed download URL works, and how long the browser may cache its file. */
+const GET_URL_EXPIRY_SECONDS = 172800;
+
 @Injectable()
 export class S3Service {
   private s3Client: S3Client;
@@ -100,7 +103,10 @@ export class S3Service {
     const command = new GetObjectCommand({
       Bucket: this.bucketName,
       Key: resolved,
+      // Every upload gets a fresh key, so an object never changes and the browser may keep it for
+      // as long as this URL stays valid instead of asking S3 again.
+      ResponseCacheControl: `private, max-age=${GET_URL_EXPIRY_SECONDS}, immutable`,
     });
-    return getSignedUrl(this.s3Client, command, { expiresIn: 172800 });
+    return getSignedUrl(this.s3Client, command, { expiresIn: GET_URL_EXPIRY_SECONDS });
   }
 }

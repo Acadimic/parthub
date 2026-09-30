@@ -2,7 +2,7 @@ import { DocumentType } from '@enums';
 import { CommonService } from '@services';
 import { type AttachmentDto } from '@repo/shared/contracts';
 import { getFileExtension } from '@repo/shared/utils';
-import { errorToast, getObjectId, successToast } from '@utils/helpers';
+import { compressImage, createBatcher, errorToast, getObjectId, successToast } from '@utils/helpers';
 
 /**
  * The S3 object key a stored attachment URL points at.
@@ -13,10 +13,20 @@ import { errorToast, getObjectId, successToast } from '@utils/helpers';
  */
 const toObjectKey = (url: string): string => url.replace(/^https?:\/\/[^/]+\//, '');
 
+/** Module-level so every image on the page shares one batch; see `createBatcher`. */
+const signKey = createBatcher<string>(
+  async (keys) => {
+    const { data: presignedUrls } = await CommonService.getPreSignedGETUrls({ keys });
+    return new Map((presignedUrls ?? []).map((presignedUrl) => [presignedUrl.key, presignedUrl.url]));
+  },
+  { delayMs: 10, maxBatchSize: 100 },
+);
+
 export const useAttachment = () => {
-  const uploadFilesToS3 = async (_id: string, selectedFiles: File[]): Promise<AttachmentDto[]> => {
-    if (!selectedFiles.length) return [];
+  const uploadFilesToS3 = async (_id: string, originalFiles: File[]): Promise<AttachmentDto[]> => {
+    if (!originalFiles.length) return [];
     try {
+      const selectedFiles = await Promise.all(originalFiles.map(compressImage));
       // The key groups an entity's objects under its own id, so a standard's logo is findable from
       // the standard alone, and the minted half keeps two uploads of the same file apart.
       const files = selectedFiles.map((file: File) => ({
@@ -52,19 +62,9 @@ export const useAttachment = () => {
     }
   };
 
-  const getPresignedUrls = async (urls: string[]): Promise<string[]> => {
-    try {
-      const keys = urls.map(toObjectKey);
-      const { data: presignedUrls } = await CommonService.getPreSignedGETUrls({ keys });
-      const urlByKey = new Map((presignedUrls ?? []).map((presignedUrl) => [presignedUrl.key, presignedUrl.url]));
-      // Back into the caller's order, with the key as the join — an object the server could not
-      // sign is simply absent from the response rather than shifting every later entry.
-      return keys.map((key: string) => urlByKey.get(key) ?? '');
-    } catch (error) {
-      errorToast({ message: (error as Error)?.message || 'Error fetching presigned URL!' });
-      return [];
-    }
-  };
+  /** Signed URLs in the caller's order, `''` for one that could not be signed. */
+  const getPresignedUrls = async (urls: string[]): Promise<string[]> =>
+    Promise.all(urls.map(async (url) => (await signKey(toObjectKey(url))) ?? ''));
 
   return {
     uploadFilesToS3,

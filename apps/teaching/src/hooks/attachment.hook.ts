@@ -2,7 +2,7 @@ import { type AttachmentDto } from '@repo/shared/contracts';
 import { getFileExtension } from '@repo/shared/utils';
 import { DocumentType, StorageKey } from '@enums';
 import { CommonService } from '@services';
-import { errorToast, getObjectId, isPresignedUrlExpired } from '@utils/helpers';
+import { compressImage, createBatcher, errorToast, getObjectId, isPresignedUrlExpired } from '@utils/helpers';
 
 /**
  * The S3 object key a stored attachment URL points at.
@@ -12,6 +12,18 @@ import { errorToast, getObjectId, isPresignedUrlExpired } from '@utils/helpers';
  * is already a key has no scheme and comes back untouched, which is what an older row holds.
  */
 const toObjectKey = (url: string): string => url.replace(/^https?:\/\/[^/]+\//, '');
+
+/** Module-level so every image on the page shares one batch; see `createBatcher`. */
+const signKey = createBatcher<string>(
+  async (keys) => {
+    const { data: presignedUrls } = await CommonService.getPreSignedGETUrls({ keys });
+    return new Map((presignedUrls ?? []).map((presignedUrl) => [presignedUrl.key, presignedUrl.url]));
+  },
+  { delayMs: 10, maxBatchSize: 100 },
+);
+
+const readPresignedUrlCache = (): Record<string, string> =>
+  JSON.parse(localStorage.getItem(StorageKey.PRESIGNED_URLS) || '{}');
 
 /** Per-file upload progress, 0–100, by position in the staged list. */
 export type UploadProgress = Record<number, number>;
@@ -26,10 +38,11 @@ export const useAttachment = () => {
    */
   const uploadFilesToS3 = async (
     _id: string,
-    selectedFiles: File[],
+    originalFiles: File[],
     onProgress?: (index: number, percent: number) => void,
   ): Promise<AttachmentDto[]> => {
-    if (!selectedFiles.length) return [];
+    if (!originalFiles.length) return [];
+    const selectedFiles = await Promise.all(originalFiles.map(compressImage));
     // The key groups an entity's objects under its own id, so a course's images are findable from
     // the course alone, and the minted half keeps two uploads of the same file apart.
     const files = selectedFiles.map((file: File) => ({
@@ -83,34 +96,23 @@ export const useAttachment = () => {
     }
   };
 
+  /**
+   * Signed URLs in the caller's order, `''` for one that could not be signed. A cached URL that has
+   * not expired is reused, which also lets the browser serve the image from its own cache.
+   */
   const getPresignedUrls = async (urls: string[]): Promise<string[]> => {
-    let presignedUrlMaps = JSON.parse(localStorage.getItem(StorageKey.PRESIGNED_URLS) || '{}');
-    const existingPresignedUrls = urls
-      .map((url: string) => {
-        const existingPresignedUrl = presignedUrlMaps[url];
-        const isExpired = isPresignedUrlExpired(existingPresignedUrl);
-        if (existingPresignedUrl && !isExpired) return existingPresignedUrl;
-        return null;
-      })
-      .filter(Boolean);
-    if (existingPresignedUrls.length === urls.length) return existingPresignedUrls;
-    try {
-      const keys = urls.map(toObjectKey);
-      const { data: presignedUrls } = await CommonService.getPreSignedGETUrls({ keys });
-      const urlByKey = new Map((presignedUrls ?? []).map((presignedUrl) => [presignedUrl.key, presignedUrl.url]));
-      // Back into the caller's order, with the key as the join — an object the server could not
-      // sign is simply absent from the response rather than shifting every later entry.
-      const signedUrls = keys.map((key: string) => urlByKey.get(key) ?? '');
-      presignedUrlMaps = JSON.parse(localStorage.getItem(StorageKey.PRESIGNED_URLS) || '{}');
-      urls.forEach((url: string, index: number) => {
-        if (signedUrls[index]) presignedUrlMaps[url] = signedUrls[index];
-      });
-      localStorage.setItem(StorageKey.PRESIGNED_URLS, JSON.stringify(presignedUrlMaps));
-      return signedUrls;
-    } catch (error) {
-      errorToast({ message: (error as Error)?.message || 'Error fetching presigned URL!' });
-      return [];
-    }
+    const cache = readPresignedUrlCache();
+    const cached = urls.map((url) => (cache[url] && !isPresignedUrlExpired(cache[url]) ? cache[url] : ''));
+    if (cached.every(Boolean)) return cached;
+    const signed = await Promise.all(
+      urls.map(async (url, index) => cached[index] || ((await signKey(toObjectKey(url))) ?? '')),
+    );
+    const next = readPresignedUrlCache();
+    urls.forEach((url, index) => {
+      if (signed[index] && !cached[index]) next[url] = signed[index];
+    });
+    localStorage.setItem(StorageKey.PRESIGNED_URLS, JSON.stringify(next));
+    return signed;
   };
 
   return {
