@@ -1,6 +1,9 @@
+import { AccountSettingsType } from '../enums/app.enum';
 import { PermissionItem } from '../enums/permission.enum';
 import { DefaultRole } from '../enums/role.enum';
+import { StandardGroup } from '../enums/standard.enum';
 import { Subdomain } from '../enums/subdomain.enum';
+import { type IDynamicObject } from '../interfaces/common.interface';
 
 /**
  * Every permission the system defines.
@@ -40,4 +43,41 @@ export const DEFAULT_PERMISSIONS: Record<DefaultRole, PermissionItem[]> = {
     PermissionItem.MANAGE_FOLLOWER,
     PermissionItem.STUDENT,
   ],
+};
+
+/** Column key of a table's row-actions column. */
+export const ACTIONS = 'actions';
+
+/** The "everything" option of a filter select. */
+export const ALL = 'ALL';
+
+/** Display order of the standard groups; a group missing here sorts last. */
+export const STANDARD_GROUP_ORDER: IDynamicObject = {
+  [StandardGroup.CLASSES]: 100,
+  [StandardGroup.COMPETITIVE_EXAMS]: 500,
+  [StandardGroup.POST_GRADUATE_COMPETITIVE_EXAMS]: 1000,
+  [StandardGroup.GATE]: 1500,
+  [StandardGroup.GENERAL]: 1200,
+  [StandardGroup.OLYMPIADS]: 1300,
+  [StandardGroup.UNDERGRADUATE]: 1400,
+  [StandardGroup.POST_GRADUATE]: 1600,
+  [StandardGroup.LEARNING_TRACKS]: 1700,
+  [StandardGroup.LANGUAGES]: 1800,
+};
+
+export const AccountSettingsRoutes: Record<AccountSettingsType, string> = {
+  [AccountSettingsType.ACCOUNT_SETTINGS]: '/account-settings',
+  [AccountSettingsType.PROFILE]: '/account-settings/profile',
+  [AccountSettingsType.SECURITY]: '/account-settings/security',
+};
+
+/** `Date.getDay()` index to weekday name. */
+export const WEEK_DAYS_INTEGER_MAPPINGS: Record<string, string> = {
+  '0': 'Sunday',
+  '1': 'Monday',
+  '2': 'Tuesday',
+  '3': 'Wednesday',
+  '4': 'Thursday',
+  '5': 'Friday',
+  '6': 'Saturday',
 };

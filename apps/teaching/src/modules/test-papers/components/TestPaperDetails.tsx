@@ -15,7 +15,7 @@ import {
 } from '@phosphor-icons/react';
 import { TestPaperService } from '@services';
 import { useStandardLookups, useTestPaperStore } from '@stores';
-import { ALL } from '@utils/constants';
+import { ALL } from '@repo/shared/utils';
 import { reportError, successToast } from '@utils/helpers';
 import { useSetState } from 'react-use';
 import { MergeTestPapersModal } from './MergeTestPapersModal';

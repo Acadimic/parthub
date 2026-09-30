@@ -7,7 +7,7 @@ import { Badge } from '@repo/ui/core';
 import { type IColumnData } from '@interfaces';
 import { LinkSimpleIcon, PencilIcon, PlusIcon, TagIcon } from '@phosphor-icons/react';
 import { useCourseLookups, useOrderLookups, useUserLookups } from '@stores';
-import { ACTIONS } from '@utils/constants';
+import { ACTIONS } from '@repo/shared/utils';
 import { getStringFormattedDate } from '@utils/helpers';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';

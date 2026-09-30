@@ -1,7 +1,7 @@
 import { type StandardDto, type SubjectDto } from '@repo/shared/contracts';
 import { useAttachment } from '@hooks/attachment.hook';
 import { type ICourse, useCourseLookups, useStandardLookups } from '@stores';
-import { STANDARD_GROUP_ORDER } from '@utils/constants';
+import { STANDARD_GROUP_ORDER } from '@repo/shared/utils';
 import { useEffect, useState } from 'react';
 
 const UNGROUPED = 'other';

@@ -4,13 +4,12 @@ import {
   type StandardSubjectMappingDto,
   type SubjectDto,
 } from '@repo/shared/contracts';
-import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
+import { type IRequestSlice, createRequestSlice, STANDARD_GROUP_ORDER } from '@repo/shared/utils';
 import { type ISelectItem, type IStandardSubjectQuery } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { ChapterService, CommonService, StandardService, SubjectService } from '../services';
 import { useSelectorStore } from './selector.store';
-import { STANDARD_GROUP_ORDER } from '../utils/constants';
 import { getObjectId } from '../utils/helpers';
 
 /** The fetches this store tracks. `run`, `isLoading` and friends accept only these names. */

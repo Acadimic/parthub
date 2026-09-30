@@ -1,6 +1,6 @@
 import { BlankState } from '@components/others';
 import { type IColumnData } from '@interfaces';
-import { ACTIONS } from '@utils/constants';
+import { ACTIONS } from '@repo/shared/utils';
 import * as React from 'react';
 import { type TableComponents, TableVirtuoso } from 'react-virtuoso';
 import { Menu, Checkbox, Tooltip } from '@repo/ui/app';

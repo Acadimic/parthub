@@ -13,11 +13,12 @@ import {
   useTestPaperLookups,
   useTestPaperStore,
 } from '@stores';
-import { ALL, defaultMarkings } from '@utils/constants';
+import { defaultMarkings } from '@utils/constants';
 import { errorToast, getYears, reportError, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import { DefaultMarkingsModal } from './DefaultMarkingsModal';
+import { ALL } from '@repo/shared/utils';
 
 interface IProps {
   isOpen: boolean;

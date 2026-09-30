@@ -12,7 +12,7 @@ import {
 import { Button, SoftConfirmModal, StatTile } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
 import { useCourseStore, useStandardLookups } from '@stores';
-import { ALL } from '@utils/constants';
+import { ALL } from '@repo/shared/utils';
 import { reportError, successToast } from '@utils/helpers';
 import { useSetState } from 'react-use';
 

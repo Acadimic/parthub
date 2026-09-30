@@ -1,5 +1,5 @@
 import { cn } from '@repo/ui/lib';
-import { WEEK_DAYS_INTEGER_MAPPINGS } from '@utils/constants';
+import { WEEK_DAYS_INTEGER_MAPPINGS } from '@repo/shared/utils';
 
 interface IProps {
   value: number[];

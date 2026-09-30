@@ -7,7 +7,7 @@ import { Badge } from '@repo/ui/core';
 import { AccountType, Gender } from '@enums';
 import { type IColumnData, type ISelectItem } from '@interfaces';
 import { type IUser, useSelectorLookups, useStandardLookups, useUserLookups } from '@stores';
-import { ACTIONS } from '@utils/constants';
+import { ACTIONS } from '@repo/shared/utils';
 import { getStringFormattedDate, getStringFormattedDateWithTime, capitalizeFirstWord } from '@utils/helpers';
 import { useMemo } from 'react';
 import { useSetState } from 'react-use';

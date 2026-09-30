@@ -1,7 +1,7 @@
 import { BlankState } from '@components/others';
 import { type ISelectItem } from '@interfaces';
 import { CaretDownIcon, CheckIcon, MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react';
-import { ALL } from '@utils/constants';
+import { ALL } from '@repo/shared/utils';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { Label } from '@repo/ui/app';

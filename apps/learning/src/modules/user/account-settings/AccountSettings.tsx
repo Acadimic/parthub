@@ -6,7 +6,7 @@ import { type IMenuItem } from '@interfaces';
 import { ChartLineUpIcon, GearSixIcon, LockKeyIcon, UserIcon } from '@phosphor-icons/react';
 import { UserService } from '@services';
 import { useSelectedUser, useUserLookups } from '@stores';
-import { AccountSettingsRoutes } from '@utils/constants';
+import { AccountSettingsRoutes } from '@repo/shared/utils';
 import { successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useState } from 'react';

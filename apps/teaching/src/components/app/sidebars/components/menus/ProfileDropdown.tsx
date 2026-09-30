@@ -4,7 +4,7 @@ import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IMenuItem } from '@interfaces';
 import { CheckIcon, GearSixIcon, SignOutIcon } from '@phosphor-icons/react';
 import { type IUser, useSelectedUser, useSelectorLookups, useUserLookups } from '@stores';
-import { AccountSettingsRoutes } from '@utils/constants';
+import { AccountSettingsRoutes } from '@repo/shared/utils';
 import { capitalize, logOut } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import * as React from 'react';

@@ -4,7 +4,7 @@ import { CaretDownIcon, CaretUpDownIcon, CaretUpIcon, FunnelSimpleIcon, XIcon } 
 import { Button, Menu, RectangleSkeleton, Tooltip } from '@repo/ui/app';
 import { Checkbox, Popover } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
-import { ACTIONS } from '@utils/constants';
+import { ACTIONS } from '@repo/shared/utils';
 import * as React from 'react';
 import { type TableComponents, TableVirtuoso } from 'react-virtuoso';
 

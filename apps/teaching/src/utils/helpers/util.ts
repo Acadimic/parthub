@@ -9,9 +9,10 @@ import {
   splitCamelCase,
 } from '@repo/ui/lib';
 import { type IFullCalendarEvent, type ISelectItem } from '@interfaces';
-import { WEEK_DAYS_INTEGER_MAPPINGS, getMeetFrequencyMeta } from '../constants';
+import { getMeetFrequencyMeta } from '../constants';
 import { logOut as signOut } from '../firebase';
 import { errorToast } from './toasts';
+import { WEEK_DAYS_INTEGER_MAPPINGS } from '@repo/shared/utils';
 
 export const logOut = () => {
   clearLocalStorage();

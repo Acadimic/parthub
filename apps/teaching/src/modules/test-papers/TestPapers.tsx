@@ -15,7 +15,7 @@ import {
   TrashIcon,
 } from '@phosphor-icons/react';
 import { useSelectorStore, useStandardLookups, useTestPaperStore } from '@stores';
-import { ACTIONS, ALL } from '@utils/constants';
+import { ACTIONS, ALL } from '@repo/shared/utils';
 import { reportError, successToast, capitalizeFirstWord } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo } from 'react';

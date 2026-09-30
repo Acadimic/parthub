@@ -27,7 +27,7 @@ import {
   totalCount,
   validateAiPaper,
 } from '@utils/ai/test-paper-generator';
-import { ALL, defaultMarkings as APP_DEFAULT_MARKINGS } from '@utils/constants';
+import { defaultMarkings as APP_DEFAULT_MARKINGS } from '@utils/constants';
 import { errorToast, reportError, successToast } from '@utils/helpers';
 import { useEffect, useMemo, useState } from 'react';
 import { useSetState } from 'react-use';
@@ -35,6 +35,7 @@ import { type TestPaperDto } from '@repo/shared/contracts';
 import { AiBlueprintStep, type IPlanRow } from './AiBlueprintStep';
 import { AiPromptStep, AiSteps, type IAiStep } from '@components/app/ai';
 import { AiImportStep } from './AiImportStep';
+import { ALL } from '@repo/shared/utils';
 
 interface IProps {
   isOpen: boolean;

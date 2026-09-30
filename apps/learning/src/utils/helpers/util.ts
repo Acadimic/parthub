@@ -1,7 +1,7 @@
 import { type StandardDto } from '@repo/shared/contracts';
 import { capitalize, clearLocalStorage, splitCamelCase } from '@repo/ui/lib';
 import { type ISelectItem } from '@interfaces';
-import { WEEK_DAYS_INTEGER_MAPPINGS } from '../constants';
+import { WEEK_DAYS_INTEGER_MAPPINGS } from '@repo/shared/utils';
 import { logOut as signOut } from '../firebase';
 import { errorToast } from './toasts';
 

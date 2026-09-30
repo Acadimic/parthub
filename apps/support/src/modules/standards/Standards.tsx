@@ -9,7 +9,7 @@ import { useLoadOnce } from '@repo/ui/hooks';
 import { type IColumnData } from '@interfaces';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { useSelectorStore, useStandardStore } from '@stores';
-import { ACTIONS } from '@utils/constants';
+import { ACTIONS } from '@repo/shared/utils';
 import { errorToast, pluralize, successToast, titleCase } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo } from 'react';

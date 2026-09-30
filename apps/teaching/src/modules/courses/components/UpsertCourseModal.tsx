@@ -16,7 +16,7 @@ import {
   useSelectorLookups,
   useStandardLookups,
 } from '@stores';
-import { ALL } from '@utils/constants';
+import { ALL } from '@repo/shared/utils';
 import { errorToast, reportError, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
