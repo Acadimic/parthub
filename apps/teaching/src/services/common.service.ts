@@ -1,12 +1,13 @@
-import { type ILinkCheck, type InitialDataResponse, type IPresignedUrl } from '@repo/shared/contracts';
+import { type ILinkCheck, type IPresignedUrl, type PublicDataResponse } from '@repo/shared/contracts';
 import { type IPresignedGetUrlsRequest, type IPresignedPutUrlsRequest } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi, callDefaultApi } from './http.service';
 
 class CommonService {
-  getInitialData = async () => {
-    const url = 'common/initial-data';
-    const resData = await callAuthApi<InitialDataResponse>(url, API.GET);
+  /** The platform catalogue: standards, subjects and their mappings. */
+  getPublicData = async () => {
+    const url = 'common/public-data';
+    const resData = await callAuthApi<PublicDataResponse>(url, API.GET);
     return resData;
   };
 

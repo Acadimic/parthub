@@ -4,10 +4,10 @@ import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
 import { type ICourseFilter, type ICourseFilterOptions, type IGetCompletedModule } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { type CollectionType, PeriodType, CurrencyType } from '../enums';
+import { type CollectionType, PeriodType, CurrencyType, Subdomain } from '../enums';
 import { CourseService, MeetService, PlanService } from '../services';
 import { type ICourseModuleContents } from '../services/course.service';
-import { capitalize, getObjectId, onceInFlight } from '../utils/helpers';
+import { capitalize, getObjectId, getToken, onceInFlight, seedPresignedUrlCache } from '../utils/helpers';
 import { useMaterialStore } from './material.store';
 import { useMeetStore } from './meet.store';
 import { useSelectorStore } from './selector.store';
@@ -326,8 +326,11 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   loadCourses: () =>
     onceInFlight('courses', () =>
       get().run('courses', async () => {
-        const result = await CourseService.getPublishedCourses();
-        if (result?.data) get().addCourses(result.data);
+        // A visitor with no session cannot sign the covers, so the response carries them.
+        const result = await CourseService.getPublishedCourses({ signed: !getToken(Subdomain.LEARN) });
+        if (!result?.data) return;
+        seedPresignedUrlCache(result.data.presignedUrls);
+        get().addCourses(result.data.courses);
       }),
     ),
 

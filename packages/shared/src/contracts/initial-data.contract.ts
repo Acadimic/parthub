@@ -1,16 +1,16 @@
 import {
+  type CourseDto,
   type QuestionDto,
   type StandardDto,
   type StandardSubjectMappingDto,
   type SubjectDto,
   type TestPaperSectionDto,
 } from './entity.contract';
+import { type IPresignedUrl } from './presigned-url.contract';
 
 /**
- * The `common/initial-data` response — the reference data every app loads once after sign-in.
- *
- * All three apps consume it into their standard store, so the shape belongs here rather than being
- * re-derived per app. The endpoint is `GET common/initial-data` in the server's common module.
+ * The `common/private-initial-data` response — the platform catalogue the support app loads through
+ * the private API key. `PublicDataResponse` is the same data for every other caller.
  */
 export interface InitialDataResponse {
   standards: StandardDto[];
@@ -19,14 +19,28 @@ export interface InitialDataResponse {
 }
 
 /**
- * The `common/public-data` response — the reference data a visitor sees before signing in.
+ * The `common/public-data` response: the platform catalogue every app loads, signed in or not.
+ * `GET common/public-data` in the server's common module, `@Public()`.
  *
- * Standards and subjects only: the endpoint is `GET common/public-data` in the server's common
- * module, and it is `@Public()`.
+ * `presignedUrls` signs the standards' and subjects' logos for a caller that cannot sign them
+ * itself; it is filled only for `?signed=true`, which the learning app sends without a session,
+ * and is an empty array otherwise. Each `key` is the logo's stored address.
  */
 export interface PublicDataResponse {
   standards: StandardDto[];
   subjects: SubjectDto[];
+  mappings: StandardSubjectMappingDto[];
+  presignedUrls: IPresignedUrl[];
+}
+
+/**
+ * The `course/published` response: the public catalogue of published courses. `presignedUrls`
+ * signs every course image (its `attachments`) under the same `?signed=true` rule as
+ * `PublicDataResponse`.
+ */
+export interface PublishedCoursesResponse {
+  courses: CourseDto[];
+  presignedUrls: IPresignedUrl[];
 }
 
 /**

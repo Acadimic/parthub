@@ -1,6 +1,6 @@
 import { type AttachmentDto } from '@repo/shared/contracts';
 import { getFileExtension } from '@repo/shared/utils';
-import { DocumentType, StorageKey, Subdomain } from '@enums';
+import { DocumentType, Subdomain } from '@enums';
 import { CommonService } from '@services';
 import { useSelectorLookups } from '@stores';
 import {
@@ -9,8 +9,11 @@ import {
   errorToast,
   getObjectId,
   getToken,
-  isPresignedUrlExpired,
+  isSignedAndLive,
+  readPresignedUrlCache,
   successToast,
+  toAddress,
+  writePresignedUrlCache,
 } from '@utils/helpers';
 import { useState } from 'react';
 
@@ -21,7 +24,7 @@ import { useState } from 'react';
  * GET route signs object *keys* — it passes each one to `GetObjectCommand` unchanged. A value that
  * is already a key has no scheme and comes back untouched, which is what an older row holds.
  */
-const toObjectKey = (url: string): string => url.replace(/^https?:\/\/[^/]+\//, '');
+const toObjectKey = (url: string): string => toAddress(url).replace(/^https?:\/\/[^/]+\//, '');
 
 /** Module-level so every image on the page shares one batch; see `createBatcher`. */
 const signKey = createBatcher<string>(
@@ -31,9 +34,6 @@ const signKey = createBatcher<string>(
   },
   { delayMs: 10, maxBatchSize: 100 },
 );
-
-const readPresignedUrlCache = (): Record<string, string> =>
-  JSON.parse(localStorage.getItem(StorageKey.PRESIGNED_URLS) || '{}');
 
 export const useAttachment = () => {
   const selectorStore = useSelectorLookups();
@@ -82,11 +82,15 @@ export const useAttachment = () => {
 
   /**
    * Signed URLs in the caller's order, `''` for one that could not be signed. A cached URL that has
-   * not expired is reused, which also lets the browser serve the image from its own cache.
+   * not expired is used as it is — including those a public route sent for a visitor with no
+   * session — which also lets the browser serve the image from its own cache.
    */
   const getPresignedUrls = async (urls: string[]): Promise<string[]> => {
     const cache = readPresignedUrlCache();
-    const cached = urls.map((url) => (cache[url] && !isPresignedUrlExpired(cache[url]) ? cache[url] : ''));
+    const cached = urls.map((url) => {
+      const hit = cache[toAddress(url)];
+      return hit && isSignedAndLive(hit) ? hit : '';
+    });
     if (cached.every(Boolean)) return cached;
     // The course catalogue is public, so an anonymous visitor renders cards whose images cannot be
     // signed — `common/presigned-GET-urls` is authenticated. Bail quietly and let the caller show
@@ -97,9 +101,9 @@ export const useAttachment = () => {
     );
     const next = readPresignedUrlCache();
     urls.forEach((url, index) => {
-      if (signed[index] && !cached[index]) next[url] = signed[index];
+      if (signed[index] && !cached[index]) next[toAddress(url)] = signed[index];
     });
-    localStorage.setItem(StorageKey.PRESIGNED_URLS, JSON.stringify(next));
+    writePresignedUrlCache(next);
     return signed;
   };
 

@@ -2,9 +2,10 @@ import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Public } from '@decorators/public.decorator';
+import { S3Service } from '@modules/s3/s3.service';
 import { TestPaperResultService } from '@modules/test-paper/test-paper-result.service';
-import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common';
-import { type TestPaperSectionsResponse } from '@repo/shared/contracts';
+import { Controller, Get, Post, Body, Param, NotFoundException, ParseBoolPipe, Query } from '@nestjs/common';
+import { type PublishedCoursesResponse, type TestPaperSectionsResponse } from '@repo/shared/contracts';
 import { CourseService, type ICourseModuleContents } from './course.service';
 import { RequestContextService } from '../../context/request-context.service';
 import {
@@ -24,6 +25,7 @@ export class CourseController {
     private readonly courseService: CourseService,
     private readonly requestContextService: RequestContextService,
     private readonly testPaperResultService: TestPaperResultService,
+    private readonly s3Service: S3Service,
   ) {}
 
   @Post('upsert')
@@ -174,12 +176,19 @@ export class CourseController {
 
   /**
    * The public catalogue, across organizations. `@Public()` because the learning app's `/courses`
-   * and landing page are browsed by anonymous visitors, the same way `common/public-data` is.
+   * and landing page are browsed by anonymous visitors, the same way `common/public-data` is, and
+   * `?signed=true` likewise adds signed URLs for every course image. A course's `attachments` are
+   * only its images (lesson files belong to materials), so signing them all exposes nothing private.
    */
   @Public()
   @Get('published')
-  async getPublishedCourses(): Promise<CourseDto[]> {
-    return this.courseService.getPublishedCourses();
+  async getPublishedCourses(
+    @Query('signed', new ParseBoolPipe({ optional: true })) signed?: boolean,
+  ): Promise<PublishedCoursesResponse> {
+    const courses = await this.courseService.getPublishedCourses();
+    const images = courses.flatMap((course) => (course.attachments ?? []).map((attachment) => attachment.url));
+    const presignedUrls = signed ? await this.s3Service.presignStoredReferences(images) : [];
+    return { courses, presignedUrls };
   }
 
   // `published` above and `:id` here are both a single segment, so this one must stay last or it

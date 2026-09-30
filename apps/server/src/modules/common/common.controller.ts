@@ -1,13 +1,12 @@
 import { Private } from '@decorators';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Public } from '@decorators/public.decorator';
-import { Subdomains } from '@decorators/subdomains.decorator';
 import { StandardSubjectMappingService } from '@modules/standard/standard-subject-mapping.service';
 import { StandardService } from '@modules/standard/standard.service';
+import { S3Service } from '@modules/s3/s3.service';
 import { SubjectService } from '@modules/subject/subject.service';
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, ParseBoolPipe, Post, Query } from '@nestjs/common';
 import { type ILinkCheck, type IPresignedUrl } from '@repo/shared/contracts';
-import { Subdomain } from '@repo/shared/enums';
 import { RequestContextService } from '../../context/request-context.service';
 import { CommonService } from './common.service';
 import { DeleteObjectsDto, PresignedGetUrlsDto, PresignedPutUrlsDto } from './dto/presigned-url.dto';
@@ -26,17 +25,10 @@ export class CommonController {
     private readonly standardService: StandardService,
     private readonly standardSubjectMappingService: StandardSubjectMappingService,
     private readonly linkCheckService: LinkCheckService,
+    private readonly s3Service: S3Service,
   ) {}
 
-  /**
-   * The body behind both `initial-data` routes. Not a route itself — Nest only maps decorated
-   * public methods — so the authenticated and private twins cannot drift apart.
-   *
-   * Deliberately not annotated `Promise<InitialDataResponse>`: standardService, subjectService
-   * and standardSubjectMappingService return lean documents whose `_id` is an ObjectId, while the
-   * contract declares `string`. The wire shape is right (an ObjectId serializes to a string) but
-   * the three collections have no transform step, so the annotation cannot hold until they get one.
-   */
+  /** The catalogue behind `public-data` and `private-initial-data`, so the two cannot drift apart. */
   private async loadInitialData() {
     const [standards, subjects, mappings] = await Promise.all([
       this.standardService.getAll(),
@@ -56,26 +48,29 @@ export class CommonController {
     return this.requestContextService.getOrgId().toString();
   }
 
-  /** The reference data every app loads once an organization is selected. */
-  @Get('initial-data')
-  @Subdomains(Subdomain.SUPPORT, Subdomain.TEACH, Subdomain.LEARN)
-  @Permissions()
-  async getInitialData() {
-    return this.loadInitialData();
+  /**
+   * The platform catalogue — standards, subjects and their mappings — which every app loads, signed
+   * in or not; none of it is scoped to an organization. `?signed=true` adds the logos' signed URLs
+   * for a visitor with no session to sign them; otherwise `presignedUrls` is empty.
+   *
+   * Deliberately not annotated `Promise<PublicDataResponse>`: the three services return lean
+   * documents whose `_id` is an ObjectId, while the contract declares `string`. The wire shape is
+   * right (an ObjectId serializes to a string), but the collections have no transform step yet.
+   */
+  @Public()
+  @Get('public-data')
+  async getPublicData(@Query('signed', new ParseBoolPipe({ optional: true })) signed?: boolean) {
+    const { standards, subjects, mappings } = await this.loadInitialData();
+    const logos = [...standards, ...subjects].map((row) => row.logo);
+    const presignedUrls = signed ? await this.s3Service.presignStoredReferences(logos) : [];
+    return { standards, subjects, mappings, presignedUrls };
   }
 
-  /** The support dashboard's machine-to-machine twin of `initial-data`. */
+  /** The support dashboard's machine-to-machine twin of `public-data`, without the signed URLs. */
   @Private()
   @Get('private-initial-data')
   async privateGetInitialData() {
     return this.loadInitialData();
-  }
-
-  @Public()
-  @Get('public-data')
-  async getPublicData() {
-    const [standards, subjects] = await Promise.all([this.standardService.getAll(), this.subjectService.getAll()]);
-    return { standards, subjects };
   }
 
   @Post('presigned-PUT-urls')

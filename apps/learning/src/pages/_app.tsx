@@ -44,9 +44,8 @@ type ThemeMode = 'light' | 'dark';
 function App({ Component, pageProps }: AppPropsWithLayout) {
   const userStore = useUserLookups();
   const { loadLoggedInUsers } = userStore;
-  // `useRequest` rather than `useLoadOnce`: both loads are gated below, not simply on mount.
-  const initialData = useRequest(useStandardStore, 'initialData');
-  const loadInitialData = useStandardStore((state) => state.loadInitialData);
+  // `useRequest` rather than `useLoadOnce`: the load is gated below, not simply on mount.
+  const publicData = useRequest(useStandardStore, 'publicData');
   const loadPublicData = useStandardStore((state) => state.loadPublicData);
   const isLoadingLoggedInUsers = userStore.isLoading('loggedInUsers');
   const isLoadedLoggedInUsers = userStore.isLoaded('loggedInUsers');
@@ -182,17 +181,15 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     }
   }, [route, isReady]);
 
+  // After `isReady`, so a new tab's session is restored before the load decides whether to ask for
+  // signed logo URLs, which only a visitor without one needs.
   useEffect(() => {
-    if (isLoadedLoggedInUsers && useStandardStore.getState().shouldLoad('initialData')) loadInitialData();
-  }, [isLoadedLoggedInUsers, loadInitialData]);
-
-  useEffect(() => {
-    if (useStandardStore.getState().shouldLoad('publicData')) loadPublicData();
-  }, [loadPublicData]);
+    if (isReady && useStandardStore.getState().shouldLoad('publicData')) loadPublicData();
+  }, [isReady, loadPublicData]);
 
   // A spinner rather than nothing: the sign-in and reference loads take long enough on a cold start
   // that a blank page reads as broken.
-  if (!mode || !isReady || (isLoadedLoggedInUsers && !initialData.isLoaded)) return <FullScreenLoader loading />;
+  if (!mode || !isReady || (isLoadedLoggedInUsers && !publicData.isLoaded)) return <FullScreenLoader loading />;
 
   return (
     <>

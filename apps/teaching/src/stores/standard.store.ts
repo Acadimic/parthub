@@ -260,7 +260,7 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
 
   loadInitialData: () =>
     get().run('initialData', async () => {
-      const result = await CommonService.getInitialData();
+      const result = await CommonService.getPublicData();
       if (!result?.data) return;
       const { standards, subjects, mappings } = result.data;
       get().addStandards(standards);

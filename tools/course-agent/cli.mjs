@@ -157,7 +157,7 @@ const list = (value) => (value === undefined ? [] : [].concat(value).flatMap((it
 // ------------------------------------------------------------------------------------------------
 
 const loadWorkspace = async () => {
-  const [initial, chapters, testPapers] = await Promise.all([api('common/initial-data'), api('chapter/all'), api('test-paper/all')]);
+  const [initial, chapters, testPapers] = await Promise.all([api('common/public-data'), api('chapter/all'), api('test-paper/all')]);
   return { standards: initial.standards ?? [], subjects: initial.subjects ?? [], mappings: initial.mappings ?? [], chapters: chapters ?? [], testPapers: testPapers ?? [] };
 };
 

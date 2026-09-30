@@ -1,15 +1,12 @@
-import { type InitialDataResponse, type IPresignedUrl, type PublicDataResponse } from '@repo/shared/contracts';
+import { type IPresignedUrl, type PublicDataResponse } from '@repo/shared/contracts';
 import { type IPresignedGetUrlsRequest, type IPresignedPutUrlsRequest } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi, callDefaultApi, callUnAuthApi } from './http.service';
 
 class CommonService {
-  getInitialData = async () => {
-    return await callAuthApi<InitialDataResponse>('common/initial-data', API.GET);
-  };
-
-  getPublicData = async () => {
-    return await callUnAuthApi<PublicDataResponse>('common/public-data', API.GET);
+  /** The platform catalogue; `signed` also asks for the logos' signed URLs, for a visitor with no session. */
+  getPublicData = async ({ signed }: { signed: boolean }) => {
+    return await callUnAuthApi<PublicDataResponse>(`common/public-data${signed ? '?signed=true' : ''}`, API.GET);
   };
 
   getPreSignedPUTUrls = async (payload: IPresignedPutUrlsRequest) => {

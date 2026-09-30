@@ -8,10 +8,12 @@ import { type IRequestSlice, createRequestSlice, STANDARD_GROUP_ORDER } from '@r
 import { type ISelectItem, type IStandardSubjectQuery } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
+import { Subdomain } from '../enums';
 import { ChapterService, CommonService, StandardService, SubjectService } from '../services';
+import { getToken, seedPresignedUrlCache } from '../utils/helpers';
 
 /** The fetches this store tracks. */
-type StandardFetch = 'standards' | 'subjects' | 'mappings' | 'chapters' | 'initialData' | 'publicData';
+type StandardFetch = 'standards' | 'subjects' | 'mappings' | 'chapters' | 'publicData';
 
 export interface IStandardState extends IRequestSlice<StandardFetch> {
   standardMap: Record<string, StandardDto>;
@@ -46,9 +48,7 @@ export interface IStandardState extends IRequestSlice<StandardFetch> {
   loadSubjects: () => Promise<void>;
   loadStandardSubjectMappings: () => Promise<void>;
   loadStandardSubjectChapters: (query: IStandardSubjectQuery) => Promise<void>;
-  /** The reference data a signed-in learner needs, in one request. */
-  loadInitialData: () => Promise<void>;
-  /** The same, for a visitor who is not signed in. */
+  /** The platform catalogue — standards, subjects and mappings — in one request, signed in or not. */
   loadPublicData: () => Promise<void>;
   reset: () => void;
 }
@@ -71,7 +71,7 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
   subjectMap: {},
   chapterMap: {},
   mappingMap: {},
-  ...createRequestSlice(['standards', 'subjects', 'mappings', 'chapters', 'initialData', 'publicData'], set, get),
+  ...createRequestSlice(['standards', 'subjects', 'mappings', 'chapters', 'publicData'], set, get),
 
   getStandardById: (standardId) => (standardId ? get().standardMap[standardId] : undefined),
 
@@ -196,31 +196,16 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
       if (result?.data) get().addChapters(result.data);
     }),
 
-  loadInitialData: () =>
-    get().run('initialData', async () => {
-      const result = await CommonService.getInitialData();
+  loadPublicData: () =>
+    get().run('publicData', async () => {
+      // A visitor with no session cannot sign the logos, so the response carries them.
+      const result = await CommonService.getPublicData({ signed: !getToken(Subdomain.LEARN) });
       if (!result?.data) return;
-      const { standards, subjects, mappings } = result.data;
+      const { standards, subjects, mappings, presignedUrls } = result.data;
+      seedPresignedUrlCache(presignedUrls);
       get().addStandards(standards);
       get().addSubjects(subjects);
       get().addStandardSubjectMappings(mappings);
-      // This used to read `data.collaborators` and `data.studentStandardMaps`, which the endpoint
-      // has never sent: `undefined.forEach` threw, `isLoadedInitialData` never flipped, and `_app`
-      // returned null for the whole app. Neither collection has a route the LEARN subdomain can
-      // call -- `user/all` and `mapping/student-standard/all` are both TEACH-only -- so they are
-      // not loaded here. `courseStore.loadCourses` depends on the student-standard mappings and
-      // will return nothing until such a route exists.
-    }),
-
-  loadPublicData: () =>
-    get().run('publicData', async () => {
-      const result = await CommonService.getPublicData();
-      if (!result?.data) return;
-      // `common/public-data` returns standards and subjects only. This also read
-      // `standardSubjectMappings` and `courses`, which it does not send.
-      const { standards, subjects } = result.data;
-      get().addStandards(standards);
-      get().addSubjects(subjects);
     }),
 
   reset: () => {

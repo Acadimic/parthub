@@ -1,8 +1,13 @@
-import { type MeetDto } from '@repo/shared/contracts';
+import { type MeetDto, type PublishedCoursesResponse } from '@repo/shared/contracts';
 import { type ICompletedModuleFields } from '@repo/shared/interfaces';
 import { type ICourse, type ICourseModule, type IMaterial, type ITestPaper } from '@stores';
 import { API } from '../enums';
 import { callAuthApi, callUnAuthApi } from './http.service';
+
+/** `course/published`, with the courses typed as the store holds them. */
+interface IPublishedCoursesResponse extends Omit<PublishedCoursesResponse, 'courses'> {
+  courses: ICourse[];
+}
 
 /**
  * `course/course/modules/:courseId` returns each module with its test papers, materials and meets
@@ -24,10 +29,13 @@ class CourseService {
     return await callAuthApi(`course/${id}`, API.GET);
   };
 
-  /** The public catalogue: published courses from every organization. Needs no session. */
-  getPublishedCourses = async () => {
-    const url = 'course/published';
-    const resData = await callUnAuthApi<ICourse[]>(url, API.GET);
+  /**
+   * The public catalogue: published courses from every organization. Needs no session; `signed`
+   * also asks for the covers' signed URLs, for a visitor who has none.
+   */
+  getPublishedCourses = async ({ signed }: { signed: boolean }) => {
+    const url = `course/published${signed ? '?signed=true' : ''}`;
+    const resData = await callUnAuthApi<IPublishedCoursesResponse>(url, API.GET);
     return resData;
   };
 

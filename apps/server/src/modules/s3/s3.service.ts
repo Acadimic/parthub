@@ -1,6 +1,7 @@
 import { DeleteObjectsCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { ForbiddenException, Injectable } from '@nestjs/common';
+import { type IPresignedUrl } from '@repo/shared/contracts';
 import { Secrets } from '@secrets/secrets';
 import { SecretsService } from '../../secrets/secrets.service';
 
@@ -108,5 +109,36 @@ export class S3Service {
       ResponseCacheControl: `private, max-age=${GET_URL_EXPIRY_SECONDS}, immutable`,
     });
     return getSignedUrl(this.s3Client, command, { expiresIn: GET_URL_EXPIRY_SECONDS });
+  }
+
+  /**
+   * Signs a stored file reference (an object's address or key) for the public routes, whose caller
+   * has no organization, so a visitor who is not signed in can still load a course thumbnail or a
+   * standard's logo. Only an object in the private bucket's org folders is signed; anything else —
+   * an external link, the public bucket, a legacy key with no org folder — comes back unchanged.
+   */
+  async signStoredReference<T extends string>(value: T): Promise<T | string> {
+    if (!value) return value;
+    let key: string = value;
+    if (/^https?:\/\//.test(value)) {
+      const { host, pathname } = new URL(value);
+      const bucketHosts = [`${this.bucketName}.s3.${this.region}.amazonaws.com`, `${this.bucketName}.s3.amazonaws.com`];
+      if (!bucketHosts.includes(host)) return value;
+      key = decodeURIComponent(pathname.slice(1));
+    }
+    const relative = this.prefix && key.startsWith(this.prefix) ? key.slice(this.prefix.length) : key;
+    if (!relative.startsWith(`${S3Service.ORG_FOLDER}/`)) return value;
+    return this.getPreSignedGETUrl(key, '', false, true);
+  }
+
+  /**
+   * Signed URLs for the given stored references, keyed by the reference as stored. Anything
+   * `signStoredReference` leaves unchanged is left out, and a reference repeated across rows is
+   * signed once.
+   */
+  async presignStoredReferences(references: string[]): Promise<IPresignedUrl[]> {
+    const unique = [...new Set(references.filter((reference): reference is string => !!reference))];
+    const signed = await Promise.all(unique.map(async (key) => ({ key, url: await this.signStoredReference(key) })));
+    return signed.filter(({ key, url }) => url !== key);
   }
 }
