@@ -1,10 +1,11 @@
 import { type OrgDto, type StudentStandardMappingDto, type UserDto, type StandardDto } from '@repo/shared/contracts';
-import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
+import { type IRequestSlice, createRequestSlice, isProfileForApp } from '@repo/shared/utils';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { AccountType, DefaultRole, Gender, StorageKey } from '../enums';
 import { FollowerService, MappingService, UserService } from '../services';
 import { getObjectId } from '../utils/helpers';
+import { THIS_APP } from '../utils/constants';
 import { useSelectorStore } from './selector.store';
 import { useStandardStore } from './standard.store';
 
@@ -72,6 +73,19 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
     map[row._id] = row;
     return map;
   }, {});
+
+/**
+ * The org the other app asked for with `?org=`, when it sent the user here from its profile menu.
+ * Read once and removed from the address, so a reload or a shared link does not reapply it.
+ */
+const takeRequestedOrg = (): string | null => {
+  const url = new URL(window.location.href);
+  const org = url.searchParams.get('org');
+  if (!org) return null;
+  url.searchParams.delete('org');
+  window.history.replaceState(window.history.state, '', url.toString());
+  return org;
+};
 
 export const useUserStore = create<IUserState>()((set, get) => ({
   userMap: {},
@@ -219,8 +233,15 @@ export const useUserStore = create<IUserState>()((set, get) => ({
       get().addOrgs(orgs);
       set({ loggedInUserIds: users.map((user) => user._id) });
       const org = localStorage.getItem(StorageKey.ORGANIZATION);
-      const loggedInUsers = get().getLoggedInUsers();
-      const user = (org ? loggedInUsers.find((item) => item.org === org) : loggedInUsers[0]) ?? loggedInUsers[0];
+      // Only profiles that fit this app are selectable here; the rest open the other app.
+      const loggedInUsers = get()
+        .getLoggedInUsers()
+        .filter((item) => isProfileForApp(THIS_APP, item.permission));
+      const requested = takeRequestedOrg();
+      const user =
+        loggedInUsers.find((item) => item.org === requested) ??
+        loggedInUsers.find((item) => item.org === org) ??
+        loggedInUsers[0];
       // `org` is optional on a client row but always present on a fetched one. Selection is the
       // selector store's business; this store only supplies the user.
       if (user?.org) {

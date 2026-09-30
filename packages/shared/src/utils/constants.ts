@@ -22,6 +22,19 @@ export const DEFAULT_PERMISSION_BY_APP: Record<Subdomain, DefaultRole> = {
   [Subdomain.SUPPORT]: DefaultRole.ADMIN,
 };
 
+const PROFILE_FITS_APP: Record<Subdomain, (permission: DefaultRole) => boolean> = {
+  [Subdomain.LEARN]: (permission) => permission === DefaultRole.STUDENT,
+  [Subdomain.TEACH]: (permission) => permission !== DefaultRole.STUDENT,
+  [Subdomain.SUPPORT]: () => true,
+};
+
+/**
+ * Whether a membership with this permission belongs in this app: student rows in learning, staff
+ * rows in teaching. The server refuses a row that does not fit, and each app offers such a row as
+ * a link to the other app instead of switching to it.
+ */
+export const isProfileForApp = (app: Subdomain, permission: DefaultRole): boolean => PROFILE_FITS_APP[app](permission);
+
 export const DEFAULT_PERMISSIONS: Record<DefaultRole, PermissionItem[]> = {
   // Provisional: admin, teacher and assistant all hold every permission until the per-role split
   // is decided. The apps stay separated by @Subdomains regardless of this map — the learn-only

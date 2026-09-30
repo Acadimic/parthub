@@ -18,6 +18,7 @@ import {
   UpdateProfileDto,
   UserDto,
 } from '@repo/shared/validations';
+import { isProfileForApp } from '@repo/shared/utils';
 import { getObjectId } from '@utils/util';
 import { Model, Types } from 'mongoose';
 import { RequestContextService } from '../../context/request-context.service';
@@ -48,8 +49,9 @@ export class UserService {
   }
 
   /**
-   * First login of a Firebase account. Two paths:
-   * - Invited: the user joins the inviting org with the permission the invite named.
+   * The first login of a Firebase account in an app it has no fitting profile in. Two paths:
+   * - Invited, when the invite's role fits the app: the user joins the inviting org with the
+   *   permission the invite named.
    * - Self sign-up: a personal org is created and the user owns it with `payload.permission`,
    *   which `getRegisterPayload` derived from the app. It is used verbatim rather than re-derived
    *   here: the same value is already on the request context, and a second ternary disagreed with
@@ -58,11 +60,12 @@ export class UserService {
    * No roles are created: `permission` is stored on the user and the permission set comes from
    * `DEFAULT_PERMISSIONS`.
    */
-  async registerUser(payload: RegisterUserDto, subdomain?: Subdomain): Promise<UserDto> {
+  async registerUser(payload: RegisterUserDto, subdomain: Subdomain): Promise<UserDto> {
     const invite = await this.inviteService.getPendingInviteByEmail(payload.email);
     const timezone = this.requestContextService.getTimezone() || 'Asia/Kolkata';
 
-    if (invite) {
+    // An invite to a role this app cannot act as stays pending for the app it belongs to.
+    if (invite && isProfileForApp(subdomain, invite.permission)) {
       const org = invite.org.toString();
       const dbUser = await this.requestContextService.withOrg(org, () =>
         this.upsert({

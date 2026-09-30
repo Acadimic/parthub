@@ -1,5 +1,5 @@
 import { type OrgDto, type StudentStandardMappingDto, type UserDto, type StandardDto } from '@repo/shared/contracts';
-import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
+import { type IRequestSlice, createRequestSlice, isProfileForApp } from '@repo/shared/utils';
 import { type ISelectItem } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
@@ -7,6 +7,7 @@ import { AccountType, DefaultRole, Gender, StorageKey } from '../enums';
 import { MappingService, UserService } from '../services';
 import { capitalize } from '../utils/helpers';
 import { getObjectId } from '../utils/helpers';
+import { THIS_APP } from '../utils/constants';
 import { useSelectorStore } from './selector.store';
 import { useStandardStore } from './standard.store';
 
@@ -82,6 +83,28 @@ const toUserItem = (user: IUser): ISelectItem => ({
   group: `${user.permission}s`,
 });
 
+/**
+ * The members of the selected org. The map also holds the signed-in person's own rows in their
+ * other orgs, one per profile, and those are not this org's students or collaborators.
+ */
+const getSelectedOrgUsers = (users: IUser[]): IUser[] => {
+  const org = useSelectorStore.getState().selectedOrgId;
+  return users.filter((user) => user.org === org);
+};
+
+/**
+ * The org the other app asked for with `?org=`, when it sent the user here from its profile menu.
+ * Read once and removed from the address, so a reload or a shared link does not reapply it.
+ */
+const takeRequestedOrg = (): string | null => {
+  const url = new URL(window.location.href);
+  const org = url.searchParams.get('org');
+  if (!org) return null;
+  url.searchParams.delete('org');
+  window.history.replaceState(window.history.state, '', url.toString());
+  return org;
+};
+
 export const useUserStore = create<IUserState>()((set, get) => ({
   userMap: {},
   orgMap: {},
@@ -102,12 +125,9 @@ export const useUserStore = create<IUserState>()((set, get) => ({
 
   getLoggedInUsers: () => get().getUsersByIds(get().loggedInUserIds),
 
-  getStudents: () => get().getUsers().filter(isStudentUser),
+  getStudents: () => getSelectedOrgUsers(get().getUsers()).filter(isStudentUser),
 
-  getCollaborators: () =>
-    get()
-      .getUsers()
-      .filter((user) => !isStudentUser(user)),
+  getCollaborators: () => getSelectedOrgUsers(get().getUsers()).filter((user) => !isStudentUser(user)),
 
   getStudentItems: () => get().getStudents().map(toUserItem),
 
@@ -213,8 +233,15 @@ export const useUserStore = create<IUserState>()((set, get) => ({
       get().addOrgs(orgs);
       set({ loggedInUserIds: users.map((user) => user._id) });
       const org = localStorage.getItem(StorageKey.ORGANIZATION);
-      const loggedInUsers = get().getLoggedInUsers();
-      const user = (org ? loggedInUsers.find((item) => item.org === org) : loggedInUsers[0]) ?? loggedInUsers[0];
+      // Only profiles that fit this app are selectable here; the rest open the other app.
+      const loggedInUsers = get()
+        .getLoggedInUsers()
+        .filter((item) => isProfileForApp(THIS_APP, item.permission));
+      const requested = takeRequestedOrg();
+      const user =
+        loggedInUsers.find((item) => item.org === requested) ??
+        loggedInUsers.find((item) => item.org === org) ??
+        loggedInUsers[0];
       // Selection is the selector store's business; this store only supplies the user.
       // `org` is optional on the DTO (a write body never sends the ownership fields) but is
       // always present on a fetched one.

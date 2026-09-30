@@ -4,9 +4,17 @@ import { FirebaseUserDto } from '@modules/firebase/firebase.dto';
 import { FirebaseService } from '@modules/firebase/firebase.service';
 import { UserDocument } from '@modules/user/user.schema';
 import { UserService } from '@modules/user/user.service';
-import { BadRequestException, CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AccessType, DefaultRole, Subdomain } from '@repo/shared/enums';
+import { isProfileForApp } from '@repo/shared/utils';
 import { RegisterUserDto, UserDto } from '@repo/shared/validations';
 import { Secrets } from '@secrets/secrets';
 import { SecretsService } from '@secrets/secrets.service';
@@ -143,8 +151,9 @@ export class AuthGuard implements CanActivate {
    * environment — one setting that stays correct in dev and production beats two that must be
    * looked up and kept in step.
    *
-   * The account is expected to belong to exactly one organization; `getUsersByEmail` returns a row
-   * per org, and the first is taken.
+   * `getUsersByEmail` returns a row per org, in no set order, and signing the account in to the
+   * learning app adds a student row in an org of its own. So the oldest staff row is taken: the
+   * org every private write has always gone to.
    */
   private privateIdentity?: { userId: string; orgId: string; permission: DefaultRole };
 
@@ -155,7 +164,9 @@ export class AuthGuard implements CanActivate {
     if (!email) throw new UnauthorizedException('Private API service account is not configured.');
 
     const users = await this.userService.getUsersByEmail(email);
-    const user = users?.[0];
+    const [user] = users
+      .filter((row) => isProfileForApp(Subdomain.TEACH, row.permission))
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     if (!user) throw new UnauthorizedException(`Private API service account ${email} was not found.`);
 
     this.privateIdentity = { userId: String(user._id), orgId: String(user.org), permission: user.permission };
@@ -185,10 +196,13 @@ export class AuthGuard implements CanActivate {
     const timezoneOffset = this.getRequiredHeader(context, 'timezone-offset');
     const { url } = request;
     const subdomain = this.getApp(context);
-    const org = this.getHeaderValue(context, 'organization') as string;
+    const isInitialLogin = url.includes(INITIAL_LOGIN_DATA_URL);
+    // The first call picks the profile itself, so a stored org from an earlier session, possibly
+    // one belonging to the other app, cannot steer it.
+    const org = isInitialLogin ? '' : (this.getHeaderValue(context, 'organization') as string);
     // 400, not 401: the session is fine, the request just came before the client chose an org, and
     // the apps treat any 401 as an expired session and sign the user out.
-    if (!org && !url.includes(INITIAL_LOGIN_DATA_URL)) {
+    if (!org && !isInitialLogin) {
       throw new BadRequestException('Organization is required!');
     }
     const firebaseUser = await this.validateAndGetFirebaseUser(context);
@@ -196,9 +210,15 @@ export class AuthGuard implements CanActivate {
     if (!firebaseUser.uid) throw new UnauthorizedException('Firebase uid not found!');
     let user = org
       ? await this.userService.getUserByOrgIdAndUid({ uid: firebaseUser.uid, org })
-      : (await this.userService.getUsersByUid(firebaseUser.uid))[0];
+      : this.pickProfileForApp(await this.userService.getUsersByUid(firebaseUser.uid), subdomain);
     if (org && !user) throw new UnauthorizedException(`DB user not found for org id: ${org}`);
-    if (!user && url.includes(INITIAL_LOGIN_DATA_URL)) {
+    // 403 rather than 401, for the same reason as above: the session is valid, the profile is not
+    // one this app may act as.
+    if (user && !isProfileForApp(subdomain, user.permission)) {
+      throw new ForbiddenException(`This profile opens in the other app, not ${subdomain}.`);
+    }
+    // No profile fits this app yet: the person gets their own org here, as on a first sign-up.
+    if (!user && isInitialLogin) {
       const payload = getRegisterPayload(subdomain, firebaseUser);
       this.setRequestContext(payload, { apiRoute: url, accessType, subdomain, timezone, timezoneOffset });
       user = await this.userService.registerUser(payload, subdomain);
@@ -210,6 +230,12 @@ export class AuthGuard implements CanActivate {
     if (user.isInactive) throw new UnauthorizedException('Your access to this organization has been revoked.');
     this.userService.updateLastActive(String(user._id), new Date());
     return this.userService.transformUser(user as UserDocument);
+  }
+
+  /** The profile a first call lands in: one that fits the app, an active one if there is. */
+  private pickProfileForApp(users: UserDto[], app: Subdomain): UserDto | undefined {
+    const fitting = users.filter((user) => isProfileForApp(app, user.permission));
+    return fitting.find((user) => !user.isInactive) ?? fitting[0];
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

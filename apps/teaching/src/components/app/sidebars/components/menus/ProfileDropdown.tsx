@@ -2,9 +2,10 @@ import { Avatar } from '@components/app/avatars';
 import { AccountSettingsType } from '@enums';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IMenuItem } from '@interfaces';
-import { CheckIcon, GearSixIcon, SignOutIcon } from '@phosphor-icons/react';
+import { ArrowSquareOutIcon, CheckIcon, GearSixIcon, SignOutIcon } from '@phosphor-icons/react';
 import { type IUser, useSelectedUser, useSelectorLookups, useUserLookups } from '@stores';
-import { AccountSettingsRoutes } from '@repo/shared/utils';
+import { AccountSettingsRoutes, isProfileForApp } from '@repo/shared/utils';
+import { OTHER_APP, THIS_APP } from '@utils/constants';
 import { capitalize, logOut } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import * as React from 'react';
@@ -45,6 +46,10 @@ export const ProfileDropdown = () => {
 
   const handleSwitchAccount = (user: IUser) => {
     if (!user?.org || !selectedUser || user._id === selectedUser._id) return;
+    if (!isProfileForApp(THIS_APP, user.permission)) {
+      window.location.assign(`${OTHER_APP.url}/?org=${user.org}`);
+      return;
+    }
     selectUserAndOrg(user._id, user.org);
     window.location.reload();
   };
@@ -84,6 +89,7 @@ export const ProfileDropdown = () => {
                   const org = getOrgById(user.org ?? '');
                   if (!org) return null;
                   const isSelected = selectedUser._id === user._id;
+                  const isElsewhere = !isProfileForApp(THIS_APP, user.permission);
                   return (
                     <div
                       key={user._id}
@@ -98,13 +104,20 @@ export const ProfileDropdown = () => {
                             <div className="pr-1">{capitalize(org.orgType ?? '')}</div>
                             <div className="px-1 capitalize">{user.permission}</div>
                           </div>
+                          {isElsewhere ? (
+                            <div className="text-xs text-muted-foreground">Opens in {OTHER_APP.name}</div>
+                          ) : null}
                         </div>
                       </div>
-                      <CheckIcon
-                        weight="bold"
-                        size={16}
-                        className={`${isSelected ? 'text-primary' : 'text-transparent'}`}
-                      />
+                      {isElsewhere ? (
+                        <ArrowSquareOutIcon size={16} className="text-muted-foreground" />
+                      ) : (
+                        <CheckIcon
+                          weight="bold"
+                          size={16}
+                          className={`${isSelected ? 'text-primary' : 'text-transparent'}`}
+                        />
+                      )}
                     </div>
                   );
                 })}
