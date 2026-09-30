@@ -1,18 +1,14 @@
-import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
 import { Public } from '@decorators/public.decorator';
-import { PermissionService } from '@modules/permissions/permission.service';
+import { Subdomains } from '@decorators/subdomains.decorator';
 import { Body, Controller, Get, Param, ParseArrayPipe, Post } from '@nestjs/common';
 import { PermissionItem, Subdomain } from '@repo/shared/enums';
-import { InviteIdDto, InviteLookupDto, InviteDto, InviteUserDto } from '@repo/shared/validations';
+import { InviteDto, InviteIdDto, InviteLookupDto, InviteUserDto } from '@repo/shared/validations';
 import { InviteService } from './invite.service';
 
 @Controller('invite')
 export class InviteController {
-  constructor(
-    private readonly inviteService: InviteService,
-    private readonly permissionService: PermissionService,
-  ) {}
+  constructor(private readonly inviteService: InviteService) {}
 
   @Public()
   @Get('/lookup/:inviteId')

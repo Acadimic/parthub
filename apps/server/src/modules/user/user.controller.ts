@@ -1,7 +1,6 @@
-import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
+import { Subdomains } from '@decorators/subdomains.decorator';
 import { User } from '@decorators/user.decorator';
-import { PermissionService } from '@modules/permissions/permission.service';
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import {
@@ -18,10 +17,7 @@ import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-    private readonly permissionService: PermissionService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   /** First call after Firebase login; registers the account on first use (see UserService.registerUser). */
   @Get(INITIAL_LOGIN_DATA_URL)

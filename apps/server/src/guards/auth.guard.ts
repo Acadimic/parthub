@@ -4,7 +4,7 @@ import { FirebaseUserDto } from '@modules/firebase/firebase.dto';
 import { FirebaseService } from '@modules/firebase/firebase.service';
 import { UserDocument } from '@modules/user/user.schema';
 import { UserService } from '@modules/user/user.service';
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AccessType, DefaultRole, Subdomain } from '@repo/shared/enums';
 import { RegisterUserDto, UserDto } from '@repo/shared/validations';
@@ -186,8 +186,10 @@ export class AuthGuard implements CanActivate {
     const { url } = request;
     const subdomain = this.getApp(context);
     const org = this.getHeaderValue(context, 'organization') as string;
+    // 400, not 401: the session is fine, the request just came before the client chose an org, and
+    // the apps treat any 401 as an expired session and sign the user out.
     if (!org && !url.includes(INITIAL_LOGIN_DATA_URL)) {
-      throw new UnauthorizedException('Organization is required!');
+      throw new BadRequestException('Organization is required!');
     }
     const firebaseUser = await this.validateAndGetFirebaseUser(context);
     if (!firebaseUser.email) throw new UnauthorizedException('Firebase email not found!');

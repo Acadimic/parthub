@@ -1,6 +1,5 @@
-import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
-import { PermissionService } from '@modules/permissions/permission.service';
+import { Subdomains } from '@decorators/subdomains.decorator';
 import { Body, Controller, Post } from '@nestjs/common';
 import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import { OrgDto, UpdateOrgDto } from '@repo/shared/validations';
@@ -11,7 +10,6 @@ import { OrgService } from './org.service';
 export class OrgController {
   constructor(
     private readonly orgService: OrgService,
-    private readonly permissionService: PermissionService,
     private readonly requestContextService: RequestContextService,
   ) {}
 

@@ -59,6 +59,15 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   const { route, push } = useRouter();
   const { layout } = Component;
   const [isReady, setIsReady] = useState(false);
+  // A signed-in request without an organization is refused, and a page's effects run before this
+  // component's, so with a session the page waits until the login data has picked the org. AUTH
+  // pages are left alone: they redirect instead of loading it, so the wait would never end.
+  const isAwaitingOrganization =
+    isReady &&
+    !!getToken(Subdomain.TEACH) &&
+    layout !== Layout.AUTH &&
+    !isLoadedLoggedInUsers &&
+    !userStore.getError('loggedInUsers');
   const [mode, setMode] = useState<ThemeMode>();
 
   /**
@@ -167,7 +176,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
       </Head>
       <ColorModeContext.Provider value={colorMode}>
         <MathJaxContext config={config}>
-          {isLoadingLoggedInUsers || !isReady ? (
+          {isLoadingLoggedInUsers || !isReady || isAwaitingOrganization ? (
             <FullScreenLoader loading={true} />
           ) : (
             <>
