@@ -56,7 +56,7 @@ export const Link = ({
           {label}
         </span>
       ) : null}
-      {isLoading && !hideLoadingIcon ? <Spinner /> : null}
+      {isLoading && !hideLoadingIcon ? <Spinner className="border-current border-t-transparent" /> : null}
       {!isLoading && rightsection ? <span className="flex items-center">{rightsection}</span> : null}
     </NextLink>
   );

@@ -67,7 +67,8 @@ const TrailingSlot = ({
   if (isLoading && !hideLoadingIcon) {
     return (
       <div className={`${isFull && isLoading ? 'flex-1 flex justify-center' : ''}`}>
-        <Spinner />
+        {/* The spinner takes the button's text colour: a primary spinner on a primary fill is invisible. */}
+        <Spinner className="border-current border-t-transparent" />
       </div>
     );
   }
