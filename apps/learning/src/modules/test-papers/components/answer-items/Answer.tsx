@@ -31,7 +31,8 @@ export const Answer = ({ correctOptionIndexes, solution, answers, isAnswer }: IP
       </div>
       {solution ? (
         <div className="mt-3 border-t border-success/20 pt-3 text-sm">
-          <RichTextView value={solution} prefix="Solution:" />
+          <p className="font-semibold">Solution</p>
+          <RichTextView value={solution} className="[&>:first-child]:mt-1" />
         </div>
       ) : null}
     </div>
