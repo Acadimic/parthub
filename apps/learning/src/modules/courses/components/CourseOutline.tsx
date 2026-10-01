@@ -115,7 +115,7 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
           >
             {type}
           </span>
-          <span aria-hidden className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+          <span aria-hidden className="h-[3px] w-[3px] rounded-full bg-muted-foreground/50" />
           {details?.durationMins ?? 0} min
         </span>
       </span>
