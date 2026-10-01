@@ -1,11 +1,11 @@
 import { type QuestionDto } from '@repo/shared/contracts';
 import { BlankState } from '@components/others';
-import { ArrowsInLineVerticalIcon, ArrowsOutLineVerticalIcon, PlusIcon, SparkleIcon } from '@phosphor-icons/react';
-import { Button, Menu, SplitButton } from '@repo/ui/app';
+import { PlusIcon, SparkleIcon } from '@phosphor-icons/react';
+import { Button, Menu, SplitButton, ExpandAllButton } from '@repo/ui/app';
+import { useExpandedIds } from '@repo/ui/hooks';
 import { Badge } from '@repo/ui/core';
 import { type IMenuItem } from '@interfaces';
 import { type ITestPaperSection, useSectionQuestions } from '@stores';
-import { useCallback, useState } from 'react';
 import { QuestionCard } from './QuestionCard';
 
 interface IProps {
@@ -35,20 +35,7 @@ export const SectionCard = ({
   onDeleteQuestion,
 }: IProps) => {
   const questions = useSectionQuestions(section._id);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const allExpanded = questions.length > 0 && questions.every((question) => expanded.has(question._id));
-
-  // Stable, because `QuestionCard` is memoised.
-  const toggle = useCallback((id: string) => {
-    setExpanded((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const toggleAll = () => setExpanded(allExpanded ? new Set() : new Set(questions.map((question) => question._id)));
+  const { isExpanded, isAllExpanded, toggle, toggleAll } = useExpandedIds(questions.map((question) => question._id));
 
   const addItems: IMenuItem[] = [
     { label: 'Add question', onClick: onAddQuestion, icon: <PlusIcon weight="bold" className="h-4 w-4" /> },
@@ -71,20 +58,7 @@ export const SectionCard = ({
           </Badge>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          {questions.length > 1 ? (
-            <Button
-              isSubtle
-              leftsection={
-                allExpanded ? (
-                  <ArrowsInLineVerticalIcon className="h-4 w-4" />
-                ) : (
-                  <ArrowsOutLineVerticalIcon className="h-4 w-4" />
-                )
-              }
-              text={allExpanded ? 'Collapse all' : 'Expand all'}
-              onClick={toggleAll}
-            />
-          ) : null}
+          {questions.length > 1 ? <ExpandAllButton isAllExpanded={isAllExpanded} onClick={toggleAll} /> : null}
           <SplitButton menuItems={addItems} text="Add question" onClick={onAddQuestion} />
           <Menu menuItems={sectionMenuItems} className="px-1" />
         </div>
@@ -97,7 +71,7 @@ export const SectionCard = ({
               key={question._id}
               question={question}
               number={index + 1}
-              isExpanded={expanded.has(question._id)}
+              isExpanded={isExpanded(question._id)}
               onToggle={toggle}
               onEdit={onEditQuestion}
               onDelete={onDeleteQuestion}

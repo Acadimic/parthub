@@ -1,8 +1,9 @@
 import { type CourseDto, type MeetDto } from '@repo/shared/contracts';
 import { MeetItem } from '@components/common';
 import { BlankState } from '@components/others';
-import { ArrowsInLineVerticalIcon, ArrowsOutLineVerticalIcon, PlusIcon } from '@phosphor-icons/react';
-import { Button, Card, SoftConfirmModal } from '@repo/ui/app';
+import { PlusIcon } from '@phosphor-icons/react';
+import { Button, Card, SoftConfirmModal, ExpandAllButton } from '@repo/ui/app';
+import { useExpandedIds } from '@repo/ui/hooks';
 import { Badge } from '@repo/ui/core';
 import {
   type ICourseModule,
@@ -16,7 +17,7 @@ import {
 } from '@stores';
 import { reportError, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useSetState } from 'react-use';
 import {
   CourseHeader,
@@ -112,22 +113,13 @@ export const Course = ({ courseId }: IProps) => {
     isOpenReview: false,
     isDeletingModule: false,
   });
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const courseIds = moduleCourseIds(selectedCourse);
   const courseModules = courseIds.flatMap((id) => getCourseModulesByCourseId(id));
+  const { isExpanded, isAllExpanded, toggle, toggleAll } = useExpandedIds(
+    courseModules.map((courseModule) => courseModule._id),
+  );
   const meets = meetStore.getMeetsByIds(selectedCourse?.meets ?? []);
-  const allExpanded = courseModules.length > 0 && courseModules.every((courseModule) => expanded.has(courseModule._id));
-
-  const toggle = (id: string) =>
-    setExpanded((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  const toggleAll = () =>
-    setExpanded(allExpanded ? new Set() : new Set(courseModules.map((courseModule) => courseModule._id)));
 
   const onOpenUpsertCourseModuleModal = () => {
     // Select the draft the store just made: without this the drawer opens on nothing and the blank
@@ -225,20 +217,7 @@ export const Course = ({ courseId }: IProps) => {
             ) : null}
           </div>
           <div className="ml-auto flex items-center gap-2">
-            {courseModules.length > 1 ? (
-              <Button
-                isSubtle
-                leftsection={
-                  allExpanded ? (
-                    <ArrowsInLineVerticalIcon className="h-4 w-4" />
-                  ) : (
-                    <ArrowsOutLineVerticalIcon className="h-4 w-4" />
-                  )
-                }
-                text={allExpanded ? 'Collapse all' : 'Expand all'}
-                onClick={toggleAll}
-              />
-            ) : null}
+            {courseModules.length > 1 ? <ExpandAllButton isAllExpanded={isAllExpanded} onClick={toggleAll} /> : null}
             <Button
               isSecondary
               leftsection={<PlusIcon weight="bold" className="h-4 w-4" />}
@@ -253,7 +232,7 @@ export const Course = ({ courseId }: IProps) => {
               key={courseModule._id}
               courseModule={courseModule}
               number={index + 1}
-              isExpanded={expanded.has(courseModule._id)}
+              isExpanded={isExpanded(courseModule._id)}
               onToggle={() => toggle(courseModule._id)}
               onEdit={() => onEditCourseModule(courseModule)}
               onDelete={() => setState({ moduleToDelete: courseModule })}

@@ -36,6 +36,7 @@ export const Faq = () => (
     <div className="rounded-xl border border-border bg-background px-2">
       <Accordion
         type="single"
+        openIndexes={[]}
         items={QUESTIONS.map((question) => ({
           title: question.title,
           component: <p className="text-sm leading-relaxed text-muted-foreground">{question.body}</p>,

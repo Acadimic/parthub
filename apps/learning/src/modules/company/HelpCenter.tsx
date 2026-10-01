@@ -106,6 +106,7 @@ export const HelpCenter = () => {
                   <div className="rounded-xl border border-border bg-background px-2">
                     <Accordion
                       type="single"
+                      openIndexes={[]}
                       items={topic.entries.map((entry) => ({
                         title: entry.question,
                         component: (

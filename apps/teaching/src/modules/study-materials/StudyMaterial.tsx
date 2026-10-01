@@ -1,12 +1,7 @@
 import { type MaterialDto } from '@repo/shared/contracts';
-import { Button, Card, SoftConfirmModal } from '@repo/ui/app';
-import {
-  ArrowsInLineVerticalIcon,
-  ArrowsOutLineVerticalIcon,
-  PlusIcon,
-  SparkleIcon,
-  WrenchIcon,
-} from '@phosphor-icons/react';
+import { Button, Card, SoftConfirmModal, ExpandAllButton } from '@repo/ui/app';
+import { useExpandedIds } from '@repo/ui/hooks';
+import { PlusIcon, SparkleIcon, WrenchIcon } from '@phosphor-icons/react';
 import { BlankState } from '@components/others';
 import {
   useMaterialLookups,
@@ -18,7 +13,7 @@ import {
 import { errorToast, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useMaterialRepair } from '@hooks/material-repair.hook';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useSetState } from 'react-use';
 import {
   AiMaterialDrawer,
@@ -61,6 +56,7 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
   // Saved rows only: a draft being typed into the drawer is not content yet, and counting it would
   // put "5 contents" on a page that shows four.
   const materials = getStandardSubjectMaterials(standardId, subjectId).filter((material) => !material.isNew);
+  const { isExpanded, isAllExpanded, toggle, toggleAll } = useExpandedIds(materials.map((material) => material._id));
   const [state, setState] = useSetState<IState>({
     isOpenUpsertModal: false,
     isOpenGenerateModal: false,
@@ -68,19 +64,6 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
     materialToDelete: null,
     isDeleting: false,
   });
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const allExpanded = materials.length > 0 && materials.every((material) => expanded.has(material._id));
-
-  // The row handlers below are stable, because `MaterialCard` is memoised.
-  const toggle = useCallback((id: string) => {
-    setExpanded((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-  const toggleAll = () => setExpanded(allExpanded ? new Set() : new Set(materials.map((material) => material._id)));
 
   const onOpenAddModal = () => {
     // The new row has to be selected as well as created: the modal renders its body from
@@ -211,20 +194,7 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
         <header className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">
           <h2 className="text-sm font-semibold text-foreground">Contents</h2>
           <div className="ml-auto flex items-center gap-2">
-            {materials.length > 1 ? (
-              <Button
-                isSubtle
-                leftsection={
-                  allExpanded ? (
-                    <ArrowsInLineVerticalIcon className="h-4 w-4" />
-                  ) : (
-                    <ArrowsOutLineVerticalIcon className="h-4 w-4" />
-                  )
-                }
-                text={allExpanded ? 'Collapse all' : 'Expand all'}
-                onClick={toggleAll}
-              />
-            ) : null}
+            {materials.length > 1 ? <ExpandAllButton isAllExpanded={isAllExpanded} onClick={toggleAll} /> : null}
             <Button
               isSubtle
               leftsection={<WrenchIcon weight="bold" className="h-4 w-4" />}
@@ -247,7 +217,7 @@ export const StudyMaterial = ({ standardId, subjectId }: IProps) => {
               key={material._id}
               material={material}
               number={index + 1}
-              isExpanded={expanded.has(material._id)}
+              isExpanded={isExpanded(material._id)}
               onToggle={toggle}
               onEdit={editMaterial}
               onGenerate={generateMaterial}

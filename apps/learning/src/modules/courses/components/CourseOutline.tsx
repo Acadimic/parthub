@@ -1,12 +1,21 @@
+import { ExpandAllButton } from '@repo/ui/app';
 import { Accordion } from '@repo/ui/core';
+import { useExpandedIds } from '@repo/ui/hooks';
 import { cn } from '@repo/ui/lib';
 import { BlankState } from '@components/others';
 import { ModuleContentType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { type ICourseModuleItem } from '@interfaces';
 import { BookOpenTextIcon, CheckIcon, ClipboardTextIcon, LockSimpleIcon, VideoIcon } from '@phosphor-icons/react';
-import { type ICourseModule, useCourseLookups, useMaterialLookups, useTestPaperLookups } from '@stores';
+import {
+  type ICourseModule,
+  useCourseLookups,
+  useMaterialLookups,
+  useSelectorLookups,
+  useTestPaperLookups,
+} from '@stores';
 import { getPlural } from '@utils/helpers';
+import { useEffect } from 'react';
 
 const ITEM_ICONS = {
   [ModuleContentType.VIDEO]: VideoIcon,
@@ -113,12 +122,55 @@ const ModuleTitle = ({
   );
 };
 
+/** The count of what the outline holds, and the one control that opens or folds every module. */
+const OutlineToolbar = ({
+  moduleCount,
+  itemCount,
+  isAllOpen,
+  isSticky,
+  onToggleAll,
+}: {
+  moduleCount: number;
+  itemCount: number;
+  isAllOpen: boolean;
+  isSticky: boolean;
+  onToggleAll: () => void;
+}) => (
+  <div
+    className={cn(
+      'flex items-center justify-between gap-3 border-b border-border py-2 pl-4 pr-2',
+      isSticky && 'sticky top-0 z-10 bg-background',
+    )}
+  >
+    <span className="min-w-0 truncate text-xs text-muted-foreground">
+      {moduleCount} {getPlural(moduleCount, 'module')} · {itemCount} {getPlural(itemCount, 'item')}
+    </span>
+    <ExpandAllButton
+      isAllExpanded={isAllOpen}
+      onClick={onToggleAll}
+      className="shrink-0 px-2.5 py-1 text-xs text-primary"
+    />
+  </div>
+);
+
 export const CourseOutline = ({ courseId, isPreview, isLocked, onSelectItem }: IProps) => {
   const { getCourseModules, isItemCompleted } = useCourse();
   const { isLoading } = useCourseLookups();
   const { getMaterialsByIds } = useMaterialLookups();
   const { getTestPapersByIds } = useTestPaperLookups();
+  const { selectedCourseModuleId } = useSelectorLookups();
   const courseModules = getCourseModules(courseId);
+  // Ids rather than positions, so a panel stays open if the module list arrives or reorders later.
+  const { isExpanded, isAllExpanded, expand, setExpandedIds, toggleAll } = useExpandedIds(
+    courseModules.map((courseModule) => courseModule._id),
+  );
+
+  // Every module starts folded; while learning, the one holding the current lesson opens itself,
+  // so moving to the next lesson across a module boundary keeps it in view.
+  useEffect(() => {
+    if (isPreview || !selectedCourseModuleId) return;
+    expand(selectedCourseModuleId);
+  }, [isPreview, selectedCourseModuleId, expand]);
 
   if (!courseModules.length) {
     if (isLoading('courseModules')) return null;
@@ -127,56 +179,72 @@ export const CourseOutline = ({ courseId, isPreview, isLocked, onSelectItem }: I
     );
   }
 
+  const openIndexes = courseModules.flatMap((courseModule, index) => (isExpanded(courseModule._id) ? [index] : []));
+  const itemCount = courseModules.reduce(
+    (count, courseModule) => count + (courseModule.materials?.length ?? 0) + (courseModule.testPapers?.length ?? 0),
+    0,
+  );
+
   return (
-    <Accordion
-      type="multiple"
-      openIndexes={courseModules.map((_, index) => index)}
-      contentClassName="px-0 pb-0"
-      className="[&>div:last-child]:border-b-0 [&_button]:px-4 [&_button]:py-3"
-      items={courseModules.map((courseModule, index) => {
-        const items: ICourseModuleItem[] = [
-          ...getMaterialsByIds(courseModule.materials ?? []).map((material) => ({
-            courseId,
-            courseModuleId: courseModule._id,
-            material,
-          })),
-          ...getTestPapersByIds(courseModule.testPapers ?? []).map((testPaper) => ({
-            courseId,
-            courseModuleId: courseModule._id,
-            testPaper,
-          })),
-        ];
-        const completedCount = items.filter(isItemCompleted).length;
-        return {
-          id: courseModule._id,
-          title: (
-            <ModuleTitle
-              courseModule={courseModule}
-              index={index}
-              itemCount={items.length}
-              completedCount={completedCount}
-            />
-          ),
-          component: (
-            <div className={cn('pb-2', isPreview && 'pb-4')}>
-              {isPreview && courseModule.description ? (
-                <p className="px-4 pb-2 pt-1 text-sm text-muted-foreground">{courseModule.description}</p>
-              ) : null}
-              <div className="flex flex-col">
-                {items.map((item) => (
-                  <OutlineItem
-                    key={item.material?._id ?? item.testPaper?._id}
-                    item={item}
-                    isPreview={isPreview}
-                    isLocked={isLocked}
-                    onSelect={onSelectItem}
-                  />
-                ))}
+    <>
+      <OutlineToolbar
+        moduleCount={courseModules.length}
+        itemCount={itemCount}
+        isAllOpen={isAllExpanded}
+        isSticky={!isPreview}
+        onToggleAll={toggleAll}
+      />
+      <Accordion
+        type="multiple"
+        openIndexes={openIndexes}
+        onOpenIndexesChange={(indexes) => setExpandedIds(indexes.map((index) => courseModules[index]._id))}
+        contentClassName="px-0 pb-0"
+        className="[&>div:last-child]:border-b-0 [&_button]:px-4 [&_button]:py-3"
+        items={courseModules.map((courseModule, index) => {
+          const items: ICourseModuleItem[] = [
+            ...getMaterialsByIds(courseModule.materials ?? []).map((material) => ({
+              courseId,
+              courseModuleId: courseModule._id,
+              material,
+            })),
+            ...getTestPapersByIds(courseModule.testPapers ?? []).map((testPaper) => ({
+              courseId,
+              courseModuleId: courseModule._id,
+              testPaper,
+            })),
+          ];
+          const completedCount = items.filter(isItemCompleted).length;
+          return {
+            id: courseModule._id,
+            title: (
+              <ModuleTitle
+                courseModule={courseModule}
+                index={index}
+                itemCount={items.length}
+                completedCount={completedCount}
+              />
+            ),
+            component: (
+              <div className={cn('pb-2', isPreview && 'pb-4')}>
+                {isPreview && courseModule.description ? (
+                  <p className="px-4 pb-2 pt-1 text-sm text-muted-foreground">{courseModule.description}</p>
+                ) : null}
+                <div className="flex flex-col">
+                  {items.map((item) => (
+                    <OutlineItem
+                      key={item.material?._id ?? item.testPaper?._id}
+                      item={item}
+                      isPreview={isPreview}
+                      isLocked={isLocked}
+                      onSelect={onSelectItem}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          ),
-        };
-      })}
-    />
+            ),
+          };
+        })}
+      />
+    </>
   );
 };
