@@ -2,7 +2,7 @@ import { type IRichText } from '@repo/shared/interfaces';
 import { type AttachmentDto } from '@repo/shared/contracts';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { CourseItemType, QuestionType, StorageKey } from '../enums';
+import { CourseItemType, CourseOutlineTab, QuestionType, StorageKey } from '../enums';
 
 /**
  * What the learner currently has selected. **Ids and plain values only.**
@@ -33,6 +33,8 @@ export interface ISelectorState {
   selectedBatchId: string;
   selectedQuestionType: QuestionType;
   selectedCourseItem: CourseItemType;
+  /** Shared by every outline on screen, and carried from the preview into the learning view. */
+  selectedCourseOutlineTab: CourseOutlineTab;
   selectedUpsertQuestionStep: number;
   isCourseMenuOpen: boolean;
   /** The Explore sheet on a small screen; opened from the tab bar and the header's search icon. */
@@ -56,6 +58,7 @@ export interface ISelectorState {
   setSelectedBatchId: (value: string) => void;
   setSelectedQuestionType: (value: QuestionType) => void;
   setSelectedCourseItem: (value: CourseItemType) => void;
+  setSelectedCourseOutlineTab: (value: CourseOutlineTab) => void;
   setSelectedUpsertQuestionStep: (value: number) => void;
   setIsCourseMenuOpen: (value: boolean) => void;
   setIsExploreOpen: (value: boolean) => void;
@@ -97,6 +100,7 @@ const INITIAL = {
   selectedBatchId: '',
   selectedQuestionType: QuestionType.SINGLE_CHOICE,
   selectedCourseItem: CourseItemType.COURSE_MATERIALS,
+  selectedCourseOutlineTab: CourseOutlineTab.CONTENTS,
   selectedUpsertQuestionStep: 0,
   isCourseMenuOpen: false,
   isExploreOpen: false,
@@ -154,6 +158,9 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
   },
   setSelectedCourseItem: (value) => {
     set({ selectedCourseItem: value });
+  },
+  setSelectedCourseOutlineTab: (value) => {
+    set({ selectedCourseOutlineTab: value });
   },
   setSelectedUpsertQuestionStep: (value) => {
     set({ selectedUpsertQuestionStep: value });

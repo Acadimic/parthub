@@ -4,7 +4,7 @@ import { useExpandedIds } from '@repo/ui/hooks';
 import { cn } from '@repo/ui/lib';
 import { CONTENT_TYPE_ICONS, CONTENT_TYPE_TONES, ContentTypeBadge } from '@components/app/badges';
 import { BlankState } from '@components/others';
-import { ModuleContentType } from '@enums';
+import { CourseOutlineTab, ModuleContentType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { type ICourseModuleItem } from '@interfaces';
 import { CheckIcon, ClipboardTextIcon, ListBulletsIcon, LockSimpleIcon } from '@phosphor-icons/react';
@@ -16,7 +16,7 @@ import {
   useTestPaperLookups,
 } from '@stores';
 import { getPlural } from '@utils/helpers';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface IProps {
   courseId: string;
@@ -47,6 +47,32 @@ const getMarkClass = (type: ModuleContentType, isCompleted: boolean, isSelected:
   return isSelected ? CONTENT_TYPE_TONES[type].solid : CONTENT_TYPE_TONES[type].soft;
 };
 
+/** The nearest ancestor that scrolls vertically, which is the list's panel; `null` outside one. */
+const getScroller = (element: HTMLElement): HTMLElement | null => {
+  let node = element.parentElement;
+  while (node) {
+    const { overflowY } = getComputedStyle(node);
+    if (overflowY === 'auto' || overflowY === 'scroll') return node;
+    node = node.parentElement;
+  }
+  return null;
+};
+
+/**
+ * Brings a row to the bottom edge of its panel only when it is not already fully visible, so a row
+ * the learner just clicked stays under the pointer. The panel's sticky toolbar hides its top
+ * strip, so a row behind it counts as out of view.
+ */
+const revealRow = (row: HTMLElement) => {
+  const scroller = getScroller(row);
+  if (!scroller) return;
+  const rowRect = row.getBoundingClientRect();
+  const panelRect = scroller.getBoundingClientRect();
+  const stickyHeight = scroller.querySelector<HTMLElement>('.sticky')?.getBoundingClientRect().height ?? 0;
+  const isInView = rowRect.top >= panelRect.top + stickyHeight && rowRect.bottom <= panelRect.bottom;
+  if (!isInView) row.scrollIntoView({ block: 'end' });
+};
+
 const OutlineItem = ({ item, isPreview, isLocked, onSelect, moduleName }: IRowProps) => {
   const { getModuleContentType, isItemCompleted, isItemSelected } = useCourse();
   const type = getModuleContentType(item.material, item.testPaper);
@@ -54,9 +80,19 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect, moduleName }: IRowPr
   const isSelected = !isPreview && isItemSelected(item);
   const details = item.material ?? item.testPaper;
   const RowIcon = isLocked ? LockSimpleIcon : CONTENT_TYPE_ICONS[isCompleted ? ModuleContentType.COMPLETED : type];
+  const rowRef = useRef<HTMLButtonElement>(null);
+
+  // The selected row keeps itself in view: on arrival from the preview, and as the lesson pager
+  // moves on. Its module panel opens over 250ms, so the row's final place is known only after that.
+  useEffect(() => {
+    if (!isSelected) return;
+    const timer = window.setTimeout(() => rowRef.current && revealRow(rowRef.current), 300);
+    return () => window.clearTimeout(timer);
+  }, [isSelected]);
 
   return (
     <button
+      ref={rowRef}
       type="button"
       aria-current={isSelected ? 'true' : undefined}
       aria-disabled={isLocked || undefined}
@@ -295,10 +331,14 @@ const TestList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem }
   );
 };
 
+/** The strip's order; the store keeps the tab itself. */
+const OUTLINE_TABS = [CourseOutlineTab.CONTENTS, CourseOutlineTab.TESTS];
+
 export const CourseOutline = (props: IProps) => {
   const { courseId, isPreview } = props;
   const { getCourseModules } = useCourse();
   const { isLoading } = useCourseLookups();
+  const { selectedCourseOutlineTab, setSelectedCourseOutlineTab } = useSelectorLookups();
   const courseModules = getCourseModules(courseId);
 
   if (!courseModules.length) {
@@ -310,9 +350,12 @@ export const CourseOutline = (props: IProps) => {
 
   // While learning, the strip stays put and each panel scrolls under it, so the tabs are always
   // one tap away; the caller gives the outline a column to fill (see `CourseModules`). The
-  // preview page scrolls as a whole, so there the panels simply flow.
+  // preview page scrolls as a whole, so there the panels simply flow. The tab lives in the store,
+  // so a test picked from the preview's Tests tab opens the learning view on that tab.
   return (
     <Tabs
+      value={OUTLINE_TABS.indexOf(selectedCourseOutlineTab)}
+      onChange={(index) => setSelectedCourseOutlineTab(OUTLINE_TABS[index] ?? CourseOutlineTab.CONTENTS)}
       className={cn(!isPreview && 'flex min-h-0 flex-1 flex-col')}
       contentClassName={cn('mt-0', !isPreview && 'min-h-0 flex-1 overflow-y-auto')}
       triggerClassName="px-3 py-1.5 text-xs"

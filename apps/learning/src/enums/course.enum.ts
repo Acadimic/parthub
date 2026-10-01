@@ -13,3 +13,9 @@ export enum ModuleContentType {
   TEST_PAPER = 'test paper',
   COMPLETED = 'completed',
 }
+
+/** The two lists the course outline can show. */
+export enum CourseOutlineTab {
+  CONTENTS = 'contents',
+  TESTS = 'tests',
+}
