@@ -67,9 +67,9 @@ interface IRowProps {
 
 /** The mark's fill: done is a quiet tinted tick, so a finished list does not shout; selected beats idle. */
 const getMarkClass = (type: ModuleContentType, isCompleted: boolean, isSelected: boolean, isLocked: boolean) => {
-  if (isCompleted) return 'h-6 w-6 bg-success/15 text-success';
-  if (isLocked) return 'h-8 w-8 bg-muted text-muted-foreground';
-  return cn('h-8 w-8', isSelected ? ITEM_TONES[type].solid : ITEM_TONES[type].soft);
+  if (isCompleted) return 'bg-success/15 text-success';
+  if (isLocked) return 'bg-muted text-muted-foreground';
+  return isSelected ? ITEM_TONES[type].solid : ITEM_TONES[type].soft;
 };
 
 const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
@@ -91,21 +91,19 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
         isSelected ? 'border-primary bg-accent' : 'border-transparent',
       )}
     >
-      {/* A fixed slot keeps the text column aligned whatever size the mark inside it is. */}
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center">
+      {/* The slot matches the module number's width, so the item marks centre under it. */}
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center">
         <span
           className={cn(
-            'flex items-center justify-center rounded-full transition-colors',
+            'flex h-6 w-6 items-center justify-center rounded-full transition-colors',
             getMarkClass(type, isCompleted, isSelected, isLocked),
           )}
         >
-          <RowIcon weight="bold" className={isCompleted ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+          <RowIcon weight="bold" className="h-3.5 w-3.5" />
         </span>
       </span>
       <span className="min-w-0 flex-1">
-        <span className={cn('block truncate text-sm', isSelected ? 'font-semibold' : 'font-medium')}>
-          {details?.name}
-        </span>
+        <span className="block truncate text-sm font-medium">{details?.name}</span>
         <span className="mt-0.5 flex items-center gap-1.5 text-xxs text-muted-foreground/70">
           <span
             className={cn(
@@ -123,25 +121,35 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
   );
 };
 
+/** An open module's mark fills solid, so the expanded panels stand out from the folded ones. */
+const getModuleMarkClass = (isDone: boolean, isOpen: boolean) => {
+  if (isDone) {
+    return isOpen ? 'bg-success-fill text-success-fill-foreground' : 'bg-success/15 text-success';
+  }
+  return isOpen ? 'bg-primary-fill text-primary-fill-foreground' : 'bg-primary/10 text-primary';
+};
+
 /** One module's title, with its position and its own completion summary. */
 const ModuleTitle = ({
   courseModule,
   index,
   itemCount,
   completedCount,
+  isOpen,
 }: {
   courseModule: ICourseModule;
   index: number;
   itemCount: number;
   completedCount: number;
+  isOpen: boolean;
 }) => {
   const isDone = itemCount > 0 && completedCount === itemCount;
   return (
     <span className="flex min-w-0 items-center gap-3">
       <span
         className={cn(
-          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-xs font-semibold',
-          isDone ? 'bg-success/15 text-success' : 'bg-primary/10 text-primary',
+          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-xs font-semibold transition-colors',
+          getModuleMarkClass(isDone, isOpen),
         )}
       >
         {isDone ? <CheckIcon weight="bold" className="h-3.5 w-3.5" /> : index + 1}
@@ -256,22 +264,23 @@ export const CourseOutline = ({ courseId, isPreview, isLocked, onSelectItem }: I
                 index={index}
                 itemCount={items.length}
                 completedCount={completedCount}
+                isOpen={isExpanded(courseModule._id)}
               />
             ),
             component: (
-              <div className={cn('pb-2', isPreview && 'pb-4')}>
+              <div>
                 {isPreview && courseModule.description ? (
                   <p className="px-4 pb-2 pt-1 text-sm text-muted-foreground">{courseModule.description}</p>
                 ) : null}
                 <div className="flex flex-col">
+                  {/* The divider sits on a wrapper, inset, so it neither recolours the selection bar nor spans the row. */}
                   {items.map((item) => (
-                    <OutlineItem
+                    <div
                       key={item.material?._id ?? item.testPaper?._id}
-                      item={item}
-                      isPreview={isPreview}
-                      isLocked={isLocked}
-                      onSelect={onSelectItem}
-                    />
+                      className="relative before:absolute before:inset-x-4 before:top-0 before:border-t before:border-dotted before:border-border"
+                    >
+                      <OutlineItem item={item} isPreview={isPreview} isLocked={isLocked} onSelect={onSelectItem} />
+                    </div>
                   ))}
                 </div>
               </div>

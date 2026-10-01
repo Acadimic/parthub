@@ -45,6 +45,11 @@ export const light = {
     primary: '#3b4fd0',
     'primary-foreground': '#ffffff',
 
+    // A solid fill under light text, such as an open module's number. The same as `primary` here;
+    // in dark it is a deeper indigo, because `primary` there is pale and carries dark text.
+    'primary-fill': '#3b4fd0',
+    'primary-fill-foreground': '#ffffff',
+
     secondary: '#e9ecf4',
     'secondary-foreground': '#1a1c22',
 
@@ -61,6 +66,9 @@ export const light = {
 
     success: '#0d7a4d',
     'success-foreground': '#ffffff',
+
+    'success-fill': '#0d7a4d',
+    'success-fill-foreground': '#ffffff',
 
     warning: '#96620d',
     'warning-foreground': '#ffffff',

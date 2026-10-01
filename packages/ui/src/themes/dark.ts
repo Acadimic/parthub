@@ -36,6 +36,9 @@ export const dark = {
     primary: '#6d86f5',
     'primary-foreground': '#0a0b0f',
 
+    'primary-fill': '#3346b8',
+    'primary-fill-foreground': '#e6eaff',
+
     secondary: '#2b2e37',
     'secondary-foreground': '#edeef2',
 
@@ -50,6 +53,9 @@ export const dark = {
 
     success: '#7ee4ac',
     'success-foreground': '#0a0b0f',
+
+    'success-fill': '#1a6b48',
+    'success-fill-foreground': '#e3fbef',
 
     warning: '#e0a94a',
     'warning-foreground': '#0a0b0f',
