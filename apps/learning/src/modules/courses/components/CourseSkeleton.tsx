@@ -46,27 +46,72 @@ export const CoursePreviewSkeleton = () => (
   </div>
 );
 
-/** Mirrors the learning view: the content frame on the left, the outline on the right. */
+/**
+ * Mirrors the learning view, with the frame at its real height so nothing jumps when the lesson
+ * arrives: the top bar, the lesson column, and the outline pane on the right.
+ */
 export const CourseModulesSkeleton = () => (
-  <div className="flex animate-pulse">
-    <div className="flex-1 px-4 py-4 md:px-6">
-      <RectangleSkeleton height={14} width={260} />
-      <div className="mt-4">
-        <RectangleSkeleton height={420} />
+  <div className="flex h-[100vh] animate-pulse">
+    <div className="flex min-w-0 flex-1 flex-col bg-muted/40">
+      <div className="shrink-0 border-b border-border bg-background">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-2 px-3 md:px-6">
+          <RectangleSkeleton height={28} width={96} />
+          <div className="flex-1" />
+          <RectangleSkeleton height={28} width={28} />
+          <RectangleSkeleton height={28} width={28} />
+        </div>
       </div>
-      <div className="mt-4 flex flex-col gap-2">
-        <RectangleSkeleton height={22} width="50%" />
-        <RectangleSkeleton height={12} width="30%" />
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-3 py-4 md:gap-5 md:px-6 md:py-6">
+          {/* The one line above the frame: module and lesson name, then the kind and duration. */}
+          <div className="flex items-center justify-between gap-4 px-1">
+            <RectangleSkeleton height={16} width="45%" />
+            <div className="flex items-center gap-3">
+              <RectangleSkeleton height={22} width={64} />
+              <RectangleSkeleton height={12} width={44} />
+            </div>
+          </div>
+          <div className="overflow-hidden rounded-xl border border-border bg-background">
+            <div className="h-[62vh] min-h-[360px] md:h-[640px]">
+              <RectangleSkeleton />
+            </div>
+            <div className="flex items-center justify-between border-t border-border px-3 py-2">
+              <RectangleSkeleton height={28} width={88} />
+              <RectangleSkeleton height={28} width={160} />
+            </div>
+          </div>
+          {/* Mark complete and the reactions, then the teacher. */}
+          <div className="flex flex-col gap-4 rounded-xl border border-border bg-background p-4 md:p-5">
+            <div className="flex items-center justify-between gap-4">
+              <RectangleSkeleton height={36} width={160} />
+              <div className="flex gap-2">
+                <RectangleSkeleton height={32} width={64} />
+                <RectangleSkeleton height={32} width={64} />
+                <RectangleSkeleton height={32} width={64} />
+              </div>
+            </div>
+            <div className="flex items-center gap-3 border-t border-border pt-4">
+              <RectangleSkeleton height={40} width={40} />
+              <div className="flex flex-1 flex-col gap-1.5">
+                <RectangleSkeleton height={10} width={56} />
+                <RectangleSkeleton height={14} width="40%" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div className="hidden w-[360px] shrink-0 border-l border-border p-4 lg:block">
-      <RectangleSkeleton height={18} width="60%" />
-      <div className="mt-2">
+    <aside className="hidden w-[360px] shrink-0 flex-col border-l border-border bg-background lg:flex xl:w-[400px]">
+      <div className="flex flex-col gap-3 border-b border-border px-4 py-4">
+        <div className="flex flex-col gap-1.5">
+          <RectangleSkeleton height={10} width={48} />
+          <RectangleSkeleton height={14} width="70%" />
+        </div>
         <RectangleSkeleton height={8} />
       </div>
-      <div className="mt-6">
-        <OutlineSkeleton rows={6} />
+      <div className="p-4">
+        <OutlineSkeleton rows={8} />
       </div>
-    </div>
+    </aside>
   </div>
 );
