@@ -1,7 +1,12 @@
 import { type MeetDto } from '@repo/shared/contracts';
 import { Button } from '@repo/ui/app';
 import { cn } from '@repo/ui/lib';
-import { CaretDownIcon, VideoCameraIcon } from '@phosphor-icons/react';
+import {
+  ArrowsInLineVerticalIcon,
+  ArrowsOutLineVerticalIcon,
+  CaretDownIcon,
+  VideoCameraIcon,
+} from '@phosphor-icons/react';
 import { useState } from 'react';
 import {
   getNextSession,
@@ -53,16 +58,18 @@ const SessionRow = ({ meet, isNext }: { meet: MeetDto; isNext: boolean }) => {
  */
 export const CourseSessions = ({ meets }: { meets: MeetDto[] }) => {
   const [showPast, setShowPast] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   if (!meets.length) return null;
   const next = getNextSession(meets);
   const groups = groupSessions(meets);
   const upcoming = groups.filter((group) => group.key !== 'past').flatMap((group) => group.meets);
   const past = groups.find((group) => group.key === 'past')?.meets ?? [];
   const isLive = next ? getSessionState(next) === 'live' : false;
+  const ToggleIcon = isExpanded ? ArrowsInLineVerticalIcon : ArrowsOutLineVerticalIcon;
 
   return (
     <section className="rounded-xl border border-border bg-background shadow-sm">
-      <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
+      <header className="flex items-center justify-between gap-3 px-4 py-3 md:px-5">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <VideoCameraIcon weight="bold" className="h-4 w-4" />
@@ -74,49 +81,73 @@ export const CourseSessions = ({ meets }: { meets: MeetDto[] }) => {
             </div>
           </div>
         </div>
-        {isLive ? (
-          <span className="flex items-center gap-2 text-sm font-medium text-destructive">
-            <LivePulse />
-            Live now
-          </span>
-        ) : null}
+        <div className="flex shrink-0 items-center gap-3">
+          {isLive ? (
+            <span className="flex items-center gap-2 text-sm font-medium text-destructive">
+              <LivePulse />
+              Live now
+            </span>
+          ) : null}
+          <Button
+            isSubtle
+            aria-expanded={isExpanded}
+            className="px-2.5 py-1 text-xs text-primary"
+            leftsection={<ToggleIcon className="h-4 w-4" />}
+            text={isExpanded ? 'Collapse' : 'Expand'}
+            onClick={() => setIsExpanded(!isExpanded)}
+          />
+        </div>
       </header>
-      <div className="flex flex-col gap-2 p-2 md:p-3">
-        {upcoming.length ? (
-          <ul className="flex flex-col gap-1">
-            {upcoming.map((meet) => (
-              <SessionRow key={meet._id} meet={meet} isNext={meet._id === next?._id} />
-            ))}
-          </ul>
-        ) : (
-          <p className="px-3 py-4 text-sm text-muted-foreground">
-            All {past.length} {pluralClasses(past.length)} in this course have taken place.
-          </p>
+      {/* Animating grid rows from 0fr to 1fr folds the list to its real height, on the accordion's clock;
+          inert keeps the folded join links out of the tab order. */}
+      <div
+        inert={!isExpanded}
+        className={cn(
+          'grid transition-[grid-template-rows] duration-250 ease-[cubic-bezier(0.4,0,0.2,1)]',
+          isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
         )}
-        {past.length ? (
-          <div className="border-t border-border pt-2">
-            <Button
-              isSubtle
-              className="w-full justify-between px-3 py-2 text-xs text-muted-foreground"
-              onClick={() => setShowPast(!showPast)}
-              rightsection={
-                <CaretDownIcon
-                  weight="bold"
-                  className={cn('h-3.5 w-3.5 transition-transform', showPast && 'rotate-180')}
-                />
-              }
-            >
-              {showPast ? 'Hide past classes' : `Show ${past.length} past ${pluralClasses(past.length)}`}
-            </Button>
-            {showPast ? (
-              <ul className="mt-1 flex flex-col gap-1">
-                {past.map((meet) => (
-                  <SessionRow key={meet._id} meet={meet} isNext={false} />
-                ))}
-              </ul>
-            ) : null}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="border-t border-border p-2 md:p-3">
+            <div className="flex flex-col gap-2">
+              {upcoming.length ? (
+                <ul className="flex flex-col gap-1">
+                  {upcoming.map((meet) => (
+                    <SessionRow key={meet._id} meet={meet} isNext={meet._id === next?._id} />
+                  ))}
+                </ul>
+              ) : (
+                <p className="px-3 py-4 text-sm text-muted-foreground">
+                  All {past.length} {pluralClasses(past.length)} in this course have taken place.
+                </p>
+              )}
+              {past.length ? (
+                <div className="border-t border-border pt-2">
+                  <Button
+                    isSubtle
+                    className="w-full justify-between px-3 py-2 text-xs text-muted-foreground"
+                    onClick={() => setShowPast(!showPast)}
+                    rightsection={
+                      <CaretDownIcon
+                        weight="bold"
+                        className={cn('h-3.5 w-3.5 transition-transform', showPast && 'rotate-180')}
+                      />
+                    }
+                  >
+                    {showPast ? 'Hide past classes' : `Show ${past.length} past ${pluralClasses(past.length)}`}
+                  </Button>
+                  {showPast ? (
+                    <ul className="mt-1 flex flex-col gap-1">
+                      {past.map((meet) => (
+                        <SessionRow key={meet._id} meet={meet} isNext={false} />
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
           </div>
-        ) : null}
+        </div>
       </div>
     </section>
   );
