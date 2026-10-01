@@ -69,5 +69,12 @@ export const dark = {
     'chart-3': '#e0a94a',
     'chart-4': '#fb7185',
     'chart-5': '#b79cf5',
+
+    'content-reading': '#22d3ee',
+    'content-reading-foreground': '#0a0b0f',
+    'content-video': '#e879f9',
+    'content-video-foreground': '#0a0b0f',
+    'content-test': '#fb923c',
+    'content-test-foreground': '#0a0b0f',
   },
 };

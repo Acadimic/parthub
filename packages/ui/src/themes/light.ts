@@ -87,5 +87,14 @@ export const light = {
     'chart-3': '#b45309',
     'chart-4': '#be123c',
     'chart-5': '#7c3aed',
+
+    // What a course item is: read, watch or be tested. Three hues spread around the wheel and away
+    // from `primary`, so the kind reads at a glance without looking like the selected row.
+    'content-reading': '#0e7490',
+    'content-reading-foreground': '#ffffff',
+    'content-video': '#a21caf',
+    'content-video-foreground': '#ffffff',
+    'content-test': '#c2410c',
+    'content-test-foreground': '#ffffff',
   },
 };

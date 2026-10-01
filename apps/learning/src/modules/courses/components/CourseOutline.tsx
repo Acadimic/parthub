@@ -24,6 +24,31 @@ const ITEM_ICONS = {
   [ModuleContentType.COMPLETED]: CheckIcon,
 };
 
+// Each kind's soft tint, its solid fill for the selected row, and its pill. Written out in full so
+// Tailwind's purge keeps every class.
+const ITEM_TONES = {
+  [ModuleContentType.VIDEO]: {
+    soft: 'bg-content-video/15 text-content-video ring-1 ring-inset ring-content-video/25',
+    solid: 'bg-content-video text-content-video-foreground',
+    pill: 'bg-content-video/10 text-content-video',
+  },
+  [ModuleContentType.READING]: {
+    soft: 'bg-content-reading/15 text-content-reading ring-1 ring-inset ring-content-reading/25',
+    solid: 'bg-content-reading text-content-reading-foreground',
+    pill: 'bg-content-reading/10 text-content-reading',
+  },
+  [ModuleContentType.TEST_PAPER]: {
+    soft: 'bg-content-test/15 text-content-test ring-1 ring-inset ring-content-test/25',
+    solid: 'bg-content-test text-content-test-foreground',
+    pill: 'bg-content-test/10 text-content-test',
+  },
+  [ModuleContentType.COMPLETED]: {
+    soft: 'bg-muted text-muted-foreground',
+    solid: 'bg-primary text-primary-foreground',
+    pill: 'bg-muted text-muted-foreground',
+  },
+};
+
 interface IProps {
   courseId: string;
   /** Wider spacing and module descriptions; the learning view keeps it dense. */
@@ -41,10 +66,10 @@ interface IRowProps {
 }
 
 /** The mark's fill: done is a quiet tinted tick, so a finished list does not shout; selected beats idle. */
-const getMarkClass = (isCompleted: boolean, isSelected: boolean) => {
+const getMarkClass = (type: ModuleContentType, isCompleted: boolean, isSelected: boolean, isLocked: boolean) => {
   if (isCompleted) return 'h-6 w-6 bg-success/15 text-success';
-  if (isSelected) return 'h-8 w-8 bg-primary text-primary-foreground';
-  return 'h-8 w-8 bg-muted text-muted-foreground';
+  if (isLocked) return 'h-8 w-8 bg-muted text-muted-foreground';
+  return cn('h-8 w-8', isSelected ? ITEM_TONES[type].solid : ITEM_TONES[type].soft);
 };
 
 const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
@@ -71,7 +96,7 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
         <span
           className={cn(
             'flex items-center justify-center rounded-full transition-colors',
-            getMarkClass(isCompleted, isSelected),
+            getMarkClass(type, isCompleted, isSelected, isLocked),
           )}
         >
           <RowIcon weight="bold" className={isCompleted ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
@@ -81,8 +106,17 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
         <span className={cn('block truncate text-sm', isSelected ? 'font-semibold' : 'font-medium')}>
           {details?.name}
         </span>
-        <span className="block text-xs capitalize text-muted-foreground">
-          {type} · {details?.durationMins ?? 0} min
+        <span className="mt-0.5 flex items-center gap-1.5 text-xxs text-muted-foreground/70">
+          <span
+            className={cn(
+              'px-1 py-0.5 text-[0.5625rem] font-semibold uppercase leading-none tracking-caps',
+              ITEM_TONES[type].pill,
+            )}
+          >
+            {type}
+          </span>
+          <span aria-hidden className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+          {details?.durationMins ?? 0} min
         </span>
       </span>
     </button>
@@ -114,7 +148,7 @@ const ModuleTitle = ({
       </span>
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold">{courseModule.name}</span>
-        <span className="block text-xs font-normal text-muted-foreground">
+        <span className="block text-xxs font-normal text-muted-foreground/70">
           {itemCount ? `${completedCount} of ${itemCount} ${getPlural(itemCount, 'item')} done` : 'No items yet'}
         </span>
       </span>
