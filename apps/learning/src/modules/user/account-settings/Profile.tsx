@@ -1,12 +1,13 @@
 import { Select } from '@components/app/selects';
-import { Button, Card, ModalFooter, TextInput } from '@repo/ui/app';
 import { Gender } from '@enums';
-import { PencilLineIcon } from '@phosphor-icons/react';
+import { EnvelopeSimpleIcon, PencilSimpleIcon } from '@phosphor-icons/react';
+import { Button, TextInput } from '@repo/ui/app';
 import { UserService } from '@services';
-import { useSelectedUser, useUserLookups } from '@stores';
-import { errorToast, formatPhoneNumber, successToast, validateEmail } from '@utils/helpers';
+import { useSelectedUser, useUserLookups, useUserStore } from '@stores';
+import { capitalize, errorToast, formatPhoneNumber, successToast, validateEmail } from '@utils/helpers';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
+import { FieldValue, SettingsSection } from './SettingsSection';
 
 interface IState {
   firstName: string;
@@ -83,7 +84,9 @@ export const Profile = () => {
       patchUser(selectedUser._id, { phoneNumber });
       patchUser(selectedUser._id, { designation: state.designation });
       patchUser(selectedUser._id, { gender: state.gender });
-      await UserService.updateProfile(selectedUser);
+      // Read the user back after the patches: the one in this closure still has the old values.
+      const updatedUser = useUserStore.getState().getUserById(selectedUser._id);
+      if (updatedUser) await UserService.updateProfile(updatedUser);
       successToast({ message: 'Profile updated successfully!' });
       toggleEdit(false);
     } catch (error) {
@@ -107,108 +110,108 @@ export const Profile = () => {
 
   if (!selectedUser) return <></>;
 
+  const isDisabled = !state.isEditing || state.isLoading;
+  const phone = selectedUser.phoneNumber ? `${selectedUser.countryCode || '+91'} ${selectedUser.phoneNumber}` : '';
+
   return (
-    <div className="flex flex-col">
-      <Card>
-        <div className="flex flex-col gap-6 w-full">
-          <div className="flex items-center justify-between border-b border-border border-dashed pb-1">
-            <div className="text-lg font-medium">Your Profile</div>
-            <div>
-              <Button
-                className="px-0 py-0 text-sm text-muted-foreground hover:text-primary"
-                isSubtle
-                text={state.isEditing ? 'Close' : 'Edit'}
-                leftsection={<PencilLineIcon />}
-                onClick={() => toggleEdit(!state.isEditing)}
-                isLoading={state.isLoading}
-              />
-            </div>
+    <>
+      <SettingsSection
+        title="Personal information"
+        description="How you appear to teachers and classmates across Acadimic."
+        action={
+          state.isEditing ? null : (
+            <Button
+              isSecondary
+              className="px-3 py-1.5 text-sm"
+              text="Edit"
+              leftsection={<PencilSimpleIcon weight="bold" className="h-4 w-4" />}
+              onClick={() => toggleEdit(true)}
+            />
+          )
+        }
+        footer={
+          state.isEditing ? (
+            <>
+              <Button isSecondary text="Cancel" onClick={() => toggleEdit(false)} disabled={state.isLoading} />
+              <Button text="Save changes" onClick={handleSaveProfile} isLoading={state.isLoading} />
+            </>
+          ) : null
+        }
+      >
+        {state.isEditing ? (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <TextInput
+              label="First Name"
+              value={state.firstName}
+              onChange={handleTextInputChange}
+              name="firstName"
+              required
+              disabled={isDisabled}
+            />
+            <TextInput
+              label="Last Name"
+              value={state.lastName}
+              onChange={handleTextInputChange}
+              name="lastName"
+              required
+              disabled={isDisabled}
+            />
+            <TextInput
+              label="Role"
+              value={state.designation}
+              onChange={handleTextInputChange}
+              name="designation"
+              placeholder="Student, parent, tutor…"
+              required
+              disabled={isDisabled}
+            />
+            <Select
+              label="Gender"
+              values={[state.gender]}
+              items={Object.values(Gender).map((gender) => ({ label: capitalize(gender), value: gender }))}
+              required
+              isDisabled={isDisabled}
+              onChange={(values) => values[0] && setState({ gender: values[0].value as Gender })}
+              isSingleSelect
+            />
+            <TextInput
+              label="Phone Number"
+              value={state.phoneNumber}
+              onChange={handleTextInputChange}
+              name="phoneNumber"
+              required
+              disabled={isDisabled}
+              leftsection={<div className="text-sm font-medium text-foreground">{state.countryCode}</div>}
+              type="number"
+            />
           </div>
-          <div className="flex flex-col md:flex-row gap-4 w-full">
-            <div className="w-full md:w-[50%]">
-              <TextInput
-                label="First Name"
-                value={state.firstName}
-                onChange={handleTextInputChange}
-                name="firstName"
-                required
-                disabled={!state.isEditing || state.isLoading}
-              />
-            </div>
-            <div className="w-full md:w-[50%]">
-              <TextInput
-                label="Last Name"
-                value={state.lastName}
-                onChange={handleTextInputChange}
-                name="lastName"
-                required
-                disabled={!state.isEditing || state.isLoading}
-              />
-            </div>
-          </div>
-          <div className="flex flex-col md:flex-row gap-4 w-full">
-            <div className="w-full md:w-[50%]">
-              <TextInput
-                label="Role"
-                value={state.designation}
-                onChange={handleTextInputChange}
-                name="designation"
-                required
-                disabled={!state.isEditing || state.isLoading}
-              />
-            </div>
-            <div className="w-full md:w-[50%]">
-              <Select
-                label="Gender"
-                values={[state.gender]}
-                items={Object.values(Gender).map((gender) => ({
-                  label: gender,
-                  value: gender,
-                }))}
-                required
-                isDisabled={!state.isEditing || state.isLoading}
-                onChange={(values) => values[0] && setState({ gender: values[0].value as Gender })}
-                isSingleSelect
-              />
-            </div>
-          </div>
-          <div className="flex flex-col md:flex-row gap-4 w-full">
-            <div className="w-full md:w-[50%]">
-              <TextInput
-                label="Phone Number"
-                value={state.phoneNumber}
-                onChange={handleTextInputChange}
-                name="phoneNumber"
-                required
-                disabled={!state.isEditing || state.isLoading}
-                leftsection={
-                  <div
-                    className={`${!state.isEditing ? 'text-muted-foreground' : 'text-foreground'} text-sm font-medium`}
-                  >
-                    {state.countryCode}
-                  </div>
-                }
-                type="number"
-              />
-            </div>
-            <div className="w-full md:w-[50%]">
-              <TextInput
-                label="Email"
-                value={state.email}
-                onChange={handleTextInputChange}
-                name="email"
-                required
-                disabled={true || !state.isEditing || state.isLoading}
-              />
-            </div>
+        ) : (
+          <dl className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+            <FieldValue label="First name" value={selectedUser.firstName} />
+            <FieldValue label="Last name" value={selectedUser.lastName} />
+            <FieldValue label="Role" value={selectedUser.designation} />
+            <FieldValue label="Gender" value={selectedUser.gender ? capitalize(selectedUser.gender) : ''} />
+            <FieldValue label="Phone number" value={phone} />
+          </dl>
+        )}
+      </SettingsSection>
+
+      <SettingsSection
+        title="Sign-in email"
+        description="The address you sign in with. It also receives your receipts and reminders."
+      >
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-background text-primary">
+            <EnvelopeSimpleIcon weight="bold" className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-foreground">{selectedUser.email}</p>
+            <p className="text-xs text-muted-foreground">
+              Email cannot be changed here. Contact support to move your account.
+            </p>
           </div>
         </div>
-        <div className="flex justify-end mt-8">
-          {state.isEditing ? (
-            <ModalFooter onSave={handleSaveProfile} onCancel={() => toggleEdit(false)} isLoading={state.isLoading} />
-          ) : null}
-        </div>
-      </Card>
-    </div>
+      </SettingsSection>
+    </>
   );
 };

@@ -190,6 +190,12 @@ export const replaceColor = (content: string) => {
     .replace(/color: rgb(?:a)?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*(?:0|1|0?\.\d+))?\s*\);/g, 'color: inherit;');
 };
 
+/**
+ * Whether a stored address points outside our S3 buckets — a sign-in provider's profile photo, for
+ * one. Such a URL is rendered as it is; only an object of ours is signed before display.
+ */
+export const isExternalUrl = (url: string): boolean => /^https?:\/\//.test(url) && !/\.amazonaws\.com\//.test(url);
+
 export const isPresignedUrlExpired = (signedUrl: string) => {
   if (!signedUrl?.includes('?')) return true;
   const params = new URLSearchParams(signedUrl.split('?')[1]);

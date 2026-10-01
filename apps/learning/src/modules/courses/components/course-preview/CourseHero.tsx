@@ -56,7 +56,7 @@ const TeacherRow = ({ course }: IProps) => {
   if (!teacher && !org) return null;
   return (
     <div className="flex items-center gap-3">
-      {teacher ? <Avatar id={teacher._id} name={teacher.name || 'Teacher'} avatar={teacher.photoUrl} /> : null}
+      {teacher ? <Avatar id={teacher._id} name={teacher.name || 'Teacher'} avatar={teacher.avatar} /> : null}
       <div className="text-sm">
         {teacher ? <div className="font-medium">{teacher.name}</div> : null}
         {org ? <div className="text-xs text-muted-foreground">{org.name}</div> : null}

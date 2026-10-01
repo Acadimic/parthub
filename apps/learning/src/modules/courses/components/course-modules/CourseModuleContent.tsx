@@ -312,7 +312,7 @@ export const CourseModuleContent = () => {
         </div>
         {createdBy ? (
           <div className="flex min-w-0 items-center gap-3 border-t border-border pt-4">
-            <Avatar id={createdBy._id} name={createdBy.name || 'Teacher'} avatar={createdBy.photoUrl} size={40} />
+            <Avatar id={createdBy._id} name={createdBy.name || 'Teacher'} avatar={createdBy.avatar} size={40} />
             <div className="min-w-0 flex-1">
               <div className="text-xs font-semibold uppercase tracking-caps text-muted-foreground">Teacher</div>
               <div className="truncate text-sm font-semibold">{createdBy.name}</div>

@@ -187,7 +187,8 @@ export class AuthGuard implements CanActivate {
     const email = firebaseUser.email as string;
     const name = (firebaseUser.name || firebaseUser.displayName || firebaseUser.display_name) as string;
     const phone_number = firebaseUser.phone_number as string;
-    return { email, uid, name, phone_number };
+    const picture = firebaseUser.picture;
+    return { email, uid, name, phone_number, picture };
   }
 
   async validateAndGetUser(context: ExecutionContext, accessType: AccessType): Promise<UserDto> {

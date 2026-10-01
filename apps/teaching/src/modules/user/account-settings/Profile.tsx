@@ -3,7 +3,7 @@ import { Button, Card, ModalFooter, TextInput } from '@repo/ui/app';
 import { PencilLineIcon } from '@phosphor-icons/react';
 import { Gender } from '@enums';
 import { UserService } from '@services';
-import { useSelectedUser, useUserLookups } from '@stores';
+import { useSelectedUser, useUserLookups, useUserStore } from '@stores';
 import { errorToast, formatPhoneNumber, successToast, validateEmail } from '@utils/helpers';
 import { useEffect } from 'react';
 import { useSetState } from 'react-use';
@@ -83,7 +83,9 @@ export const Profile = () => {
       patchUser(selectedUser._id, { phoneNumber });
       patchUser(selectedUser._id, { designation: state.designation });
       patchUser(selectedUser._id, { gender: state.gender });
-      await UserService.updateProfile(selectedUser);
+      // Read the user back after the patches: the one in this closure still has the old values.
+      const updatedUser = useUserStore.getState().getUserById(selectedUser._id);
+      if (updatedUser) await UserService.updateProfile(updatedUser);
       successToast({ message: 'Profile updated successfully!' });
       toggleEdit(false);
     } catch (error) {

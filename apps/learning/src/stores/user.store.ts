@@ -11,12 +11,10 @@ import { useStandardStore } from './standard.store';
 
 /**
  * A user in the store. Every field here is client-only and stripped from every request by
- * `CLIENT_ONLY_KEYS`: `isNew` marks a draft the user is still creating, and the API sends
- * `avatar` rather than `photoUrl`.
+ * `CLIENT_ONLY_KEYS`: `isNew` marks a draft the user is still creating.
  */
 export type IUser = UserDto & {
   isNew?: boolean;
-  photoUrl?: string | null;
   followersCount?: number;
   isLoadedFollowersCount?: boolean;
   isLoadingFollowersCount?: boolean;

@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class CreateFirebaseUserDto {
   @IsString()
@@ -56,4 +56,9 @@ export class FirebaseUserDto {
   @IsString()
   @IsOptional()
   phone_number?: string;
+
+  /** The provider's profile photo, as the ID token's `picture` claim; absent for an email sign-up. */
+  @IsUrl()
+  @IsOptional()
+  picture?: string;
 }

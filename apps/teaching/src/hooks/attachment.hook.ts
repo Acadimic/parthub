@@ -1,6 +1,7 @@
 import { type AttachmentDto } from '@repo/shared/contracts';
 import { getFileExtension } from '@repo/shared/utils';
 import { DocumentType, StorageKey } from '@enums';
+import { isExternalUrl } from '@repo/ui/lib';
 import { CommonService } from '@services';
 import { compressImage, createBatcher, errorToast, getObjectId, isPresignedUrlExpired } from '@utils/helpers';
 
@@ -105,7 +106,11 @@ export const useAttachment = () => {
     const cached = urls.map((url) => (cache[url] && !isPresignedUrlExpired(cache[url]) ? cache[url] : ''));
     if (cached.every(Boolean)) return cached;
     const signed = await Promise.all(
-      urls.map(async (url, index) => cached[index] || ((await signKey(toObjectKey(url))) ?? '')),
+      urls.map(async (url, index) => {
+        if (cached[index]) return cached[index];
+        if (isExternalUrl(url)) return url;
+        return (await signKey(toObjectKey(url))) ?? '';
+      }),
     );
     const next = readPresignedUrlCache();
     urls.forEach((url, index) => {

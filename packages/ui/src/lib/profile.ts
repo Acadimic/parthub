@@ -7,7 +7,7 @@ export interface IProfileSource {
   countryCode?: string | null;
   gender?: string;
   dob?: string | null;
-  photoUrl?: string | null;
+  avatar?: string | null;
   designation?: string;
   standards?: readonly string[];
 }
@@ -27,7 +27,8 @@ export const getProfilePayload = (user: IProfileSource) => ({
   // A birth date has no timezone: slice the server's ISO date part instead of reformatting locally,
   // which would shift the day for viewers behind UTC.
   dob: user.dob ? user.dob.slice(0, 10) : undefined,
-  avatar: user.photoUrl || undefined,
+  // null, not undefined: an absent key leaves the stored photo alone, so removing one would not stick.
+  avatar: user.avatar || null,
   designation: user.designation || undefined,
   standards: user.standards ? [...user.standards] : undefined,
 });

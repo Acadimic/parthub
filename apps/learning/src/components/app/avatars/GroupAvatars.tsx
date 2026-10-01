@@ -11,7 +11,7 @@ const UserInfo = ({ user }: { user: IUser }) => {
   return (
     <div className="flex flex-col">
       <div className="flex items-center gap-2">
-        <Avatar key={user._id} id={user._id} name={user.name} avatar={user.photoUrl} />
+        <Avatar key={user._id} id={user._id} name={user.name} avatar={user.avatar} />
         <div>
           <div>{user.name}</div>
           <div>{user.email && <span className="text-xs">{user.email}</span>}</div>
@@ -28,7 +28,7 @@ export const GroupAvatars = ({ users, max = 4 }: IProps) => {
     <div className="flex items-center space-x-[-6px]">
       {users.slice(0, max).map((user) => (
         <Tooltip key={user._id} title={<UserInfo user={user} />}>
-          <Avatar key={user._id} id={user._id} name={user.name} avatar={user.photoUrl} />
+          <Avatar key={user._id} id={user._id} name={user.name} avatar={user.avatar} />
         </Tooltip>
       ))}
       {total > max && (

@@ -105,7 +105,7 @@ export const ProfileDropdown = ({ isCompact }: IProps) => {
             !isCompact && 'md:pr-3',
           )}
         >
-          <Avatar avatar={selectedUser.photoUrl} name={fullName} id={selectedUser._id} size={32} />
+          <Avatar avatar={selectedUser.avatar} name={fullName} id={selectedUser._id} size={32} />
           {isCompact ? null : (
             <>
               <span className="hidden min-w-0 flex-col items-start text-left md:flex">
@@ -127,7 +127,7 @@ export const ProfileDropdown = ({ isCompact }: IProps) => {
             className="flex cursor-pointer items-center gap-3 px-4 pb-3 pt-4 transition-colors hover:bg-accent"
             onClick={() => push(AccountSettingsRoutes[AccountSettingsType.PROFILE])}
           >
-            <Avatar avatar={selectedUser.photoUrl} name={fullName} id={selectedUser._id} size={44} />
+            <Avatar avatar={selectedUser.avatar} name={fullName} id={selectedUser._id} size={44} />
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-sm font-semibold">{fullName}</span>
               <span className="truncate text-xs text-muted-foreground">{selectedUser.email}</span>

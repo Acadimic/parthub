@@ -1,9 +1,12 @@
-import { Button, Card, TextInput } from '@repo/ui/app';
-import { type FirebaseError, getFirebaseErrorMessage, updateUserPassword } from '@utils/firebase';
-import { errorToast, successToast, validateFieldValues } from '@utils/helpers';
+import { KeyIcon, SignOutIcon } from '@phosphor-icons/react';
+import { Button, TextInput } from '@repo/ui/app';
+import { getFullFormattedDate } from '@repo/ui/lib';
 import { useSelectedUser } from '@stores';
+import { type FirebaseError, getFirebaseErrorMessage, updateUserPassword } from '@utils/firebase';
+import { errorToast, logOut, successToast, validateFieldValues } from '@utils/helpers';
 import { useState } from 'react';
 import { useSetState } from 'react-use';
+import { FieldValue, SettingsSection } from './SettingsSection';
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -68,69 +71,99 @@ export const Security = () => {
   if (!selectedUser) return <></>;
 
   return (
-    <div className="flex flex-col">
-      <Card>
-        <div className="flex w-full flex-col gap-6">
-          <div className="flex items-center justify-between border-b border-dashed border-border pb-1">
-            <div className="text-lg font-medium">Password</div>
-            {!isEditing && (
-              <Button
-                className="px-0 py-0 text-sm text-muted-foreground hover:text-primary"
-                isSubtle
-                text="Change"
-                onClick={() => setIsEditing(true)}
-              />
-            )}
-          </div>
-          {isEditing ? (
+    <>
+      <SettingsSection
+        title="Password"
+        description={`Use at least ${MIN_PASSWORD_LENGTH} characters that you do not reuse on another site.`}
+        action={
+          isEditing ? null : (
+            <Button
+              isSecondary
+              className="px-3 py-1.5 text-sm"
+              text="Change password"
+              leftsection={<KeyIcon weight="bold" className="h-4 w-4" />}
+              onClick={() => setIsEditing(true)}
+            />
+          )
+        }
+        footer={
+          isEditing ? (
             <>
-              <div className="w-full md:w-[50%]">
-                <TextInput
-                  label="Current Password"
-                  type="password"
-                  name="currentPassword"
-                  value={state.currentPassword}
-                  onChange={handleTextInputChange}
-                  required
-                  disabled={state.isLoading}
-                />
-              </div>
-              <div className="flex w-full flex-col gap-4 md:flex-row">
-                <div className="w-full md:w-[50%]">
-                  <TextInput
-                    label="New Password"
-                    type="password"
-                    name="newPassword"
-                    value={state.newPassword}
-                    onChange={handleTextInputChange}
-                    required
-                    disabled={state.isLoading}
-                  />
-                </div>
-                <div className="w-full md:w-[50%]">
-                  <TextInput
-                    label="Confirm New Password"
-                    type="password"
-                    name="confirmPassword"
-                    value={state.confirmPassword}
-                    onChange={handleTextInputChange}
-                    required
-                    disabled={state.isLoading}
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button text="Update Password" onClick={handleChangePassword} isLoading={state.isLoading} />
-                <Button text="Cancel" isSecondary onClick={closeForm} />
-              </div>
+              <Button isSecondary text="Cancel" onClick={closeForm} disabled={state.isLoading} />
+              <Button text="Update password" onClick={handleChangePassword} isLoading={state.isLoading} />
             </>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Choose a strong password of at least {MIN_PASSWORD_LENGTH} characters that you do not reuse elsewhere.
-            </p>
-          )}
-        </div>
-      </Card>
-    </div>
+          ) : null
+        }
+      >
+        {isEditing ? (
+          <div className="grid max-w-xl grid-cols-1 gap-5">
+            <TextInput
+              label="Current Password"
+              type="password"
+              name="currentPassword"
+              value={state.currentPassword}
+              onChange={handleTextInputChange}
+              required
+              autoFocus
+              disabled={state.isLoading}
+            />
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <TextInput
+                label="New Password"
+                type="password"
+                name="newPassword"
+                value={state.newPassword}
+                onChange={handleTextInputChange}
+                required
+                disabled={state.isLoading}
+              />
+              <TextInput
+                label="Confirm New Password"
+                type="password"
+                name="confirmPassword"
+                value={state.confirmPassword}
+                onChange={handleTextInputChange}
+                required
+                disabled={state.isLoading}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-background text-primary">
+              <KeyIcon weight="bold" className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground">Password is set</p>
+              <p className="text-xs text-muted-foreground">
+                You sign in with your email and password. Change it here if you think it has been shared.
+              </p>
+            </div>
+          </div>
+        )}
+      </SettingsSection>
+
+      <SettingsSection
+        title="This account"
+        description="Where you are signed in, and how to leave."
+        action={
+          <Button
+            isSecondary
+            className="px-3 py-1.5 text-sm"
+            text="Sign out"
+            leftsection={<SignOutIcon weight="bold" className="h-4 w-4" />}
+            onClick={logOut}
+          />
+        }
+      >
+        <dl className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+          <FieldValue label="Signed in as" value={selectedUser.email} />
+          <FieldValue
+            label="Member since"
+            value={selectedUser.createdAt ? getFullFormattedDate(selectedUser.createdAt) : ''}
+          />
+        </dl>
+      </SettingsSection>
+    </>
   );
 };

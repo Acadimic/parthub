@@ -83,7 +83,7 @@ export const SessionHost = ({ meet, className }: { meet: MeetDto; className?: st
   if (!host) return null;
   return (
     <div className={cn('flex items-center gap-2 text-xs text-muted-foreground', className)}>
-      <Avatar id={host._id} name={host.name || 'Teacher'} avatar={host.photoUrl} size={20} />
+      <Avatar id={host._id} name={host.name || 'Teacher'} avatar={host.avatar} size={20} />
       <span className="truncate">with {host.name}</span>
     </div>
   );

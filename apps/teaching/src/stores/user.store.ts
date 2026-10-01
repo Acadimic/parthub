@@ -12,11 +12,10 @@ import { useSelectorStore } from './selector.store';
 import { useStandardStore } from './standard.store';
 
 /**
- * A user in the store. Both fields are client-only and stripped from every request by
- * `CLIENT_ONLY_KEYS`: `isNew` marks a draft the user is still creating, and the API sends
- * `avatar` rather than `photoUrl`.
+ * A user in the store. `isNew` is client-only and stripped from every request by
+ * `CLIENT_ONLY_KEYS`: it marks a draft the user is still creating.
  */
-export type IUser = UserDto & { isNew?: boolean; photoUrl?: string | null };
+export type IUser = UserDto & { isNew?: boolean };
 
 /**
  * Whether a user is a student. Decided by what their role grants, not by its name, so a custom

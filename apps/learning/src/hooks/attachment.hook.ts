@@ -15,6 +15,7 @@ import {
   toAddress,
   writePresignedUrlCache,
 } from '@utils/helpers';
+import { isExternalUrl } from '@repo/ui/lib';
 import { useState } from 'react';
 
 /**
@@ -97,7 +98,11 @@ export const useAttachment = () => {
     // its placeholder, rather than raising one error toast per card.
     if (!getToken(Subdomain.LEARN)) return [];
     const signed = await Promise.all(
-      urls.map(async (url, index) => cached[index] || ((await signKey(toObjectKey(url))) ?? '')),
+      urls.map(async (url, index) => {
+        if (cached[index]) return cached[index];
+        if (isExternalUrl(url)) return url;
+        return (await signKey(toObjectKey(url))) ?? '';
+      }),
     );
     const next = readPresignedUrlCache();
     urls.forEach((url, index) => {

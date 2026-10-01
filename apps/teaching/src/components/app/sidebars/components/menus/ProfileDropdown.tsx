@@ -90,7 +90,7 @@ export const ProfileDropdown = () => {
           aria-label="Open profile menu"
           className="flex items-center gap-2 rounded-full border border-border bg-background p-1 text-foreground transition-colors hover:bg-accent md:pr-3"
         >
-          <Avatar avatar={selectedUser.photoUrl} name={fullName} id={selectedUser._id} size={32} />
+          <Avatar avatar={selectedUser.avatar} name={fullName} id={selectedUser._id} size={32} />
           <span className="hidden min-w-0 flex-col items-start text-left md:flex">
             <span className="max-w-36 truncate text-sm font-semibold leading-tight">{fullName}</span>
             <span className="max-w-36 truncate text-xs leading-tight text-muted-foreground">
@@ -108,7 +108,7 @@ export const ProfileDropdown = () => {
             className="flex cursor-pointer items-center gap-3 px-4 pb-3 pt-4 transition-colors hover:bg-accent"
             onClick={() => push(AccountSettingsRoutes[AccountSettingsType.PROFILE])}
           >
-            <Avatar avatar={selectedUser.photoUrl} name={fullName} id={selectedUser._id} size={44} />
+            <Avatar avatar={selectedUser.avatar} name={fullName} id={selectedUser._id} size={44} />
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-sm font-semibold">{fullName}</span>
               <span className="truncate text-xs text-muted-foreground">{selectedUser.email}</span>

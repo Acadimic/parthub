@@ -5,7 +5,7 @@ import { AccountSettingsType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { type IMenuItem } from '@interfaces';
 import { UserService } from '@services';
-import { useSelectedUser, useUserLookups } from '@stores';
+import { useSelectedUser, useUserLookups, useUserStore } from '@stores';
 import { AccountSettingsRoutes } from '@repo/shared/utils';
 import { successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
@@ -25,9 +25,11 @@ export const AccountSettings = () => {
     if (!selectedUser) return;
     try {
       const attachment = file && (await uploadFilesToS3(selectedUser._id, [file]));
-      const photoUrl = attachment?.length ? attachment[0].url : '';
-      patchUser(selectedUser._id, { photoUrl });
-      await UserService.updateProfile(selectedUser);
+      const avatar = attachment?.length ? attachment[0].url : '';
+      patchUser(selectedUser._id, { avatar });
+      // Read the user back after the patch: the one in this closure still has the old photo.
+      const updatedUser = useUserStore.getState().getUserById(selectedUser._id);
+      if (updatedUser) await UserService.updateProfile(updatedUser);
       successToast({ message: 'Avatar updated successfully!' });
       setAvatarFile(undefined);
     } catch (error) {
@@ -96,7 +98,7 @@ export const AccountSettings = () => {
           <Card>
             <div className="flex flex-col items-center justify-center gap-6 min-h-[240px]">
               <UploadAvatar
-                url={selectedUser.photoUrl}
+                url={selectedUser.avatar}
                 file={avatarFile}
                 setFile={updatePhotoUrl}
                 removeFile={() => updatePhotoUrl(undefined)}

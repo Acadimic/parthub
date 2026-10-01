@@ -31,7 +31,7 @@ export const ViewMeetAttendees = ({ attendeeIds, isStudents, isTeachers, noLabel
       {attendees.length ? (
         <div className="flex flex-wrap gap-2">
           {attendees.map((user) => (
-            <AvatarWithName key={user._id} id={user._id} name={user.name} avatar={user.photoUrl} />
+            <AvatarWithName key={user._id} id={user._id} name={user.name} avatar={user.avatar} />
           ))}
         </div>
       ) : (
