@@ -307,7 +307,7 @@ export const AiCourseReviewDrawer = ({ isOpen, onClose, course, modules }: IProp
               </p>
             )}
             {state.linkState === 'failed' ? (
-              <p className="mt-2 text-xs text-warning">The references could not be checked.</p>
+              <p className="mt-2 text-xs text-foreground">The references could not be checked.</p>
             ) : null}
           </DrawerSection>
 

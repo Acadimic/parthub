@@ -70,8 +70,11 @@ export const light = {
     'success-fill': '#0d7a4d',
     'success-fill-foreground': '#ffffff',
 
-    warning: '#96620d',
-    'warning-foreground': '#ffffff',
+    // A true yellow, so it is a fill with dark text on it — never body text. Any yellow dark
+    // enough to read as text on white turns brown, so a warning is said with an icon or a tinted
+    // pill, not with yellow words. The contrast script skips `warning` as text for this reason.
+    warning: '#e0ac00',
+    'warning-foreground': '#1a1c22',
 
     // Sky rather than the periwinkle of `primary`. An informational notice sitting next to a
     // primary button has to be distinguishable from it, which a second blue of the same hue is not.

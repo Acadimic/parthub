@@ -37,7 +37,9 @@ const badgeVariants = cva(
       { tone: 'neutral', appearance: 'soft', class: 'bg-muted-foreground/15 text-foreground border-border' },
       { tone: 'primary', appearance: 'soft', class: 'bg-primary/15 text-primary border-primary/25' },
       { tone: 'success', appearance: 'soft', class: 'bg-success/15 text-success border-success/25' },
-      { tone: 'warning', appearance: 'soft', class: 'bg-warning/15 text-warning border-warning/25' },
+      // Yellow is a fill, not a text colour: the soft and outline pills say it with the tint and
+      // the border and keep their text at full contrast.
+      { tone: 'warning', appearance: 'soft', class: 'bg-warning/20 text-foreground border-warning/40' },
       { tone: 'destructive', appearance: 'soft', class: 'bg-destructive/15 text-destructive border-destructive/25' },
       { tone: 'info', appearance: 'soft', class: 'bg-info/15 text-info border-info/25' },
       { tone: 'brand', appearance: 'soft', class: 'bg-brand/15 text-brand border-brand/25' },
@@ -53,7 +55,7 @@ const badgeVariants = cva(
       { tone: 'neutral', appearance: 'outline', class: 'text-muted-foreground border-border' },
       { tone: 'primary', appearance: 'outline', class: 'text-primary border-primary/40' },
       { tone: 'success', appearance: 'outline', class: 'text-success border-success/40' },
-      { tone: 'warning', appearance: 'outline', class: 'text-warning border-warning/40' },
+      { tone: 'warning', appearance: 'outline', class: 'text-foreground border-warning' },
       { tone: 'destructive', appearance: 'outline', class: 'text-destructive border-destructive/40' },
       { tone: 'info', appearance: 'outline', class: 'text-info border-info/40' },
       { tone: 'brand', appearance: 'outline', class: 'text-brand border-brand/40' },

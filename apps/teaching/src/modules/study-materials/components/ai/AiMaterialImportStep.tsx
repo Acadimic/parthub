@@ -188,7 +188,7 @@ export const LinkSummary = ({
       );
     }
     if (state === 'failed') {
-      return <span className="text-warning">The references could not be checked; all {total} will be kept.</span>;
+      return <span className="text-foreground">The references could not be checked; all {total} will be kept.</span>;
     }
     return (
       <>

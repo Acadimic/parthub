@@ -1,3 +1,4 @@
+import { cn } from '@repo/ui/lib';
 import { CheckCircleIcon, FlagIcon, type Icon, MinusCircleIcon, TimerIcon } from '@phosphor-icons/react';
 import { useTestPaperLookups } from '@stores';
 import { getTimeString } from '@utils/helpers';
@@ -42,7 +43,9 @@ export const TestPaperSummary = () => {
               <row.icon weight="bold" className="h-4 w-4 text-muted-foreground" />
               {row.label}
             </div>
-            <div className={`font-mono text-sm font-semibold ${row.isWarning ? 'text-warning' : ''}`}>{row.value}</div>
+            <div className={cn('font-mono text-sm font-semibold', row.isWarning && 'rounded-md bg-warning/20 px-1.5')}>
+              {row.value}
+            </div>
           </div>
         ))}
       </div>

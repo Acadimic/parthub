@@ -94,8 +94,10 @@ for (const text of ['foreground', 'muted-foreground']) {
   }
 }
 
+// `warning` is deliberately absent: it is a true yellow, legible only as a fill under its dark
+// foreground (checked above), and nothing sets it as text.
 console.log('\nstatus colours as text on the base surfaces');
-for (const name of ['destructive', 'success', 'warning', 'info', 'primary']) {
+for (const name of ['destructive', 'success', 'info', 'primary']) {
   if (!tokens[name]) continue;
   for (const s of ['background', 'muted'].filter((x) => tokens[x])) {
     const r = contrast(tokens[name], tokens[s]);

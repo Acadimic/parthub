@@ -48,7 +48,7 @@ export const dark = {
     accent: '#23262e',
     'accent-foreground': '#edeef2',
 
-    destructive: '#e5706e',
+    destructive: '#f25f57',
     'destructive-foreground': '#0a0b0f',
 
     success: '#7ee4ac',

@@ -17,7 +17,7 @@ import { getQuestionTypeMeta } from './question-types';
 const MARKING_FIELDS: { name: Marking; label: string; tone: string }[] = [
   { name: Marking.CORRECT, label: 'Correct', tone: 'text-success' },
   { name: Marking.INCORRECT, label: 'Incorrect', tone: 'text-destructive' },
-  { name: Marking.UNATTEMPTED, label: 'Unattempted', tone: 'text-warning' },
+  { name: Marking.UNATTEMPTED, label: 'Unattempted', tone: 'text-muted-foreground' },
 ];
 
 /**

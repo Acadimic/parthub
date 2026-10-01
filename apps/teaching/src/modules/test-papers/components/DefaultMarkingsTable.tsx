@@ -17,7 +17,7 @@ interface IProps {
 const COLUMNS: { marking: Marking; label: string; tone: string }[] = [
   { marking: Marking.CORRECT, label: 'Correct', tone: 'text-success' },
   { marking: Marking.INCORRECT, label: 'Incorrect', tone: 'text-destructive' },
-  { marking: Marking.UNATTEMPTED, label: 'Unattempted', tone: 'text-warning' },
+  { marking: Marking.UNATTEMPTED, label: 'Unattempted', tone: 'text-muted-foreground' },
 ];
 
 /** The key an input carries in its `name`, and the key its text is held under. */

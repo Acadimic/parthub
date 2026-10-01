@@ -10,7 +10,7 @@ export const AiIssueList = ({ issues }: { issues: IAiIssue[] }) => (
         key={`${issue.path}-${index}`}
         className={cn(
           'flex items-start gap-2 rounded-md px-2.5 py-1.5 text-xs',
-          issue.level === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning',
+          issue.level === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-warning/15 text-foreground',
         )}
       >
         {issue.level === 'error' ? (

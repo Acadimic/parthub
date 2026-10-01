@@ -113,7 +113,9 @@ A brand or high-contrast variant is additive:
 - **Pick accents by measuring, not by eye.** Contrast is symmetric, so an accent at ~5:1 against the
   page works *both* as `text-destructive` on the page and as `bg-destructive` under
   `text-destructive-foreground`. One value covers both jobs, which is why the status colours here
-  are dark in light mode and bright in dark mode rather than one shared mid-tone.
+  are dark in light mode and bright in dark mode rather than one shared mid-tone. `warning` is the
+  one exception: a yellow dark enough to read as text turns brown, so it is a true yellow with dark
+  text on it and is never used as text — a soft pill or an icon carries a warning instead.
 - **Status colours earn their keep only if they are rare.** The chrome is deliberately neutral so
   that a coloured control always means something. `primary` is the one interactive hue; if a second
   colour starts appearing on clickable things, the signal is gone.
