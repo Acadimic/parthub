@@ -253,7 +253,7 @@ const ModuleList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem
 };
 
 /** Every test paper in the course in one flat list, for a learner who only wants to practise. */
-const TestList = ({ courseId, courseModules, isLocked, onSelectItem }: IListProps) => {
+const TestList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem }: IListProps) => {
   const { getCourseItems, isItemCompleted } = useCourse();
   const tests = getCourseItems(courseId).filter((item) => item.testPaper);
   const completedCount = tests.filter(isItemCompleted).length;
@@ -271,7 +271,10 @@ const TestList = ({ courseId, courseModules, isLocked, onSelectItem }: IListProp
 
   return (
     <>
-      <ListToolbar summary={`${tests.length} ${getPlural(tests.length, 'test')} · ${completedCount} done`} isSticky />
+      <ListToolbar
+        summary={`${tests.length} ${getPlural(tests.length, 'test')} · ${completedCount} done`}
+        isSticky={!isPreview}
+      />
       <div className="flex flex-col">
         {tests.map((item) => (
           <div
@@ -280,7 +283,7 @@ const TestList = ({ courseId, courseModules, isLocked, onSelectItem }: IListProp
           >
             <OutlineItem
               item={item}
-              isPreview={false}
+              isPreview={isPreview}
               isLocked={isLocked}
               onSelect={onSelectItem}
               moduleName={getModuleName(item.courseModuleId)}
@@ -305,14 +308,13 @@ export const CourseOutline = (props: IProps) => {
     );
   }
 
-  if (isPreview) return <ModuleList {...props} courseModules={courseModules} />;
-
-  // The strip stays put and each panel scrolls under it, so the tabs are always one tap away. The
-  // caller gives the outline a column to fill; see `CourseModules`.
+  // While learning, the strip stays put and each panel scrolls under it, so the tabs are always
+  // one tap away; the caller gives the outline a column to fill (see `CourseModules`). The
+  // preview page scrolls as a whole, so there the panels simply flow.
   return (
     <Tabs
-      className="flex min-h-0 flex-1 flex-col"
-      contentClassName="mt-0 min-h-0 flex-1 overflow-y-auto"
+      className={cn(!isPreview && 'flex min-h-0 flex-1 flex-col')}
+      contentClassName={cn('mt-0', !isPreview && 'min-h-0 flex-1 overflow-y-auto')}
       triggerClassName="px-3 py-1.5 text-xs"
       tabs={[
         {

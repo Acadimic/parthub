@@ -130,8 +130,14 @@ const loadModules = (courseId: string, shape: 'contents' | 'outline'): Promise<v
     const courseModules = modulesResult.data.map(distributeCourseModule);
     if (meetsResult?.data) useMeetStore.getState().addMeets(meetsResult.data);
     store.addCourseModules(courseModules);
+    // Only when nothing in this course is selected: the preview picks an item and then opens the
+    // learning view, which loads the contents, and that pick must survive the load.
+    const selector = useSelectorStore.getState();
+    const isSelectionInCourse = courseModules.some(
+      (courseModule) => courseModule._id === selector.selectedCourseModuleId,
+    );
     const firstModuleId = courseModules[0]?._id;
-    if (firstModuleId) useSelectorStore.getState().setSelectedCourseModuleId(firstModuleId);
+    if (!isSelectionInCourse && firstModuleId) selector.setSelectedCourseModuleId(firstModuleId);
     // An outline never downgrades a course whose whole contents are already here.
     store.patchCourse(
       courseId,
