@@ -1,5 +1,6 @@
 import { Button, FullLogo, Logo } from '@repo/ui/app';
 import { StorageKey } from '@enums';
+import { useScrollTopOnNavigate } from '@repo/ui/hooks';
 import { CaretDoubleRightIcon, CaretLeftIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
@@ -92,6 +93,7 @@ interface IProps {
 }
 
 export const AppSidebar = ({ children }: IProps) => {
+  const scrollRef = useScrollTopOnNavigate<HTMLElement>();
   // Starts closed so the server and the first client render agree; the stored preference (or the
   // viewport, on a first visit) is applied on mount. Reading localStorage during render both
   // risked a hydration mismatch and pinned `open` to the pre-measurement value, which is why the
@@ -151,7 +153,7 @@ export const AppSidebar = ({ children }: IProps) => {
         </div>
       </aside>
       {/* Main content */}
-      <main className="h-screen w-full flex-1 overflow-auto">
+      <main ref={scrollRef} className="h-screen w-full flex-1 overflow-auto">
         {/* Top bar */}
         <header className="sticky top-0 z-30 border-b border-border bg-background">
           <div className="flex h-16 w-full items-center justify-between px-4">

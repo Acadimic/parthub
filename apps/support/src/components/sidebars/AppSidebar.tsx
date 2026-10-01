@@ -1,5 +1,6 @@
 import { StorageKey } from '@enums';
 import { CaretDoubleRightIcon } from '@phosphor-icons/react';
+import { useScrollTopOnNavigate } from '@repo/ui/hooks';
 import { useRouter } from 'next/router';
 import { type ReactNode, useEffect, useState } from 'react';
 import { ProfileDropdown } from './components';
@@ -12,6 +13,7 @@ interface IProps {
 }
 
 export const AppSidebar = ({ children }: IProps) => {
+  const scrollRef = useScrollTopOnNavigate<HTMLDivElement>();
   const [open, setOpen] = useState(false);
 
   /**
@@ -155,7 +157,7 @@ export const AppSidebar = ({ children }: IProps) => {
             </div>
           </div>
         </header>
-        <div className="overflow-y-auto" style={{ height: 'calc(100vh - 64px)' }}>
+        <div ref={scrollRef} className="overflow-y-auto" style={{ height: 'calc(100vh - 64px)' }}>
           <div className="py-4 px-4 md:py-4 md:px-4 bg-muted min-h-full">{children}</div>
         </div>
       </main>

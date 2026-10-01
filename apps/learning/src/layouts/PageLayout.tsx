@@ -1,6 +1,7 @@
 import { PageHeader } from '@components/app/headers';
 import { ExploreSheet } from '@components/app/headers/explore';
 import { LearnerNavigation } from '@components/app/navigations';
+import { useScrollTopOnNavigate } from '@repo/ui/hooks';
 import { cn } from '@repo/ui/lib';
 import { useSelectedUser } from '@stores';
 
@@ -21,10 +22,11 @@ interface IProps {
  */
 export const PageLayout = ({ children, withTabBar }: IProps) => {
   const selectedUser = useSelectedUser();
+  const scrollRef = useScrollTopOnNavigate<HTMLDivElement>();
   // Every tab but Home needs an account, so a visitor gets the header's Sign In instead of a bar.
   const hasTabBar = withTabBar && Boolean(selectedUser);
   return (
-    <div className="relative h-[100vh] overflow-auto bg-background">
+    <div ref={scrollRef} className="relative h-[100vh] overflow-auto bg-background">
       <div className="fixed top-0 z-50 w-full">
         <PageHeader />
       </div>
