@@ -81,6 +81,7 @@ export const useCourse = () => {
   };
 
   const selectItem = (item: ICourseModuleItem) => {
+    if (isItemSelected(item)) return;
     const { material, testPaper, courseModuleId } = item;
     setSelectedCourseModuleId(courseModuleId);
     if (material) {
