@@ -103,12 +103,16 @@ export const useAttachment = () => {
    */
   const getPresignedUrls = async (urls: string[]): Promise<string[]> => {
     const cache = readPresignedUrlCache();
-    const cached = urls.map((url) => (cache[url] && !isPresignedUrlExpired(cache[url]) ? cache[url] : ''));
+    // An external address (a sign-in provider's photo) is used as it is. Decided before the cache
+    // is read, so an entry written for it before this rule existed can never shadow it.
+    const cached = urls.map((url) => {
+      if (isExternalUrl(url)) return url;
+      return cache[url] && !isPresignedUrlExpired(cache[url]) ? cache[url] : '';
+    });
     if (cached.every(Boolean)) return cached;
     const signed = await Promise.all(
       urls.map(async (url, index) => {
         if (cached[index]) return cached[index];
-        if (isExternalUrl(url)) return url;
         return (await signKey(toObjectKey(url))) ?? '';
       }),
     );

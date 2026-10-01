@@ -46,7 +46,14 @@ export const Avatar = ({ id, name, avatar, size = 32, bg: bgProp, color: colorPr
       }}
     >
       {presignedUrl ? (
-        <img src={presignedUrl} alt={name} className="w-full h-full object-cover" />
+        <img
+          src={presignedUrl}
+          alt={name}
+          className="w-full h-full object-cover"
+          // A dead address — an object removed from the bucket, a provider photo that no longer
+          // resolves — shows the initials rather than the browser's broken-image box.
+          onError={() => setPresignedUrl('')}
+        />
       ) : (
         <Tooltip title={name}>{initials}</Tooltip>
       )}
