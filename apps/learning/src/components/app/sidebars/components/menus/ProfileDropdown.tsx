@@ -88,7 +88,7 @@ export const ProfileDropdown = ({ isCompact }: IProps) => {
 
   if (!selectedUser) return null;
 
-  const fullName = [selectedUser.name, selectedUser.lastName].filter(Boolean).join(' ') || 'User';
+  const fullName = selectedUser.name || 'User';
   const org = getOrgById(selectedUser.org ?? '');
   const orgName = org?.name || 'Organization';
   const otherAccounts = loggedInUsers.filter((user) => user._id !== selectedUser._id && getOrgById(user.org ?? ''));

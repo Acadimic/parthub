@@ -94,7 +94,7 @@ export const AccountSettings = () => {
 
   if (!selectedUser) return <></>;
 
-  const fullName = [selectedUser.firstName, selectedUser.lastName].filter(Boolean).join(' ') || selectedUser.name;
+  const fullName = selectedUser.name || 'User';
   const org = getOrgById(selectedUser.org ?? '');
   const currentItem = navItems.find((item) => item.isCurrent);
 
