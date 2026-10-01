@@ -91,3 +91,6 @@ export {
 } from './MathField/virtual-keyboard';
 export type { IVirtualKeyboard } from './MathField/virtual-keyboard';
 export { VirtualKeyboardDismiss } from './MathField/VirtualKeyboardDismiss';
+
+export { ExpandableText } from './ExpandableText';
+export type { IExpandableTextProps } from './ExpandableText';

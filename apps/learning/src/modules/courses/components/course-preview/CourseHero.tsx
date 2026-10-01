@@ -2,7 +2,7 @@ import { Avatar } from '@components/app/avatars';
 import { useCourse } from '@hooks/course.hook';
 import { CalendarBlankIcon, ClockIcon, HouseIcon, SparkleIcon, StackIcon } from '@phosphor-icons/react';
 import { Breadcrumb, type IBreadcrumbItem } from '@repo/ui/app';
-import { Badge } from '@repo/ui/core';
+import { Badge, ExpandableText } from '@repo/ui/core';
 import { type ICourse, useStandardLookups, useUserLookups } from '@stores';
 import { AI_GENERATED_COURSE_TAG } from '@utils/constants';
 import { getPlural, getStringFormattedDate } from '@utils/helpers';
@@ -85,7 +85,7 @@ export const CourseHero = ({ course }: IProps) => {
       <div className="flex flex-col gap-3">
         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{course.name}</h1>
         {course.description ? (
-          <p className="max-w-2xl text-xs text-muted-foreground md:text-sm">{course.description}</p>
+          <ExpandableText text={course.description} className="max-w-2xl text-xs text-muted-foreground md:text-sm" />
         ) : null}
       </div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
