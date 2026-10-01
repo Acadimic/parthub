@@ -21,9 +21,11 @@ interface ITabsProps {
   className?: string;
   /** Classes for each panel, typically `min-h-0 flex-1 overflow-auto` alongside a flex root. */
   contentClassName?: string;
+  /** Classes for each tab, for a denser strip (`px-3 py-1.5 text-xs`) in a narrow column. */
+  triggerClassName?: string;
 }
 
-export const Tabs = ({ tabs, value, onChange, className, contentClassName }: ITabsProps) => {
+export const Tabs = ({ tabs, value, onChange, className, contentClassName, triggerClassName }: ITabsProps) => {
   const [selectedTabIndex, setSelectedTabIndex] = React.useState(value || 0);
 
   const handleChange = (val: string) => {
@@ -46,6 +48,7 @@ export const Tabs = ({ tabs, value, onChange, className, contentClassName }: ITa
             className={cn(
               'text-sm font-semibold rounded-none border-b-2 border-transparent px-4 py-2',
               'data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none',
+              triggerClassName,
             )}
           >
             <div className={cn('flex items-center gap-1.5', tab.iconPosition === 'end' && 'flex-row-reverse')}>

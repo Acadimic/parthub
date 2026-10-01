@@ -1,5 +1,5 @@
 import { ExpandAllButton } from '@repo/ui/app';
-import { Accordion } from '@repo/ui/core';
+import { Accordion, Tabs } from '@repo/ui/core';
 import { useExpandedIds } from '@repo/ui/hooks';
 import { cn } from '@repo/ui/lib';
 import { CONTENT_TYPE_ICONS, CONTENT_TYPE_TONES, ContentTypeBadge } from '@components/app/badges';
@@ -7,7 +7,7 @@ import { BlankState } from '@components/others';
 import { ModuleContentType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { type ICourseModuleItem } from '@interfaces';
-import { CheckIcon, LockSimpleIcon } from '@phosphor-icons/react';
+import { CheckIcon, ClipboardTextIcon, ListBulletsIcon, LockSimpleIcon } from '@phosphor-icons/react';
 import {
   type ICourseModule,
   useCourseLookups,
@@ -20,11 +20,15 @@ import { useEffect } from 'react';
 
 interface IProps {
   courseId: string;
-  /** Wider spacing and module descriptions; the learning view keeps it dense. */
+  /** Wider spacing and module descriptions; the learning view keeps it dense and adds the tests tab. */
   isPreview: boolean;
   /** A priced course without a seat: rows show a lock instead of their kind, and do not open. */
   isLocked: boolean;
   onSelectItem: (item: ICourseModuleItem) => void;
+}
+
+interface IListProps extends IProps {
+  courseModules: ICourseModule[];
 }
 
 interface IRowProps {
@@ -32,6 +36,8 @@ interface IRowProps {
   isPreview: boolean;
   isLocked: boolean;
   onSelect: (item: ICourseModuleItem) => void;
+  /** Named only in the flat tests list, where a row has no module panel above it to say where it is. */
+  moduleName?: string;
 }
 
 /** The mark's fill: done is a quiet tinted tick, so a finished list does not shout; selected beats idle. */
@@ -41,7 +47,7 @@ const getMarkClass = (type: ModuleContentType, isCompleted: boolean, isSelected:
   return isSelected ? CONTENT_TYPE_TONES[type].solid : CONTENT_TYPE_TONES[type].soft;
 };
 
-const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
+const OutlineItem = ({ item, isPreview, isLocked, onSelect, moduleName }: IRowProps) => {
   const { getModuleContentType, isItemCompleted, isItemSelected } = useCourse();
   const type = getModuleContentType(item.material, item.testPaper);
   const isCompleted = isItemCompleted(item);
@@ -73,10 +79,16 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">{details?.name}</span>
-        <span className="mt-0.5 flex items-center gap-1.5 text-xxs text-muted-foreground/70">
+        <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xxs text-muted-foreground/70">
           <ContentTypeBadge type={type} size="xs" />
-          <span aria-hidden className="h-[3px] w-[3px] rounded-full bg-muted-foreground/50" />
-          {details?.durationMins ?? 0} min
+          <span aria-hidden className="h-[3px] w-[3px] shrink-0 rounded-full bg-muted-foreground/50" />
+          <span className="shrink-0">{details?.durationMins ?? 0} min</span>
+          {moduleName ? (
+            <>
+              <span aria-hidden className="h-[3px] w-[3px] shrink-0 rounded-full bg-muted-foreground/50" />
+              <span className="truncate">{moduleName}</span>
+            </>
+          ) : null}
         </span>
       </span>
     </button>
@@ -126,44 +138,33 @@ const ModuleTitle = ({
   );
 };
 
-/** The count of what the outline holds, and the one control that opens or folds every module. */
-const OutlineToolbar = ({
-  moduleCount,
-  itemCount,
-  isAllOpen,
+/** The line above a list: what it holds, and any control over the whole of it. Sticks while learning. */
+const ListToolbar = ({
+  summary,
   isSticky,
-  onToggleAll,
+  action,
 }: {
-  moduleCount: number;
-  itemCount: number;
-  isAllOpen: boolean;
+  summary: string;
   isSticky: boolean;
-  onToggleAll: () => void;
+  action?: React.ReactNode;
 }) => (
   <div
     className={cn(
-      'flex items-center justify-between gap-3 border-b border-border py-2 pl-4 pr-2',
+      'flex min-h-[2.5rem] items-center justify-between gap-3 border-b border-border py-2 pl-4 pr-2',
       isSticky && 'sticky top-0 z-10 bg-background',
     )}
   >
-    <span className="min-w-0 truncate text-xs text-muted-foreground">
-      {moduleCount} {getPlural(moduleCount, 'module')} · {itemCount} {getPlural(itemCount, 'item')}
-    </span>
-    <ExpandAllButton
-      isAllExpanded={isAllOpen}
-      onClick={onToggleAll}
-      className="shrink-0 px-2.5 py-1 text-xs text-primary"
-    />
+    <span className="min-w-0 truncate text-xs text-muted-foreground">{summary}</span>
+    {action}
   </div>
 );
 
-export const CourseOutline = ({ courseId, isPreview, isLocked, onSelectItem }: IProps) => {
-  const { getCourseModules, isItemCompleted } = useCourse();
-  const { isLoading } = useCourseLookups();
+/** The syllabus: one folding panel per module, with its lessons and tests inside. */
+const ModuleList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem }: IListProps) => {
+  const { isItemCompleted } = useCourse();
   const { getMaterialsByIds } = useMaterialLookups();
   const { getTestPapersByIds } = useTestPaperLookups();
   const { selectedCourseModuleId } = useSelectorLookups();
-  const courseModules = getCourseModules(courseId);
   // Ids rather than positions, so a panel stays open if the module list arrives or reorders later.
   const { isExpanded, isAllExpanded, expand, setExpandedIds, toggleAll } = useExpandedIds(
     courseModules.map((courseModule) => courseModule._id),
@@ -176,13 +177,6 @@ export const CourseOutline = ({ courseId, isPreview, isLocked, onSelectItem }: I
     expand(selectedCourseModuleId);
   }, [isPreview, selectedCourseModuleId, expand]);
 
-  if (!courseModules.length) {
-    if (isLoading('courseModules')) return null;
-    return (
-      <BlankState label="No modules yet" description="Lessons and tests will appear here once they are published." />
-    );
-  }
-
   const openIndexes = courseModules.flatMap((courseModule, index) => (isExpanded(courseModule._id) ? [index] : []));
   const itemCount = courseModules.reduce(
     (count, courseModule) => count + (courseModule.materials?.length ?? 0) + (courseModule.testPapers?.length ?? 0),
@@ -191,12 +185,16 @@ export const CourseOutline = ({ courseId, isPreview, isLocked, onSelectItem }: I
 
   return (
     <>
-      <OutlineToolbar
-        moduleCount={courseModules.length}
-        itemCount={itemCount}
-        isAllOpen={isAllExpanded}
+      <ListToolbar
+        summary={`${courseModules.length} ${getPlural(courseModules.length, 'module')} · ${itemCount} ${getPlural(itemCount, 'item')}`}
         isSticky={!isPreview}
-        onToggleAll={toggleAll}
+        action={
+          <ExpandAllButton
+            isAllExpanded={isAllExpanded}
+            onClick={toggleAll}
+            className="shrink-0 px-2.5 py-1 text-xs text-primary"
+          />
+        }
       />
       <Accordion
         type="multiple"
@@ -251,5 +249,83 @@ export const CourseOutline = ({ courseId, isPreview, isLocked, onSelectItem }: I
         })}
       />
     </>
+  );
+};
+
+/** Every test paper in the course in one flat list, for a learner who only wants to practise. */
+const TestList = ({ courseId, courseModules, isLocked, onSelectItem }: IListProps) => {
+  const { getCourseItems, isItemCompleted } = useCourse();
+  const tests = getCourseItems(courseId).filter((item) => item.testPaper);
+  const completedCount = tests.filter(isItemCompleted).length;
+  const getModuleName = (courseModuleId: string) =>
+    courseModules.find((courseModule) => courseModule._id === courseModuleId)?.name;
+
+  if (!tests.length) {
+    return (
+      <BlankState
+        label="No tests yet"
+        description="Tests will appear here once your teacher adds them to the course."
+      />
+    );
+  }
+
+  return (
+    <>
+      <ListToolbar summary={`${tests.length} ${getPlural(tests.length, 'test')} · ${completedCount} done`} isSticky />
+      <div className="flex flex-col">
+        {tests.map((item) => (
+          <div
+            key={item.testPaper?._id}
+            className="relative before:absolute before:inset-x-4 before:top-0 before:border-t before:border-dotted before:border-border first:before:border-0"
+          >
+            <OutlineItem
+              item={item}
+              isPreview={false}
+              isLocked={isLocked}
+              onSelect={onSelectItem}
+              moduleName={getModuleName(item.courseModuleId)}
+            />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+};
+
+export const CourseOutline = (props: IProps) => {
+  const { courseId, isPreview } = props;
+  const { getCourseModules } = useCourse();
+  const { isLoading } = useCourseLookups();
+  const courseModules = getCourseModules(courseId);
+
+  if (!courseModules.length) {
+    if (isLoading('courseModules')) return null;
+    return (
+      <BlankState label="No modules yet" description="Lessons and tests will appear here once they are published." />
+    );
+  }
+
+  if (isPreview) return <ModuleList {...props} courseModules={courseModules} />;
+
+  // The strip stays put and each panel scrolls under it, so the tabs are always one tap away. The
+  // caller gives the outline a column to fill; see `CourseModules`.
+  return (
+    <Tabs
+      className="flex min-h-0 flex-1 flex-col"
+      contentClassName="mt-0 min-h-0 flex-1 overflow-y-auto"
+      triggerClassName="px-3 py-1.5 text-xs"
+      tabs={[
+        {
+          label: 'Contents',
+          icon: <ListBulletsIcon weight="bold" className="h-3.5 w-3.5" />,
+          component: <ModuleList {...props} courseModules={courseModules} />,
+        },
+        {
+          label: 'Tests',
+          icon: <ClipboardTextIcon weight="bold" className="h-3.5 w-3.5" />,
+          component: <TestList {...props} courseModules={courseModules} />,
+        },
+      ]}
+    />
   );
 };

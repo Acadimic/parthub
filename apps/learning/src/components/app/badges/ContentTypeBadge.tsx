@@ -54,7 +54,7 @@ export const ContentTypeBadge = ({ type, size, className }: IProps) => {
     return (
       <span
         className={cn(
-          'px-1 py-0.5 text-[0.5625rem] font-semibold uppercase leading-none tracking-caps',
+          'shrink-0 whitespace-nowrap px-1 py-0.5 text-[0.5625rem] font-semibold uppercase leading-none tracking-caps',
           CONTENT_TYPE_TONES[type].pill,
           className,
         )}

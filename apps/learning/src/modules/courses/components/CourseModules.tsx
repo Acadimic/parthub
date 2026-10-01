@@ -163,7 +163,8 @@ export const CourseModules = () => {
       >
         <div className={cn('flex h-full min-h-0 flex-col', isOutlineHidden && 'hidden')}>
           <OutlineHeader course={selectedCourse} />
-          <div className="min-h-0 flex-1 overflow-y-auto">{outline}</div>
+          {/* The outline scrolls its own tab panels, so this is a column for it to fill, not a scroller. */}
+          <div className="flex min-h-0 flex-1 flex-col">{outline}</div>
         </div>
       </aside>
       <Modal
@@ -173,7 +174,7 @@ export const CourseModules = () => {
         onClose={handleCourseMenuClick}
         childrenClassName="px-0"
         component={
-          <div className="flex flex-col">
+          <div className="flex h-full flex-col">
             <OutlineHeader course={selectedCourse} />
             {outline}
           </div>
