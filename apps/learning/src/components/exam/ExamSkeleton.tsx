@@ -32,7 +32,7 @@ const Header = ({ isPractice }: IProps) => (
 );
 
 const Palette = () => (
-  <aside className="hidden h-full w-[380px] border-l border-border bg-background xl:block">
+  <aside className="hidden h-full w-[380px] flex-col border-l border-border bg-background xl:flex">
     <div className="border-b border-border px-4 py-4">
       <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
         {Array.from({ length: 5 }).map((_, index) => (
@@ -46,7 +46,7 @@ const Palette = () => (
         <RectangleSkeleton width={120} height={14} />
       </div>
     </div>
-    <div className="px-4 py-4">
+    <div className="min-h-0 flex-1 px-4 py-4">
       <div className="mb-3 flex items-center gap-2">
         <RectangleSkeleton width={80} height={22} />
         <RectangleSkeleton width={70} height={10} />
@@ -59,19 +59,26 @@ const Palette = () => (
         ))}
       </div>
     </div>
+    {/* The submit button's place, the same height as the question footer beside it. */}
+    <div className="flex h-14 shrink-0 items-center border-t border-border px-4 xl:h-16">
+      <RectangleSkeleton width="100%" height={36} />
+    </div>
   </aside>
 );
 
+/** Previous, the quiet answer actions, Next — and the finish button only where the palette is not a pane. */
 const Footer = ({ isPractice }: IProps) => (
-  <div className="h-14 border-t border-border bg-background xl:h-16">
+  <div className="h-14 shrink-0 border-t border-border bg-background xl:h-16">
     <div className="flex h-full items-center gap-2 px-3 md:gap-3 md:px-6">
       <RectangleSkeleton width={96} height={36} />
       <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-        {isPractice ? null : <RectangleSkeleton width={140} height={36} />}
-        <RectangleSkeleton width={120} height={36} />
+        {isPractice ? null : <RectangleSkeleton width={120} height={28} />}
+        <RectangleSkeleton width={72} height={28} />
       </div>
       <RectangleSkeleton width={88} height={36} />
-      <RectangleSkeleton width={80} height={36} />
+      <div className="xl:hidden">
+        <RectangleSkeleton width={110} height={36} />
+      </div>
     </div>
   </div>
 );
@@ -85,10 +92,10 @@ export const ExamSkeleton = ({ isPractice }: IProps) => (
     <div className="fixed top-0 z-10 w-full">
       <Header isPractice={isPractice} />
     </div>
-    <div className="h-[100vh] overflow-hidden py-14 xl:py-16">
+    <div className="h-[100vh] overflow-hidden pt-14 xl:pt-16">
       <div className="flex h-full w-full justify-between overflow-x-hidden">
-        <div className="min-w-0 grow px-4 md:px-8 md:w-[calc(100%-360px)]">
-          <div className="flex h-full flex-col gap-3 py-3 md:py-4">
+        <div className="flex min-w-0 grow flex-col md:w-[calc(100%-360px)]">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-3 md:px-8 md:py-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <RectangleSkeleton width={56} height={12} />
@@ -126,12 +133,10 @@ export const ExamSkeleton = ({ isPractice }: IProps) => (
               </div>
             </div>
           </div>
+          <Footer isPractice={isPractice} />
         </div>
         <Palette />
       </div>
-    </div>
-    <div className="fixed bottom-0 w-full">
-      <Footer isPractice={isPractice} />
     </div>
   </div>
 );

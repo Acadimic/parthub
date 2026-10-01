@@ -6,8 +6,6 @@ export type {
   IPresignedPutUrlsRequest,
   IPresignedGetUrlsRequest,
   IStandardSubjectQuery,
-  IScoreRating,
-  ISubjectGraphData,
   ITarget,
   IFunctionProps,
   IPosition,

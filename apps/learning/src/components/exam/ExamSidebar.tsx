@@ -5,13 +5,19 @@ import { TestPaperSection } from '@modules/test-papers/components/exam-items';
 import { CaretDoubleRightIcon, InfoIcon } from '@phosphor-icons/react';
 import { useSelectorLookups, useTestPaperLookups } from '@stores';
 import { getPlural } from '@utils/helpers';
-import { useState } from 'react';
+import { type ReactNode } from 'react';
 import { PALETTE_LABELS, PaletteTile, type PaletteStatus } from './PaletteTile';
 
 interface IProps {
   closeExamSummary: () => void;
   openInstruction: () => void;
   isResultPage: boolean;
+  /** Whether the pane is expanded. The layout owns it, so the footer can take over what the pane hides. */
+  isOpen: boolean;
+  /** Collapses or expands the pane. Absent in the sheet, which has no handle. */
+  onToggle?: () => void;
+  /** Pinned under the palette: the submit or result button when the palette is a pane. */
+  footer?: ReactNode;
 }
 
 const RESULT_STATUS: Record<Marking, PaletteStatus> = {
@@ -32,10 +38,9 @@ const LegendItem = ({ status, count }: { status: PaletteStatus; count: number })
  * The question palette: a legend of how many questions are in each state, then every question as
  * a tile to jump to. A fixed pane from `xl` up, a sheet below that.
  */
-export const ExamSidebar = ({ isResultPage, closeExamSummary, openInstruction }: IProps) => {
+export const ExamSidebar = ({ isResultPage, closeExamSummary, openInstruction, isOpen, onToggle, footer }: IProps) => {
   const testPaperStore = useTestPaperLookups();
   const { setSelectedQuestionId, selectedQuestionId } = useSelectorLookups();
-  const [isOpen, setIsOpen] = useState(true);
   const { exam, getTestPaperSectionById } = testPaperStore;
 
   if (isResultPage || !exam) return <></>;
@@ -93,16 +98,18 @@ export const ExamSidebar = ({ isResultPage, closeExamSummary, openInstruction }:
         isOpen ? 'w-full max-w-full xl:w-[380px] xl:max-w-[380px]' : 'w-0',
       )}
     >
-      <div className="absolute -ml-6 hidden xl:block" style={{ top: 'calc(50% - 20px)' }}>
-        <button
-          type="button"
-          aria-label={isOpen ? 'Hide question palette' : 'Show question palette'}
-          className="flex h-10 w-6 items-center justify-center rounded-l-md bg-primary text-primary-foreground shadow-md"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <CaretDoubleRightIcon weight="bold" className={cn('h-4 w-4', !isOpen && 'rotate-180')} />
-        </button>
-      </div>
+      {onToggle ? (
+        <div className="absolute -ml-6 hidden xl:block" style={{ top: 'calc(50% - 20px)' }}>
+          <button
+            type="button"
+            aria-label={isOpen ? 'Hide question palette' : 'Show question palette'}
+            className="flex h-10 w-6 items-center justify-center rounded-l-md bg-primary text-primary-foreground shadow-md"
+            onClick={onToggle}
+          >
+            <CaretDoubleRightIcon weight="bold" className={cn('h-4 w-4', !isOpen && 'rotate-180')} />
+          </button>
+        </div>
+      ) : null}
       <div className={cn('flex h-full flex-col', !isOpen && 'hidden')}>
         <div className="border-b border-border px-4 py-4">
           <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
@@ -155,6 +162,10 @@ export const ExamSidebar = ({ isResultPage, closeExamSummary, openInstruction }:
             );
           })}
         </div>
+        {/* The same height as the question footer beside it, so the two bars read as one edge. */}
+        {footer ? (
+          <div className="flex h-14 shrink-0 items-center border-t border-border px-4 xl:h-16">{footer}</div>
+        ) : null}
       </div>
     </div>
   );

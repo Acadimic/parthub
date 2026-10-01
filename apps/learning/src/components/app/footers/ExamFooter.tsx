@@ -1,12 +1,15 @@
 import { Button } from '@repo/ui/app';
+import { cn } from '@repo/ui/lib';
+import { ExamFinishButton } from '@components/exam';
 import { ArrowCounterClockwiseIcon, CaretLeftIcon, CaretRightIcon, EraserIcon, FlagIcon } from '@phosphor-icons/react';
 import { useTestPaperLookups } from '@stores';
 
 interface IProps {
   isResultPage: boolean;
+  /** The palette pane is open and shows the finish button, so from `xl` up this bar need not. */
+  isFinishInPalette: boolean;
   openResultPage: () => void;
   closeResultPage: () => void;
-  openExit: () => void;
   openSubmitSummary: () => void;
   toggleTimer: () => void;
 }
@@ -18,6 +21,7 @@ const FooterButton = ({
   onClick,
   disabled,
   isPrimary,
+  isSubtle,
   isPressed,
   trailing,
 }: {
@@ -26,17 +30,20 @@ const FooterButton = ({
   onClick: () => void;
   disabled?: boolean;
   isPrimary?: boolean;
+  /** The quiet variant, for the actions on the answer itself rather than the paper. */
+  isSubtle?: boolean;
   isPressed?: boolean;
   /** Puts the icon after the label, for "Next". */
   trailing?: boolean;
 }) => (
   <Button
-    isSecondary={!isPrimary}
+    isSecondary={!isPrimary && !isSubtle}
+    isSubtle={isSubtle}
     aria-label={label}
     aria-pressed={isPressed}
     disabled={disabled}
-    className="px-2.5 py-1.5 sm:px-3"
-    labelClassName="hidden sm:block"
+    className={cn('px-2.5 py-1.5 sm:px-3', isSubtle && 'px-2 py-1 text-muted-foreground', isPressed && 'bg-accent')}
+    labelClassName={cn('hidden sm:block', isSubtle && 'text-xs')}
     onClick={onClick}
     leftsection={trailing ? undefined : icon}
     rightsection={trailing ? icon : undefined}
@@ -46,14 +53,14 @@ const FooterButton = ({
 );
 
 /**
- * The bar under the paper. Left: back. Middle: what can be done to the question on screen. Right:
- * the way out of the paper, then forward — the same places in every mode, so nothing jumps.
+ * The bar under the paper. Left: back. Middle: what can be done to the answer on screen, quietly.
+ * Right: forward, then the way out of the paper — the same places in every mode, so nothing jumps.
  */
 export const ExamFooter = ({
   isResultPage,
+  isFinishInPalette,
   openResultPage,
   closeResultPage,
-  openExit,
   openSubmitSummary,
   toggleTimer,
 }: IProps) => {
@@ -74,17 +81,19 @@ export const ExamFooter = ({
     toggleSelectedQuestionMarkForReview,
   } = testPaperStore;
 
-  const handleViewSolutionsClick = () => {
+  // Back to the question the learner was on. Leaving the paper stays with the header's close.
+  const handleBackClick = () => {
     closeResultPage();
     if (exam.isPractice) toggleTimer();
   };
 
   if (isResultPage) {
     return (
-      <div className="h-14 border-t border-border bg-background xl:h-16">
-        <div className="flex h-full items-center justify-between px-3 md:px-6">
-          <Button isSecondary text="Exit" onClick={openExit} />
-          <Button text="View solutions" onClick={handleViewSolutionsClick} />
+      <div className="h-14 shrink-0 border-t border-border bg-background xl:h-16">
+        <div className="flex h-full items-center justify-center px-3 md:px-6">
+          <Button onClick={handleBackClick} leftsection={<CaretLeftIcon weight="bold" className="h-4 w-4" />}>
+            Back
+          </Button>
         </div>
       </div>
     );
@@ -93,17 +102,8 @@ export const ExamFooter = ({
   const isMarked = isSelectedQuestionMarkedForReview();
   const isLast = isLastQuestion();
 
-  // What the finishing button does depends on where the sitting is. It is outlined while there
-  // are questions ahead and filled on the last one, where it becomes the natural next step.
-  const getFinishAction = () => {
-    if (isSubmitted) return { label: 'View result', onClick: openResultPage };
-    if (isPractice) return { label: 'View analytics', onClick: openResultPage };
-    return { label: 'Submit', onClick: openSubmitSummary };
-  };
-  const finish = getFinishAction();
-
   return (
-    <div className="h-14 border-t border-border bg-background xl:h-16">
+    <div className="h-14 shrink-0 border-t border-border bg-background xl:h-16">
       <div className="flex h-full items-center gap-2 px-3 md:gap-3 md:px-6">
         <FooterButton
           label="Previous"
@@ -115,30 +115,36 @@ export const ExamFooter = ({
           {isPractice || isSubmitted ? null : (
             <FooterButton
               label={isMarked ? 'Marked for review' : 'Mark for review'}
-              icon={<FlagIcon weight={isMarked ? 'fill' : 'bold'} className="h-4 w-4" />}
+              // Once marked, the flag fills in the palette's "marked" yellow, so the state reads at a
+              // glance and survives the icon-only layout below `sm`.
+              icon={
+                <FlagIcon
+                  weight={isMarked ? 'fill' : 'bold'}
+                  className={cn('h-3.5 w-3.5', isMarked && 'text-warning')}
+                />
+              }
+              isSubtle
               isPressed={isMarked}
               onClick={toggleSelectedQuestionMarkForReview}
             />
           )}
           {isSubmitted ? null : (
             <FooterButton
-              label={isPractice ? 'Reset answer' : 'Clear answer'}
+              label={isPractice ? 'Reset' : 'Clear'}
               icon={
                 isPractice ? (
-                  <ArrowCounterClockwiseIcon weight="bold" className="h-4 w-4" />
+                  <ArrowCounterClockwiseIcon weight="bold" className="h-3.5 w-3.5" />
                 ) : (
-                  <EraserIcon weight="bold" className="h-4 w-4" />
+                  <EraserIcon weight="bold" className="h-3.5 w-3.5" />
                 )
               }
+              isSubtle
               disabled={!isSelectedQuestionResponded()}
               onClick={isPractice ? resetResponse : clearResponse}
             />
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button isSecondary={!isLast} className="px-3 py-1.5" onClick={finish.onClick}>
-            {finish.label}
-          </Button>
           <FooterButton
             label="Next"
             icon={<CaretRightIcon weight="bold" className="h-4 w-4" />}
@@ -146,6 +152,13 @@ export const ExamFooter = ({
             trailing
             disabled={isLast}
             onClick={selectNextQuestion}
+          />
+          {/* Outlined while there are questions ahead, filled on the last one, where it is the next step. */}
+          <ExamFinishButton
+            isPrimary={isLast}
+            className={cn(isFinishInPalette && 'xl:hidden')}
+            openResultPage={openResultPage}
+            openSubmitSummary={openSubmitSummary}
           />
         </div>
       </div>

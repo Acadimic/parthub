@@ -1,13 +1,13 @@
 import { Button, Modal, ModalFooter } from '@repo/ui/app';
 import { ExamFooter } from '@components/app/footers';
 import { ExamHeader } from '@components/app/headers';
-import { ExamSidebar, ExamSkeleton, Instruction } from '@components/exam';
+import { ExamFinishButton, ExamSidebar, ExamSkeleton, Instruction } from '@components/exam';
 import { BlankState } from '@components/others';
 import { useExam } from '@hooks/exam.hook';
 import { TestPaperSummary } from '@modules/test-papers/components/TestPaperSummary';
 import { Exam } from '@modules/test-papers/Exam';
-import { useTestPaperLookups } from '@stores';
-import { useEffect } from 'react';
+import { useSelectorLookups, useTestPaperLookups } from '@stores';
+import { useEffect, useState } from 'react';
 
 interface IProps {
   testPaperId: string;
@@ -32,8 +32,10 @@ const getExamReadiness = (store: ReturnType<typeof useTestPaperLookups>, testPap
 
 export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => {
   const testPaperStore = useTestPaperLookups();
-  const { loadAndSetExam, unsetExam } = testPaperStore;
+  const { loadAndSetExam, unsetExam, setVisited } = testPaperStore;
+  const { setSelectedQuestionId } = useSelectorLookups();
   const { exam, isSettingExam, error } = getExamReadiness(testPaperStore, testPaperId);
+  const [isPaletteOpen, setIsPaletteOpen] = useState(true);
   const {
     openInstruction,
     closeInstruction,
@@ -59,6 +61,14 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
   const confirmExit = () => {
     unsetExam();
     onCloseExam();
+  };
+
+  // The same leaving of the result page as the footer's Back, landed on one question.
+  const reviewQuestion = (questionId: string) => {
+    setSelectedQuestionId(questionId);
+    setVisited(questionId);
+    closeResultPage();
+    if (isPractice) toggleTimer();
   };
 
   useEffect(() => {
@@ -90,14 +100,28 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
             openExit={openExit}
           />
         </div>
-        <div className="overflow-auto h-[100vh] py-14 xl:py-16">
-          <div className="flex justify-between space-x-0 w-full h-full overflow-x-hidden">
-            <div className="grow px-4 md:px-8 md:w-[calc(100%-360px)]">
-              <Exam
+        <div className="h-[100vh] overflow-auto pt-14 xl:pt-16">
+          <div className="flex h-full w-full justify-between space-x-0 overflow-x-hidden">
+            {/* The footer lives in this column, so "Next" sits under the question beside the palette
+                rather than under the palette at the far edge of the window. */}
+            <div className="flex min-w-0 grow flex-col md:w-[calc(100%-360px)]">
+              {/* The column scrolls here, under a footer that stays put — the result page is long. */}
+              <div className="min-h-0 flex-1 overflow-auto px-4 md:px-8">
+                <Exam
+                  isResultPage={isResultPage}
+                  openExamSummary={openExamSummary}
+                  toggleTimer={toggleTimer}
+                  openInstruction={openInstruction}
+                  onReviewQuestion={reviewQuestion}
+                />
+              </div>
+              <ExamFooter
                 isResultPage={isResultPage}
-                openExamSummary={openExamSummary}
+                isFinishInPalette={isPaletteOpen}
+                openResultPage={openResultPage}
+                closeResultPage={closeResultPage}
+                openSubmitSummary={openSubmitSummary}
                 toggleTimer={toggleTimer}
-                openInstruction={openInstruction}
               />
             </div>
             <div className="hidden xl:block">
@@ -105,19 +129,19 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
                 openInstruction={openInstruction}
                 closeExamSummary={closeExamSummary}
                 isResultPage={isResultPage}
+                isOpen={isPaletteOpen}
+                onToggle={() => setIsPaletteOpen(!isPaletteOpen)}
+                footer={
+                  <ExamFinishButton
+                    isPrimary
+                    isFull
+                    openResultPage={openResultPage}
+                    openSubmitSummary={openSubmitSummary}
+                  />
+                }
               />
             </div>
           </div>
-        </div>
-        <div className="fixed bottom-0 w-full">
-          <ExamFooter
-            isResultPage={isResultPage}
-            openResultPage={openResultPage}
-            closeResultPage={closeResultPage}
-            openExit={openExit}
-            openSubmitSummary={openSubmitSummary}
-            toggleTimer={toggleTimer}
-          />
         </div>
       </div>
 
@@ -126,6 +150,7 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
         isOpen={isOpenExamSummary}
         component={
           <ExamSidebar
+            isOpen
             openInstruction={openInstruction}
             closeExamSummary={closeExamSummary}
             isResultPage={isResultPage}

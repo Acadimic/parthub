@@ -1,242 +1,33 @@
-import { Button, Card, CircularProgress, Spinner, Tooltip } from '@repo/ui/app';
-import { useRequest } from '@repo/ui/hooks';
-import { Marking } from '@enums';
-import {
-  ArrowClockwiseIcon,
-  CheckCircleIcon,
-  CheckIcon,
-  MedalIcon,
-  MinusIcon,
-  PercentIcon,
-  TimerIcon,
-  WarningCircleIcon,
-  XIcon,
-} from '@phosphor-icons/react';
-import { useTestPaperLookups, useTestPaperStore } from '@stores';
-import { getMinutesString, getRatingItem, splitCamelCase } from '@utils/helpers';
-import { SubjectGraph } from './graphs';
+import { BreakdownChart, Insights, OutcomeBar, QuestionGrid, ScoreHero, TimeChart } from './components';
+import { useResultAnalytics } from './useResultAnalytics';
 
-/** Whether the submitted sitting reached the server, with a way to try again if it did not. */
-const SaveStatus = () => {
-  const { exam, submitExam } = useTestPaperLookups();
-  const request = useRequest(useTestPaperStore, 'submitResult');
-  if (!exam || exam.isPractice || !exam.isSubmitted) return null;
-  if (request.isLoading) {
-    return (
-      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-        <Spinner className="h-4 w-4" />
-        Saving your result…
-      </div>
-    );
-  }
-  if (request.isFailed) {
-    return (
-      <div className="flex flex-col items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm sm:flex-row">
-        <span className="flex items-center gap-2">
-          <WarningCircleIcon weight="fill" className="h-5 w-5 shrink-0 text-destructive" />
-          Your result could not be saved. {request.error}
-        </span>
-        <Button
-          isSecondary
-          className="shrink-0 px-3 py-1.5"
-          onClick={submitExam}
-          leftsection={<ArrowClockwiseIcon weight="bold" className="h-4 w-4" />}
-        >
-          Try again
-        </Button>
-      </div>
-    );
-  }
-  if (request.isLoaded) {
-    return (
-      <div className="flex items-center justify-center gap-2 text-sm text-success">
-        <CheckCircleIcon weight="fill" className="h-5 w-5" />
-        Result saved to your account
-      </div>
-    );
-  }
-  return null;
-};
+interface IProps {
+  /** Leaves the result for the paper, open at the given question. */
+  onReviewQuestion: (questionId: string) => void;
+}
 
-export const Result = () => {
-  const testPaperStore = useTestPaperLookups();
-  const { exam } = testPaperStore;
-  if (!exam) return;
-
-  const { maxMarks, totalSpendTime } = exam;
-
-  const { getAccuracy, getMarksObtained, getPercentage, getResultCounts } = testPaperStore;
-  const keys = Object.keys(getResultCounts()) as Marking[];
-  const percentageRatingItem = getRatingItem(getPercentage());
-  const accuracyRatingItem = getRatingItem(getAccuracy());
-
-  const items = {
-    [Marking.CORRECT]: {
-      icon: CheckIcon,
-      color: 'green',
-    },
-    [Marking.INCORRECT]: {
-      icon: XIcon,
-      color: 'red',
-    },
-    [Marking.UNATTEMPTED]: {
-      icon: MinusIcon,
-      color: 'gray',
-    },
-    [Marking.PARTIALLY_CORRECT]: {
-      icon: CheckIcon,
-      color: 'gray',
-    },
-  };
-
-  const leftData = [
-    {
-      name: 'Score',
-      value: `${getMarksObtained()} out of ${maxMarks}`,
-      icon: MedalIcon,
-    },
-    {
-      name: 'Percentage',
-      value: `${getPercentage()}%`,
-      icon: PercentIcon,
-    },
-  ];
-
-  const rightData = [
-    {
-      name: 'Accuracy',
-      value: `${getAccuracy()}%`,
-      icon: PercentIcon,
-    },
-    {
-      name: 'Time Taken',
-      value: getMinutesString(totalSpendTime),
-      icon: TimerIcon,
-    },
-  ];
+/**
+ * The result of a sitting, headline first: the score and verdict, then how the paper split, where
+ * the marks came from, where the time went, and every question as a way back into the paper.
+ */
+export const Result = ({ onReviewQuestion }: IProps) => {
+  const analytics = useResultAnalytics();
+  if (!analytics) return null;
 
   return (
-    <div className="w-full h-full flex justify-center items-center py-4 md:py-6">
-      <div className="max-w-2xl w-full h-full">
-        <div className="flex flex-col pb-8 gap-6">
-          <SaveStatus />
-          <div className="flex justify-center space-x-6 md:space-x-12 items-center">
-            <div className="flex flex-col items-center justify-center gap-3">
-              <CircularProgress
-                thickness={6}
-                value={getPercentage()}
-                className={`${percentageRatingItem.color}`}
-                label={
-                  <Tooltip title={percentageRatingItem.text}>
-                    <div className="font-bold text-center flex justify-center items-center">
-                      <div>
-                        <div className="border-b-2 border-border min-w-[48px] pb-0.5">{getMarksObtained()}</div>
-                        <div className="pt-0.5">{maxMarks}</div>
-                      </div>
-                    </div>
-                  </Tooltip>
-                }
-              />
-              <div className="font-semibold">Score</div>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-3">
-              <CircularProgress
-                thickness={6}
-                value={getAccuracy()}
-                className={`${accuracyRatingItem.color}`}
-                label={
-                  <Tooltip title={accuracyRatingItem.text}>
-                    <div className="font-bold text-center flex justify-center items-center">
-                      <div>{getAccuracy()} %</div>
-                    </div>
-                  </Tooltip>
-                }
-              />
-              <div className="font-semibold">Accuracy</div>
-            </div>
-          </div>
-          <div className={`grid grid-cols-2 ${keys.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-4 mt-2`}>
-            {keys.map((key: Marking) => {
-              const item = items[key];
-              return (
-                <div
-                  key={key}
-                  className="bg-background text-sm flex py-4 rounded flex-col justify-center border border-border items-center space-y-1"
-                >
-                  <div className="mb-2">
-                    <item.icon color={item.color} weight="bold" className="w-5 h-5" />
-                  </div>
-                  <div className="capitalize font-medium">{splitCamelCase(key)}</div>
-                  <div className="font-semibold">{getResultCounts()[key]}</div>
-                  <div className="font-medium text-muted-foreground">Questions</div>
-                </div>
-              );
-            })}
-          </div>
-          <Card>
-            <div className="rounded w-full">
-              <div className="flex flex-col md:flex-row">
-                <div className="w-full md:w-[50%] px-4 md:px-6">
-                  <table className="w-full">
-                    <tbody>
-                      {leftData.map((item) => {
-                        return (
-                          <tr key={item.name}>
-                            <td className="w-[60%] py-2">
-                              <div className="flex items-center space-x-2">
-                                <div>
-                                  <item.icon className="w-6 h-6" />
-                                </div>
-                                <div className="font-semibold">{item.name}</div>
-                              </div>
-                            </td>
-                            <td className="w-[40%] py-2 text-right pr-1.5 text-sm font-medium">
-                              <div>{item.value}</div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="w-full md:w-[50%] px-4 md:px-6">
-                  <table className="w-full">
-                    <tbody>
-                      {rightData.map((item) => {
-                        return (
-                          <tr key={item.name}>
-                            <td className="w-[60%] py-2">
-                              <div className="flex items-center space-x-2">
-                                <div>
-                                  <item.icon className="w-6 h-6" />
-                                </div>
-                                <div className="font-semibold">{item.name}</div>
-                              </div>
-                            </td>
-                            <td className="w-[40%] py-2 text-right pr-1.5 text-sm font-medium">
-                              <div>{item.value}</div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </Card>
-          <Card>
-            <div className="w-full px-2 md:px-4">
-              <div className="flex items-center justify-center mb-4">
-                <div className="font-semibold">Paper Analysis</div>
-              </div>
-              <div className="w-full">
-                <SubjectGraph />
-              </div>
-            </div>
-          </Card>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 py-4 md:gap-5 md:py-6">
+      <ScoreHero analytics={analytics} />
+      <div className="grid grid-cols-1 gap-4 md:gap-5 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <OutcomeBar analytics={analytics} />
+        </div>
+        <div className="lg:col-span-2">
+          <Insights insights={analytics.insights} />
         </div>
       </div>
+      <BreakdownChart analytics={analytics} />
+      <TimeChart analytics={analytics} onReviewQuestion={onReviewQuestion} />
+      <QuestionGrid analytics={analytics} onReviewQuestion={onReviewQuestion} />
     </div>
   );
 };

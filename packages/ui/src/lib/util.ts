@@ -1,4 +1,4 @@
-import { type IPosition, type IScoreRating } from '@repo/shared/interfaces';
+import { type IPosition } from '@repo/shared/interfaces';
 import { StorageKey, type Subdomain } from '@repo/shared/enums';
 import ObjectID from 'bson-objectid';
 import randomColor from 'randomcolor';
@@ -153,14 +153,6 @@ export const getMinutesString = (seconds: number) => {
   return mins
     ? `${mins} ${getPlural(mins, 'min')} ${secs} ${getPlural(secs, 'sec')}`
     : `${secs} ${getPlural(secs, 'sec')}`;
-};
-
-export const getRatingItem = (num = 0): IScoreRating => {
-  if (num < 18) return { color: 'text-destructive', text: 'Poor' };
-  if (num >= 18 && num < 35) return { color: 'text-warning', text: 'Good' };
-  if (num >= 35 && num < 60) return { color: 'text-success', text: 'Good' };
-  if (num >= 60 && num < 80) return { color: 'text-success', text: 'Very Good' };
-  return { color: 'text-success', text: 'Excellent' };
 };
 
 export const parseCompactUTCDate = (dateStr: string) => {

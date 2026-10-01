@@ -18,6 +18,8 @@ interface IProps {
   openExamSummary: () => void;
   toggleTimer: () => void;
   openInstruction: () => void;
+  /** Leaves the result page for the paper, open at the given question. */
+  onReviewQuestion: (questionId: string) => void;
 }
 
 /**
@@ -49,7 +51,7 @@ const QuestionScore = ({
   );
 };
 
-export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstruction }: IProps) => {
+export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstruction, onReviewQuestion }: IProps) => {
   const testPaperStore = useTestPaperLookups();
   const { getTestPaperSectionsByIds } = testPaperStore;
   const questionStore = useQuestionLookups();
@@ -97,7 +99,7 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
       selectedQuestion.questionType,
     );
 
-  if (isResultPage) return <Result />;
+  if (isResultPage) return <Result onReviewQuestion={onReviewQuestion} />;
 
   return (
     <div className="flex h-full flex-col gap-3 py-3 md:py-4">

@@ -1,16 +1,14 @@
 import { type TestPaperDto, type TestPaperResultDto, type TestPaperSectionDto } from '@repo/shared/contracts';
 import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
-import { type ISubjectGraphData } from '@repo/shared/interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { Marking } from '../enums';
 import { ReactionService, TestPaperService } from '../services';
-import { getMinutesString, groupBy, onceInFlight } from '../utils/helpers';
+import { getMinutesString, onceInFlight } from '../utils/helpers';
 import { useQuestionStore } from './question.store';
 import { markResponse, toResultPayload } from './exam.marking';
 import { buildExam } from './exam.sitting';
 import { useSelectorStore } from './selector.store';
-import { useStandardStore } from './standard.store';
 
 /**
  * A test paper in the store. `reactionsCount` and `isLoadedReactionsCount` are client-only and are
@@ -101,7 +99,6 @@ export interface ITestPaperState extends IRequestSlice<TestPaperFetch> {
   getTimeLeft: () => number;
   getPercentage: () => number;
   getAccuracy: () => number;
-  getSubjectGraphData: () => ISubjectGraphData[];
   isFirstQuestion: () => boolean;
   isLastQuestion: () => boolean;
   isSelectedQuestionMarkedForReview: () => boolean;
@@ -476,30 +473,6 @@ export const useTestPaperStore = create<ITestPaperState>()((set, get) => ({
     const counts = get().getResultCounts();
     const total = counts[Marking.CORRECT] + counts[Marking.INCORRECT];
     return total ? Math.round((counts[Marking.CORRECT] / total) * 100) : 0;
-  },
-
-  getSubjectGraphData: () => {
-    const exam = get().exam;
-    if (!exam) return [];
-    const standardStore = useStandardStore.getState();
-    const questions = useQuestionStore.getState().getQuestionsByIds(exam.questions);
-    const groups = groupBy(
-      questions,
-      (question) => (question.subject && standardStore.getSubjectById(question.subject)?.name) || 'Other',
-    );
-    return Object.keys(groups).map((name) => {
-      const group = groups[name];
-      const countOf = (marking: Marking) =>
-        group.filter((question) => get().getResultByQuestionId(question._id) === marking).length;
-      return {
-        name,
-        total: group.length,
-        correct: countOf(Marking.CORRECT),
-        incorrect: countOf(Marking.INCORRECT),
-        unattempted: countOf(Marking.UNATTEMPTED),
-        partiallyCorrect: countOf(Marking.PARTIALLY_CORRECT),
-      };
-    });
   },
 
   isFirstQuestion: () => get().getCurrentQuestionIndex() === 0,
