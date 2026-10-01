@@ -1,4 +1,3 @@
-import { ToggleTheme } from '@repo/ui/app';
 import { StorageKey } from '@enums';
 import { CaretDoubleRightIcon } from '@phosphor-icons/react';
 import { useRouter } from 'next/router';
@@ -150,13 +149,8 @@ export const AppSidebar = ({ children }: IProps) => {
             </div>
             <div className="w-full flex justify-between items-center space-x-2">
               <div className="text-lg font-bold capitalize">{route?.slice(1).split('-').join(' ')}</div>
-              <div className="flex items-center space-x-4">
-                <div>
-                  <ToggleTheme />
-                </div>
-                <div>
-                  <ProfileDropdown />
-                </div>
+              <div className="flex items-center">
+                <ProfileDropdown />
               </div>
             </div>
           </div>

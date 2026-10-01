@@ -1,23 +1,12 @@
-import { ColorModeContext } from '../../contexts';
 import { MoonIcon, SunIcon } from '@phosphor-icons/react';
-import { useContext, useEffect, useState } from 'react';
+import { useColorMode } from '../../hooks';
 
 export const ToggleTheme = () => {
-  const [isDark, setIsDark] = useState(false);
-  const colorMode = useContext(ColorModeContext);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'));
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
+  const { isDark, toggleColorMode } = useColorMode();
 
   return (
     <div className="relative">
-      <button className="p-1 rounded hover:bg-accent" onClick={colorMode.toggleColorMode}>
+      <button className="p-1 rounded hover:bg-accent" onClick={toggleColorMode}>
         {isDark ? (
           <SunIcon className="w-4 h-4 md:w-5 md:h-5 text-foreground" weight="bold" />
         ) : (

@@ -132,11 +132,11 @@ export const PageHeader = () => {
           >
             <MagnifyingGlassIcon weight="bold" className="h-5 w-5" />
           </button>
-          <ToggleTheme />
           {selectedUser ? (
             <ProfileDropdown />
           ) : (
             <>
+              <ToggleTheme />
               <div className="hidden lg:block">
                 <Link isSubtle className="px-3 py-1.5 text-foreground" href="/sign-up">
                   Sign Up

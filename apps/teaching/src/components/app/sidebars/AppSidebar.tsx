@@ -1,6 +1,6 @@
 import { StorageKey } from '@enums';
 import { CaretDoubleRightIcon, CaretLeftIcon } from '@phosphor-icons/react';
-import { Button, FullLogo, Logo, ToggleTheme } from '@repo/ui/app';
+import { Button, FullLogo, Logo } from '@repo/ui/app';
 import { cn } from '@repo/ui/lib';
 import { useRouter } from 'next/router';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
@@ -224,13 +224,8 @@ export const AppSidebar = ({ children }: IProps) => {
                   </Button>
                 )}
               </div>
-              <div className="flex items-center space-x-4">
-                <div>
-                  <ToggleTheme />
-                </div>
-                <div>
-                  <ProfileDropdown />
-                </div>
+              <div className="flex items-center">
+                <ProfileDropdown />
               </div>
             </div>
           </div>

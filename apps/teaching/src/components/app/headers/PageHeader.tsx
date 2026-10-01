@@ -52,15 +52,13 @@ export const PageHeader = () => {
                 <SearchBar />
               </div>
               <div className="w-full flex justify-end items-center space-x-2 md:w-auto">
-                <div>
-                  <ToggleTheme />
-                </div>
                 {selectedUser ? (
                   <div>
                     <ProfileDropdown />
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
+                    <ToggleTheme />
                     <div className="hidden md:block">
                       <Link isSecondary className="text-foreground px-4 py-1.5" href="/sign-up">
                         Sign Up

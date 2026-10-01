@@ -1,5 +1,5 @@
 import { PositionType } from '@repo/shared/enums';
-import { Breadcrumb, Button, type IBreadcrumbItem, Link, Modal, ToggleTheme } from '@repo/ui/app';
+import { Breadcrumb, Button, type IBreadcrumbItem, Link, Modal } from '@repo/ui/app';
 import { Badge, Progress } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
 import { ProfileDropdown } from '@components/app/sidebars/components';
@@ -124,8 +124,7 @@ export const CourseModules = () => {
                   <span className="sm:hidden">{progress.total}</span>
                 </Button>
               </div>
-              <ToggleTheme />
-              <ProfileDropdown />
+              <ProfileDropdown isCompact />
               <div className="hidden lg:block">
                 <Button
                   isSubtle
