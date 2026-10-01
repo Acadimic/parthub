@@ -2,11 +2,12 @@ import { ExpandAllButton } from '@repo/ui/app';
 import { Accordion } from '@repo/ui/core';
 import { useExpandedIds } from '@repo/ui/hooks';
 import { cn } from '@repo/ui/lib';
+import { CONTENT_TYPE_ICONS, CONTENT_TYPE_TONES, ContentTypeBadge } from '@components/app/badges';
 import { BlankState } from '@components/others';
 import { ModuleContentType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { type ICourseModuleItem } from '@interfaces';
-import { BookOpenTextIcon, CheckIcon, ClipboardTextIcon, LockSimpleIcon, VideoIcon } from '@phosphor-icons/react';
+import { CheckIcon, LockSimpleIcon } from '@phosphor-icons/react';
 import {
   type ICourseModule,
   useCourseLookups,
@@ -16,38 +17,6 @@ import {
 } from '@stores';
 import { getPlural } from '@utils/helpers';
 import { useEffect } from 'react';
-
-const ITEM_ICONS = {
-  [ModuleContentType.VIDEO]: VideoIcon,
-  [ModuleContentType.READING]: BookOpenTextIcon,
-  [ModuleContentType.TEST_PAPER]: ClipboardTextIcon,
-  [ModuleContentType.COMPLETED]: CheckIcon,
-};
-
-// Each kind's soft tint, its solid fill for the selected row, and its pill. Written out in full so
-// Tailwind's purge keeps every class.
-const ITEM_TONES = {
-  [ModuleContentType.VIDEO]: {
-    soft: 'bg-content-video/15 text-content-video ring-1 ring-inset ring-content-video/25',
-    solid: 'bg-content-video text-content-video-foreground',
-    pill: 'bg-content-video/10 text-content-video',
-  },
-  [ModuleContentType.READING]: {
-    soft: 'bg-content-reading/15 text-content-reading ring-1 ring-inset ring-content-reading/25',
-    solid: 'bg-content-reading text-content-reading-foreground',
-    pill: 'bg-content-reading/10 text-content-reading',
-  },
-  [ModuleContentType.TEST_PAPER]: {
-    soft: 'bg-content-test/15 text-content-test ring-1 ring-inset ring-content-test/25',
-    solid: 'bg-content-test text-content-test-foreground',
-    pill: 'bg-content-test/10 text-content-test',
-  },
-  [ModuleContentType.COMPLETED]: {
-    soft: 'bg-muted text-muted-foreground',
-    solid: 'bg-primary text-primary-foreground',
-    pill: 'bg-muted text-muted-foreground',
-  },
-};
 
 interface IProps {
   courseId: string;
@@ -69,7 +38,7 @@ interface IRowProps {
 const getMarkClass = (type: ModuleContentType, isCompleted: boolean, isSelected: boolean, isLocked: boolean) => {
   if (isCompleted) return 'bg-success/15 text-success';
   if (isLocked) return 'bg-muted text-muted-foreground';
-  return isSelected ? ITEM_TONES[type].solid : ITEM_TONES[type].soft;
+  return isSelected ? CONTENT_TYPE_TONES[type].solid : CONTENT_TYPE_TONES[type].soft;
 };
 
 const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
@@ -78,7 +47,7 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
   const isCompleted = isItemCompleted(item);
   const isSelected = !isPreview && isItemSelected(item);
   const details = item.material ?? item.testPaper;
-  const RowIcon = isLocked ? LockSimpleIcon : ITEM_ICONS[isCompleted ? ModuleContentType.COMPLETED : type];
+  const RowIcon = isLocked ? LockSimpleIcon : CONTENT_TYPE_ICONS[isCompleted ? ModuleContentType.COMPLETED : type];
 
   return (
     <button
@@ -105,14 +74,7 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect }: IRowProps) => {
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">{details?.name}</span>
         <span className="mt-0.5 flex items-center gap-1.5 text-xxs text-muted-foreground/70">
-          <span
-            className={cn(
-              'px-1 py-0.5 text-[0.5625rem] font-semibold uppercase leading-none tracking-caps',
-              ITEM_TONES[type].pill,
-            )}
-          >
-            {type}
-          </span>
+          <ContentTypeBadge type={type} size="xs" />
           <span aria-hidden className="h-[3px] w-[3px] rounded-full bg-muted-foreground/50" />
           {details?.durationMins ?? 0} min
         </span>

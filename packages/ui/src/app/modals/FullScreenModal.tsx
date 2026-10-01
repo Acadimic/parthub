@@ -1,5 +1,5 @@
-import { useRouter } from 'next/router';
 import * as React from 'react';
+import { useCloseOnBack } from '../../hooks/use-close-on-back.hook';
 
 interface IProps {
   isOpen: boolean;
@@ -10,21 +10,7 @@ interface IProps {
 }
 
 export const FullScreenModal = ({ isOpen, onClose, component, id, footer }: IProps) => {
-  const router = useRouter();
-
-  React.useEffect(() => {
-    const handleBack = () => {
-      onClose();
-      router.push(router.asPath, undefined, { shallow: true });
-      return false;
-    };
-
-    router.beforePopState(handleBack);
-
-    return () => {
-      router.beforePopState(() => true);
-    };
-  }, [router]);
+  useCloseOnBack(isOpen, onClose);
 
   if (!isOpen) return null;
 

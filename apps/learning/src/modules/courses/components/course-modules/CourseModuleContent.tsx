@@ -4,9 +4,10 @@ import { useLoadOnce } from '@repo/ui/hooks';
 import { Badge } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
 import { Attachment } from '@components/app/attachments';
+import { ContentTypeBadge } from '@components/app/badges';
 import { Avatar } from '@components/app/avatars';
 import { BlankState } from '@components/others';
-import { CollectionType } from '@enums';
+import { CollectionType, type ModuleContentType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { useCourse } from '@hooks/course.hook';
 import { type ICourseModuleItem } from '@interfaces';
@@ -152,7 +153,10 @@ const FrameToolbar = ({
 /** The item's display name, whichever kind it is. */
 const getItemName = (item: ICourseModuleItem) => item.material?.name ?? item.testPaper?.name ?? '';
 
-/** The lesson's name and its place in the course, unboxed above the frame. */
+/**
+ * One quiet line above the frame, read like a breadcrumb: the module, then the lesson's name
+ * beside it, with its facts on the right. Nothing above the content is large enough to compete.
+ */
 const LessonHeader = ({
   item,
   type,
@@ -161,33 +165,38 @@ const LessonHeader = ({
   durationMins,
 }: {
   item: IMaterial | ITestPaper;
-  type: string;
+  type: ModuleContentType;
   isCompleted: boolean;
   courseModule: ICourseModule | undefined;
   durationMins: number;
 }) => (
-  <header className="flex flex-col gap-1.5 px-1">
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <Badge tone="primary" className="capitalize">
-        {type}
-      </Badge>
+  <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 px-1">
+    <div className="flex min-w-0 flex-1 items-center gap-1.5">
+      {courseModule ? (
+        <>
+          <span className="truncate text-xs text-muted-foreground" title={courseModule.name}>
+            Module {courseModule.day} · {courseModule.name}
+          </span>
+          <CaretRightIcon weight="bold" className="h-3 w-3 shrink-0 text-muted-foreground" />
+        </>
+      ) : null}
+      <h1 className="truncate text-sm font-semibold md:text-base" title={item.name}>
+        {item.name}
+      </h1>
+    </div>
+    <div className="flex shrink-0 items-center gap-x-3">
+      <ContentTypeBadge type={type} size="sm" />
       {isCompleted ? (
         <Badge tone="success" className="gap-1">
           <CheckCircleIcon weight="fill" className="h-3 w-3" />
           Completed
         </Badge>
       ) : null}
-      {courseModule ? (
-        <span className="truncate text-xs text-muted-foreground">
-          Module {courseModule.day} · {courseModule.name}
-        </span>
-      ) : null}
       <span className="flex items-center gap-1 text-xs text-muted-foreground">
         <ClockIcon weight="bold" className="h-3.5 w-3.5" />
         {durationMins} min
       </span>
     </div>
-    <h1 className="text-xl font-semibold leading-tight md:text-2xl">{item.name}</h1>
   </header>
 );
 
@@ -261,8 +270,7 @@ export const CourseModuleContent = () => {
   return (
     <div ref={topRef} className="flex flex-col gap-4 md:gap-5">
       <NextSessionBanner meets={meets} />
-      {/* The lesson's name and place come first, unboxed, so the frame below is the first thing
-          with any weight on the screen. */}
+      {/* One small line above the frame, so the content is the first thing with any weight. */}
       <LessonHeader
         item={item}
         type={moduleContentType}

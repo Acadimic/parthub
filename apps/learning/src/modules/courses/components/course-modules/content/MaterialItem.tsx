@@ -64,7 +64,14 @@ export const MaterialItem = ({ material, isFullScreen, onFullScreenChange }: IPr
       selectedAttachment.linkType &&
       [LinkType.YOUTUBE, LinkType.VIDEO].includes(selectedAttachment.linkType)
     ) {
-      return <VideoPlayer url={selectedAttachment.url} isStatic={true} />;
+      return (
+        <VideoPlayer
+          url={selectedAttachment.url}
+          isStatic={true}
+          isFullScreen={isFullScreen}
+          onFullScreenChange={onFullScreenChange}
+        />
+      );
     }
     return (
       <ViewUrlContent
