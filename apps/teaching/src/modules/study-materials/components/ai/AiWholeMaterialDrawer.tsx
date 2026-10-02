@@ -1,3 +1,5 @@
+import { withFigureSources } from '@repo/shared/ai';
+import { uploadAiFigures } from '@hooks/rich-text-media.hook';
 import { type ILinkCheck, type MaterialDto } from '@repo/shared/contracts';
 import { type IAiStudyMaterial } from '@repo/shared/interfaces';
 import { AiDrawerFooter, AiPromptPackStep, AiSteps, type IAiStep } from '@components/app/ai';
@@ -181,6 +183,7 @@ export const AiWholeMaterialDrawer = ({ isOpen, onClose }: IProps) => {
         key,
         title: context ? `${context.standard.name} · ${context.subject.name}` : key,
         outline: file.outline ?? [],
+        figures: file.figures ?? [],
         issues,
         imported: toImportedMaterials(file, {
           standard: file.standard,
@@ -241,7 +244,11 @@ export const AiWholeMaterialDrawer = ({ isOpen, onClose }: IProps) => {
         const existing = useMaterialStore.getState().getStandardSubjectMaterials(standard, subject);
         const startOrder =
           existing.filter((row) => !row.isNew).reduce((max, row) => Math.max(max, row.order ?? 0), 0) + 1;
-        const rows: MaterialDto[] = set.imported.map((item, index) => ({ ...item.dto, order: startOrder + index }));
+        const srcByRef = await uploadAiFigures(set.figures);
+        const rows: MaterialDto[] = set.imported.map((item, index) => ({
+          ...withFigureSources(item.dto, srcByRef),
+          order: startOrder + index,
+        }));
         const result = await MaterialService.bulkUpsertMaterials(rows);
         if (result?.data) materialStore.addMaterials(result.data);
         written += rows.length;

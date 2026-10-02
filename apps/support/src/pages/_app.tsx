@@ -1,6 +1,7 @@
 import { ErrorBoundaryFallback, FullScreenLoader, InternetStatus } from '@repo/ui/app';
 import { useRequest } from '@repo/ui/hooks';
-import { ColorModeContext } from '@repo/ui/contexts';
+import { ColorModeContext, RichTextMediaContext } from '@repo/ui/contexts';
+import { useRichTextMediaValue } from '@hooks/rich-text-media.hook';
 import { Layout, StorageKey, Theme, Subdomain } from '@enums';
 import { AuthLayout, SidebarLayout } from '@layouts';
 import { ToastContainer } from '@modules/toasts';
@@ -49,6 +50,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     else element.classList.remove('dark');
   };
 
+  const richTextMedia = useRichTextMediaValue();
   const colorMode = useMemo(
     () => ({
       toggleColorMode: () => {
@@ -146,17 +148,19 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <ColorModeContext.Provider value={colorMode}>
-        {isLoadingInitialData || !isReady || isRedirectingToSignIn ? (
-          <FullScreenLoader loading={true} />
-        ) : (
-          <>
-            <InternetStatus />
-            <div data-theme={mode} className="bg-background text-foreground">
-              {getLayout()}
-            </div>
-          </>
-        )}
-        <ToastContainer />
+        <RichTextMediaContext.Provider value={richTextMedia}>
+          {isLoadingInitialData || !isReady || isRedirectingToSignIn ? (
+            <FullScreenLoader loading={true} />
+          ) : (
+            <>
+              <InternetStatus />
+              <div data-theme={mode} className="bg-background text-foreground">
+                {getLayout()}
+              </div>
+            </>
+          )}
+          <ToastContainer />
+        </RichTextMediaContext.Provider>
       </ColorModeContext.Provider>
     </>
   );

@@ -1,3 +1,6 @@
+import { withFigureSources } from '@repo/shared/ai';
+import { uploadAiFigures } from '@hooks/rich-text-media.hook';
+import { type IAiFigure } from '@repo/shared/interfaces';
 import { type QuestionDto } from '@repo/shared/contracts';
 import { ArrowLeftIcon, ArrowRightIcon, SparkleIcon } from '@phosphor-icons/react';
 import { Button, Modal } from '@repo/ui/app';
@@ -85,6 +88,7 @@ export const AiWholePaperDrawer = ({ isOpen, onClose }: IProps) => {
   });
   const [issues, setIssues] = useState<IAiIssue[]>([]);
   const [imported, setImported] = useState<IImportedQuestion[]>([]);
+  const [figures, setFigures] = useState<IAiFigure[]>([]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -149,6 +153,7 @@ export const AiWholePaperDrawer = ({ isOpen, onClose }: IProps) => {
       }),
     ];
     setIssues(all);
+    setFigures(parsed.paper.figures ?? []);
     setImported(
       all.some((issue) => issue.level === 'error')
         ? []
@@ -200,6 +205,7 @@ export const AiWholePaperDrawer = ({ isOpen, onClose }: IProps) => {
         testPaperStore.patchTestPaperSection(sectionId, { isNew: false });
       }
       // 3. The questions, in one request.
+      const srcByRef = await uploadAiFigures(figures);
       const dtos: QuestionDto[] = imported.map((item) => {
         const sectionId = sectionIdByRef.get(item.section.ref) ?? '';
         const questionType = item.dto.questionType ?? QuestionType.SINGLE_CHOICE;
@@ -211,7 +217,13 @@ export const AiWholePaperDrawer = ({ isOpen, onClose }: IProps) => {
           markings: item.dto.markings ?? APP_DEFAULT_MARKINGS[questionType],
         });
         created.questionIds.push(draft._id);
-        const { standard: _s, subject: _j, questionType: _t, markings: _m, ...rest } = item.dto;
+        const {
+          standard: _s,
+          subject: _j,
+          questionType: _t,
+          markings: _m,
+          ...rest
+        } = withFigureSources(item.dto, srcByRef);
         questionStore.patchQuestion(draft._id, rest);
         return { ...draft, ...rest, section: sectionId };
       });

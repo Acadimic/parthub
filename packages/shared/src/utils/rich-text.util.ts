@@ -19,8 +19,26 @@ export const createEmptyRichText = (): IRichText => ({
   text: '',
 });
 
+/**
+ * The picture block. `src` is one of three things: the address of an object in our own bucket,
+ * signed by the reader on display; any other `https:` address, shown as it is; or `figure:<ref>`,
+ * a placeholder in an AI reply that the importer swaps for the uploaded figure's address.
+ */
+export const IMAGE_NODE = 'image';
+export const FIGURE_REF_PREFIX = 'figure:';
+export const IMAGE_WIDTHS = ['small', 'medium', 'full'] as const;
+export type ImageWidth = (typeof IMAGE_WIDTHS)[number];
+
 /** Containers whose children are inline, and so join without a newline between them. */
 const INLINE_CONTAINERS = new Set(['paragraph', 'heading', 'codeBlock']);
+
+/** The text of a node that has no children to walk: an equation's LaTeX, a picture's description. */
+const leafText = (node: IRichTextNode): string | null => {
+  if (node.type === 'inlineMath' || node.type === 'blockMath') return String(node.attrs?.latex ?? '');
+  // A picture reads as its description, so a document holding only an image is not "empty".
+  if (node.type === IMAGE_NODE) return String(node.attrs?.alt || node.attrs?.caption || 'Image');
+  return null;
+};
 
 /**
  * Document → plain text, equations reduced to their LaTeX.
@@ -33,7 +51,8 @@ export const docToPlainText = (doc: IRichTextNode | null): string => {
   if (!doc) return '';
   const walk = (node: IRichTextNode): string => {
     if (node.type === 'text') return node.text ?? '';
-    if (node.type === 'inlineMath' || node.type === 'blockMath') return String(node.attrs?.latex ?? '');
+    const leaf = leafText(node);
+    if (leaf !== null) return leaf;
     // A row reads across, so its cells sit on one line; the table's rows then stack as usual.
     if (node.type === 'tableRow') return (node.content ?? []).map(walk).join('\t');
     return (node.content ?? []).map(walk).join(INLINE_CONTAINERS.has(node.type) ? '' : '\n');
@@ -207,6 +226,10 @@ const DISPLAY_MATH = /^(?:\$\$(.+)\$\$|\\\[(.+)\\\])$/;
 const DISPLAY_OPEN = /^(\$\$|\\\[)(.*)$/;
 const DISPLAY_CLOSE = /^(.*?)(\$\$|\\\])$/;
 const FENCE = /^```/;
+/** `![alt](src "caption")` alone on its line. The caption is optional and may escape a quote. */
+const IMAGE_LINE = /^!\[([^\]]*)\]\(\s*(\S+?)(?:\s+"((?:[^"\\]|\\.)*)")?\s*\)$/;
+/** An address we may show, or a figure placeholder; anything else stays a paragraph of text. */
+const IMAGE_SOURCE = /^(https:\/\/\S+|figure:[\w-]+)$/;
 
 /** What one reader consumed: the block it produced, and where parsing resumes. */
 interface IBlockMatch {
@@ -305,9 +328,22 @@ const TABLE_SEPARATOR = /^\|(\s*:?-{3,}:?\s*\|)+\s*$/;
 const splitTableRow = (line: string): string[] =>
   (TABLE_ROW.exec(line.trim())?.[1] ?? '').split(/(?<!\\)\|/).map((cell) => cell.replace(/\\\|/g, '|').trim());
 
+/** `<br>` inside a cell is a line break, the one way GFM has to break a line within a cell. */
+const CELL_BREAK = /<br\s*\/?>/i;
+
 const tableCell = (type: 'tableHeader' | 'tableCell', text: string): IRichTextNode => ({
   type,
-  content: [{ type: 'paragraph', content: parseInline(text) }],
+  content: [
+    {
+      type: 'paragraph',
+      content: text
+        .split(CELL_BREAK)
+        .reduce<IRichTextNode[]>(
+          (nodes, line, index) => nodes.concat(index ? [{ type: 'hardBreak' }] : [], parseInline(line.trim())),
+          [],
+        ),
+    },
+  ],
 });
 
 /**
@@ -328,9 +364,23 @@ const readTable: BlockReader = (lines, index) => {
   return { node: { type: 'table', attrs: { bordered: true }, content: rows }, next: cursor };
 };
 
+const readImage: BlockReader = (lines, index) => {
+  const match = IMAGE_LINE.exec(lines[index].trim());
+  if (!match || !IMAGE_SOURCE.test(match[2])) return null;
+  const caption = (match[3] ?? '').replace(/\\"/g, '"');
+  return { node: imageNode(match[2], match[1].trim(), caption.trim()), next: index + 1 };
+};
+
+/** An image node with every attribute present, so the editor and the reader see the same shape. */
+export const imageNode = (src: string, alt: string, caption: string, width: ImageWidth = 'full'): IRichTextNode => ({
+  type: IMAGE_NODE,
+  attrs: { src, alt, caption, width },
+});
+
 /** Order matters: a fence swallows its body, so it is tried before anything inside it can match. */
 const BLOCK_READERS: BlockReader[] = [
   readFence,
+  readImage,
   readTable,
   readRule,
   readDisplayMath,
@@ -387,6 +437,23 @@ export const richTextFromMarkdown = (markdown: string): IRichText => {
   if (!content.length) return createEmptyRichText();
   const doc: IRichTextDoc = { type: 'doc', content };
   return { format: RichTextFormat.DOC_V1, doc, text: docToPlainText(doc) };
+};
+
+/** Every image `src` in a document, in document order, repeats included. */
+export const collectImageSources = (doc: IRichTextNode | null): string[] => {
+  if (!doc) return [];
+  const own = doc.type === IMAGE_NODE && typeof doc.attrs?.src === 'string' ? [doc.attrs.src] : [];
+  return own.concat(flatMap(doc.content ?? [], collectImageSources));
+};
+
+/** The same document with each image `src` passed through `map`; nothing else is touched. */
+export const mapImageSources = <T extends IRichTextNode>(node: T, map: (src: string) => string): T => {
+  const attrs =
+    node.type === IMAGE_NODE && typeof node.attrs?.src === 'string'
+      ? { ...node.attrs, src: map(node.attrs.src) }
+      : node.attrs;
+  const content = node.content?.map((child) => mapImageSources(child, map));
+  return { ...node, ...(attrs ? { attrs } : {}), ...(content ? { content } : {}) };
 };
 
 // ---------------------------------------------------------------------------

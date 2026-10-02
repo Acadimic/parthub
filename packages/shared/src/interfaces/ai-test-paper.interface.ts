@@ -1,3 +1,4 @@
+import { type IAiFigure } from './ai-figure.interface';
 import { type LevelType, type QuestionType } from '../enums';
 
 /**
@@ -68,4 +69,6 @@ export interface IAiTestPaper {
   /** The course module this paper was planned for, echoed from the prompt; the import links it into the module. */
   courseModule?: string;
   sections: IAiSection[];
+  /** Pictures the content places with `![alt](figure:<ref>)`; uploaded on import. */
+  figures?: IAiFigure[];
 }

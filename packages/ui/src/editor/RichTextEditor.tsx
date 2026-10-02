@@ -1,11 +1,14 @@
 import { Placeholder } from '@tiptap/extensions';
 import { EditorContent, useEditor } from '@tiptap/react';
+import { type ChangeEvent, useRef, useState } from 'react';
 import StarterKit from '@tiptap/starter-kit';
 import { RichTextFormat } from '@repo/shared/enums';
 import type { IRichText, IRichTextDoc } from '@repo/shared/interfaces';
 import { docToPlainText } from '@repo/shared/utils';
+import { useRichTextMedia } from '../contexts/rich-text-media-context';
 import { Label } from '../core/Label';
 import { cn } from '../lib/cn';
+import { IMAGE_ACCEPT, ImageBlock } from './extensions/image';
 import { MathExtensions } from './extensions/math-nodes';
 import { TableExtensions } from './extensions/table';
 import { EditorToolbar } from './toolbar/EditorToolbar';
@@ -52,6 +55,7 @@ const DOCUMENT_CLASS = [
   '[&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.9em]',
   '[&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2',
   '[&_hr]:my-6 [&_hr]:border-border',
+  '[&_figure[data-image]]:my-4',
   // Tables match the reading view's cell padding and header ground. A borderless table keeps a
   // faint dashed guide while editing — the author still has to find the cells — that the reading
   // view does not draw.
@@ -83,6 +87,13 @@ export const RichTextEditor = ({
   className,
   editorClassName,
 }: IRichTextEditorProps) => {
+  const { uploadImage } = useRichTextMedia();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const reportUploadError = (error: unknown) =>
+    setUploadError(error instanceof Error && error.message ? error.message : 'The image could not be uploaded.');
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -95,6 +106,7 @@ export const RichTextEditor = ({
       Placeholder.configure({ placeholder }),
       ...MathExtensions,
       ...TableExtensions,
+      ImageBlock.configure({ upload: uploadImage, onUploadError: reportUploadError }),
     ],
     content: value?.doc ?? null,
     // Required under the Pages Router: Tiptap renders to the DOM, so letting it render during SSR
@@ -106,6 +118,25 @@ export const RichTextEditor = ({
       onChange({ format: RichTextFormat.DOC_V1, doc, text: docToPlainText(doc) });
     },
   });
+
+  const pickImage = uploadImage ? () => fileInputRef.current?.click() : undefined;
+
+  const onImageChosen = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !uploadImage || !editor) return;
+    setUploadError('');
+    setIsUploadingImage(true);
+    try {
+      const { src } = await uploadImage(file);
+      const alt = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+      editor.chain().focus().insertImage({ src, alt }).run();
+    } catch (error) {
+      reportUploadError(error);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   /**
    * The editor owns its scrolling so the toolbar can stay put: the toolbar is a fixed-height row
@@ -130,12 +161,22 @@ export const RichTextEditor = ({
         )}
       >
         <div className="shrink-0">
-          <EditorToolbar editor={editor} />
+          <EditorToolbar editor={editor} onPickImage={pickImage} isUploadingImage={isUploadingImage} />
+          {uploadImage ? (
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={IMAGE_ACCEPT.join(',')}
+              className="hidden"
+              onChange={onImageChosen}
+            />
+          ) : null}
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
           <EditorContent editor={editor} />
         </div>
       </div>
+      {uploadError ? <p className="mt-1 text-xs text-destructive">{uploadError}</p> : null}
       {helperText ? (
         <p className={cn('mt-1 text-xs', error ? 'text-destructive' : 'text-muted-foreground')}>{helperText}</p>
       ) : null}

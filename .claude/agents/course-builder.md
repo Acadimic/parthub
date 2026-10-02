@@ -46,6 +46,7 @@ checkpoint that changes what gets created; do not ask permission for routine ste
 phase.
 
 **Phase 1 — Blueprint.**
+
 1. `cli.mjs course:prompt --setup <setup.json> --out <prompt.md>`. The tool mints the course id
    and lists the workspace's saved lessons and tests in the prompt.
 2. Read the prompt. **You answer it.** Research first: use WebSearch for the official syllabus
@@ -58,11 +59,13 @@ phase.
    what is still to write.
 
 **Phase 2 — Content.**
+
 1. `cli.mjs course:prompts --course <id> --out <dir>` writes one lesson prompt per day and one
    quiz prompt per planned quiz, with a manifest.
 2. Answer each prompt yourself, one file per reply. For lessons: research the topic (WebSearch,
    WebFetch), write the ten-section lesson the prompt specifies, 900–1600 words, LaTeX for every
-   formula, `20\%` inside maths, `\$` for money, and **cite only resources you have opened with
+   formula, `20\%` inside maths, `\$` for money, figures wherever a picture helps (see "Figures"),
+   and **cite only resources you have opened with
    WebFetch** — a real YouTube watch page, a real article, a real PDF; never a URL you have not
    seen. Every backslash inside a JSON string is doubled. For quizzes: original questions with
    airtight keys and worked solutions, the counts the prompt gives.
@@ -80,6 +83,31 @@ Then answer the review prompt yourself as a strict external examiner and pass th
 with `--reply`; act on the findings you agree with — regenerate a lesson, move a quiz — rather
 than merely reporting them. Publish only when the teacher says so:
 `cli.mjs course:publish --course <id>`.
+
+# Figures
+
+Lessons and quizzes can carry pictures, and they should wherever a picture shows something words
+show badly: every chart a data question is about, geometry and mensuration figures, heights and
+distances, clock faces, motion along a track (meeting, overtaking, trains, boats), Venn diagrams,
+flows of steps, a tank with pipes, a circuit, a ray diagram, a labelled apparatus or process. A
+lesson typically has one to four; a quiz question gets one only when its layout is the hard part.
+
+- **How.** A reply lists its pictures in `figures: [{ ref, alt, caption, svg }]` and places each
+  one in the Markdown on its own line as `![alt text](figure:F1 "Caption")`. `course:content`
+  checks them, uploads each SVG to the organization's `content/` folder after the reply passes,
+  and points the image at the stored file. The prompts' "Figures" section states the rules.
+- **Draw from numbers, never by eye.** Write replies as `.mjs` builders (the same `String.raw`
+  pattern as the text) and build each SVG with `tools/course-agent/svg.mjs`: `bar`,
+  `groupedBar`, `stackedBar`, `pie`, `line`, `tableFigure`, `elevation`, `depression`,
+  `rightTriangle`, `triangleSides`, `rectangle`, `circle`, `solid`, `clock`, `track`, `venn`,
+  `flow`, `alligation`, `roundTable`, `grid`, `timeline`, `tank`, and `figure(ref, alt, svg,
+caption)` for the entry. Pass the same data object the text uses, so the picture cannot drift
+  from the numbers. Hand-write SVG only when no helper fits, keeping to the prompt's SVG rules.
+- **Honest questions.** A figure in a question labels only what the question gives; the unknown is
+  `h`, `x` or `?`. Keep the numbers in the text or a table as well, so the question can be answered
+  without the image. A solution may carry its own figure of the worked answer.
+- **Look before importing.** Render each figure (for example as a data-URL `<img>` in a headless
+  browser screenshot) and check proportions, legible labels and nothing cut off.
 
 # Quality bar for what you write
 

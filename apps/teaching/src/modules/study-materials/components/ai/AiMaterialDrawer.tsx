@@ -1,3 +1,5 @@
+import { withFigureSources } from '@repo/shared/ai';
+import { uploadAiFigures } from '@hooks/rich-text-media.hook';
 import { type ILinkCheck, type MaterialDto } from '@repo/shared/contracts';
 import { AiDrawerFooter, AiPromptStep, AiSteps, type IAiStep } from '@components/app/ai';
 import { Modal } from '@repo/ui/app';
@@ -170,7 +172,8 @@ export const AiMaterialDrawer = ({ isOpen, onClose, standardId, subjectId }: IPr
     if (!imported.length || state.isImporting) return;
     setState({ isImporting: true });
     try {
-      const rows: MaterialDto[] = imported.map((item) => item.dto);
+      const srcByRef = await uploadAiFigures(parsed.file?.figures ?? []);
+      const rows: MaterialDto[] = imported.map((item) => withFigureSources(item.dto, srcByRef));
       const result = await MaterialService.bulkUpsertMaterials(rows);
       if (result?.data) materialStore.addMaterials(result.data);
       const dropped = imported.reduce((sum, item) => sum + item.dropped.length, 0);

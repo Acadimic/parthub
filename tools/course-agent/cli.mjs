@@ -411,6 +411,22 @@ const createPaper = async (pack, imported) => {
   }
 };
 
+/** Stores one reply figure in the organization's `content/` folder and returns its address. */
+const uploadFigure = async (figure) => {
+  const key = `content/${utils.createObjectId()}.svg`;
+  const body = figure.svg.trim();
+  const signed = await api('common/presigned-PUT-urls', {
+    method: 'POST',
+    body: { files: [{ key, contentType: 'image/svg+xml', size: Buffer.byteLength(body) }] },
+  });
+  const url = (signed ?? []).find((item) => item.key === key)?.url;
+  if (!url) throw new Error(`No upload URL was issued for figure ${figure.ref}.`);
+  const response = await fetch(url, { method: 'PUT', headers: { 'content-type': 'image/svg+xml' }, body });
+  if (!response.ok) throw new Error(`Uploading figure ${figure.ref} failed: ${response.status} ${response.statusText}`);
+  // The query string is the signature and expires; the object's address does not.
+  return url.split('?')[0];
+};
+
 commands['course:content'] = async (options) => {
   const courseId = options.course ?? fail('--course <id> is required.');
   const files = list(options.reply);
@@ -427,7 +443,15 @@ commands['course:content'] = async (options) => {
   };
   const summary = { lessons: 0, quizzes: 0, failed: [] };
   for (const file of files) {
-    const text = fs.readFileSync(file, 'utf8');
+    const original = fs.readFileSync(file, 'utf8');
+    // Checked as written first, so a reply that will be refused never puts a figure in the bucket.
+    const precheck = ai.readContentReply(original, prompts, context);
+    let text = original;
+    if (precheck.kind !== 'unknown' && !ai.hasErrors(precheck.issues)) {
+      const figures = await ai.uploadReplyFigures(original, uploadFigure);
+      if (figures.uploaded.length) console.error(`  ${figures.uploaded.length} figure${figures.uploaded.length === 1 ? '' : 's'} uploaded`);
+      text = figures.text;
+    }
     const result = ai.readContentReply(text, prompts, context);
     console.error(`\n${path.basename(file)} → ${result.kind === 'unknown' ? 'not matched' : `${result.kind}: ${result.pack.title}`}`);
     printIssues(result.issues);

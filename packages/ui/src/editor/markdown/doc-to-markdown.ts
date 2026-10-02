@@ -1,5 +1,6 @@
 import type { IRichTextNode } from '@repo/shared/interfaces';
 import { BLOCK_MATH_NAME, INLINE_MATH_NAME } from '../extensions/math-names';
+import { IMAGE_NODE as IMAGE_NAME } from '@repo/shared/utils';
 
 /**
  * ProseMirror document → Markdown.
@@ -95,12 +96,14 @@ const serializeHeading = (node: IRichTextNode): string => {
   return `${'#'.repeat(level)} ${serializeInline(node.content)}`;
 };
 
-/** A cell's text on one line; a pipe inside would end the cell, so it is escaped. */
+/** A cell's text on one line; a pipe inside would end the cell, so it is escaped, and a hard break is `<br>`. */
 const serializeCell = (cell: IRichTextNode): string =>
   (cell.content ?? [])
     .map((block) => serializeBlock(block))
     .join(' ')
     .replace(/\|/g, '\\|')
+    // A hard break cannot be a newline inside a row; GFM spells it `<br>`, which the import reads.
+    .replace(/\\\n/g, '<br>')
     .replace(/\n/g, ' ')
     .trim();
 
@@ -121,6 +124,14 @@ const serializeTable = (node: IRichTextNode): string => {
   return [line(header), `| ${Array.from({ length: width }, () => '---').join(' | ')} |`, ...body.map(line)].join('\n');
 };
 
+/** `![alt](src "caption")`, with brackets in the alt and quotes in the caption escaped. */
+const serializeImage = (node: IRichTextNode): string => {
+  const alt = String(node.attrs?.alt ?? '').replace(/[[\]]/g, '');
+  const caption = String(node.attrs?.caption ?? '').replace(/"/g, '\\"');
+  const src = String(node.attrs?.src ?? '');
+  return src ? `![${alt}](${src}${caption ? ` "${caption}"` : ''})` : '';
+};
+
 /** The blocks with no attributes to read and no nesting to flatten. */
 const SIMPLE_BLOCKS: Record<string, (node: IRichTextNode) => string> = {
   table: serializeTable,
@@ -132,6 +143,7 @@ const SIMPLE_BLOCKS: Record<string, (node: IRichTextNode) => string> = {
   blockquote: serializeQuote,
   codeBlock: serializeCodeBlock,
   horizontalRule: () => '---',
+  [IMAGE_NAME]: serializeImage,
 };
 
 function serializeBlock(node: IRichTextNode): string {

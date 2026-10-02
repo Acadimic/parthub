@@ -1,6 +1,7 @@
 import { AI_STUDY_MATERIAL_FORMAT, type AiResourceKind } from '../interfaces';
 import { LevelType } from '../enums';
 import { MARKDOWN_RULES } from './common';
+import { FIGURE_RULES } from './figures';
 import {
   type IAiMaterialContext,
   type IAiMaterialSetup,
@@ -194,6 +195,9 @@ ${instructionsSection(setup.instructions)}
 
 Markdown, restricted to:${MARKDOWN_RULES}
 
+# Figures
+${FIGURE_RULES}
+
 # Output
 
 Return exactly one JSON object and nothing else — no prose, no code fence. It must match this TypeScript type:
@@ -227,6 +231,12 @@ interface Output {
       source: string;
       note: string;
     }>;
+  }>;
+  figures?: Array<{             // pictures placed in the Markdown as ![alt](figure:<ref> "caption")
+    ref: string;                //   "F1", "F2" …
+    alt: string;
+    caption?: string;
+    svg: string;                //   one complete <svg> element, as described under "Figures"
   }>;
 }
 \`\`\`

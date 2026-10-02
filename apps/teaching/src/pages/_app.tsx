@@ -1,6 +1,7 @@
 import { ErrorBoundaryFallback, FullScreenLoader, InternetStatus } from '@repo/ui/app';
 import { configureMathLive } from '@repo/ui/core';
-import { ColorModeContext } from '@repo/ui/contexts';
+import { ColorModeContext, RichTextMediaContext } from '@repo/ui/contexts';
+import { useRichTextMediaValue } from '@hooks/rich-text-media.hook';
 import { Layout, StorageKey, Theme, Subdomain } from '@enums';
 import { AuthLayout, SidebarLayout } from '@layouts';
 import { ToastContainer } from '@modules/toasts';
@@ -84,6 +85,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     else element.classList.remove('dark');
   };
 
+  const richTextMedia = useRichTextMediaValue();
   const colorMode = useMemo(
     () => ({
       toggleColorMode: () => {
@@ -175,19 +177,21 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <ColorModeContext.Provider value={colorMode}>
-        <MathJaxContext config={config}>
-          {isLoadingLoggedInUsers || !isReady || isAwaitingOrganization ? (
-            <FullScreenLoader loading={true} />
-          ) : (
-            <>
-              <InternetStatus />
-              <div data-theme={mode} className="bg-background text-foreground">
-                {getLayout()}
-              </div>
-            </>
-          )}
-          <ToastContainer />
-        </MathJaxContext>
+        <RichTextMediaContext.Provider value={richTextMedia}>
+          <MathJaxContext config={config}>
+            {isLoadingLoggedInUsers || !isReady || isAwaitingOrganization ? (
+              <FullScreenLoader loading={true} />
+            ) : (
+              <>
+                <InternetStatus />
+                <div data-theme={mode} className="bg-background text-foreground">
+                  {getLayout()}
+                </div>
+              </>
+            )}
+            <ToastContainer />
+          </MathJaxContext>
+        </RichTextMediaContext.Provider>
       </ColorModeContext.Provider>
     </>
   );

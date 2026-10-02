@@ -1,3 +1,6 @@
+import { withFigureSources } from '@repo/shared/ai';
+import { uploadAiFigures } from '@hooks/rich-text-media.hook';
+import { type IAiFigure } from '@repo/shared/interfaces';
 import { type QuestionDto } from '@repo/shared/contracts';
 import { type IAiTestPaper } from '@repo/shared/interfaces';
 import { ArrowLeftIcon, ArrowRightIcon, SparkleIcon } from '@phosphor-icons/react';
@@ -99,6 +102,7 @@ export const AiTestPaperDrawer = ({ isOpen, onClose, testPaper, sections, initia
   });
   const [issues, setIssues] = useState<IAiIssue[]>([]);
   const [imported, setImported] = useState<IImportedQuestion[]>([]);
+  const [figures, setFigures] = useState<IAiFigure[]>([]);
 
   // Rows follow the paper's sections each time the drawer opens; the section that opened it starts ticked.
   useEffect(() => {
@@ -186,6 +190,7 @@ export const AiTestPaperDrawer = ({ isOpen, onClose, testPaper, sections, initia
       }),
     ];
     setIssues(all);
+    setFigures(parsed.paper.figures ?? []);
     setImported(
       all.some((issue) => issue.level === 'error')
         ? []
@@ -228,6 +233,7 @@ export const AiTestPaperDrawer = ({ isOpen, onClose, testPaper, sections, initia
         if (sectionIdByRef.has(item.section.ref)) continue;
         sectionIdByRef.set(item.section.ref, item.section.sectionId ?? (await createSection(item.section)));
       }
+      const srcByRef = await uploadAiFigures(figures);
       const dtos: QuestionDto[] = imported.map((item) => {
         const sectionId = sectionIdByRef.get(item.section.ref) ?? '';
         const questionType = item.dto.questionType ?? QuestionType.SINGLE_CHOICE;
@@ -239,7 +245,13 @@ export const AiTestPaperDrawer = ({ isOpen, onClose, testPaper, sections, initia
           markings: item.dto.markings ?? APP_DEFAULT_MARKINGS[questionType],
         });
         created.push(draft._id);
-        const { standard: _s, subject: _j, questionType: _t, markings: _m, ...rest } = item.dto;
+        const {
+          standard: _s,
+          subject: _j,
+          questionType: _t,
+          markings: _m,
+          ...rest
+        } = withFigureSources(item.dto, srcByRef);
         questionStore.patchQuestion(draft._id, rest);
         return { ...questionStore.getQuestionById(draft._id), ...draft, ...rest, section: sectionId };
       });

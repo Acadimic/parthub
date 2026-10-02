@@ -99,7 +99,9 @@ converters run in the app, in a terminal, and later on the server. Two things si
 
 - **`tools/course-agent/cli.mjs`** — the pipeline as commands: `login`, `workspace`,
   `course:prompt`, `course:import`, `course:prompts`, `course:content`, `course:sessions`,
-  `course:status`, `course:review`, `course:publish`. It signs in with Firebase email and password
+  `course:status`, `course:review`, `course:publish`. `course:content` uploads a reply's figures
+  after the reply passes its checks and points the images at them; `tools/course-agent/svg.mjs`
+  draws charts and diagrams from data for the replies the agent writes. It signs in with Firebase email and password
   (or a browser id token for a one-off run), keeps the session and each run's ids in
   `.course-agent/` (git-ignored), and calls the API as the signed-in teacher. `--help` lists
   everything. It never calls a model.

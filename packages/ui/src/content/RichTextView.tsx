@@ -1,7 +1,9 @@
 import type { IRichText, IRichTextMark, IRichTextNode, RichTextAttrValue } from '@repo/shared/interfaces';
+import { docToPlainText } from '@repo/shared/utils';
 import { createElement, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
 import { MathRender } from './MathRender';
+import { RichTextImage } from './RichTextImage';
 
 export interface IRichTextViewProps {
   value?: IRichText | null;
@@ -20,6 +22,17 @@ const numberAttr = (attrs: Record<string, RichTextAttrValue> | undefined, key: s
 const stringAttr = (attrs: Record<string, RichTextAttrValue> | undefined, key: string): string => {
   const value = attrs?.[key];
   return typeof value === 'string' ? value : '';
+};
+
+const NUMBER_COLUMN_CLASS =
+  '[&_tr>*:first-child]:w-px [&_tr>*:first-child]:min-w-0 [&_tr>*:first-child]:whitespace-nowrap';
+
+/** True when the table's first header cell is a short label, which marks a numbering column. */
+const hasNumberColumn = (table: IRichTextNode): boolean => {
+  const first = table.content?.[0]?.content?.[0];
+  if (first?.type !== 'tableHeader') return false;
+  const label = docToPlainText(first).trim();
+  return label.length > 0 && label.length <= 4;
 };
 
 /** Only these schemes may leave the page from authored content; anything else renders as text. */
@@ -94,13 +107,18 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
   ),
   horizontalRule: (_node, _children, key) => <hr key={key} className="my-6 border-border" />,
   hardBreak: (_node, _children, key) => <br key={key} />,
-  // A table scrolls inside its own container rather than widening the page. `bordered: false` is
-  // a layout grid — the cells keep their padding and lose their lines.
+  // A table scrolls inside its own container rather than widening the page, and its columns size
+  // to their content: a fixed layout split a phone's width evenly and wrapped every cell to a few
+  // characters. A cell never narrows below a readable width. `bordered: false` is a layout grid —
+  // the cells keep their padding and lose their lines.
   table: (node, children, key) => (
     <div key={key} className="my-4 overflow-x-auto">
       <table
         className={cn(
-          'w-full table-fixed border-collapse text-sm',
+          'w-full border-collapse text-sm [&_td]:min-w-[6rem] [&_th]:min-w-[6rem] [&_td]:align-top',
+          // A first column headed by a short label ("No.", "#", "F") is a numbering column: it takes
+          // only the width of its own text, and the rest of the row gets the space.
+          hasNumberColumn(node) ? NUMBER_COLUMN_CLASS : '',
           node.attrs?.bordered === false ? '[&_td]:border-0 [&_th]:border-0' : '[&_td]:border [&_th]:border',
           '[&_td]:border-border [&_th]:border-border [&_td]:p-2 [&_th]:p-2 [&_th]:bg-muted/40 [&_th]:text-left [&_th]:font-semibold [&_td>p]:my-0 [&_th>p]:my-0',
         )}
@@ -119,6 +137,15 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
     <td key={key} colSpan={numberAttr(node.attrs, 'colspan', 1)} rowSpan={numberAttr(node.attrs, 'rowspan', 1)}>
       {children}
     </td>
+  ),
+  image: (node, _children, key) => (
+    <RichTextImage
+      key={key}
+      src={stringAttr(node.attrs, 'src')}
+      alt={stringAttr(node.attrs, 'alt')}
+      caption={stringAttr(node.attrs, 'caption')}
+      width={stringAttr(node.attrs, 'width') || 'full'}
+    />
   ),
   inlineMath: (node, _children, key) => <MathRender key={key} latex={stringAttr(node.attrs, 'latex')} />,
   blockMath: (node, _children, key) => (

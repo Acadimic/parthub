@@ -11,6 +11,7 @@ import { richTextFromMarkdown } from '../utils';
 import { LevelType, QuestionType } from '../enums';
 import { createObjectId } from '../utils/object-id.util';
 import { checkMarkdownMath, type IAiIssue, MARKDOWN_RULES, parseJsonObject, repairIssue } from './common';
+import { checkFigures, FIGURE_RULES } from './figures';
 
 /** How many of each type a section should get. */
 export type IQuestionCounts = Record<QuestionType, number>;
@@ -207,6 +208,9 @@ ${blueprint.instructions.trim() ? `\n### Additional instructions from the teache
 
 Markdown, restricted to:${MARKDOWN_RULES}
 
+# Figures
+${FIGURE_RULES}
+
 # Output
 
 Return exactly one JSON object and nothing else — no prose, no code fence. It must match this TypeScript type:
@@ -247,6 +251,12 @@ interface Output {
       estimatedMinutes: number;
       skills: string[];
     }>;
+  }>;
+  figures?: Array<{             // pictures placed in the Markdown as ![alt](figure:<ref> "caption")
+    ref: string;                //   "F1", "F2" …
+    alt: string;
+    caption?: string;
+    svg: string;                //   one complete <svg> element, as described under "Figures"
   }>;
 }
 \`\`\`
@@ -471,6 +481,16 @@ export const validateAiPaper = (paper: IAiTestPaper, target: IValidationTarget):
       checkQuestion(question, path, target, issues);
     });
   });
+  const markdown = paper.sections.flatMap((section) => [
+    section.instructions ?? '',
+    ...(section.questions ?? []).flatMap((question) => [
+      question.body ?? '',
+      question.solution ?? '',
+      question.answer ?? '',
+      ...(question.options ?? []).map((option) => option.body ?? ''),
+    ]),
+  ]);
+  checkFigures(paper.figures, markdown, issues);
   return issues;
 };
 

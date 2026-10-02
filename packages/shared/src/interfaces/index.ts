@@ -12,6 +12,7 @@ export * from './toast.interface';
 export * from './request.interface';
 export * from './entity.interface';
 export * from './rich-text.interface';
+export * from './ai-figure.interface';
 export * from './ai-test-paper.interface';
 export * from './ai-study-material.interface';
 export * from './ai-course.interface';

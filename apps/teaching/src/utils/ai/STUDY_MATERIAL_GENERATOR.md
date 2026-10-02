@@ -88,6 +88,21 @@ Types live in `packages/shared/src/interfaces/ai-study-material.interface.ts` (`
 }
 ```
 
+## Figures
+
+A reply may draw pictures for its content: a `figures` list of `{ ref, alt, caption?, svg }`, each
+placed in Markdown on its own line as `![alt](figure:<ref> "caption")`. The prompt's "Figures"
+section (`FIGURE_RULES` in `packages/shared/src/ai/figures.ts`) asks for a picture wherever it is
+clearer than words: charts, geometry, diagrams, clock faces, motion along a track, Venn diagrams.
+Each SVG must be one `<svg>` with a `viewBox` on a white ground, with no script, event attribute,
+foreign content, external link or resource, and at most 200 kB.
+
+The validator (`checkFigures`) errors on a ref that is used but not defined and on an unsafe SVG,
+and warns on an unplaced figure or one without alt text. Nothing is uploaded while a reply has
+errors; at import each figure goes to the organization's `content/` folder (`uploadAiFigures`)
+and the image nodes are pointed at it (`withFigureSources`). The editor and every reading view
+then show it like an image a teacher uploaded; see `packages/ui/src/editor/README.md` §3a.
+
 ## What the import writes
 
 - One material per item, in file order, with `order` continuing from the page's last row, `level`,

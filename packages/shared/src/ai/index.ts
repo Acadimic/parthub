@@ -3,6 +3,7 @@
 // server dependency, so the teaching app, the terminal course agent and (later) a server-side job
 // runner share one implementation.
 export * from './common';
+export * from './figures';
 export * from './defaults';
 export * from './test-paper-generator';
 export * from './test-paper-plan';

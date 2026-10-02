@@ -4,7 +4,7 @@ This is the reference for how authored content — study material, questions, op
 is written, stored, rendered, imported and exported. It covers `@repo/ui/editor`,
 `@repo/ui/content`, and the shared utilities in `@repo/shared/utils` they depend on. The design
 rationale lives in `.claude/plans/CONTENT_EDITOR_AND_EQUATIONS.md`; this file records what is
-built and how to use it. Updated 2026-09-19.
+built and how to use it. Updated 2026-10-02 (images).
 
 ## 1. The model in one paragraph
 
@@ -74,6 +74,7 @@ exported to Markdown and imported from Markdown — all four, or it would be los
 | `hardBreak`                                     | Shift+Enter                                                                                                |
 | `table`, `tableRow`, `tableHeader`, `tableCell` | `bordered` flag on the table; cells hold **inline content only** (no blocks in cells); optional header row |
 | `blockMath`                                     | a display equation; `attrs.latex`                                                                          |
+| `image`                                         | a picture block; `attrs.src`, `alt`, `caption`, `width` (`small`, `medium`, `full`). See §3a               |
 
 ### Inline
 
@@ -84,9 +85,31 @@ exported to Markdown and imported from Markdown — all four, or it would be los
 | `bold`, `italic`, `underline`, `strike`, `code` | marks                                                                                                                    |
 | `link`                                          | mark with `attrs.href`; only `http(s):`, `mailto:` and `tel:` are rendered as links, anything else renders as plain text |
 
+### 3a. Images
+
+An image is an atomic block node. `src` holds one of three things:
+
+- the **address of an object in our bucket** (`https://<bucket>.s3.<region>.amazonaws.com/<prefix>orgs/<org>/content/<id>`),
+  stored without a signature and signed by the reader on display, so the document never expires;
+- any other **`https:` address**, shown as it is;
+- **`figure:<ref>`**, a placeholder that exists only inside an AI reply until the importer uploads
+  the figure and swaps in its address.
+
+The file is never inlined into the document. Uploads go through the host app: `RichTextMediaContext`
+(`@repo/ui/contexts`) carries `resolveImageUrl(src)` and, in the teaching app only,
+`uploadImage(file)`. Each app provides it at its root from its own attachment helpers
+(`src/hooks/rich-text-media.hook.ts`), because this package must not reach an app's HTTP layer.
+Without a provider only plain external `https:` images can be shown, and the editor offers no image
+button.
+
+An image is uploaded **the moment it is inserted**, into the organization's `content/` folder, unlike
+attachments, which upload when their form saves. That is what lets the document hold a real
+address straight away. A picture deleted before the record is saved stays in the bucket with
+nothing pointing at it; it is small and not worth a second upload path.
+
 ### Not supported, deliberately
 
-Images, raw HTML, footnotes, task lists, callouts, toggles, nested tables, headings 4–6, colours
+Raw HTML, footnotes, task lists, callouts, toggles, nested tables, headings 4–6, colours
 and font sizes. A model or an import that produces any of these gets a paragraph of text instead
 (nothing is dropped silently), and the AI prompts tell models not to use them. The plan's
 `callout` and `toggle` blocks (§5.10) are not built.
@@ -99,7 +122,14 @@ complete `IRichText`, projection included. Props follow the input-wrapper contra
 
 **Toolbar**: undo/redo · block type (Text, Heading 1–3, Quote, Code block) · Bold, Italic,
 Underline, Strikethrough, Inline code · bulleted and numbered lists · table (rows × columns
-picker with header-row and borders toggles) and divider · Equation (Inline, Display, Chemistry).
+picker with header-row and borders toggles), image (when the host can upload) and divider ·
+Equation (Inline, Display, Chemistry).
+
+**Images**: the toolbar button opens a file picker (PNG, JPEG, WebP, GIF, SVG); pasting or dropping
+an image file uploads it too. Selecting an image shows its alt text and caption fields, a
+Small / Medium / Full width switch and a remove button. Raster images are compressed to WebP
+before upload (`compressImage`) and never scaled past their own size; a drawing (SVG) fills its
+width up to a reading width of 40rem.
 Inside a table a second row adds and deletes rows and columns, toggles the header row and the
 borders, or deletes the table.
 
@@ -115,6 +145,10 @@ starts a display equation.
 
 **Placeholder**: shown in an empty document; default "Start writing. Ctrl/⌘ + E adds an
 equation, or type $x^2$".
+
+**Tables on a phone**: the reading view sizes columns to their content and scrolls a wide table
+sideways; a cell never narrows below 6rem, and a first column headed by a short label ("No.",
+"#") stays only as wide as its text.
 
 **Rendering**: the content area carries `DOCUMENT_CLASS`, the same typography `RichTextView`
 uses, so what an author edits is what a reader sees. Tiptap renders client-side only
@@ -156,6 +190,9 @@ with `trust: false`, so `\href`, `\url` and `\includegraphics` are disabled and 
 smuggle a link or a remote image. `maxExpand` and `maxSize` bound macro bombs. A link's `href` is
 checked against `http(s):`, `mailto:`, `tel:` before it renders as a link.
 
+Images: `RichTextImage` resolves `src` through the media context, shows a pulse while signing,
+the image with its caption beneath, and a dashed box with the alt text if it cannot be loaded.
+
 Errors: KaTeX runs with `throwOnError: false`, so a bad expression renders as a red monospace chip
 carrying the source and the error in its title, and never takes down the page. `strict: 'ignore'`
 keeps it lenient about Unicode in maths.
@@ -169,21 +206,22 @@ The write path for everything that does not come from the editor: AI replies, im
 Deliberately narrow — it accepts what the editor can store and turns unknown lines into
 paragraphs, so no input is dropped.
 
-| Markdown                                                                         | Becomes                     |
-| -------------------------------------------------------------------------------- | --------------------------- |
-| `#`, `##`, `###`                                                                 | heading 1–3                 |
-| blank-line separated text                                                        | paragraphs                  |
-| `- `, `* `, `+ `                                                                 | bullet list                 |
-| `1. `, `1) `                                                                     | ordered list                |
-| `> `                                                                             | blockquote                  |
-| ` ``` ` fences                                                                   | code block                  |
-| `---`, `***`, `___`                                                              | horizontal rule             |
-| GFM pipe table (header row, separator, body rows)                                | table, bordered, header row |
-| `$$…$$` on one line, or a `$$` … `$$` block over several lines; `\[…\]` likewise | display equation            |
-| `$…$`, `\(…\)`, `$$…$$` inside a line                                            | inline equation             |
-| `**bold**`, `_italic_`, `~~strike~~`, `` `code` ``                               | marks                       |
-| `[text](https://…)`                                                              | link mark                   |
-| `\$`                                                                             | a literal dollar sign       |
+| Markdown                                                                         | Becomes                                             |
+| -------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `#`, `##`, `###`                                                                 | heading 1–3                                         |
+| blank-line separated text                                                        | paragraphs                                          |
+| `- `, `* `, `+ `                                                                 | bullet list                                         |
+| `1. `, `1) `                                                                     | ordered list                                        |
+| `> `                                                                             | blockquote                                          |
+| ` ``` ` fences                                                                   | code block                                          |
+| `---`, `***`, `___`                                                              | horizontal rule                                     |
+| GFM pipe table (header row, separator, body rows); `<br>` in a cell              | table, bordered, header row; `<br>` is a hard break |
+| `$$…$$` on one line, or a `$$` … `$$` block over several lines; `\[…\]` likewise | display equation                                    |
+| `$…$`, `\(…\)`, `$$…$$` inside a line                                            | inline equation                                     |
+| `**bold**`, `_italic_`, `~~strike~~`, `` `code` ``                               | marks                                               |
+| `[text](https://…)`                                                              | link mark                                           |
+| `\$`                                                                             | a literal dollar sign                               |
+| `![alt](src "caption")` alone on a line; `src` is `https:` or `figure:<ref>`     | image                                               |
 
 Rules worth knowing:
 
@@ -197,8 +235,9 @@ Rules worth knowing:
   backslashes are restored (`<TAB>imes` → `\times`), a command that lost its first letter at the
   start is restored (`rac{a}{b}` → `\frac{a}{b}`), a bare `%` becomes `\%` (otherwise it is a
   LaTeX comment), a bare `$` becomes `\$` (a price inside an equation), and whitespace is trimmed.
-- **Not imported**: `*italic*` with single asterisks (write `_italic_`), `<u>` underline, images,
-  HTML, nested lists, task lists, hard breaks.
+- **Not imported**: `*italic*` with single asterisks (write `_italic_`), `<u>` underline, an
+  image inside a paragraph or with any other scheme (it stays text), HTML, nested lists, task
+  lists, hard breaks.
 
 ## 7. Markdown out: `docToMarkdown`
 
@@ -206,7 +245,8 @@ The export path, and what proves the stored JSON is a document rather than a pri
 Every node in §3 serialises: headings, marks in a fixed order (`**_x_**` and `_**x**_` are the
 same document and must be the same string), underline as `<u>…</u>` (Markdown has none), lists,
 quotes, fenced code, rules, pipe tables (with `|` escaped in cells), `$…$` and `$$\n…\n$$`,
-`---`, and hard breaks as a backslash before the newline. Bare `$` in prose is escaped as `\$` so
+`---`, images as `![alt](src "caption")` (width is not expressible and comes back as `full`), and
+hard breaks as a backslash before the newline (as `<br>` inside a table cell). Bare `$` in prose is escaped as `\$` so
 a re-import does not invent an equation.
 
 The AI-safe subset — what round-trips `doc → Markdown → doc` exactly — is everything in §3 except
@@ -226,8 +266,14 @@ The generators live in `apps/teaching/src/utils/ai/` and are documented in
    command, so a real line break survives. The count is shown to the teacher as a warning.
 3. **Validation** (`checkMarkdownMath`) warns on leftover control characters, currency `$`, an odd
    number of `$`, and `\( \)` delimiters.
-4. **Conversion** is `richTextFromMarkdown`, with the normalisation of §6.
-5. **Import** writes `IRichText` values through the bulk routes.
+4. **Figures**: a reply may draw pictures as SVG in `figures: [{ ref, alt, caption, svg }]`,
+   placed as `![alt](figure:<ref>)`. `checkFigures` refuses an undefined ref and an SVG with a
+   script, an event attribute, foreign content, an external link or resource, no `viewBox`, or more
+   than 200 kB. Once a reply passes, the importer uploads each figure (`uploadReplyFigures` in the
+   CLI, `uploadAiFigures` + `withFigureSources` in the teaching app's drawers) and points the image
+   at the stored file. The prompts' "Figures" section (`FIGURE_RULES`) tells the model all of this.
+5. **Conversion** is `richTextFromMarkdown`, with the normalisation of §6.
+6. **Import** writes `IRichText` values through the bulk routes.
 
 Content imported before these safeguards existed can be repaired in place with **Repair
 equations** on a subject's material page (header button for every content, card menu for one).
@@ -273,7 +319,8 @@ solution, and `TestPaper.instruction`.
 - Server-side structural validation of `doc` (§10).
 - Hindi and other Indic text inside `\text{}` renders through KaTeX's fallback fonts; not yet
   verified on devices (plan §6.6, §6.10).
-- No image node; course covers and material files are attachments, not content.
+- An image's width does not survive Markdown. Images inside table cells or list items are not
+  supported (the node is a block).
 - The Notion-style block chrome of the plan (drag handles, slash menu) is not built; the toolbar
   is the whole UI.
 - `*italic*` and `<u>` are not imported from Markdown.

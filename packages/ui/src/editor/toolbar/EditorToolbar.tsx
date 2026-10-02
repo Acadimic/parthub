@@ -6,6 +6,7 @@ import {
   CodeIcon,
   FlaskIcon,
   FunctionIcon,
+  ImageIcon,
   ListBulletsIcon,
   ListNumbersIcon,
   MinusIcon,
@@ -30,6 +31,9 @@ import { CONTROL_CLASS, keepSelection, ToolbarAction, ToolbarButton, ToolbarGrou
 
 interface IProps {
   editor: Editor | null;
+  /** Opens the file picker; absent where the host cannot upload, which hides the button. */
+  onPickImage?: () => void;
+  isUploadingImage?: boolean;
 }
 
 const ICON = 'h-4 w-4';
@@ -165,7 +169,7 @@ const useIsCompact = () => {
  * re-renders the owner on every transaction, so a toolbar that read `editor.isActive` directly
  * showed the state of the *previous* selection.
  */
-export const EditorToolbar = ({ editor }: IProps) => {
+export const EditorToolbar = ({ editor, onPickImage, isUploadingImage = false }: IProps) => {
   const { ref, isCompact } = useIsCompact();
   const state =
     useEditorState({
@@ -297,6 +301,14 @@ export const EditorToolbar = ({ editor }: IProps) => {
             isDisabled={state.inTable}
             onInsert={(options) => editor.chain().focus().insertBorderedTable(options).run()}
           />
+          {onPickImage ? (
+            <ToolbarButton
+              label={isUploadingImage ? 'Uploading image…' : 'Image — upload, paste or drop a picture'}
+              icon={<ImageIcon className={cn(ICON, isUploadingImage ? 'animate-pulse' : '')} />}
+              isDisabled={isUploadingImage}
+              onClick={onPickImage}
+            />
+          ) : null}
           {!isCompact && (
             <ToolbarButton
               label="Divider"

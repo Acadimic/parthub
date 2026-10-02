@@ -1,3 +1,5 @@
+import { figuresOf, withFigureSources } from '@repo/shared/ai';
+import { uploadAiFigures } from '@hooks/rich-text-media.hook';
 import { type CourseDto, type CourseModuleDto, type MaterialDto } from '@repo/shared/contracts';
 import { AiDrawerFooter, AiIssueList, AiPromptPackStep, AiSteps, type IAiStep } from '@components/app/ai';
 import {
@@ -229,10 +231,11 @@ export const AiCourseModulesDrawer = ({ isOpen, onClose, course, modules }: IPro
       return current + 1;
     };
     try {
-      for (const { result } of ready) {
+      for (const { reply, result } of ready) {
+        const srcByRef = await uploadAiFigures(figuresOf(reply.text));
         if (result.kind === 'lessons') {
           const rows: MaterialDto[] = result.imported.map((item) => ({
-            ...item.dto,
+            ...withFigureSources(item.dto, srcByRef),
             order: nextOrder(result.pack.standardId, result.pack.subjectId),
           }));
           const saved = await MaterialService.bulkUpsertMaterials(rows);
@@ -253,7 +256,7 @@ export const AiCourseModulesDrawer = ({ isOpen, onClose, course, modules }: IPro
             standards: result.pack.standardIds,
             subjects: result.pack.subjectIds,
             durationMins: result.pack.spec.durationMins,
-            imported: result.imported,
+            imported: result.imported.map((item) => ({ ...item, dto: withFigureSources(item.dto, srcByRef) })),
           });
           const linked = await CourseService.linkCourseModule({
             courseModule: result.pack.moduleId,

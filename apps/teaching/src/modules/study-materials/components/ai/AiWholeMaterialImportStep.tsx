@@ -1,3 +1,4 @@
+import { type IAiFigure } from '@repo/shared/interfaces';
 import { type ILinkCheck } from '@repo/shared/contracts';
 import { AiIssueList } from '@components/app/ai';
 import {
@@ -34,6 +35,8 @@ export interface IAiImportSet {
   key: string;
   title: string;
   outline: string[];
+  /** The figures the merged replies drew, uploaded at import. */
+  figures: IAiFigure[];
   issues: IAiIssue[];
   imported: IImportedMaterial[];
   chapterName: (chapterId?: string) => string;

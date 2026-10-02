@@ -10,6 +10,7 @@ import { richTextFromMarkdown } from '../utils';
 import { DocumentType, FileExtension, LevelType, LinkType } from '../enums';
 import { createObjectId } from '../utils/object-id.util';
 import { checkMarkdownMath, type IAiIssue, parseJsonObject, repairIssue } from './common';
+import { checkFigures } from './figures';
 import { buildStudyMaterialPrompt } from './study-material-prompt';
 import { type IAiMaterialContext, type IAiMaterialSetup } from './study-material-setup';
 
@@ -109,7 +110,7 @@ const checkContent = (material: IAiMaterial, path: string, issues: IAiIssue[]) =
   if (material.kind === 'lesson' && !/^##\s+important notes/im.test(content)) {
     issues.push({ level: 'warning', path: `${path}.content`, message: 'No "Important notes" section.' });
   }
-  if (/<[a-z][^>]*>/i.test(content)) {
+  if (/<(?!br\s*\/?>)[a-z][^>]*>/i.test(content)) {
     issues.push({ level: 'warning', path: `${path}.content`, message: 'Contains HTML tags, which the editor drops.' });
   }
   checkMarkdownMath(content, `${path}.content`, issues);
@@ -193,6 +194,11 @@ export const validateAiMaterials = (file: IAiStudyMaterial, target: IMaterialVal
         }),
       );
   }
+  checkFigures(
+    file.figures,
+    file.materials.map((material) => material.content ?? ''),
+    issues,
+  );
   const examPreps = file.materials.filter((material) => material.kind === 'examPrep');
   if (target.expectsExamPrep && !examPreps.length) {
     issues.push({
@@ -377,6 +383,11 @@ export const mergeAiMaterialFiles = (files: IAiStudyMaterial[]): IAiStudyMateria
       outline: existing.outline?.length ? existing.outline : file.outline,
       title: existing.title ?? file.title,
       materials,
+      // A later part's figure replaces an earlier one with the same ref, as its lessons do.
+      figures: [
+        ...(existing.figures ?? []).filter((figure) => !(file.figures ?? []).some((next) => next.ref === figure.ref)),
+        ...(file.figures ?? []),
+      ],
     });
   });
   return [...byPair.values()];

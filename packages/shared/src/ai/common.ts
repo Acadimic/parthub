@@ -130,6 +130,6 @@ export const MARKDOWN_RULES = `
 - Inline maths as $...$ and display maths on its own line as $$...$$, in LaTeX — never \\( \\) or \\[ \\]. Chemistry with \\ce{...} inside maths, e.g. $\\ce{H2SO4}$.
 - Inside maths a percent sign is \\%, e.g. $20\\%$; units go in \\text{}, e.g. $60\\ \\text{km h}^{-1}$.
 - Money is never a bare dollar sign: write \\$5000 in prose, or use ₹ or "Rs". A bare $ before a number would be read as the start of an equation.
-- Tables as GitHub pipe tables where a comparison genuinely needs one.
-- No HTML, images or footnotes, and no references to "the figure": there are no figures.
+- Tables as GitHub pipe tables where a comparison genuinely needs one; <br> inside a cell breaks the line. Keep tables to two or three columns so they read on a phone, e.g. a formula sheet as | No. | Formula | with the formula, <br>, then when to use it.
+- No HTML and no footnotes. Pictures only as described under "Figures" below, each placed on its own line.
 - Inside JSON strings every backslash is doubled: "\\\\frac{1}{2}" for \\frac{1}{2}, "\\\\times" for \\times, "\\\\$" for \\$; newlines are \\n. A single backslash before f, t, n, b or r is a JSON control character, not a command — "\\frac" arrives as a form feed followed by "rac".`;
