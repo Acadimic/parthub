@@ -49,3 +49,7 @@ COURSE_TRANSFER_FIREBASE_KEY=<the production web API key, NEXT_PUBLIC_FIREBASE_A
   default 1 MiB body.
 - **Read-back:** fetches the course, plans, days, lessons, quizzes, questions and meet, and fails
   if any exported id is missing or the cover is not the new address.
+
+`--course-only` writes the course record and its plans and nothing else, then reads the course
+back: the way to ship a change to the course itself, such as its display `order`. Pass
+`--publish` with it for a course that should stay published.

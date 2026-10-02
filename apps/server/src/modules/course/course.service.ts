@@ -146,12 +146,14 @@ export class CourseService {
   async getOrgCourses(org: Types.ObjectId): Promise<CourseDto[]> {
     return this.courseModel
       .find({ org, _deleted: { $ne: true } })
+      .sort({ order: 1, createdAt: 1 })
       .lean<CourseDocument[]>()
       .then((courses) => this.getTransformedCourses(courses));
   }
 
   /**
-   * The public catalogue: published courses from every organization, newest first.
+   * The public catalogue: published courses from every organization, in each course's display
+   * `order` (set by its teacher on the Courses page), newest first among equal orders.
    *
    * Deliberately not org-scoped — unlike every other read here — because `isPublished` is the
    * organization's own opt-in to being listed, and the catalogue is browsed by anonymous visitors
@@ -160,7 +162,7 @@ export class CourseService {
   async getPublishedCourses(): Promise<CourseDto[]> {
     return this.courseModel
       .find({ isPublished: true, _deleted: { $ne: true } }, CATALOGUE_EXCLUDED_FIELDS)
-      .sort({ publishedDate: -1 })
+      .sort({ order: 1, publishedDate: -1 })
       .lean<CourseDocument[]>()
       .then((courses) => this.getTransformedCourses(courses));
   }

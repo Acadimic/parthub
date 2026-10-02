@@ -60,6 +60,12 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
 
   /** Publishes a course or puts it back in draft, and keeps the saved row in the store. */
   setCoursePublished: (courseId: string, isPublished: boolean) => Promise<void>;
+  /**
+   * Moves a course one place up or down in the display order the learning catalogue follows.
+   * The list is renumbered 0…n−1 on the way, so duplicate or missing orders heal themselves, and
+   * only the courses whose number changed are saved.
+   */
+  moveCourse: (courseId: string, direction: CourseMoveDirection) => Promise<void>;
   /** Soft-deletes a course on the server, then drops it from the store. */
   deleteCourse: (courseId: string) => Promise<void>;
   /** Soft-deletes a module on the server, then drops it from the store. */
@@ -72,6 +78,12 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   loadCourseModules: (courseId: string) => Promise<void>;
   reset: () => void;
 }
+
+export type CourseMoveDirection = 'up' | 'down';
+
+/** Saved courses in display order; ties keep the order they were created in. */
+export const byDisplayOrder = (a: CourseDto, b: CourseDto): number =>
+  (a.order ?? 0) - (b.order ?? 0) || String(a._id).localeCompare(String(b._id));
 
 const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
   rows.reduce<Record<string, T>>((map, row) => {
@@ -289,6 +301,28 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
     };
     const result = await CourseService.upsertCourse(next);
     get().addCourses([result?.data ?? next]);
+  },
+
+  moveCourse: async (courseId, direction) => {
+    const ordered = get()
+      .getCourses()
+      .filter((course) => !course.isNew)
+      .sort(byDisplayOrder);
+    const from = ordered.findIndex((course) => course._id === courseId);
+    const to = direction === 'up' ? from - 1 : from + 1;
+    if (from < 0 || to < 0 || to >= ordered.length) return;
+    [ordered[from], ordered[to]] = [ordered[to], ordered[from]];
+    const changed = ordered
+      .map((course, index) => ({ ...course, order: index }))
+      .filter((course) => course.order !== get().getCourseById(course._id)?.order);
+    // Shown at once, then saved; a failed save reloads the list so the table never lies.
+    get().addCourses(changed);
+    try {
+      for (const course of changed) await CourseService.upsertCourse(course);
+    } catch (error) {
+      await get().loadCourses();
+      throw error;
+    }
   },
 
   deleteCourse: async (courseId) => {

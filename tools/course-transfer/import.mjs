@@ -63,6 +63,9 @@ const firebaseKey = needed('firebase-key', 'FIREBASE_KEY');
 const orgOption = setting('org', 'ORG');
 const dryRun = flag('dry-run');
 const publish = flag('publish');
+// Writes the course record (and its plans) only: how a change such as the display order reaches
+// the target without sending every lesson and question again.
+const courseOnly = flag('course-only');
 const password =
   process.env.COURSE_TRANSFER_PASSWORD ??
   target.COURSE_TRANSFER_PASSWORD ??
@@ -239,6 +242,17 @@ await write(
   },
   `course and ${plans.length} plan(s), ${publish ? 'published' : 'unpublished'}`,
 );
+
+if (courseOnly) {
+  if (!dryRun) {
+    const saved = await api(`course/${course._id}`);
+    if (saved.order !== course.order || saved.isPublished !== publish) {
+      fail(`read-back: order ${saved.order}, published ${saved.isPublished}; expected ${course.order}, ${publish}`);
+    }
+  }
+  console.log(`${dryRun ? '[dry run] ' : ''}course ${course._id} · order ${course.order} · ${publish ? 'published' : 'unpublished'}`);
+  process.exit(0);
+}
 
 // Batches stay under Fastify's 1 MiB default body limit.
 const MAX_BATCH_BYTES = 800_000;

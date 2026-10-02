@@ -9,6 +9,8 @@ import { useLoadOnce } from '@repo/ui/hooks';
 import {
   ArrowClockwiseIcon,
   ArrowCounterClockwiseIcon,
+  ArrowDownIcon,
+  ArrowUpIcon,
   ArrowSquareOutIcon,
   MagnifyingGlassIcon,
   PencilIcon,
@@ -17,7 +19,14 @@ import {
   SparkleIcon,
   TrashIcon,
 } from '@phosphor-icons/react';
-import { useCourseLookups, useCourseStore, useSelectorLookups, useStandardLookups } from '@stores';
+import {
+  byDisplayOrder,
+  type CourseMoveDirection,
+  useCourseLookups,
+  useCourseStore,
+  useSelectorLookups,
+  useStandardLookups,
+} from '@stores';
 import { ACTIONS, ALL } from '@repo/shared/utils';
 import { reportError, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
@@ -43,7 +52,7 @@ export const Courses = () => {
   const courseStore = useCourseLookups();
   const standardStore = useStandardLookups();
   const { setSelectedCourseId } = useSelectorLookups();
-  const { createCourse, loadCourses, deleteCourse, setCoursePublished } = courseStore;
+  const { createCourse, loadCourses, deleteCourse, setCoursePublished, moveCourse } = courseStore;
   const { getStandardNamesText, getSubjectNamesText } = standardStore;
   const courses = courseStore.getCourses();
   const standardOptions: ISelectItem[] = standardStore
@@ -79,7 +88,8 @@ export const Courses = () => {
   // arriving after the courses would leave this list matching against empty names.
   const visibleCourses = useMemo(() => {
     // A draft being typed into the drawer is not a row yet; it joins the list when the save lands.
-    const saved = courses.filter((course) => !course.isNew);
+    // In display order — the order learners see in the catalogue — until a column header re-sorts.
+    const saved = courses.filter((course) => !course.isNew).sort(byDisplayOrder);
     const term = state.search.trim().toLowerCase();
     if (!term) return saved;
     return saved.filter((course) =>
@@ -133,6 +143,14 @@ export const Courses = () => {
       reportError(error, 'Could not change the course status.');
     } finally {
       setState({ isPublishing: false });
+    }
+  };
+
+  const onMoveCourse = async (course: CourseDto, direction: CourseMoveDirection) => {
+    try {
+      await moveCourse(course._id, direction);
+    } catch (error) {
+      reportError(error, 'Could not change the course order.');
     }
   };
 
@@ -262,6 +280,17 @@ export const Courses = () => {
             ) : (
               <RocketLaunchIcon weight="bold" className="w-4 h-4" />
             ),
+        },
+        {
+          // Moves the course in the learning catalogue's order, which this table shows by default.
+          label: 'Move up',
+          onClick: (row) => row && onMoveCourse(row, 'up'),
+          icon: <ArrowUpIcon weight="bold" className="w-4 h-4" />,
+        },
+        {
+          label: 'Move down',
+          onClick: (row) => row && onMoveCourse(row, 'down'),
+          icon: <ArrowDownIcon weight="bold" className="w-4 h-4" />,
         },
         {
           label: 'Delete',
