@@ -161,8 +161,16 @@ const LINK_PATTERN = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/;
 const MARK_PATTERNS: { re: RegExp; type: string; literal?: boolean }[] = [
   { re: /`([^`]+)`/, type: 'code', literal: true },
   { re: LINK_PATTERN, type: 'link' },
-  { re: /\*\*([^*]+)\*\*/, type: 'bold' },
+  // `***x***` is bold around italic: the bold takes the outer pair, the italic rule the inner one.
+  { re: /\*\*(\*[^*]+\*)\*\*/, type: 'bold' },
+  // Bold may hold italic: `**Treating *along with* like *and*.**`.
+  { re: /\*\*((?:[^*]|\*(?!\*))+?)\*\*/, type: 'bold' },
   { re: /~~([^~]+)~~/, type: 'strike' },
+  // `*italic*`, as most writers and models spell it. It opens only where a star hugs the next
+  // character and does not follow a word, so `a*b` and `2 * 3` inside an equation stay what they
+  // are; it may be followed by a letter (`*the*s`). Tried before `_italic_`, so a blank written as
+  // `____` inside it stays a blank.
+  { re: /(?<![\w*\\$])\*(?![\s*])((?:[^*\n]|\*\*[^*\n]+?\*\*)+?)(?<![\s\\])\*(?!\*)/, type: 'italic' },
   { re: /(?<![A-Za-z0-9])_([^_]+)_(?![A-Za-z0-9])/, type: 'italic' },
 ];
 
@@ -174,9 +182,16 @@ const textNode = (text: string, marks: IRichTextMark[]): IRichTextNode =>
 /** Parses marks, recursing into what a mark wraps so `**_x_**` keeps both. Text stays escaped. */
 const parseMarked = (input: string, marks: IRichTextMark[]): IRichTextNode[] => {
   if (!input) return [];
-  for (const { re, type, literal } of MARK_PATTERNS) {
-    const match = re.exec(input);
-    if (!match) continue;
+  // The mark that opens first wins, whichever kind it is, so marks nest either way round:
+  // bold around italic and italic around bold. On a tie the pattern listed first wins.
+  const found = MARK_PATTERNS.map((pattern) => ({ pattern, match: pattern.re.exec(input) }))
+    .filter((item): item is { pattern: (typeof MARK_PATTERNS)[number]; match: RegExpExecArray } => !!item.match)
+    .sort((a, b) => a.match.index - b.match.index)[0];
+  if (found) {
+    const {
+      pattern: { type, literal },
+      match,
+    } = found;
     const inner = match[1];
     // A link is the one mark with an attribute: the address it points at.
     const nextMarks = [...marks, type === 'link' ? { type, attrs: { href: match[2] } } : { type }];

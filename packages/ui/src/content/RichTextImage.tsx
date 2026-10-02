@@ -11,14 +11,12 @@ export interface IRichTextImageProps {
   className?: string;
 }
 
-/** How wide a picture may grow. A photo also stops at its own size; a drawing fills the width. */
+/** How wide a picture may grow. It never grows past its own size, so a small tile stays small. */
 export const IMAGE_WIDTH_CLASSES: Record<string, string> = {
   small: 'max-w-[18rem]',
   medium: 'max-w-[32rem]',
   full: 'max-w-full',
 };
-
-const isVector = (src: string) => /\.svg($|\?)/i.test(src);
 
 /** Resolves a stored `src` to a loadable URL through the app's media provider. */
 export const useResolvedImageUrl = (src: string): { url: string; isLoading: boolean } => {
@@ -46,10 +44,7 @@ export const RichTextImage = ({ src, alt, caption, width, className }: IRichText
   const [hasFailed, setHasFailed] = useState(false);
   // A new address gets a fresh attempt; a failure belongs to the URL that failed.
   useEffect(() => setHasFailed(false), [url]);
-  // A drawing has no natural pixel size, so "full" stops at a comfortable reading width.
-  const widthClass =
-    isVector(src) && width === 'full' ? 'max-w-[40rem]' : (IMAGE_WIDTH_CLASSES[width] ?? IMAGE_WIDTH_CLASSES.full);
-  const frame = cn('mx-auto w-full', widthClass);
+  const frame = cn('mx-auto w-full', IMAGE_WIDTH_CLASSES[width] ?? IMAGE_WIDTH_CLASSES.full);
 
   let picture;
   if (isLoading) picture = <div className={cn(frame, 'h-48 animate-pulse rounded bg-muted')} aria-label={alt} />;
@@ -72,8 +67,9 @@ export const RichTextImage = ({ src, alt, caption, width, className }: IRichText
         alt={alt}
         loading="lazy"
         onError={() => setHasFailed(true)}
-        // A drawing scales to its column; a photo stops at its own size rather than blurring.
-        className={cn(frame, 'block h-auto rounded', isVector(src) ? '' : 'w-auto')}
+        // Natural size, capped by the column: a photo never blurs and a figure drawn as a small
+        // tile (an answer option) stays a tile. Generated SVGs carry their width for this reason.
+        className={cn(frame, 'block h-auto w-auto rounded')}
       />
     );
   }

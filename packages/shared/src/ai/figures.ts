@@ -12,7 +12,7 @@ is about, a geometry figure, a labelled diagram, a clock face, a number line, a 
 flow of steps. Draw each one yourself as SVG source in the reply's "figures" list and place it in
 Markdown on its own line as ![alt text](figure:<ref> "Caption"), e.g. ![Bar chart of sales](figure:F1 "Sales, 2021–2024").
 - "ref" is short and unique in the reply ("F1", "F2", …); "alt" says what the picture shows in one sentence; "caption" is optional.
-- "svg" is one complete <svg> element with xmlns="http://www.w3.org/2000/svg" and a viewBox, at most 800 units wide, drawn on a white rectangle that fills the viewBox so it reads in light and dark mode.
+- "svg" is one complete <svg> element with xmlns="http://www.w3.org/2000/svg" and a viewBox, at most 800 units wide, with width and height attributes equal to the viewBox size (the picture is shown at that size, never larger), drawn on a white rectangle that fills the viewBox so it reads in light and dark mode. A small figure, such as an answer option, is drawn small (about 120 wide).
 - Draw from the exact numbers in the text: bar heights, pie angles and plotted points must be to scale, and every axis, bar, sector, side and angle the reader needs is labelled with its value.
 - Text is <text> with font-family="Arial, sans-serif" and a size of at least 12; colours with strong contrast against white; no gradients needed.
 - Nothing else in the SVG: no <script>, no event attributes (onclick…), no <foreignObject>, no <image>, no external links or fonts, no CSS url() except url(#id).
@@ -70,6 +70,13 @@ export const checkFigures = (figures: IAiFigure[] | undefined, markdown: string[
     if (problem) issues.push({ level: 'error', path: `${path}.svg`, message: problem });
     if (!figure.alt?.trim()) {
       issues.push({ level: 'warning', path, message: `Figure "${figure.ref}" has no alt text.` });
+    }
+    if (!/<svg[^>]*\swidth\s*=/i.test(figure.svg ?? '')) {
+      issues.push({
+        level: 'warning',
+        path,
+        message: `Figure "${figure.ref}" has no width; it shows at the browser's default size.`,
+      });
     }
   });
   const used = new Set(markdown.reduce<string[]>((all, item) => all.concat(figureRefsIn(item)), []));

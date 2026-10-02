@@ -149,6 +149,34 @@ for (const file of manifest.files) {
     saveState();
   }
 }
+// Pictures inside lessons and questions: uploaded into this organization's content/ folder, then
+// every image node pointing at the dev address is pointed at the uploaded one.
+state.contentImages ??= {};
+for (const image of manifest.contentImages ?? []) {
+  if (state.contentImages[image.src]) continue;
+  if (dryRun) {
+    console.log(`  [dry run] upload ${image.path} (${image.bytes} bytes)`);
+    continue;
+  }
+  const key = `content/${image.name}`;
+  const [signed] = await api('common/presigned-PUT-urls', { files: [{ key, contentType: image.contentType }] });
+  const put = await fetch(signed.url, {
+    method: 'PUT',
+    headers: { 'Content-Type': image.contentType },
+    body: readFileSync(join(from, image.path)),
+  });
+  if (!put.ok) throw new Error(`upload of ${image.path} failed: ${put.status}`);
+  state.contentImages[image.src] = signed.url.split('?')[0];
+  saveState();
+}
+const withContentImages = (value) => {
+  if (Array.isArray(value)) return value.map(withContentImages);
+  if (!value || typeof value !== 'object') return value;
+  const next = Object.fromEntries(Object.entries(value).map(([k, v]) => [k, withContentImages(v)]));
+  if (next.type === 'image' && state.contentImages[next.attrs?.src]) next.attrs = { ...next.attrs, src: state.contentImages[next.attrs.src] };
+  return next;
+};
+
 const withUploadedUrls = (doc) => ({
   ...doc,
   attachments: (doc.attachments ?? []).map((a) => (state.files[a.key] ? { ...a, url: state.files[a.key] } : a)),
@@ -222,7 +250,7 @@ const flushMaterials = async () => {
   batch = [];
   batchBytes = 0;
 };
-for (const material of materials.map(withUploadedUrls)) {
+for (const material of materials.map(withUploadedUrls).map(withContentImages)) {
   const bytes = JSON.stringify(material).length;
   if (batchBytes + bytes > MAX_BATCH_BYTES) await flushMaterials();
   batch.push(material);
@@ -237,7 +265,7 @@ for (const { paper, sections, questions } of papers) {
   );
   for (const section of ordered) await write('test-paper/section/upsert', section, `section ${section.name}`);
   await write('test-paper/upsert', paper, `test paper ${paper.name}`);
-  if (questions.length) await write('question/bulk-upsert', { questions }, `${questions.length} questions`);
+  if (questions.length) await write('question/bulk-upsert', { questions: withContentImages(questions) }, `${questions.length} questions`);
 }
 
 if (hasSessions)

@@ -188,6 +188,32 @@ try {
     });
   }
 
+  // Pictures inside authored content: an image node's `src` is the address of an object in the
+  // dev bucket, which the target cannot sign. Each one is downloaded once, however often it is
+  // placed, and the import uploads it again and rewrites the address.
+  const imageSources = new Set();
+  const walk = (value) => {
+    if (Array.isArray(value)) return value.forEach(walk);
+    if (!value || typeof value !== 'object') return;
+    if (value.type === 'image' && typeof value.attrs?.src === 'string' && /\.s3\.[^/]*amazonaws\.com\//.test(value.attrs.src)) {
+      imageSources.add(value.attrs.src);
+    }
+    Object.values(value).forEach(walk);
+  };
+  walk(materials.map((m) => m.content));
+  walk(questions.map((q) => [q.body, q.options, q.solution]));
+  const contentImages = [];
+  for (const src of imageSources) {
+    const { hostname, pathname } = new URL(src);
+    const response = await s3.send(new GetObjectCommand({ Bucket: hostname.split('.s3.')[0], Key: decodeURIComponent(pathname.slice(1)) }));
+    const body = Buffer.from(await response.Body.transformToByteArray());
+    const name = pathname.split('/').pop();
+    const path = join('files', 'content', name);
+    mkdirSync(dirname(join(out, path)), { recursive: true });
+    writeFileSync(join(out, path), body);
+    contentImages.push({ src, path, name, contentType: response.ContentType ?? 'application/octet-stream', bytes: body.length });
+  }
+
   // -------------------------------------------------------------------------------------------
   // Write
   // -------------------------------------------------------------------------------------------
@@ -220,6 +246,7 @@ try {
     meets: meets.length,
     chapters: chapters.length,
     files: files.length,
+    contentImages: contentImages.length,
   };
   write('manifest.json', {
     course: { _id: String(course._id), name: course.name },
@@ -227,6 +254,7 @@ try {
     source: { database: db.databaseName, org: String(course.org) },
     counts,
     files,
+    contentImages,
   });
 
   console.log(`exported "${course.name}" → ${outArg}`);

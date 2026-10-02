@@ -128,8 +128,9 @@ Equation (Inline, Display, Chemistry).
 **Images**: the toolbar button opens a file picker (PNG, JPEG, WebP, GIF, SVG); pasting or dropping
 an image file uploads it too. Selecting an image shows its alt text and caption fields, a
 Small / Medium / Full width switch and a remove button. Raster images are compressed to WebP
-before upload (`compressImage`) and never scaled past their own size; a drawing (SVG) fills its
-width up to a reading width of 40rem.
+before upload (`compressImage`). Every image is shown at its natural size, capped by the column
+and the chosen width, so a photo never blurs and a small SVG tile (an answer option) stays small;
+a generated SVG declares `width` and `height` for this.
 Inside a table a second row adds and deletes rows and columns, toggles the header row and the
 borders, or deletes the table.
 
@@ -218,7 +219,7 @@ paragraphs, so no input is dropped.
 | GFM pipe table (header row, separator, body rows); `<br>` in a cell              | table, bordered, header row; `<br>` is a hard break |
 | `$$…$$` on one line, or a `$$` … `$$` block over several lines; `\[…\]` likewise | display equation                                    |
 | `$…$`, `\(…\)`, `$$…$$` inside a line                                            | inline equation                                     |
-| `**bold**`, `_italic_`, `~~strike~~`, `` `code` ``                               | marks                                               |
+| `**bold**`, `_italic_` or `*italic*`, `***both***`, `~~strike~~`, `` `code` ``   | marks                                               |
 | `[text](https://…)`                                                              | link mark                                           |
 | `\$`                                                                             | a literal dollar sign                               |
 | `![alt](src "caption")` alone on a line; `src` is `https:` or `figure:<ref>`     | image                                               |
@@ -235,7 +236,9 @@ Rules worth knowing:
   backslashes are restored (`<TAB>imes` → `\times`), a command that lost its first letter at the
   start is restored (`rac{a}{b}` → `\frac{a}{b}`), a bare `%` becomes `\%` (otherwise it is a
   LaTeX comment), a bare `$` becomes `\$` (a price inside an equation), and whitespace is trimmed.
-- **Not imported**: `*italic*` with single asterisks (write `_italic_`), `<u>` underline, an
+- **`*italic*`** counts only when the stars hug a word on both sides, so `a*b` and `2 * 3` stay
+  text or maths.
+- **Not imported**: `<u>` underline, an
   image inside a paragraph or with any other scheme (it stays text), HTML, nested lists, task
   lists, hard breaks.
 
@@ -323,4 +326,4 @@ solution, and `TestPaper.instruction`.
   supported (the node is a block).
 - The Notion-style block chrome of the plan (drag handles, slash menu) is not built; the toolbar
   is the whole UI.
-- `*italic*` and `<u>` are not imported from Markdown.
+- `<u>` is not imported from Markdown.

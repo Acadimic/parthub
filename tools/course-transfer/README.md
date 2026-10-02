@@ -38,6 +38,9 @@ COURSE_TRANSFER_FIREBASE_KEY=<the production web API key, NEXT_PUBLIC_FIREBASE_A
 
 - **Uploaded files** are uploaded again into the target organization's folder, and each
   attachment's `url` is rewritten to the new address. Link attachments stay as they are.
+  Pictures inside lesson and question content (image nodes whose `src` is a dev bucket address)
+  are exported once each to `files/content/`, uploaded into the target organization's `content/`
+  folder, and every image node is pointed at the new address before the rows are written.
 - **Sessions:** the exported meets are replaced by one weekly meet on `--session-days` (default
   `1,2,3,4,5`, where 0 is Sunday) from `--session-start`. The meet id, its start and the uploaded
   addresses are kept in the folder's `import-state.json`, so a rerun updates the same meet rather
