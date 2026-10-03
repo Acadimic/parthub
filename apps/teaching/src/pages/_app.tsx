@@ -13,7 +13,6 @@ import '@styles/globals.scss';
 import 'katex/dist/katex.min.css';
 import { loadFirebaseUser } from '@utils/firebase';
 import { getToken, IS_WINDOW_UNDEFINED } from '@utils/helpers';
-import { MathJaxContext } from 'better-react-mathjax';
 import type { NextPage } from 'next';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
@@ -27,19 +26,6 @@ export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<P
 
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
-};
-
-const config = {
-  tex: {
-    inlineMath: [
-      ['$', '$'],
-      ['\\(', '\\)'],
-    ],
-    displayMath: [
-      ['$$', '$$'],
-      ['\\[', '\\]'],
-    ],
-  },
 };
 
 /**
@@ -178,19 +164,17 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
       </Head>
       <ColorModeContext.Provider value={colorMode}>
         <RichTextMediaContext.Provider value={richTextMedia}>
-          <MathJaxContext config={config}>
-            {isLoadingLoggedInUsers || !isReady || isAwaitingOrganization ? (
-              <FullScreenLoader loading={true} />
-            ) : (
-              <>
-                <InternetStatus />
-                <div data-theme={mode} className="bg-background text-foreground">
-                  {getLayout()}
-                </div>
-              </>
-            )}
-            <ToastContainer />
-          </MathJaxContext>
+          {isLoadingLoggedInUsers || !isReady || isAwaitingOrganization ? (
+            <FullScreenLoader loading={true} />
+          ) : (
+            <>
+              <InternetStatus />
+              <div data-theme={mode} className="bg-background text-foreground">
+                {getLayout()}
+              </div>
+            </>
+          )}
+          <ToastContainer />
         </RichTextMediaContext.Provider>
       </ColorModeContext.Provider>
     </>

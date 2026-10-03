@@ -1,5 +1,4 @@
 export * from './AuthLayout';
-export * from './ExamLayout';
 export * from './FocusLayout';
 export * from './PageLayout';
 export * from './PageNavigationLayout';

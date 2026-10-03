@@ -1,5 +1,5 @@
 import { Layout } from '@enums';
-import { Courses } from '@modules/courses';
+import { Courses } from '@modules/courses/Courses';
 
 function CoursesPage() {
   return <Courses isFilter withHeading />;

@@ -1,5 +1,5 @@
 import { Container } from '@components/others';
-import { Courses } from '@modules/courses';
+import { Courses } from '@modules/courses/Courses';
 import { TESTIMONIALS } from './testimonials';
 import { Band, SectionHeading } from '@components/app/sections';
 import {

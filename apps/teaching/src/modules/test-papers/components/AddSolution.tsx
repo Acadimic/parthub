@@ -1,5 +1,5 @@
 import { RichTextView } from '@repo/ui/content';
-import { RichTextEditor } from '@repo/ui/editor';
+import { RichTextEditor } from '@components/others';
 import { type OptionDto, type QuestionDto } from '@repo/shared/contracts';
 import { type MarkingType } from '@repo/shared/interfaces';
 import { richTextFromMarkdown } from '@repo/shared/utils';

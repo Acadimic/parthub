@@ -7,11 +7,14 @@ import { CollectionType, Marking, QuestionType } from '@enums';
 import { CaretDownIcon, ClockIcon } from '@phosphor-icons/react';
 import { useQuestionLookups, useSelectedQuestion, useTestPaperLookups } from '@stores';
 import { splitCamelCase } from '@utils/helpers';
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { Answer } from './components/answer-items';
 import { TestPaperSection } from './components/exam-items';
 import { Options } from './components/question-items';
-import { Result } from './components/result';
+
+// Lazy so recharts loads when a result is shown, not when the exam opens.
+const Result = dynamic(() => import('./components/result').then((m) => m.Result));
 
 interface IProps {
   isResultPage: boolean;

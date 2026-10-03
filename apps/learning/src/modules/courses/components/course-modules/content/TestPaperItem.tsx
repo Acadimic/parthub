@@ -1,8 +1,12 @@
 import { FullScreenModal } from '@repo/ui/app';
-import { ExamLayout } from '@layouts';
 import { TestPaperCard } from '@modules/test-papers/components/TestPaperCard';
 import { type ITestPaper } from '@stores';
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
+
+// Lazy and outside the `@layouts` barrel: the exam pulls in KaTeX and the result charts, and `_app`
+// imports that barrel, so a static import put both on every page.
+const ExamLayout = dynamic(() => import('@layouts/ExamLayout').then((m) => m.ExamLayout));
 
 interface IProps {
   testPaper: ITestPaper;

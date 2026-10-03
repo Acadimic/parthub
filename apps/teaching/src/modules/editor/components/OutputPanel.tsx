@@ -41,7 +41,7 @@ const toToon = (doc: IRichTextDoc | null): { text: string; saving: number | null
  *
  * It is the same gate the plan puts on every write — including AI-generated content — so having it
  * visible while authoring is the cheapest way to find out which expressions KaTeX rejects that the
- * MathJax currently in the apps accepted.
+ * MathJax the apps used to render with accepted.
  */
 const EquationCheck = ({ doc }: IProps) => {
   const results = useMemo(() => collectEquations(doc).map((latex) => ({ latex, ...renderLatex(latex, false) })), [doc]);

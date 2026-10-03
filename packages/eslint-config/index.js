@@ -92,6 +92,7 @@ const APP_ALIASES = [
   '@components/*',
   '@modules/*',
   '@layouts',
+  '@layouts/*',
   '@pages/*',
   '@stores',
   '@services',

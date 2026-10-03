@@ -1,6 +1,6 @@
 import { Button, Modal, ModalFooter } from '@repo/ui/app';
-import { ExamFooter } from '@components/app/footers';
-import { ExamHeader } from '@components/app/headers';
+import { ExamFooter } from '@components/app/footers/ExamFooter';
+import { ExamHeader } from '@components/app/headers/ExamHeader';
 import { ExamFinishButton, ExamSidebar, ExamSkeleton, Instruction } from '@components/exam';
 import { BlankState } from '@components/others';
 import { useExam } from '@hooks/exam.hook';

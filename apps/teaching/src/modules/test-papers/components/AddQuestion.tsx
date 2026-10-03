@@ -1,5 +1,5 @@
 import { DrawerSection } from '@repo/ui/app';
-import { RichTextEditor } from '@repo/ui/editor';
+import { RichTextEditor } from '@components/others';
 import { PlusIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
 import { Badge } from '@repo/ui/core';

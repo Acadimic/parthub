@@ -1,4 +1,4 @@
-import { RichTextEditor } from '@repo/ui/editor';
+import { RichTextEditor } from '@components/others';
 import { TrashIcon } from '@phosphor-icons/react';
 import { type OptionDto } from '@repo/shared/contracts';
 import { Tooltip } from '@repo/ui/core';

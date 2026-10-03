@@ -1,4 +1,4 @@
-import { RichTextEditor } from '@repo/ui/editor';
+import { RichTextEditor } from '@components/others';
 import { useSpeechLocale } from '@hooks/speech-locale.hook';
 import { Attachments, UploadFiles } from '@components/app/attachments';
 import { Select } from '@components/app/selects';
