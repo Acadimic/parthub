@@ -1,4 +1,4 @@
-import { ChatsCircleIcon, HeadphonesIcon, TextTIcon } from '@phosphor-icons/react';
+import { ChatsCircleIcon, EyeIcon, EyeSlashIcon, HeadphonesIcon, TextTIcon } from '@phosphor-icons/react';
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { LISTENING_MODES, type ListeningMode } from '@repo/shared/utils';
 import { cn } from '../../lib/cn';
@@ -17,6 +17,7 @@ export const ListeningNodeView = ({ node, updateAttributes, editor, getPos }: No
   const lang = String(node.attrs.lang ?? '');
   const mode: ListeningMode = node.attrs.mode === 'dialogue' ? 'dialogue' : 'passage';
   const audio = String(node.attrs.audio ?? '');
+  const isHidden = node.attrs.transcript === 'hidden';
   const isDialogue = mode === 'dialogue';
   const Icon = isDialogue ? ChatsCircleIcon : HeadphonesIcon;
   const segments: string[] = [];
@@ -63,6 +64,23 @@ export const ListeningNodeView = ({ node, updateAttributes, editor, getPos }: No
         </div>
         <LanguagePicker value={lang} onChange={(code) => updateAttributes({ lang: code })} />
         <PreviewButtons segments={segments} lang={lang} audio={audio} />
+        <button
+          type="button"
+          onMouseDown={keepSelection}
+          onClick={() => updateAttributes({ transcript: isHidden ? 'shown' : 'hidden' })}
+          aria-pressed={isHidden}
+          title={
+            isHidden ? 'Learners hear it first and reveal the text to check' : 'Learners see the text while it plays'
+          }
+          className={cn(
+            CONTROL_CLASS,
+            'gap-1 border border-border px-2',
+            isHidden ? 'bg-primary/10 text-primary' : 'bg-background text-muted-foreground hover:bg-accent',
+          )}
+        >
+          {isHidden ? <EyeSlashIcon className="h-3.5 w-3.5" /> : <EyeIcon className="h-3.5 w-3.5" />}
+          {isHidden ? 'Text hidden' : 'Text shown'}
+        </button>
         <button
           type="button"
           onMouseDown={keepSelection}

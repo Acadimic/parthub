@@ -9,6 +9,9 @@ export const PRONUNCIATION_MARK = 'pronunciation';
 export const LISTENING_NODE = 'listening';
 export const LISTENING_MODES = ['passage', 'dialogue'] as const;
 export type ListeningMode = (typeof LISTENING_MODES)[number];
+/** `hidden` makes a listening task: the learner hears the block and reveals its text only to check. */
+export const LISTENING_TRANSCRIPTS = ['shown', 'hidden'] as const;
+export type ListeningTranscript = (typeof LISTENING_TRANSCRIPTS)[number];
 
 /** The attributes the mark carries. Every one is a string, empty when absent. */
 export interface IPronunciationAttrs {
@@ -22,6 +25,7 @@ export interface IPronunciationAttrs {
 export interface IListeningAttrs {
   lang: string;
   mode: ListeningMode;
+  transcript: ListeningTranscript;
   audio: string;
 }
 

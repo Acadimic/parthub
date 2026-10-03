@@ -21,6 +21,8 @@ This is a ${language} course. Mark every piece of correct ${language} the learne
 - A word, phrase or sentence in ${language} is a span: [word]{lang=${locale} ipa="…"} — in a Spanish course, for example, [Hola]{lang=es-ES ipa="ˈola"}. Give ipa="…" (IPA, without slashes) where a word or short phrase is taught and in the Key terms list${translit}; everywhere else, and for sentences, lang only.
 - That includes the exercises, the answers (write each answer as the full correct sentence and mark it), the correct version in "Common mistakes", the important notes, the key terms (- [**term**]{lang=${locale} ipa="…"} — meaning) and the summary.
 - Never mark an item with a blank (____), a choice between forms, a deliberate mistake to correct, a jumble to reorder, or a wrong form.
+- In a test question, mark the Spanish of the body and the solution. Mark the options only when every option is correct ${language} (a meaning or a reply to choose), and then mark all of them; never mark some options and not others, which would point at the answer, and never mark options whose sound gives the answer away (spelling, accents, stress).
+- A listening question puts what the learner hears in a listening block with transcript=hidden (::: listening lang=${locale} mode=dialogue transcript=hidden), and asks about it in the language of instruction; the learner plays it, answers, and can reveal the text afterwards.
 - A dialogue or a reading passage is a listening block, on lines of their own:
   ::: listening lang=${locale} mode=dialogue
   **Ana:** (her first line, in ${language})

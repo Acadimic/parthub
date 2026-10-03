@@ -114,6 +114,8 @@ const serializeListening = (node: IRichTextNode): string => {
   const attrs = formatMarkdownAttrs([
     ['lang', String(node.attrs?.lang ?? '')],
     ['mode', String(node.attrs?.mode ?? 'passage')],
+    // Only written when hidden, so every older block round-trips unchanged.
+    ['transcript', node.attrs?.transcript === 'hidden' ? 'hidden' : ''],
   ]);
   const body = (node.content ?? []).map((child) => serializeBlock(child)).join('\n\n');
   return `::: listening ${attrs}\n${body}\n:::`;

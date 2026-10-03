@@ -1,7 +1,7 @@
-import { ChatsCircleIcon, HeadphonesIcon, PlayIcon, SpeakerHighIcon, StopIcon } from '@phosphor-icons/react';
+import { ChatsCircleIcon, EyeIcon, HeadphonesIcon, PlayIcon, SpeakerHighIcon, StopIcon } from '@phosphor-icons/react';
 import type { IRichTextNode } from '@repo/shared/interfaces';
 import { docToPlainText, type ListeningMode, speechLanguageName } from '@repo/shared/utils';
-import { type ReactNode, useId } from 'react';
+import { type ReactNode, useId, useState } from 'react';
 import { cn } from '../lib/cn';
 import { SPEECH_RATES } from './speech/player';
 import { useSpeech, useVoiceAvailability } from './speech/use-speech';
@@ -10,6 +10,8 @@ export interface IListeningBlockProps {
   lang: string;
   mode: ListeningMode;
   audio: string;
+  /** A listening task: the text stays folded away until the learner chooses to check it. */
+  isTranscriptHidden?: boolean;
   /** The block's paragraphs as stored, to know what to speak. */
   lines: IRichTextNode[];
   /** The same paragraphs rendered, one per line. */
@@ -30,13 +32,38 @@ const spokenText = (line: IRichTextNode, mode: ListeningMode): string => {
 const PILL_CLASS =
   'inline-flex h-8 items-center gap-1.5 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40';
 
+const blockTitle = (isDialogue: boolean, isTask: boolean): string => {
+  if (isTask) return 'Listen';
+  return isDialogue ? 'Dialogue' : 'Listening';
+};
+
+/** In place of the lines of a listening task: what to do, and a way to check the text afterwards. */
+const HiddenText = ({ isDialogue, onReveal }: { isDialogue: boolean; onReveal: () => void }) => (
+  <div className="flex flex-wrap items-center gap-3 px-4 py-4">
+    <p className="flex-1 text-sm text-muted-foreground">
+      Listen to the {isDialogue ? 'conversation' : 'recording'} as many times as you like, then answer. The text is
+      hidden so you train your ear.
+    </p>
+    <button
+      type="button"
+      onClick={onReveal}
+      className={cn(PILL_CLASS, 'border border-border bg-background text-foreground hover:bg-accent')}
+    >
+      <EyeIcon className="h-3.5 w-3.5" />
+      Show text
+    </button>
+  </div>
+);
+
 /**
  * A listening passage or a dialogue: one card, one Play control for the whole, and the line being
  * spoken highlighted so a learner can follow along. In a dialogue each line can also be replayed
  * on its own, which is how a learner drills the line they missed.
  */
-export const ListeningBlock = ({ lang, mode, audio, lines, children }: IListeningBlockProps) => {
+export const ListeningBlock = ({ lang, mode, audio, isTranscriptHidden, lines, children }: IListeningBlockProps) => {
   const id = useId();
+  const [isRevealed, setIsRevealed] = useState(false);
+  const isTextHidden = !!isTranscriptHidden && !isRevealed;
   const all = useSpeech(`${id}:all`);
   const availability = useVoiceAvailability(lang, !!audio);
   const segments = lines.map((line) => spokenText(line, mode));
@@ -59,7 +86,9 @@ export const ListeningBlock = ({ lang, mode, audio, lines, children }: IListenin
             <Icon className="h-4 w-4" weight="bold" />
           </span>
           <span className="flex flex-col leading-tight">
-            <span className="text-xs font-semibold text-foreground">{isDialogue ? 'Dialogue' : 'Listening'}</span>
+            <span className="text-xs font-semibold text-foreground">
+              {blockTitle(isDialogue, !!isTranscriptHidden)}
+            </span>
             <span className="text-xxs uppercase tracking-caps text-muted-foreground">{language}</span>
           </span>
         </span>
@@ -97,7 +126,8 @@ export const ListeningBlock = ({ lang, mode, audio, lines, children }: IListenin
           This device has no {language} voice, so this passage cannot be played here.
         </p>
       ) : null}
-      <div className={cn('py-2', isDialogue && 'divide-y divide-border/60')}>
+      {isTextHidden ? <HiddenText isDialogue={isDialogue} onReveal={() => setIsRevealed(true)} /> : null}
+      <div className={cn('py-2', isDialogue && 'divide-y divide-border/60', isTextHidden && 'hidden')}>
         {children.map((child, index) => (
           <ListeningLine
             key={index}

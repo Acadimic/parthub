@@ -43,6 +43,7 @@ export const ListeningNode = Node.create<IListeningOptions>({
   addAttributes: () => ({
     lang: stringAttribute('lang', ''),
     mode: stringAttribute('mode', 'passage'),
+    transcript: stringAttribute('transcript', 'shown'),
     audio: stringAttribute('audio', ''),
   }),
 
@@ -59,6 +60,7 @@ export const ListeningNode = Node.create<IListeningOptions>({
         ({ commands }) =>
           commands.wrapIn(this.name, {
             mode: 'passage',
+            transcript: 'shown',
             audio: '',
             ...attrs,
             lang: attrs.lang || this.options.defaultLanguage || lastLanguage.get(),

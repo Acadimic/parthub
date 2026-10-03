@@ -376,8 +376,9 @@ const readListening: BlockReader = (lines, index) => {
   if (!paragraphs.length) return null;
   const attrs = parseMarkdownAttrs(open[1]);
   const mode: ListeningMode = LISTENING_MODES.find((item) => item === attrs.mode) ?? 'passage';
+  const transcript = attrs.transcript === 'hidden' ? 'hidden' : 'shown';
   return {
-    node: { type: LISTENING_NODE, attrs: { lang: attrs.lang ?? '', mode, audio: '' }, content: paragraphs },
+    node: { type: LISTENING_NODE, attrs: { lang: attrs.lang ?? '', mode, transcript, audio: '' }, content: paragraphs },
     next: close + 1,
   };
 };

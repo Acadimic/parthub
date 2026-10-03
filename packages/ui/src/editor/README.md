@@ -127,6 +127,10 @@ caret in a marked run, a second toolbar row edits its language, IPA and translit
 previews it. `RichTextEditor`'s `defaultLanguage` sets the language new marks start in — the teaching app
 passes the course standard's `locale` (`useSpeechLocale`); without one, the language last picked.
 
+A listening block with `transcript: hidden` is a listening task: the reader shows Play and Slow and
+a "Show text" button instead of the lines, so a quiz can ask about what the learner hears. The
+editor toggles it on the block (Text shown / Text hidden).
+
 Markdown is Pandoc's: `[Hola]{lang=es-ES ipa="ˈola"}` and `::: listening lang=es-ES mode=dialogue`
 … `:::`. `audio` is not written to Markdown.
 
@@ -247,7 +251,7 @@ paragraphs, so no input is dropped.
 | `\$`                                                                             | a literal dollar sign                                                |
 | `![alt](src "caption")` alone on a line; `src` is `https:` or `figure:<ref>`     | image                                                                |
 | `[text]{lang=es-ES ipa="ˈola" translit=…}` (a `lang` is required)                | pronunciation mark                                                   |
-| `::: listening lang=… mode=passage\|dialogue` … `:::`                            | listening block; anything but paragraphs inside is flattened to text |
+| `::: listening lang=… mode=passage\|dialogue [transcript=hidden]` … `:::`        | listening block; anything but paragraphs inside is flattened to text |
 
 Rules worth knowing:
 
