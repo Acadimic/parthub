@@ -38,6 +38,7 @@ export const Link = ({
   rightsection,
   className,
   labelClassName,
+  'aria-label': ariaLabel,
 }: IProps) => {
   const isInert = disabled || isLoading;
   const label = text || children;
@@ -45,6 +46,7 @@ export const Link = ({
     <NextLink
       href={href}
       target={target}
+      aria-label={ariaLabel}
       aria-disabled={isInert || undefined}
       tabIndex={isInert ? -1 : undefined}
       onClick={isInert ? (event) => event.preventDefault() : undefined}

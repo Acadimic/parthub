@@ -41,7 +41,7 @@ import { Followers } from './Followers';
 import { LikeCourse } from './LikeCourse';
 import { MarkCompleteButton } from './MarkCompleteButton';
 import { ShareCourse } from './ShareCourse';
-import { CourseSessions, NextSessionBanner } from '@modules/sessions';
+import { NextSessionBanner } from '@modules/sessions';
 
 /** An item is a material or a test paper; both carry a duration, and only one is ever set. */
 const getDurationMins = (material?: IMaterial, testPaper?: ITestPaper) =>
@@ -326,8 +326,6 @@ export const CourseModuleContent = () => {
       </Card>
 
       <UpNext />
-
-      <CourseSessions meets={meets} />
     </div>
   );
 };

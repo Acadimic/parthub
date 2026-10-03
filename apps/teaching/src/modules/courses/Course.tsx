@@ -78,7 +78,7 @@ const SessionsSection = ({ meets, onAdd }: { meets: MeetDto[]; onAdd: () => void
     </header>
     <div className="flex flex-col gap-2 p-3">
       {meets.length ? (
-        meets.map((meet) => <MeetItem key={meet._id} meet={meet} isSmallJoinable />)
+        meets.map((meet) => <MeetItem key={meet._id} meet={meet} />)
       ) : (
         <BlankState
           label="No sessions yet"

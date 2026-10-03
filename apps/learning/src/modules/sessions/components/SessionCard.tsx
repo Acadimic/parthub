@@ -2,7 +2,8 @@ import { type MeetDto } from '@repo/shared/contracts';
 import { Link } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
-import { ArrowRightIcon, ClockIcon, GraduationCapIcon } from '@phosphor-icons/react';
+import { ArrowRightIcon, ArrowsClockwiseIcon, ClockIcon, GraduationCapIcon } from '@phosphor-icons/react';
+import { getMeetRepeatText, toRecurringMeet } from '@repo/shared/utils';
 import NextLink from 'next/link';
 import { getSessionPoints, getSessionSpan, getSessionState } from '../session.utils';
 import { DateLeaf, JoinAction, SessionHost, SessionTiming } from './SessionBits';
@@ -29,6 +30,8 @@ export const SessionCard = ({ meet, courseId, courseName, isMine }: IProps) => {
   const points = getSessionPoints(meet);
   const isOpen = state !== 'ended' && state !== 'cancelled';
   const isHot = state === 'live' || state === 'soon';
+  const schedule = toRecurringMeet(meet);
+  const repeats = schedule ? getMeetRepeatText(schedule) : '';
 
   return (
     <article
@@ -56,6 +59,12 @@ export const SessionCard = ({ meet, courseId, courseName, isMine }: IProps) => {
             <ClockIcon weight="bold" className="h-3.5 w-3.5" />
             {getSessionSpan(meet)}
           </div>
+          {repeats ? (
+            <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <ArrowsClockwiseIcon weight="bold" className="h-3.5 w-3.5" />
+              {repeats}
+            </div>
+          ) : null}
         </div>
       </div>
       {points.length ? (

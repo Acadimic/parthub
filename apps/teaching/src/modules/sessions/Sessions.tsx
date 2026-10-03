@@ -16,16 +16,10 @@ import {
 import { useMeetHooks } from '@modules/calender/hooks';
 import { useMeetLookups } from '@stores';
 import { MEET_FREQUENCIES, MEET_FREQUENCY_ORDER, getMeetFrequencyMeta } from '@utils/constants';
-import {
-  addDaysToDate,
-  getFormattedTime,
-  getFrequencyText,
-  getFullCalendarEvents,
-  getFullFormattedDate,
-} from '@utils/helpers';
+import { getFormattedTime, getFrequencyText, getFullFormattedDate } from '@utils/helpers';
 import { useEffect, useMemo } from 'react';
 import { useSetState } from 'react-use';
-import { ACTIONS } from '@repo/shared/utils';
+import { ACTIONS, getNextMeetOccurrence, toRecurringMeet } from '@repo/shared/utils';
 
 interface IState {
   search: string;
@@ -36,13 +30,12 @@ const FREQUENCY_OPTIONS: ISelectItem[] = MEET_FREQUENCY_ORDER.map((frequency) =>
   value: frequency,
 }));
 
-/** When a session next runs: the first occurrence in the coming fortnight, else its own start. */
-const nextOccurrence = (meet: MeetDto): { start: Date | string; end: Date | string } | null => {
-  const events = getFullCalendarEvents(meet, new Date(), addDaysToDate(new Date(), 15));
-  const next = events[0];
-  if (next) return { start: next.start, end: next.end };
-  if (meet.startTime && meet.endTime) return { start: meet.startTime, end: meet.endTime };
-  return null;
+/** When a session next runs, or its own span once it is over. */
+const nextOccurrence = (meet: MeetDto): { start: string; end: string } | null => {
+  const schedule = toRecurringMeet(meet);
+  if (!schedule) return null;
+  const next = getNextMeetOccurrence(schedule, new Date()) ?? schedule;
+  return { start: next.startTime, end: next.endTime };
 };
 
 const NextRun = ({ meet }: { meet: MeetDto }) => {

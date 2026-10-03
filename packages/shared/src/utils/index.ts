@@ -7,3 +7,4 @@ export * from './rich-text-image.util';
 export * from './latex-repair.util';
 export * from './object-id.util';
 export * from './pronunciation.util';
+export * from './meet-occurrence.util';

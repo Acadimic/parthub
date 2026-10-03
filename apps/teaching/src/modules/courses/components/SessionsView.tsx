@@ -17,7 +17,7 @@ export const SessionsView = ({ course }: IProps) => {
     <Card>
       <div className="flex flex-col gap-2">
         {meets.map((meet) => (
-          <MeetItem key={meet._id} meet={meet} isSmallJoinable={true} />
+          <MeetItem key={meet._id} meet={meet} />
         ))}
       </div>
       <div className="flex justify-center items-center">

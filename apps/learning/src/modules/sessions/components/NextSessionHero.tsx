@@ -1,7 +1,14 @@
 import { type MeetDto } from '@repo/shared/contracts';
 import { cn } from '@repo/ui/lib';
 import { Link } from '@repo/ui/app';
-import { BookOpenTextIcon, ClockIcon, GraduationCapIcon, UsersThreeIcon } from '@phosphor-icons/react';
+import {
+  ArrowsClockwiseIcon,
+  BookOpenTextIcon,
+  ClockIcon,
+  GraduationCapIcon,
+  UsersThreeIcon,
+} from '@phosphor-icons/react';
+import { getMeetRepeatText, toRecurringMeet } from '@repo/shared/utils';
 import NextLink from 'next/link';
 import dayjs from 'dayjs';
 import { getSessionPoints, getSessionSpan, getSessionState } from '../session.utils';
@@ -22,6 +29,8 @@ export const NextSessionHero = ({ meet, courseId, courseName }: IProps) => {
   const isHot = state === 'live' || state === 'soon';
   const points = getSessionPoints(meet);
   const start = meet.startTime ? dayjs(meet.startTime) : null;
+  const schedule = toRecurringMeet(meet);
+  const repeats = schedule ? getMeetRepeatText(schedule) : '';
 
   return (
     <section
@@ -62,6 +71,12 @@ export const NextSessionHero = ({ meet, courseId, courseName }: IProps) => {
               <span className="flex items-center gap-1.5">
                 <ClockIcon weight="bold" className="h-4 w-4" />
                 {start.format('dddd, D MMM')} · {getSessionSpan(meet)}
+              </span>
+            ) : null}
+            {repeats ? (
+              <span className="flex items-center gap-1.5">
+                <ArrowsClockwiseIcon weight="bold" className="h-4 w-4" />
+                {repeats}
               </span>
             ) : null}
           </div>

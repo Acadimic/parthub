@@ -1,4 +1,5 @@
 import { type MeetDto } from '@repo/shared/contracts';
+import { withNextMeetOccurrence } from '@repo/shared/utils';
 import { RectangleSkeleton } from '@repo/ui/app';
 import { Chip } from '@repo/ui/core';
 import { useLoadOnce } from '@repo/ui/hooks';
@@ -54,11 +55,13 @@ export const Sessions = () => {
     if (allMeetIds.length && courseMeetsRequest.shouldLoad('courseMeets')) loadMeetsByIds(allMeetIds);
   }, [allMeetIds.join(',')]);
 
+  const now = new Date();
   const startedCourseIds = new Set(getCompletedModules().map((row) => row.course));
   const myMeetIds = new Set(getMyMeetsSorted().map((meet) => meet._id));
   const byCourse: ICourseMeets[] = courses
     .map((course) => {
-      const meets = getMeetsByIds(course.meets ?? []);
+      // A recurring class is shown as its next sitting, not the first one it was created with.
+      const meets = getMeetsByIds(course.meets ?? []).map((meet) => withNextMeetOccurrence(meet, now));
       const isMine = startedCourseIds.has(course._id) || meets.some((meet) => myMeetIds.has(meet._id));
       return { courseId: course._id, courseName: course.name, isMine, meets };
     })

@@ -14,8 +14,9 @@ export enum ModuleContentType {
   COMPLETED = 'completed',
 }
 
-/** The two lists the course outline can show. */
+/** The lists the course outline can show. */
 export enum CourseOutlineTab {
   CONTENTS = 'contents',
   TESTS = 'tests',
+  LIVE_CLASSES = 'liveClasses',
 }

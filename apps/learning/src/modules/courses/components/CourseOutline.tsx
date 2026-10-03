@@ -7,11 +7,14 @@ import { BlankState } from '@components/others';
 import { CourseOutlineTab, ModuleContentType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { type ICourseModuleItem } from '@interfaces';
-import { CheckIcon, ClipboardTextIcon, ListBulletsIcon, LockSimpleIcon } from '@phosphor-icons/react';
+import { CheckIcon, ClipboardTextIcon, ListBulletsIcon, LockSimpleIcon, VideoCameraIcon } from '@phosphor-icons/react';
+import { LivePulse, LiveClassesPanel, hasLiveSession } from '@modules/sessions';
+import { type ITabItem } from '@repo/ui/core';
 import {
   type ICourseModule,
   useCourseLookups,
   useMaterialLookups,
+  useMeetLookups,
   useSelectorLookups,
   useTestPaperLookups,
 } from '@stores';
@@ -331,13 +334,11 @@ const TestList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem }
   );
 };
 
-/** The strip's order; the store keeps the tab itself. */
-const OUTLINE_TABS = [CourseOutlineTab.CONTENTS, CourseOutlineTab.TESTS];
-
 export const CourseOutline = (props: IProps) => {
   const { courseId, isPreview } = props;
   const { getCourseModules } = useCourse();
-  const { isLoading } = useCourseLookups();
+  const { isLoading, getCourseById } = useCourseLookups();
+  const { getMeetsByIds } = useMeetLookups();
   const { selectedCourseOutlineTab, setSelectedCourseOutlineTab } = useSelectorLookups();
   const courseModules = getCourseModules(courseId);
 
@@ -352,25 +353,37 @@ export const CourseOutline = (props: IProps) => {
   // one tap away; the caller gives the outline a column to fill (see `CourseModules`). The
   // preview page scrolls as a whole, so there the panels simply flow. The tab lives in the store,
   // so a test picked from the preview's Tests tab opens the learning view on that tab.
+  const tabs: (ITabItem & { key: CourseOutlineTab })[] = [
+    {
+      key: CourseOutlineTab.CONTENTS,
+      label: 'Contents',
+      icon: <ListBulletsIcon weight="bold" className="h-3.5 w-3.5" />,
+      component: <ModuleList {...props} courseModules={courseModules} />,
+    },
+    {
+      key: CourseOutlineTab.TESTS,
+      label: 'Tests',
+      icon: <ClipboardTextIcon weight="bold" className="h-3.5 w-3.5" />,
+      component: <TestList {...props} courseModules={courseModules} />,
+    },
+  ];
+  const meets = getMeetsByIds(getCourseById(courseId)?.meets ?? []);
+  tabs.push({
+    key: CourseOutlineTab.LIVE_CLASSES,
+    label: 'Live classes',
+    icon: hasLiveSession(meets) ? <LivePulse /> : <VideoCameraIcon weight="bold" className="h-3.5 w-3.5" />,
+    component: <LiveClassesPanel meets={meets} isSticky={!isPreview} />,
+  });
+  const selectedIndex = tabs.findIndex((tab) => tab.key === selectedCourseOutlineTab);
+
   return (
     <Tabs
-      value={OUTLINE_TABS.indexOf(selectedCourseOutlineTab)}
-      onChange={(index) => setSelectedCourseOutlineTab(OUTLINE_TABS[index] ?? CourseOutlineTab.CONTENTS)}
+      value={Math.max(selectedIndex, 0)}
+      onChange={(index) => setSelectedCourseOutlineTab(tabs[index]?.key ?? CourseOutlineTab.CONTENTS)}
       className={cn(!isPreview && 'flex min-h-0 flex-1 flex-col')}
       contentClassName={cn('mt-0', !isPreview && 'min-h-0 flex-1 overflow-y-auto')}
       triggerClassName="px-3 py-1.5 text-xs"
-      tabs={[
-        {
-          label: 'Contents',
-          icon: <ListBulletsIcon weight="bold" className="h-3.5 w-3.5" />,
-          component: <ModuleList {...props} courseModules={courseModules} />,
-        },
-        {
-          label: 'Tests',
-          icon: <ClipboardTextIcon weight="bold" className="h-3.5 w-3.5" />,
-          component: <TestList {...props} courseModules={courseModules} />,
-        },
-      ]}
+      tabs={tabs}
     />
   );
 };
