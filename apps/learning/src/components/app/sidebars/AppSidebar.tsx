@@ -22,7 +22,7 @@ interface IDrawerContentProps {
  * so React unmounted and remounted the whole drawer — losing focus and replaying the transition.
  */
 const DrawerContent = ({ open, route, onNavigate, onToggle }: IDrawerContentProps) => (
-  <div className="bg-background flex min-h-screen flex-col items-stretch justify-between border-r border-border">
+  <div className="bg-background flex min-h-[100dvh] flex-col items-stretch justify-between border-r border-border">
     <div className="grow">
       <div className="flex h-16 items-center gap-2 px-4">
         {open ? (
@@ -153,7 +153,7 @@ export const AppSidebar = ({ children }: IProps) => {
         </div>
       </aside>
       {/* Main content */}
-      <main ref={scrollRef} className="h-screen w-full flex-1 overflow-auto">
+      <main ref={scrollRef} className="h-[100dvh] w-full flex-1 overflow-auto">
         {/* Top bar */}
         <header className="sticky top-0 z-30 border-b border-border bg-background">
           <div className="flex h-16 w-full items-center justify-between px-4">

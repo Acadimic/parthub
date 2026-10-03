@@ -26,7 +26,9 @@ export const PageLayout = ({ children, withTabBar }: IProps) => {
   // Every tab but Home needs an account, so a visitor gets the header's Sign In instead of a bar.
   const hasTabBar = withTabBar && Boolean(selectedUser);
   return (
-    <div ref={scrollRef} className="relative h-[100vh] overflow-auto bg-background">
+    // `dvh`, not `vh`: on a phone `100vh` counts the space behind the browser's address bar, so the
+    // page scrolled past its end and its foot sat under the tab bar.
+    <div ref={scrollRef} className="relative h-[100dvh] overflow-auto bg-background">
       <div className="fixed top-0 z-50 w-full">
         <PageHeader />
       </div>

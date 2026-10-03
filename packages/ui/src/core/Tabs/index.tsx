@@ -40,13 +40,15 @@ export const Tabs = ({ tabs, value, onChange, className, contentClassName, trigg
 
   return (
     <ShadcnTabs value={String(selectedTabIndex)} onValueChange={handleChange} className={className}>
-      <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start h-auto p-0 shrink-0">
+      {/* Scrolls sideways, with no bar, when the tabs are wider than the strip: a phone otherwise
+          clipped the last tab with no way to reach it. */}
+      <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start h-auto p-0 shrink-0 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tabs.map((tab, index) => (
           <TabsTrigger
             key={index}
             value={String(index)}
             className={cn(
-              'text-sm font-semibold rounded-none border-b-2 border-transparent px-4 py-2',
+              'shrink-0 text-sm font-semibold rounded-none border-b-2 border-transparent px-4 py-2',
               'data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none',
               triggerClassName,
             )}

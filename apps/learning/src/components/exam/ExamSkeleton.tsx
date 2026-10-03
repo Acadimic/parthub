@@ -92,7 +92,7 @@ export const ExamSkeleton = ({ isPractice }: IProps) => (
     <div className="fixed top-0 z-10 w-full">
       <Header isPractice={isPractice} />
     </div>
-    <div className="h-[100vh] overflow-hidden pt-14 xl:pt-16">
+    <div className="h-[100dvh] overflow-hidden pt-14 xl:pt-16">
       <div className="flex h-full w-full justify-between overflow-x-hidden">
         <div className="flex min-w-0 grow flex-col md:w-[calc(100%-360px)]">
           <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-3 md:px-8 md:py-4">

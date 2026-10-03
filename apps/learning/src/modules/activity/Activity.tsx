@@ -94,6 +94,8 @@ export const Activity = () => {
         value={VIEWS.indexOf(view)}
         onChange={setView}
         contentClassName="pt-6"
+        // Four tabs fit a phone's width only at this size; from `sm` up they take the usual one.
+        triggerClassName="px-2.5 text-xs sm:px-4 sm:text-sm"
         tabs={[
           {
             label: 'Overview',
