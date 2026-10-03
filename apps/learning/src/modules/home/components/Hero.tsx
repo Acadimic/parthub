@@ -4,6 +4,7 @@ import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { useCourseLookups, useSelectedUser, useStandardLookups } from '@stores';
 import { useRouter } from 'next/router';
 import { type FormEvent, useState } from 'react';
+import banner from '../assets/banner.webp';
 
 /** How many standards to offer as one-tap searches under the box. */
 const QUICK_PICKS = 4;
@@ -130,12 +131,14 @@ export const Hero = () => {
         <div className="order-1 flex justify-center lg:order-2 lg:justify-end">
           {/* A transparent cut-out, so it carries no frame: a ring or shadow would trace the empty
               corners rather than the subject. Intrinsic size is set because this is the LCP element
-              and the copy beside it would otherwise shift as the image decodes. */}
+              and the copy beside it would otherwise shift as the image decodes. Imported rather than
+              served from `public/`: the import gets a hashed URL cached for a year, where `public/`
+              is served with `max-age=0` and the banner was fetched again on every return home. */}
           <img
-            src="/images/banner.png"
+            src={banner.src}
             alt="A teacher discussing a book with a student"
-            width={512}
-            height={512}
+            width={banner.width}
+            height={banner.height}
             loading="eager"
             fetchPriority="high"
             className="h-auto w-full max-w-[320px] sm:max-w-[400px] lg:max-w-[512px]"
