@@ -53,3 +53,5 @@ export class Plan extends BaseSchema {
 export const PlanSchema = SchemaFactory.createForClass(Plan);
 
 PlanSchema.index({ org: 1, _deleted: 1 });
+// PlanService.getPlansByCourseId: whether a course is paid, asked on every learner content call.
+PlanSchema.index({ org: 1, courses: 1, order: 1 });

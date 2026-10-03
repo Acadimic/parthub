@@ -19,6 +19,7 @@ having to be remembered. Each one is split into **must** (a violation is a defec
 | `add-api-endpoint`      | adding or changing a route in an existing server module              |
 | `add-server-module`     | creating a server module, a Mongoose schema, or editing `app.module` |
 | `query-with-mongoose`   | any query, schema or index in `apps/server`                          |
+| `index-with-mongodb`    | adding, changing or dropping an index, or a query that feels slow    |
 | `define-data-shape`     | declaring any interface, enum, DTO, store entity or Mongoose schema  |
 | `type-strictly`         | writing `?`, a parameter default, `!`, `as`, or a boolean parameter  |
 | `write-comments`        | writing comments, docblocks, or any suppression that needs a reason  |

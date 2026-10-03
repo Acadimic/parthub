@@ -34,8 +34,8 @@ export class ActivityLog extends BaseSchema {
 
 export const ActivityLogSchema = SchemaFactory.createForClass(ActivityLog);
 
-ActivityLogSchema.index({ entityType: 1, entityId: 1 });
-ActivityLogSchema.index({ org: 1 });
-ActivityLogSchema.index({ createdAt: -1 });
-ActivityLogSchema.index({ apiRoute: 1 });
-ActivityLogSchema.index({ accessType: 1 });
+// ActivityLogService.getLogsForEntity: { org, entityType, entityId } newest first. Every write in the
+// app inserts here, so this collection carries no index that no query reads.
+ActivityLogSchema.index({ org: 1, entityType: 1, entityId: 1, createdAt: -1 });
+// Entries are kept for 60 days.
+ActivityLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 24 * 60 * 60 });

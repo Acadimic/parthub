@@ -28,6 +28,5 @@ export type InviteDocument = HydratedDocument<Invite>;
 export const InviteSchema = SchemaFactory.createForClass(Invite);
 
 InviteSchema.index({ org: 1, updatedAt: 1 });
+// Also serves the lookup by `email` alone, such as the pending invite at sign-up.
 InviteSchema.index({ email: 1, org: 1 }, { unique: true });
-InviteSchema.index({ email: 1 });
-InviteSchema.index({ email: 1, org: 1, status: 1 });

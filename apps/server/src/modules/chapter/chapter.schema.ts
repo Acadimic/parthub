@@ -27,3 +27,5 @@ ChapterSchema.index(
   { name: 1, standard: 1, subject: 1, org: 1 },
   { unique: true, partialFilterExpression: { _deleted: false } },
 );
+// ChapterService.getStandardAndSubjectChapters, and getChapters through the `org` prefix.
+ChapterSchema.index({ org: 1, standard: 1, subject: 1 });

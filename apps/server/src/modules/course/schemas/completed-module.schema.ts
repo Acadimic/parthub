@@ -30,3 +30,5 @@ export const CompletedModuleSchema = SchemaFactory.createForClass(CompletedModul
 
 CompletedModuleSchema.index({ course: 1, courseModule: 1, collectionItem: 1, createdBy: 1 }, { unique: true });
 CompletedModuleSchema.index({ org: 1, _deleted: 1 });
+// CourseService.getCompletedModules: a learner's progress, read on every course screen.
+CompletedModuleSchema.index({ createdBy: 1, _deleted: 1 });

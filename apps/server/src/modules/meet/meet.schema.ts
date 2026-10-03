@@ -62,4 +62,6 @@ export class Meet extends BaseSchema {
 export const MeetSchema = SchemaFactory.createForClass(Meet);
 
 MeetSchema.index({ org: 1, _deleted: 1 });
+// MeetService.getByAttendee: a learner's sessions.
+MeetSchema.index({ attendees: 1, _deleted: 1 });
 MeetSchema.index({ meetingId: 1 }, { unique: true, sparse: true });

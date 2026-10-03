@@ -85,8 +85,7 @@ export class User extends BaseSchema {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
+// Also serves the login lookup by `uid` alone, and `{ email, org }` the lookup by `email` alone.
 UserSchema.index({ uid: 1, org: 1 }, { unique: true });
-UserSchema.index({ email: 1 });
 UserSchema.index({ org: 1 });
-UserSchema.index({ uid: 1 });
 UserSchema.index({ email: 1, org: 1 });

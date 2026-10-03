@@ -82,12 +82,11 @@ export class ActivityLogCoreService {
     const accessType = this.getAccessType();
     if (!userId || !org || !apiRoute || !accessType) return null;
 
+    // Only the diff: both full states made an edit of a large document cost three copies of it.
     return {
       entityType,
       entityId,
       action: ActivityAction.UPDATE,
-      previousState,
-      newState,
       changes,
       createdBy: userId,
       updatedBy: userId,

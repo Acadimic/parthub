@@ -148,6 +148,7 @@ fired are different claims.
 
 ## Related skills
 
+- `index-with-mongodb` — designing an index from the query, checking it with explain, shipping it
 - `add-server-module` — the schema, the module wiring and what the pipeline already does
 - `add-api-endpoint` — the route, its access decorators and the DTO
 - `define-data-shape` — where the entity's types belong

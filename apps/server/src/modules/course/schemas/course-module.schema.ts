@@ -53,5 +53,8 @@ export class CourseModule extends BaseSchema {
 
 export const CourseModuleSchema = SchemaFactory.createForClass(CourseModule);
 
-CourseModuleSchema.index({ course: 1, day: 1 }, { unique: true });
+// One live module per day; partial so a deleted day can be planned again.
+CourseModuleSchema.index({ course: 1, day: 1 }, { unique: true, partialFilterExpression: { _deleted: false } });
+// CourseService.getCourseModulesWithContents ({ course } by day), which a partial index cannot serve.
+CourseModuleSchema.index({ course: 1, day: 1, _deleted: 1 });
 CourseModuleSchema.index({ org: 1, _deleted: 1 });

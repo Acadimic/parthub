@@ -92,6 +92,11 @@ export class Material extends BaseSchema {
 export const MaterialSchema = SchemaFactory.createForClass(Material);
 
 MaterialSchema.index({ org: 1, _deleted: 1 });
+// MaterialService.getStandardAndSubjectMaterials ({ org, standard, subject } by order), and the
+// `standard: { $in }` list through its prefix. The unique index below is partial, so no read can use it.
+MaterialSchema.index({ org: 1, standard: 1, subject: 1, order: 1 });
+// MaterialService.findByCourse.
+MaterialSchema.index({ org: 1, course: 1 });
 // Unique among live rows only. A delete is a soft delete, and with the plain unique index the
 // deleted row kept its `order`, so the next content added to the chapter — given that same next
 // order — failed with a duplicate key. `_deleted` always exists (the base schema defaults it), so
