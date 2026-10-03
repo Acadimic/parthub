@@ -9,18 +9,18 @@ export interface IUploadedImage {
  * How authored content reaches the bucket. Each app provides it at its root, because signing and
  * uploading go through the app's own HTTP layer, which this package must not import.
  *
- * `resolveImageUrl` turns a stored `src` into something an `<img>` can load (a signed URL for an
+ * `resolveMediaUrl` turns a stored `src` into something an `<img>` or `<audio>` can load (a signed URL for an
  * object of ours, the address itself for anything else, `''` when it cannot be shown).
  * `uploadImage` is absent where content is only read, and the editor then offers no image button.
  */
 export interface IRichTextMedia {
-  resolveImageUrl: (src: string) => Promise<string>;
+  resolveMediaUrl: (src: string) => Promise<string>;
   uploadImage?: (file: File) => Promise<IUploadedImage>;
 }
 
 /** Without a provider, only plain `https:` addresses outside our bucket can be shown. */
 const DEFAULT_MEDIA: IRichTextMedia = {
-  resolveImageUrl: async (src) => (/^https:\/\//.test(src) && !/\.amazonaws\.com\//.test(src) ? src : ''),
+  resolveMediaUrl: async (src) => (/^https:\/\//.test(src) && !/\.amazonaws\.com\//.test(src) ? src : ''),
 };
 
 export const RichTextMediaContext = createContext<IRichTextMedia>(DEFAULT_MEDIA);

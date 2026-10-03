@@ -1,4 +1,5 @@
 import type { IRichTextDoc, IRichTextNode } from '@repo/shared/interfaces';
+import { richTextFromMarkdown } from '@repo/shared/utils';
 
 const paragraph = (content: IRichTextNode[]): IRichTextNode => ({ type: 'paragraph', content });
 const heading = (level: number, value: string): IRichTextNode => ({
@@ -150,6 +151,32 @@ export const CHEMISTRY_DOC: IRichTextDoc = {
   ],
 };
 
+/** A language lesson as the AI writes it, through the same Markdown import a generated course uses. */
+export const PRONUNCIATION_DOC: IRichTextDoc = richTextFromMarkdown(
+  [
+    '## Greetings',
+    'Click the dotted words to see how they are said, or the speaker to hear them. Select a word in the editor and press Ctrl/⌘ + Alt + P to mark it.',
+    '| Spanish | English |',
+    '| --- | --- |',
+    '| [Hola]{lang=es-ES ipa=ˈola} | Hello |',
+    '| [Buenos días]{lang=es-ES ipa="ˈbwenos ˈdias"} | Good morning |',
+    '| [¿Cómo estás?]{lang=es-ES ipa="ˈkomo esˈtas"} | How are you? |',
+    'In Sanskrit, [नमस्ते]{lang=sa translit=namaste ipa=nɐmɐsteː} is said with folded hands, and in Hindi [धन्यवाद]{lang=hi-IN translit=dhanyavād} means thank you.',
+    '::: listening lang=es-ES mode=dialogue',
+    '**Ana:** Hola, Luis. ¿Cómo estás?',
+    '',
+    '**Luis:** Muy bien, gracias. ¿Y tú?',
+    '',
+    '**Ana:** Bien también. ¡Hasta luego!',
+    ':::',
+    '::: listening lang=es-ES mode=passage',
+    'Madrid es la capital de España. Es una ciudad grande y muy bonita.',
+    '',
+    'Muchas personas visitan el Museo del Prado cada año.',
+    ':::',
+  ].join('\n'),
+).doc;
+
 export const EMPTY_DOC: IRichTextDoc = {
   type: 'doc',
   content: [{ type: 'paragraph' }],
@@ -187,6 +214,12 @@ export const PRESETS: IPreset[] = [
     label: 'Chemistry',
     description: 'mhchem notation through the same pipeline.',
     doc: CHEMISTRY_DOC,
+  },
+  {
+    key: 'pronunciation',
+    label: 'Pronunciation',
+    description: 'Spanish vocabulary, Sanskrit and Hindi words, a dialogue and a listening passage.',
+    doc: PRONUNCIATION_DOC,
   },
   { key: 'empty', label: 'Blank', description: 'Start from nothing and author your own.', doc: EMPTY_DOC },
 ];

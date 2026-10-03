@@ -1,4 +1,5 @@
 import { RichTextEditor } from '@repo/ui/editor';
+import { useSpeechLocale } from '@hooks/speech-locale.hook';
 import { Attachments, UploadFiles } from '@components/app/attachments';
 import { Select } from '@components/app/selects';
 import { Button, Label, Modal, ModalFooter, SimpleAccordions, TextInput } from '@repo/ui/app';
@@ -35,6 +36,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
   const { addAttachment } = materialStore;
   const { selectedStandardId, selectedSubjectId } = selectorStore;
   const selectedMaterial = useSelectedMaterial();
+  const speechLocale = useSpeechLocale([selectedMaterial?.standard]);
   const { addLinkAttachment, addMaterials } = materialStore;
   const { getStandardSubjectChapters } = useStandardLookups();
   const [isLoading, setIsLoading] = useState(false);
@@ -166,6 +168,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                       label="Content"
                       value={selectedMaterial.content}
                       onChange={(content) => patchMaterial(selectedMaterial._id, { content })}
+                      defaultLanguage={speechLocale}
                       editorClassName="min-h-[18rem]"
                     />
                   </div>

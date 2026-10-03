@@ -27,6 +27,9 @@ export class Standard extends BaseSchema {
 
   @Prop({ type: String, trim: true })
   alias: string;
+
+  @Prop({ type: String, trim: true })
+  locale: string;
 }
 
 export const StandardSchema = SchemaFactory.createForClass(Standard);

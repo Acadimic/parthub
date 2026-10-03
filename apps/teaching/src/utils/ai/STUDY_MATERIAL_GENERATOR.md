@@ -103,6 +103,16 @@ errors; at import each figure goes to the organization's `content/` folder (`upl
 and the image nodes are pointed at it (`withFigureSources`). The editor and every reading view
 then show it like an image a teacher uploaded; see `packages/ui/src/editor/README.md` §3a.
 
+## Pronunciation
+
+When the course's standard has a spoken language (`locale`, set on a language standard in the
+support app), the prompt adds a "Pronunciation" section (`pronunciationRules` in
+`packages/shared/src/ai/pronunciation.ts`): vocabulary, set phrases and example sentences come back
+as `[Hola]{lang=es-ES ipa="ˈola"}` spans, dialogues and reading passages as `::: listening` blocks.
+Any other course's prompt is unchanged. `checkPronunciation` warns on a span with no `lang`, an
+unknown language code, and a listening block left open; the import keeps the text either way. See
+`packages/ui/src/editor/README.md` §3b.
+
 ## What the import writes
 
 - One material per item, in file order, with `order` continuing from the page's last row, `level`,

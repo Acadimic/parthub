@@ -20,18 +20,18 @@ export const IMAGE_WIDTH_CLASSES: Record<string, string> = {
 
 /** Resolves a stored `src` to a loadable URL through the app's media provider. */
 export const useResolvedImageUrl = (src: string): { url: string; isLoading: boolean } => {
-  const { resolveImageUrl } = useRichTextMedia();
+  const { resolveMediaUrl } = useRichTextMedia();
   const [state, setState] = useState({ url: '', isLoading: true });
   useEffect(() => {
     let isCurrent = true;
     setState({ url: '', isLoading: true });
-    resolveImageUrl(src)
+    resolveMediaUrl(src)
       .catch(() => '')
       .then((url) => isCurrent && setState({ url, isLoading: false }));
     return () => {
       isCurrent = false;
     };
-  }, [src, resolveImageUrl]);
+  }, [src, resolveMediaUrl]);
   return state;
 };
 

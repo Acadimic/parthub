@@ -1,6 +1,14 @@
 import type { IRichTextNode } from '@repo/shared/interfaces';
 import { BLOCK_MATH_NAME, INLINE_MATH_NAME } from '../extensions/math-names';
-import { IMAGE_NODE as IMAGE_NAME } from '@repo/shared/utils';
+import {
+  formatMarkdownAttrs,
+  IMAGE_NODE as IMAGE_NAME,
+  isSamePronunciation,
+  LISTENING_NODE,
+  PRONUNCIATION_MARK,
+  pronunciationAttrsOf,
+} from '@repo/shared/utils';
+import type { IRichTextMark } from '@repo/shared/interfaces';
 
 /**
  * ProseMirror document → Markdown.
@@ -54,15 +62,62 @@ const applyMarks = (text: string, node: IRichTextNode): string => {
   return result;
 };
 
-const serializeInline = (nodes: IRichTextNode[] = []): string =>
-  nodes
-    .map((node) => {
-      if (node.type === 'text') return applyMarks(escapeText(node.text ?? ''), node);
-      if (node.type === INLINE_MATH_NAME) return `$${String(node.attrs?.latex ?? '')}$`;
-      if (node.type === 'hardBreak') return '\\\n';
-      return '';
-    })
-    .join('');
+const serializeInlineNode = (node: IRichTextNode): string => {
+  if (node.type === 'text') return applyMarks(escapeText(node.text ?? ''), node);
+  if (node.type === INLINE_MATH_NAME) return `$${String(node.attrs?.latex ?? '')}$`;
+  if (node.type === 'hardBreak') return '\\\n';
+  return '';
+};
+
+const pronunciationOf = (node: IRichTextNode): IRichTextMark | undefined =>
+  node.marks?.find((mark) => mark.type === PRONUNCIATION_MARK);
+
+/** `[Hola]{lang=es-ES ipa="ˈola"}`, attributes in a fixed order so a round trip is byte-stable. */
+const serializeSpan = (inner: string, mark: IRichTextMark): string => {
+  const { lang, ipa, translit } = pronunciationAttrsOf(mark);
+  const attrs = formatMarkdownAttrs([
+    ['lang', lang],
+    ['ipa', ipa],
+    ['translit', translit],
+  ]);
+  return `[${inner}]{${attrs}}`;
+};
+
+/**
+ * Inline content. Neighbours carrying the same pronunciation are one span, written once around all
+ * of them — `[**Buenos** días]{…}` — rather than one span per change of formatting.
+ */
+const serializeInline = (nodes: IRichTextNode[] = []): string => {
+  let out = '';
+  let index = 0;
+  while (index < nodes.length) {
+    const mark = pronunciationOf(nodes[index]);
+    if (!mark) {
+      out += serializeInlineNode(nodes[index]);
+      index += 1;
+      continue;
+    }
+    let end = index + 1;
+    while (end < nodes.length) {
+      const next = pronunciationOf(nodes[end]);
+      if (!next || !isSamePronunciation(mark, next)) break;
+      end += 1;
+    }
+    out += serializeSpan(nodes.slice(index, end).map(serializeInlineNode).join(''), mark);
+    index = end;
+  }
+  return out;
+};
+
+/** `::: listening lang=es-ES mode=dialogue`, its paragraphs, then `:::`. */
+const serializeListening = (node: IRichTextNode): string => {
+  const attrs = formatMarkdownAttrs([
+    ['lang', String(node.attrs?.lang ?? '')],
+    ['mode', String(node.attrs?.mode ?? 'passage')],
+  ]);
+  const body = (node.content ?? []).map((child) => serializeBlock(child)).join('\n\n');
+  return `::: listening ${attrs}\n${body}\n:::`;
+};
 
 const serializeListItems = (node: IRichTextNode, ordered: boolean): string =>
   (node.content ?? [])
@@ -144,6 +199,7 @@ const SIMPLE_BLOCKS: Record<string, (node: IRichTextNode) => string> = {
   codeBlock: serializeCodeBlock,
   horizontalRule: () => '---',
   [IMAGE_NAME]: serializeImage,
+  [LISTENING_NODE]: serializeListening,
 };
 
 function serializeBlock(node: IRichTextNode): string {

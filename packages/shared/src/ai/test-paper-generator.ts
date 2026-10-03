@@ -12,6 +12,7 @@ import { LevelType, QuestionType } from '../enums';
 import { createObjectId } from '../utils/object-id.util';
 import { checkMarkdownMath, type IAiIssue, MARKDOWN_RULES, parseJsonObject, repairIssue } from './common';
 import { checkFigures, FIGURE_RULES } from './figures';
+import { checkPronunciation, pronunciationRules } from './pronunciation';
 
 /** How many of each type a section should get. */
 export type IQuestionCounts = Record<QuestionType, number>;
@@ -209,7 +210,7 @@ ${blueprint.instructions.trim() ? `\n### Additional instructions from the teache
 Markdown, restricted to:${MARKDOWN_RULES}
 
 # Figures
-${FIGURE_RULES}
+${FIGURE_RULES}${pronunciationRules(context.standards.find((standard) => standard.locale)?.locale)}
 
 # Output
 
@@ -415,13 +416,11 @@ const checkQuestion = (question: IAiQuestion, path: string, target: IValidationT
     return;
   }
   if (!question.body?.trim()) issues.push({ level: 'error', path, message: 'The question body is empty.' });
-  checkMarkdownMath(
-    [question.body, question.solution, question.answer, ...(question.options ?? []).map((option) => option.body)]
-      .filter(Boolean)
-      .join('\n'),
-    path,
-    issues,
-  );
+  const markdown = [question.body, question.solution, question.answer, ...(question.options ?? []).map((o) => o.body)]
+    .filter(Boolean)
+    .join('\n');
+  checkMarkdownMath(markdown, path, issues);
+  checkPronunciation(markdown, path, issues);
   if (!Object.values(LevelType).includes(question.level)) {
     issues.push({
       level: 'error',

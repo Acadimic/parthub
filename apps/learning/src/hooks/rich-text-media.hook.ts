@@ -9,7 +9,7 @@ export const useRichTextMediaValue = (): IRichTextMedia => {
   const { getPresignedUrls } = useAttachment();
   return useMemo(
     () => ({
-      resolveImageUrl: async (src: string) => {
+      resolveMediaUrl: async (src: string) => {
         if (!src || src.startsWith(FIGURE_REF_PREFIX)) return '';
         if (isExternalUrl(src)) return src;
         const [url] = await getPresignedUrls([src]);

@@ -4,7 +4,7 @@ This is the reference for how authored content — study material, questions, op
 is written, stored, rendered, imported and exported. It covers `@repo/ui/editor`,
 `@repo/ui/content`, and the shared utilities in `@repo/shared/utils` they depend on. The design
 rationale lives in `.claude/plans/CONTENT_EDITOR_AND_EQUATIONS.md`; this file records what is
-built and how to use it. Updated 2026-10-02 (images).
+built and how to use it. Updated 2026-10-03 (pronunciation).
 
 ## 1. The model in one paragraph
 
@@ -63,18 +63,19 @@ exported to Markdown and imported from Markdown — all four, or it would be los
 
 ### Blocks
 
-| Node                                            | Notes                                                                                                      |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `paragraph`                                     |                                                                                                            |
-| `heading`                                       | levels **1–3 only**; deeper headings are not admitted                                                      |
-| `bulletList`, `orderedList`, `listItem`         | list items hold paragraphs                                                                                 |
-| `blockquote`                                    |                                                                                                            |
-| `codeBlock`                                     | fenced; contents are literal                                                                               |
-| `horizontalRule`                                |                                                                                                            |
-| `hardBreak`                                     | Shift+Enter                                                                                                |
-| `table`, `tableRow`, `tableHeader`, `tableCell` | `bordered` flag on the table; cells hold **inline content only** (no blocks in cells); optional header row |
-| `blockMath`                                     | a display equation; `attrs.latex`                                                                          |
-| `image`                                         | a picture block; `attrs.src`, `alt`, `caption`, `width` (`small`, `medium`, `full`). See §3a               |
+| Node                                            | Notes                                                                                                        |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `paragraph`                                     |                                                                                                              |
+| `heading`                                       | levels **1–3 only**; deeper headings are not admitted                                                        |
+| `bulletList`, `orderedList`, `listItem`         | list items hold paragraphs                                                                                   |
+| `blockquote`                                    |                                                                                                              |
+| `codeBlock`                                     | fenced; contents are literal                                                                                 |
+| `horizontalRule`                                |                                                                                                              |
+| `hardBreak`                                     | Shift+Enter                                                                                                  |
+| `table`, `tableRow`, `tableHeader`, `tableCell` | `bordered` flag on the table; cells hold **inline content only** (no blocks in cells); optional header row   |
+| `blockMath`                                     | a display equation; `attrs.latex`                                                                            |
+| `image`                                         | a picture block; `attrs.src`, `alt`, `caption`, `width` (`small`, `medium`, `full`). See §3a                 |
+| `listening`                                     | a listening passage or dialogue; `attrs.lang`, `mode` (`passage`, `dialogue`), `audio`; paragraphs only. §3b |
 
 ### Inline
 
@@ -84,6 +85,7 @@ exported to Markdown and imported from Markdown — all four, or it would be los
 | `inlineMath`                                    | an inline equation; `attrs.latex`; atomic, selectable, draggable                                                         |
 | `bold`, `italic`, `underline`, `strike`, `code` | marks                                                                                                                    |
 | `link`                                          | mark with `attrs.href`; only `http(s):`, `mailto:` and `tel:` are rendered as links, anything else renders as plain text |
+| `pronunciation`                                 | mark with `attrs.lang` (BCP-47), `ipa`, `translit`, `audio`; a pronounceable word, phrase or sentence. §3b               |
 
 ### 3a. Images
 
@@ -96,7 +98,7 @@ An image is an atomic block node. `src` holds one of three things:
   the figure and swaps in its address.
 
 The file is never inlined into the document. Uploads go through the host app: `RichTextMediaContext`
-(`@repo/ui/contexts`) carries `resolveImageUrl(src)` and, in the teaching app only,
+(`@repo/ui/contexts`) carries `resolveMediaUrl(src)` and, in the teaching app only,
 `uploadImage(file)`. Each app provides it at its root from its own attachment helpers
 (`src/hooks/rich-text-media.hook.ts`), because this package must not reach an app's HTTP layer.
 Without a provider only plain external `https:` images can be shown, and the editor offers no image
@@ -106,6 +108,27 @@ An image is uploaded **the moment it is inserted**, into the organization's `con
 attachments, which upload when their form saves. That is what lets the document hold a real
 address straight away. A picture deleted before the record is saved stays in the bucket with
 nothing pointing at it; it is small and not worth a second upload path.
+
+### 3b. Pronunciation
+
+A `pronunciation` mark makes a run pronounceable; a `listening` block wraps paragraphs as a passage
+or a dialogue (each paragraph a line, opening with the speaker in bold, which is read but not
+spoken). Languages come from `SPEECH_LANGUAGES` in `@repo/shared/utils`. The reader shows a dotted
+underline and a speaker; the text opens a card with the transliteration, `/ipa/`, Listen and Slow.
+
+Playback goes through one shared player in `content/speech/` — one sound at a time: a stored
+`audio` file first (signed through `resolveMediaUrl`), then the device's voice, otherwise the
+control is disabled and says the device has no voice for that language. `audio` is empty by
+default; see `.claude/plans/PRONUNCIATION.md` for when audio is generated.
+
+In the editor: the speaker button marks the selection, or the word at the caret
+(`Ctrl/⌘ + Alt + P`); its caret wraps the selected paragraphs in a passage or dialogue. With the
+caret in a marked run, a second toolbar row edits its language, IPA and transliteration and
+previews it. `RichTextEditor`'s `defaultLanguage` sets the language new marks start in — the teaching app
+passes the course standard's `locale` (`useSpeechLocale`); without one, the language last picked.
+
+Markdown is Pandoc's: `[Hola]{lang=es-ES ipa="ˈola"}` and `::: listening lang=es-ES mode=dialogue`
+… `:::`. `audio` is not written to Markdown.
 
 ### Not supported, deliberately
 
@@ -207,22 +230,24 @@ The write path for everything that does not come from the editor: AI replies, im
 Deliberately narrow — it accepts what the editor can store and turns unknown lines into
 paragraphs, so no input is dropped.
 
-| Markdown                                                                         | Becomes                                             |
-| -------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `#`, `##`, `###`                                                                 | heading 1–3                                         |
-| blank-line separated text                                                        | paragraphs                                          |
-| `- `, `* `, `+ `                                                                 | bullet list                                         |
-| `1. `, `1) `                                                                     | ordered list                                        |
-| `> `                                                                             | blockquote                                          |
-| ` ``` ` fences                                                                   | code block                                          |
-| `---`, `***`, `___`                                                              | horizontal rule                                     |
-| GFM pipe table (header row, separator, body rows); `<br>` in a cell              | table, bordered, header row; `<br>` is a hard break |
-| `$$…$$` on one line, or a `$$` … `$$` block over several lines; `\[…\]` likewise | display equation                                    |
-| `$…$`, `\(…\)`, `$$…$$` inside a line                                            | inline equation                                     |
-| `**bold**`, `_italic_` or `*italic*`, `***both***`, `~~strike~~`, `` `code` ``   | marks                                               |
-| `[text](https://…)`                                                              | link mark                                           |
-| `\$`                                                                             | a literal dollar sign                               |
-| `![alt](src "caption")` alone on a line; `src` is `https:` or `figure:<ref>`     | image                                               |
+| Markdown                                                                         | Becomes                                                              |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `#`, `##`, `###`                                                                 | heading 1–3                                                          |
+| blank-line separated text                                                        | paragraphs                                                           |
+| `- `, `* `, `+ `                                                                 | bullet list                                                          |
+| `1. `, `1) `                                                                     | ordered list                                                         |
+| `> `                                                                             | blockquote                                                           |
+| ` ``` ` fences                                                                   | code block                                                           |
+| `---`, `***`, `___`                                                              | horizontal rule                                                      |
+| GFM pipe table (header row, separator, body rows); `<br>` in a cell              | table, bordered, header row; `<br>` is a hard break                  |
+| `$$…$$` on one line, or a `$$` … `$$` block over several lines; `\[…\]` likewise | display equation                                                     |
+| `$…$`, `\(…\)`, `$$…$$` inside a line                                            | inline equation                                                      |
+| `**bold**`, `_italic_` or `*italic*`, `***both***`, `~~strike~~`, `` `code` ``   | marks                                                                |
+| `[text](https://…)`                                                              | link mark                                                            |
+| `\$`                                                                             | a literal dollar sign                                                |
+| `![alt](src "caption")` alone on a line; `src` is `https:` or `figure:<ref>`     | image                                                                |
+| `[text]{lang=es-ES ipa="ˈola" translit=…}` (a `lang` is required)                | pronunciation mark                                                   |
+| `::: listening lang=… mode=passage\|dialogue` … `:::`                            | listening block; anything but paragraphs inside is flattened to text |
 
 Rules worth knowing:
 
@@ -275,8 +300,11 @@ The generators live in `apps/teaching/src/utils/ai/` and are documented in
    than 200 kB. Once a reply passes, the importer uploads each figure (`uploadReplyFigures` in the
    CLI, `uploadAiFigures` + `withFigureSources` in the teaching app's drawers) and points the image
    at the stored file. The prompts' "Figures" section (`FIGURE_RULES`) tells the model all of this.
-5. **Conversion** is `richTextFromMarkdown`, with the normalisation of §6.
-6. **Import** writes `IRichText` values through the bulk routes.
+5. **Pronunciation**: for a language course (its standard has a `locale`) the prompt asks for
+   pronunciation spans and listening blocks (§3b); `checkPronunciation` warns on a span with no
+   `lang`, an unknown code, or a block left open.
+6. **Conversion** is `richTextFromMarkdown`, with the normalisation of §6.
+7. **Import** writes `IRichText` values through the bulk routes.
 
 Content imported before these safeguards existed can be repaired in place with **Repair
 equations** on a subject's material page (header button for every content, card menu for one).

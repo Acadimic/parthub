@@ -1,5 +1,5 @@
 import { type IAiFigure, type IRichTextNode } from '../interfaces';
-import { FIGURE_REF_PREFIX, mapImageSources } from '../utils/rich-text.util';
+import { FIGURE_REF_PREFIX, mapImageSources } from '../utils/rich-text-image.util';
 import { type IAiIssue, parseJsonObject } from './common';
 
 /** Largest SVG a reply may carry for one figure. A chart or diagram is a few kilobytes. */

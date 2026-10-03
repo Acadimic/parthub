@@ -11,6 +11,7 @@ import { DocumentType, FileExtension, LevelType, LinkType } from '../enums';
 import { createObjectId } from '../utils/object-id.util';
 import { checkMarkdownMath, type IAiIssue, parseJsonObject, repairIssue } from './common';
 import { checkFigures } from './figures';
+import { checkPronunciation } from './pronunciation';
 import { buildStudyMaterialPrompt } from './study-material-prompt';
 import { type IAiMaterialContext, type IAiMaterialSetup } from './study-material-setup';
 
@@ -114,6 +115,7 @@ const checkContent = (material: IAiMaterial, path: string, issues: IAiIssue[]) =
     issues.push({ level: 'warning', path: `${path}.content`, message: 'Contains HTML tags, which the editor drops.' });
   }
   checkMarkdownMath(content, `${path}.content`, issues);
+  checkPronunciation(content, `${path}.content`, issues);
 };
 
 const checkMaterial = (material: IAiMaterial, path: string, target: IMaterialValidationTarget, issues: IAiIssue[]) => {

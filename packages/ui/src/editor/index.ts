@@ -11,6 +11,10 @@ export { InlineMath, BlockMath, MathExtensions } from './extensions/math-nodes';
 export { INLINE_MATH_NAME, BLOCK_MATH_NAME } from './extensions/math-names';
 export { ImageBlock, IMAGE_NAME, IMAGE_ACCEPT } from './extensions/image';
 export type { IImageAttrs, IImageOptions } from './extensions/image';
+export { Pronunciation, PRONUNCIATION_NAME } from './extensions/pronunciation';
+export type { IPronunciationOptions } from './extensions/pronunciation';
+export { ListeningNode, LISTENING_NAME } from './extensions/listening';
+export type { IListeningOptions } from './extensions/listening';
 export { BorderedTable, FlatTableCell, FlatTableHeader, TableExtensions, TABLE_NAME } from './extensions/table';
 export type { ITableInsertOptions } from './extensions/table';
 

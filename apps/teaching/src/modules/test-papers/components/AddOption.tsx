@@ -11,6 +11,8 @@ interface IProps {
   option: OptionDto;
   index: number;
   canRemove: boolean;
+  /** The course's spoken language, for pronunciation marks. */
+  speechLocale: string;
 }
 
 /**
@@ -19,7 +21,7 @@ interface IProps {
  * Memoised, and holding only the actions it calls: each option carries a Tiptap editor, and the
  * store's lookups re-rendered all of them on every character typed into the question above.
  */
-export const AddOption = memo(function AddOption({ questionId, option, index, canRemove }: IProps) {
+export const AddOption = memo(function AddOption({ questionId, option, index, canRemove, speechLocale }: IProps) {
   const patchOption = useQuestionStore((state) => state.patchOption);
   const removeOption = useQuestionStore((state) => state.removeOption);
   const letter = optionLetter(index);
@@ -38,6 +40,7 @@ export const AddOption = memo(function AddOption({ questionId, option, index, ca
           value={option.body}
           onChange={(body) => patchOption(questionId, option._id, { body })}
           placeholder="Write the option"
+          defaultLanguage={speechLocale}
           editorClassName="min-h-[5.5rem] rounded-lg"
         />
       </div>

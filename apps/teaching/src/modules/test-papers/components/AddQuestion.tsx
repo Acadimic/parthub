@@ -3,7 +3,8 @@ import { RichTextEditor } from '@repo/ui/editor';
 import { PlusIcon } from '@phosphor-icons/react';
 import { QuestionType } from '@enums';
 import { Badge } from '@repo/ui/core';
-import { useQuestionLookups, useSelectedQuestion } from '@stores';
+import { useQuestionLookups, useSelectedQuestion, useSelectedTestPaper } from '@stores';
+import { useSpeechLocale } from '@hooks/speech-locale.hook';
 import { AddOption } from './AddOption';
 import { getQuestionTypeMeta } from './question-types';
 import { QuestionTypePicker } from './QuestionTypePicker';
@@ -20,6 +21,8 @@ const MIN_OPTIONS = 2;
 export const AddQuestion = () => {
   const { patchQuestion, addOption } = useQuestionLookups();
   const selectedQuestion = useSelectedQuestion();
+  const selectedTestPaper = useSelectedTestPaper();
+  const speechLocale = useSpeechLocale([selectedQuestion?.standard, ...(selectedTestPaper?.standards ?? [])]);
 
   if (!selectedQuestion) return null;
 
@@ -41,6 +44,7 @@ export const AddQuestion = () => {
         <RichTextEditor
           value={selectedQuestion.body}
           onChange={(body) => patchQuestion(selectedQuestion._id, { body })}
+          defaultLanguage={speechLocale}
           placeholder="Write the question. Ctrl/⌘ + E adds an equation."
           editorClassName="min-h-[10rem] rounded-lg"
         />
@@ -70,6 +74,7 @@ export const AddQuestion = () => {
                 option={option}
                 index={index}
                 canRemove={options.length > MIN_OPTIONS}
+                speechLocale={speechLocale}
               />
             ))}
           </div>

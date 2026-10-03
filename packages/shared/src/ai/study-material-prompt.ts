@@ -2,6 +2,7 @@ import { AI_STUDY_MATERIAL_FORMAT, type AiResourceKind } from '../interfaces';
 import { LevelType } from '../enums';
 import { MARKDOWN_RULES } from './common';
 import { FIGURE_RULES } from './figures';
+import { pronunciationRules } from './pronunciation';
 import {
   type IAiMaterialContext,
   type IAiMaterialSetup,
@@ -196,7 +197,7 @@ ${instructionsSection(setup.instructions)}
 Markdown, restricted to:${MARKDOWN_RULES}
 
 # Figures
-${FIGURE_RULES}
+${FIGURE_RULES}${pronunciationRules(context.standard.locale)}
 
 # Output
 

@@ -34,7 +34,8 @@ export interface IAiPlannedLesson {
 }
 
 export interface IAiMaterialContext {
-  standard: { _id: string; name: string };
+  /** `locale` is set on a language course's standard, and switches on the pronunciation rules. */
+  standard: { _id: string; name: string; locale?: string | null };
   subject: { _id: string; name: string };
   chapters: ChapterDto[];
 }

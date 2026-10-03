@@ -34,4 +34,9 @@ export class StandardDto extends BaseOwnedDto {
   @IsOptional()
   @IsString()
   alias?: string;
+
+  /** A language track's spoken language, BCP-47 (`es-ES`, `sa`): pronunciation marks start in it. */
+  @IsOptional()
+  @IsString()
+  locale?: string | null;
 }

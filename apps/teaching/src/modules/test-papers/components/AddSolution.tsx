@@ -10,6 +10,7 @@ import { Marking, QuestionType } from '@enums';
 import { type ISelectItem } from '@interfaces';
 import { AddChapterButton } from '@modules/chapters/components/AddChapterButton';
 import { useStandardLookups, useQuestionLookups, useSelectedQuestion, useSelectedTestPaper } from '@stores';
+import { useSpeechLocale } from '@hooks/speech-locale.hook';
 import { useEffect, useState } from 'react';
 import { AnswerChoices } from './AnswerChoices';
 import { getQuestionTypeMeta } from './question-types';
@@ -155,6 +156,7 @@ export const AddSolution = () => {
   const { patchQuestion, patchOption, setSolution } = useQuestionLookups();
   const selectedTestPaper = useSelectedTestPaper();
   const selectedQuestion = useSelectedQuestion();
+  const speechLocale = useSpeechLocale([selectedQuestion?.standard, ...(selectedTestPaper?.standards ?? [])]);
   const { getStandardSubjectItems, getStandardItemsByIds, getChapterItems } = useStandardLookups();
   const [marks, setMarks] = useState<IMarkInputs>(() => toMarkInputs(selectedQuestion?.markings));
 
@@ -242,6 +244,7 @@ export const AddSolution = () => {
           value={selectedQuestion.solution?.body}
           onChange={(body) => setSolution(selectedQuestion._id, body)}
           placeholder="Explain the working, step by step."
+          defaultLanguage={speechLocale}
           editorClassName="min-h-[10rem] rounded-lg"
         />
       </DrawerSection>

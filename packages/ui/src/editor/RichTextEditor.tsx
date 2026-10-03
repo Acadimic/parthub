@@ -9,7 +9,9 @@ import { useRichTextMedia } from '../contexts/rich-text-media-context';
 import { Label } from '../core/Label';
 import { cn } from '../lib/cn';
 import { IMAGE_ACCEPT, ImageBlock } from './extensions/image';
+import { ListeningNode } from './extensions/listening';
 import { MathExtensions } from './extensions/math-nodes';
+import { Pronunciation } from './extensions/pronunciation';
 import { TableExtensions } from './extensions/table';
 import { EditorToolbar } from './toolbar/EditorToolbar';
 
@@ -34,6 +36,11 @@ export interface IRichTextEditorProps {
   className?: string;
   /** Classes for the editor frame; `className` styles the wrapper around it. */
   editorClassName?: string;
+  /**
+   * The language new pronunciation marks and listening blocks start in — a language course's own,
+   * e.g. `es-ES`. Read once, when the editor is created. Without it, the language last picked.
+   */
+  defaultLanguage?: string;
 }
 
 const DEFAULT_PLACEHOLDER = 'Start writing. Ctrl/⌘ + E adds an equation, or type $x^2$';
@@ -56,6 +63,8 @@ const DOCUMENT_CLASS = [
   '[&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2',
   '[&_hr]:my-6 [&_hr]:border-border',
   '[&_figure[data-image]]:my-4',
+  // A pronounced run: the reader's dotted underline, plus a tint so the author sees its extent.
+  '[&_span[data-pronunciation]]:underline [&_span[data-pronunciation]]:decoration-dotted [&_span[data-pronunciation]]:decoration-primary/70 [&_span[data-pronunciation]]:decoration-2 [&_span[data-pronunciation]]:underline-offset-4 [&_span[data-pronunciation]]:bg-primary/5',
   // Tables match the reading view's cell padding and header ground. A borderless table keeps a
   // faint dashed guide while editing — the author still has to find the cells — that the reading
   // view does not draw.
@@ -86,6 +95,7 @@ export const RichTextEditor = ({
   placeholder = DEFAULT_PLACEHOLDER,
   className,
   editorClassName,
+  defaultLanguage = '',
 }: IRichTextEditorProps) => {
   const { uploadImage } = useRichTextMedia();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -107,6 +117,8 @@ export const RichTextEditor = ({
       ...MathExtensions,
       ...TableExtensions,
       ImageBlock.configure({ upload: uploadImage, onUploadError: reportUploadError }),
+      Pronunciation.configure({ defaultLanguage }),
+      ListeningNode.configure({ defaultLanguage }),
     ],
     content: value?.doc ?? null,
     // Required under the Pages Router: Tiptap renders to the DOM, so letting it render during SSR

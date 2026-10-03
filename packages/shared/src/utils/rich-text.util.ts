@@ -1,6 +1,15 @@
 import { RichTextFormat } from '../enums/rich-text.enum';
 import type { IRichText, IRichTextDoc, IRichTextMark, IRichTextNode } from '../interfaces/rich-text.interface';
 import { normaliseLatex, repairLatexControlEscapes } from './latex-repair.util';
+import { IMAGE_NODE, imageNode } from './rich-text-image.util';
+import {
+  LISTENING_MODES,
+  LISTENING_NODE,
+  type ListeningMode,
+  parseMarkdownAttrs,
+  PRONUNCIATION_MARK,
+  pronunciationMarkFrom,
+} from './pronunciation.util';
 
 /** `Array.prototype.flatMap` is past this package's compile target, so the same thing by hand. */
 const flatMap = <T, U>(items: T[], map: (item: T) => U[]): U[] =>
@@ -18,16 +27,6 @@ export const createEmptyRichText = (): IRichText => ({
   doc: { type: 'doc', content: [{ type: 'paragraph' }] },
   text: '',
 });
-
-/**
- * The picture block. `src` is one of three things: the address of an object in our own bucket,
- * signed by the reader on display; any other `https:` address, shown as it is; or `figure:<ref>`,
- * a placeholder in an AI reply that the importer swaps for the uploaded figure's address.
- */
-export const IMAGE_NODE = 'image';
-export const FIGURE_REF_PREFIX = 'figure:';
-export const IMAGE_WIDTHS = ['small', 'medium', 'full'] as const;
-export type ImageWidth = (typeof IMAGE_WIDTHS)[number];
 
 /** Containers whose children are inline, and so join without a newline between them. */
 const INLINE_CONTAINERS = new Set(['paragraph', 'heading', 'codeBlock']);
@@ -157,10 +156,14 @@ export const splitInlineMath = (line: string): IInlinePiece[] => {
 /** `[text](https://…)`; the label is group 1 and the address group 2, so the mark carries `href`. */
 const LINK_PATTERN = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/;
 
+/** Pandoc's bracketed span, `[Hola]{lang=es-ES ipa="ˈola"}`; without a `lang` it is not one. */
+const SPAN_PATTERN = /\[([^\]]+)\]\{(?=[^}]*\blang=)([^}]*)\}/;
+
 /** Applied in this order so the earliest match wins consistently. `code` never nests. */
 const MARK_PATTERNS: { re: RegExp; type: string; literal?: boolean }[] = [
   { re: /`([^`]+)`/, type: 'code', literal: true },
   { re: LINK_PATTERN, type: 'link' },
+  { re: SPAN_PATTERN, type: PRONUNCIATION_MARK },
   // `***x***` is bold around italic: the bold takes the outer pair, the italic rule the inner one.
   { re: /\*\*(\*[^*]+\*)\*\*/, type: 'bold' },
   // Bold may hold italic: `**Treating *along with* like *and*.**`.
@@ -179,6 +182,13 @@ const unescape = (text: string): string => text.replace(/\\\$/g, '$');
 const textNode = (text: string, marks: IRichTextMark[]): IRichTextNode =>
   marks.length ? { type: 'text', text, marks } : { type: 'text', text };
 
+/** A link carries the address it points at, a span its language and pronunciation. */
+const markFrom = (type: string, match: RegExpExecArray): IRichTextMark => {
+  if (type === 'link') return { type, attrs: { href: match[2] } };
+  if (type === PRONUNCIATION_MARK) return pronunciationMarkFrom(parseMarkdownAttrs(match[2]));
+  return { type };
+};
+
 /** Parses marks, recursing into what a mark wraps so `**_x_**` keeps both. Text stays escaped. */
 const parseMarked = (input: string, marks: IRichTextMark[]): IRichTextNode[] => {
   if (!input) return [];
@@ -193,8 +203,7 @@ const parseMarked = (input: string, marks: IRichTextMark[]): IRichTextNode[] => 
       match,
     } = found;
     const inner = match[1];
-    // A link is the one mark with an attribute: the address it points at.
-    const nextMarks = [...marks, type === 'link' ? { type, attrs: { href: match[2] } } : { type }];
+    const nextMarks = [...marks, markFrom(type, match)];
     return [
       ...parseMarked(input.slice(0, match.index), marks),
       // Markdown interprets nothing inside a code span, so its content is taken verbatim.
@@ -386,15 +395,39 @@ const readImage: BlockReader = (lines, index) => {
   return { node: imageNode(match[2], match[1].trim(), caption.trim()), next: index + 1 };
 };
 
-/** An image node with every attribute present, so the editor and the reader see the same shape. */
-export const imageNode = (src: string, alt: string, caption: string, width: ImageWidth = 'full'): IRichTextNode => ({
-  type: IMAGE_NODE,
-  attrs: { src, alt, caption, width },
-});
+/** `::: listening lang=es-ES mode=dialogue` opens a listening block; a line of `:::` closes it. */
+const LISTENING_OPEN = /^:::\s*listening\b(.*)$/;
+const DIV_CLOSE = /^:::\s*$/;
+
+/** A listening block holds paragraphs only; anything else inside one is flattened to its text. */
+const toParagraphs = (node: IRichTextNode): IRichTextNode[] => {
+  if (node.type === 'paragraph') return [node];
+  if (node.type === 'heading') return [{ type: 'paragraph', content: node.content }];
+  if (node.content) return flatMap(node.content, toParagraphs);
+  const text = docToPlainText(node);
+  return text ? [{ type: 'paragraph', content: [{ type: 'text', text }] }] : [];
+};
+
+const readListening: BlockReader = (lines, index) => {
+  const open = LISTENING_OPEN.exec(lines[index].trim());
+  if (!open) return null;
+  let close = index + 1;
+  while (close < lines.length && !DIV_CLOSE.test(lines[close].trim())) close += 1;
+  if (close >= lines.length) return null;
+  const paragraphs = flatMap(parseBlocks(lines.slice(index + 1, close).join('\n')), toParagraphs);
+  if (!paragraphs.length) return null;
+  const attrs = parseMarkdownAttrs(open[1]);
+  const mode: ListeningMode = LISTENING_MODES.find((item) => item === attrs.mode) ?? 'passage';
+  return {
+    node: { type: LISTENING_NODE, attrs: { lang: attrs.lang ?? '', mode, audio: '' }, content: paragraphs },
+    next: close + 1,
+  };
+};
 
 /** Order matters: a fence swallows its body, so it is tried before anything inside it can match. */
 const BLOCK_READERS: BlockReader[] = [
   readFence,
+  readListening,
   readImage,
   readTable,
   readRule,
@@ -452,23 +485,6 @@ export const richTextFromMarkdown = (markdown: string): IRichText => {
   if (!content.length) return createEmptyRichText();
   const doc: IRichTextDoc = { type: 'doc', content };
   return { format: RichTextFormat.DOC_V1, doc, text: docToPlainText(doc) };
-};
-
-/** Every image `src` in a document, in document order, repeats included. */
-export const collectImageSources = (doc: IRichTextNode | null): string[] => {
-  if (!doc) return [];
-  const own = doc.type === IMAGE_NODE && typeof doc.attrs?.src === 'string' ? [doc.attrs.src] : [];
-  return own.concat(flatMap(doc.content ?? [], collectImageSources));
-};
-
-/** The same document with each image `src` passed through `map`; nothing else is touched. */
-export const mapImageSources = <T extends IRichTextNode>(node: T, map: (src: string) => string): T => {
-  const attrs =
-    node.type === IMAGE_NODE && typeof node.attrs?.src === 'string'
-      ? { ...node.attrs, src: map(node.attrs.src) }
-      : node.attrs;
-  const content = node.content?.map((child) => mapImageSources(child, map));
-  return { ...node, ...(attrs ? { attrs } : {}), ...(content ? { content } : {}) };
 };
 
 // ---------------------------------------------------------------------------

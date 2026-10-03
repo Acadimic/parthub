@@ -2,16 +2,19 @@ import {
   ArrowUUpLeftIcon,
   ArrowUUpRightIcon,
   CaretDownIcon,
+  ChatsCircleIcon,
   CodeBlockIcon,
   CodeIcon,
   FlaskIcon,
   FunctionIcon,
+  HeadphonesIcon,
   ImageIcon,
   ListBulletsIcon,
   ListNumbersIcon,
   MinusIcon,
   QuotesIcon,
   SigmaIcon,
+  SpeakerHighIcon,
   TextBIcon,
   TextHOneIcon,
   TextHThreeIcon,
@@ -21,10 +24,13 @@ import {
   TextTIcon,
   TextUnderlineIcon,
 } from '@phosphor-icons/react';
+import { getMarkRange } from '@tiptap/core';
 import { type Editor, useEditorState } from '@tiptap/react';
+import { type IPronunciationAttrs, LISTENING_NODE, PRONUNCIATION_MARK } from '@repo/shared/utils';
 import { useLayoutEffect, useState } from 'react';
 import { type IMenuItem, Menu } from '../../core/Menu';
 import { cn } from '../../lib/cn';
+import { PronunciationToolbar } from './PronunciationToolbar';
 import { TableInsertMenu } from './TableInsertMenu';
 import { TableToolbar } from './TableToolbar';
 import { CONTROL_CLASS, keepSelection, ToolbarAction, ToolbarButton, ToolbarGroup } from './ToolbarButton';
@@ -120,7 +126,28 @@ interface IToolbarState {
   /** The caret is inside a table, so the table row is shown. */
   inTable: boolean;
   tableBordered: boolean;
+  /** The pronounced run the caret is in, so its row is shown; null outside one. */
+  pronunciation: { attrs: IPronunciationAttrs; text: string } | null;
+  inListening: boolean;
 }
+
+/** The run the caret is in and its text, or null when the caret is not in a pronounced run. */
+const currentPronunciation = (editor: Editor): IToolbarState['pronunciation'] => {
+  if (!editor.isActive(PRONUNCIATION_MARK)) return null;
+  const type = editor.schema.marks[PRONUNCIATION_MARK];
+  const { $from } = editor.state.selection;
+  const attrs = editor.getAttributes(PRONUNCIATION_MARK);
+  const range = getMarkRange($from, type, attrs) ?? getMarkRange(editor.state.doc.resolve($from.pos + 1), type, attrs);
+  return {
+    attrs: {
+      lang: String(attrs.lang ?? ''),
+      ipa: String(attrs.ipa ?? ''),
+      translit: String(attrs.translit ?? ''),
+      audio: String(attrs.audio ?? ''),
+    },
+    text: range ? editor.state.doc.textBetween(range.from, range.to) : '',
+  };
+};
 
 /**
  * What the toolbar shows before the first transaction. The selector below is only re-run on a
@@ -136,7 +163,77 @@ const INITIAL_STATE: IToolbarState = {
   canRedo: false,
   inTable: false,
   tableBordered: true,
+  pronunciation: null,
+  inListening: false,
 };
+
+/** The pronunciation menu: mark or unmark the run, and wrap or unwrap a listening block. */
+const pronunciationMenu = (editor: Editor, state: IToolbarState): IMenuItem[] => {
+  const mark: IMenuItem = {
+    label: state.pronunciation ? 'Remove pronunciation' : 'Pronounce selection — Ctrl/⌘ + Alt + P',
+    icon: <SpeakerHighIcon className={ICON} />,
+    onClick: () => editor.chain().focus().togglePronunciation().run(),
+  };
+  if (state.inListening) {
+    return [
+      mark,
+      {
+        label: 'Back to plain paragraphs',
+        icon: <TextTIcon className={ICON} />,
+        onClick: () => editor.chain().focus().unsetListening().run(),
+      },
+    ];
+  }
+  return [
+    mark,
+    {
+      label: 'Listening passage',
+      icon: <HeadphonesIcon className={ICON} />,
+      onClick: () => editor.chain().focus().setListening({ mode: 'passage' }).run(),
+    },
+    {
+      label: 'Dialogue',
+      icon: <ChatsCircleIcon className={ICON} />,
+      onClick: () => editor.chain().focus().setListening({ mode: 'dialogue' }).run(),
+    },
+  ];
+};
+
+/**
+ * Pronunciation: the button marks the selection (or the word at the caret); the caret offers a
+ * listening passage or a dialogue around the selected paragraphs.
+ */
+const PronunciationGroup = ({ editor, state }: { editor: Editor; state: IToolbarState }) => (
+  <ToolbarGroup label="Pronunciation" className="ml-auto gap-0 p-0 overflow-hidden">
+    <ToolbarButton
+      label={
+        state.pronunciation
+          ? 'Remove pronunciation'
+          : 'Pronounce — Ctrl/⌘ + Alt + P. Marks the selection or the word at the caret.'
+      }
+      icon={<SpeakerHighIcon className={ICON} weight={state.pronunciation ? 'fill' : 'regular'} />}
+      isActive={!!state.pronunciation}
+      onClick={() => editor.chain().focus().togglePronunciation().run()}
+    />
+    <Menu
+      items={pronunciationMenu(editor, state)}
+      className="inline-flex"
+      trigger={
+        <button
+          type="button"
+          onMouseDown={keepSelection}
+          aria-label="More pronunciation options"
+          className={cn(
+            CONTROL_CLASS,
+            'w-5 rounded-none border-l border-border text-foreground hover:bg-primary/10 hover:text-primary',
+          )}
+        >
+          <CaretDownIcon className="h-3 w-3" weight="bold" />
+        </button>
+      }
+    />
+  </ToolbarGroup>
+);
 
 /**
  * Tracks whether the toolbar has room for everything, or has to go compact.
@@ -185,6 +282,8 @@ export const EditorToolbar = ({ editor, onPickImage, isUploadingImage = false }:
           canRedo: instance.can().redo(),
           inTable: instance.isActive('table'),
           tableBordered: instance.getAttributes('table').bordered !== false,
+          pronunciation: currentPronunciation(instance),
+          inListening: instance.isActive(LISTENING_NODE),
         };
       },
     }) ?? INITIAL_STATE;
@@ -318,9 +417,11 @@ export const EditorToolbar = ({ editor, onPickImage, isUploadingImage = false }:
           )}
         </ToolbarGroup>
 
+        <PronunciationGroup editor={editor} state={state} />
+
         {/* A split button: press it for an inline equation, open the caret for display or
             chemistry. One bordered unit, so it reads as a single control with a menu. */}
-        <ToolbarGroup label="Equation" className="ml-auto gap-0 p-0 overflow-hidden">
+        <ToolbarGroup label="Equation" className="gap-0 p-0 overflow-hidden">
           <ToolbarAction
             label="Equation"
             title="Inline equation — Ctrl/⌘ + E. With text selected, converts the selection."
@@ -348,6 +449,9 @@ export const EditorToolbar = ({ editor, onPickImage, isUploadingImage = false }:
         </ToolbarGroup>
       </div>
       {state.inTable ? <TableToolbar editor={editor} bordered={state.tableBordered} /> : null}
+      {state.pronunciation ? (
+        <PronunciationToolbar editor={editor} attrs={state.pronunciation.attrs} text={state.pronunciation.text} />
+      ) : null}
     </div>
   );
 };

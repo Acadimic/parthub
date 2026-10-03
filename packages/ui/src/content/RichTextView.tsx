@@ -1,8 +1,17 @@
 import type { IRichText, IRichTextMark, IRichTextNode, RichTextAttrValue } from '@repo/shared/interfaces';
-import { docToPlainText } from '@repo/shared/utils';
+import {
+  docToPlainText,
+  isSamePronunciation,
+  LISTENING_NODE,
+  type ListeningMode,
+  PRONUNCIATION_MARK,
+  pronunciationAttrsOf,
+} from '@repo/shared/utils';
 import { createElement, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
+import { ListeningBlock } from './ListeningBlock';
 import { MathRender } from './MathRender';
+import { PronouncedText } from './PronouncedText';
 import { RichTextImage } from './RichTextImage';
 
 export interface IRichTextViewProps {
@@ -148,6 +157,17 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
     />
   ),
   inlineMath: (node, _children, key) => <MathRender key={key} latex={stringAttr(node.attrs, 'latex')} />,
+  [LISTENING_NODE]: (node, children, key) => (
+    <ListeningBlock
+      key={key}
+      lang={stringAttr(node.attrs, 'lang')}
+      mode={(node.attrs?.mode === 'dialogue' ? 'dialogue' : 'passage') satisfies ListeningMode}
+      audio={stringAttr(node.attrs, 'audio')}
+      lines={node.content ?? []}
+    >
+      {Array.isArray(children) ? children : [children]}
+    </ListeningBlock>
+  ),
   blockMath: (node, _children, key) => (
     <div key={key} className="my-4 overflow-x-auto">
       <MathRender latex={stringAttr(node.attrs, 'latex')} displayMode />
@@ -155,10 +175,50 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
   ),
 };
 
+const pronunciationOf = (node: IRichTextNode): IRichTextMark | undefined =>
+  node.type === 'text' ? node.marks?.find((mark) => mark.type === PRONUNCIATION_MARK) : undefined;
+
+/**
+ * Renders a node's children. A pronounced run is often several text nodes — `**Buenos** días` is
+ * two — so neighbours carrying the same pronunciation are gathered into one `PronouncedText`,
+ * or the reader would see a speaker after every change of formatting.
+ */
+const renderChildren = (nodes: IRichTextNode[], key: string): ReactNode[] => {
+  const out: ReactNode[] = [];
+  let index = 0;
+  while (index < nodes.length) {
+    const mark = pronunciationOf(nodes[index]);
+    if (!mark) {
+      out.push(renderNode(nodes[index], `${key}.${index}`));
+      index += 1;
+      continue;
+    }
+    let end = index + 1;
+    while (end < nodes.length) {
+      const next = pronunciationOf(nodes[end]);
+      if (!next || !isSamePronunciation(mark, next)) break;
+      end += 1;
+    }
+    const run = nodes.slice(index, end);
+    const start = index;
+    out.push(
+      <PronouncedText
+        key={`${key}.${start}`}
+        text={docToPlainText({ type: 'paragraph', content: run })}
+        pronunciation={pronunciationAttrsOf(mark)}
+      >
+        {run.map((child, offset) => renderNode(child, `${key}.${start + offset}`))}
+      </PronouncedText>,
+    );
+    index = end;
+  }
+  return out;
+};
+
 const renderNode = (node: IRichTextNode, key: string): ReactNode => {
   if (node.type === 'text') return <span key={key}>{applyMarks(node.text ?? '', node.marks)}</span>;
 
-  const children = (node.content ?? []).map((child, index) => renderNode(child, `${key}.${index}`));
+  const children = renderChildren(node.content ?? [], key);
   const render = NODE_RENDERERS[node.type];
   return render ? render(node, children, key) : <span key={key}>{children}</span>;
 };
@@ -175,7 +235,7 @@ export const RichTextView = ({ value, fallback = null, prefix, className }: IRic
   const nodes = value?.doc?.content ?? [];
   if (!nodes.length && !prefix) return <>{fallback}</>;
 
-  const body = nodes.length ? nodes.map((node, index) => renderNode(node, String(index))) : fallback;
+  const body = nodes.length ? renderChildren(nodes, 'root') : fallback;
   if (!prefix) return <div className={cn('text-sm leading-7 text-foreground', className)}>{body}</div>;
 
   // The prefix sits beside the content rather than inside it, so a multi-paragraph value stays

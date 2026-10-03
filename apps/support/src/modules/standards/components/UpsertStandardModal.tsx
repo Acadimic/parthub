@@ -5,6 +5,7 @@ import { PositionType, StandardGroup } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { type ISelectItem } from '@interfaces';
 import { type StandardSubjectMappingDto } from '@repo/shared/contracts';
+import { SPEECH_LANGUAGES } from '@repo/shared/utils';
 import { StandardService } from '@services';
 import { useSelectedStandard, useSelectorStore, useStandardStore } from '@stores';
 import { successToast } from '@utils/helpers';
@@ -39,6 +40,14 @@ export const UpsertStandardModal = ({ isOpen, onClose }: IProps) => {
         .filter((standard) => standard._id !== selectedStandardId)
         .map((standard) => ({ label: standard.name, value: standard._id, group: standard.group })),
     [standards, selectedStandardId],
+  );
+  const localeItems = useMemo(
+    () =>
+      SPEECH_LANGUAGES.map((language) => ({
+        label: `${language.name} — ${language.nativeName}`,
+        value: language.code,
+      })),
+    [],
   );
   const subjectIds = useStandardStore(useShallow((state) => state.getStandardSubjectIds(selectedStandardId)));
   const referenceStandardIds = useStandardStore(
@@ -172,6 +181,15 @@ export const UpsertStandardModal = ({ isOpen, onClose }: IProps) => {
                 values={selectedStandard.group ? [selectedStandard.group] : []}
                 onChange={(values) => values[0] && setGroup(values[0].value as StandardGroup)}
               />
+              {selectedStandard.group === StandardGroup.LANGUAGES ? (
+                <Select
+                  label="Spoken Language"
+                  items={localeItems}
+                  isSingleSelect
+                  values={selectedStandard.locale ? [selectedStandard.locale] : []}
+                  onChange={(values) => patchStandard(selectedStandard._id, { locale: values[0]?.value ?? null })}
+                />
+              ) : null}
               <TextInput
                 label="Order"
                 type="number"
