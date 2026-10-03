@@ -8,7 +8,8 @@ import { type IAiIssue } from './common';
  */
 export const pronunciationRules = (locale: string | null | undefined): string => {
   if (!locale) return '';
-  const language = speechLanguageName(locale);
+  // "Spanish", not "Spanish (Spain)": the variant is in the code, and the name reads in a sentence.
+  const language = speechLanguageName(locale).replace(/\s*\(.*\)$/, '');
   const translit = findSpeechLanguage(locale)?.isNonLatin
     ? ' and translit="…" (its romanisation in Latin letters)'
     : '';
@@ -16,9 +17,10 @@ export const pronunciationRules = (locale: string | null | undefined): string =>
 
 # Pronunciation
 
-This is a ${language} course. Mark what a learner should hear, so the reader can play it:
-- Every new vocabulary item, set phrase and example sentence in ${language} is a span: [word]{lang=${locale} ipa="…"} — in a Spanish course, for example, [Hola]{lang=es-ES ipa="ˈola"}. Give ipa="…" (IPA, without slashes) for words and short phrases${translit}. Sentences need lang only.
-- Mark a word once where it is taught (its vocabulary table row or first use), not every time it reappears.
+This is a ${language} course. Mark every piece of correct ${language} the learner reads, in every section, so they can hear anything they see:
+- A word, phrase or sentence in ${language} is a span: [word]{lang=${locale} ipa="…"} — in a Spanish course, for example, [Hola]{lang=es-ES ipa="ˈola"}. Give ipa="…" (IPA, without slashes) where a word or short phrase is taught and in the Key terms list${translit}; everywhere else, and for sentences, lang only.
+- That includes the exercises, the answers (write each answer as the full correct sentence and mark it), the correct version in "Common mistakes", the important notes, the key terms (- [**term**]{lang=${locale} ipa="…"} — meaning) and the summary.
+- Never mark an item with a blank (____), a choice between forms, a deliberate mistake to correct, a jumble to reorder, or a wrong form.
 - A dialogue or a reading passage is a listening block, on lines of their own:
   ::: listening lang=${locale} mode=dialogue
   **Ana:** (her first line, in ${language})
@@ -26,7 +28,7 @@ This is a ${language} course. Mark what a learner should hear, so the reader can
   **Ravi:** (his reply)
   :::
   Use mode=dialogue for a conversation (one line per paragraph, each opening with the speaker's name in bold and a colon) and mode=passage for a text read aloud. Inside a block write paragraphs only — no headings, lists or tables.
-- Never mark explanations, headings, grammar notes or translations, and never mark text in the language of instruction.
+- Never mark headings, explanations or translations, and never mark text in the language of instruction.
 - Text in another language the course teaches alongside gets its own code, e.g. lang=en-US.
 - Inside JSON strings the quotes around an attribute value are escaped: ipa=\\"ˈola\\"; a value with no spaces needs no quotes at all: ipa=ˈola.`;
 };

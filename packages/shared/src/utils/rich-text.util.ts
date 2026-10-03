@@ -129,7 +129,8 @@ const MARK_PATTERNS: { re: RegExp; type: string; literal?: boolean }[] = [
   // are; it may be followed by a letter (`*the*s`). Tried before `_italic_`, so a blank written as
   // `____` inside it stays a blank.
   { re: /(?<![\w*\\$])\*(?![\s*])((?:[^*\n]|\*\*[^*\n]+?\*\*)+?)(?<![\s\\])\*(?!\*)/, type: 'italic' },
-  { re: /(?<![A-Za-z0-9])_([^_]+)_(?![A-Za-z0-9])/, type: 'italic' },
+  // An underscore next to another underscore is a blank (`me ___ Ravi`), never the edge of an italic.
+  { re: /(?<![A-Za-z0-9_])_([^_]+)_(?![A-Za-z0-9_])/, type: 'italic' },
 ];
 
 const unescape = (text: string): string => text.replace(/\\\$/g, '$');
