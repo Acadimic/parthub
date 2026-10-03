@@ -98,8 +98,8 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
       {children}
     </ul>
   ),
-  orderedList: (_node, children, key) => (
-    <ol key={key} className="my-3 list-decimal pl-6">
+  orderedList: (node, children, key) => (
+    <ol key={key} start={numberAttr(node.attrs, 'start', 1)} className="my-3 list-decimal pl-6">
       {children}
     </ol>
   ),

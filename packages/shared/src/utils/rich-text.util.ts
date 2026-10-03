@@ -281,7 +281,9 @@ const readListOf = (pattern: RegExp, type: string): BlockReader => {
       items.push(listItem(match[1]));
       cursor += 1;
     }
-    return { node: { type, content: items }, next: cursor };
+    // A numbered list that resumes after a block ("7." after a table) keeps its number.
+    const start = type === 'orderedList' ? Number(/^\d+/.exec(lines[index].trim())?.[0] ?? 1) : 1;
+    return { node: start > 1 ? { type, attrs: { start }, content: items } : { type, content: items }, next: cursor };
   };
 };
 

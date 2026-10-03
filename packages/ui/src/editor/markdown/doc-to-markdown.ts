@@ -121,10 +121,11 @@ const serializeListening = (node: IRichTextNode): string => {
   return `::: listening ${attrs}\n${body}\n:::`;
 };
 
-const serializeListItems = (node: IRichTextNode, ordered: boolean): string =>
-  (node.content ?? [])
+const serializeListItems = (node: IRichTextNode, ordered: boolean): string => {
+  const start = typeof node.attrs?.start === 'number' ? node.attrs.start : 1;
+  return (node.content ?? [])
     .map((item, index) => {
-      const marker = ordered ? `${index + 1}. ` : '- ';
+      const marker = ordered ? `${start + index}. ` : '- ';
       const body = (item.content ?? []).map((child) => serializeBlock(child)).join('\n\n');
       // Continuation lines align under the marker, which is what keeps a multi-paragraph item
       // inside the item rather than terminating the list.
@@ -132,6 +133,7 @@ const serializeListItems = (node: IRichTextNode, ordered: boolean): string =>
       return `${marker}${body.split('\n').join(`\n${indent}`)}`;
     })
     .join('\n');
+};
 
 const serializeQuote = (node: IRichTextNode): string =>
   (node.content ?? [])
