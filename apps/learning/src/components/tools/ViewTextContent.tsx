@@ -29,8 +29,10 @@ export const ViewTextContent = ({ content, isFullScreen, onFullScreenChange }: I
         onClose={() => onFullScreenChange(false)}
         component={
           <div className="flex h-full w-full flex-col">
+            <div className="min-h-0 w-full flex-1 overflow-auto">
+              <div className="mx-auto w-full max-w-4xl">{CONTENT}</div>
+            </div>
             <FullScreenBar onExit={() => onFullScreenChange(false)} />
-            <div className="mx-auto w-full max-w-4xl flex-1 overflow-auto">{CONTENT}</div>
           </div>
         }
       />

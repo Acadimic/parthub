@@ -87,7 +87,7 @@ export const CourseModules = () => {
   const columnWidth = isOutlineHidden ? 'max-w-6xl' : 'max-w-5xl';
 
   return (
-    <div className="flex h-[100vh]">
+    <div className="flex h-[100dvh]">
       {/* The top bar sits outside the column's scroller, so the scrollbar runs under it rather than
           beside it and the bar meets the outline pane with no gap. */}
       <div className="flex min-w-0 flex-1 flex-col bg-muted/40">
@@ -143,9 +143,12 @@ export const CourseModules = () => {
             </div>
           </div>
         </div>
+        {/* The lesson fills this exactly, so it scrolls only on a screen too short for the frame's
+            minimum height, rather than clipping the footer there. */}
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className={cn('mx-auto w-full px-3 py-4 md:px-6 md:py-6', columnWidth)}>
-            <div className="flex flex-col gap-4 md:gap-5">
+          {/* A column at least as tall as the scroller, so the lesson can take what is left of it. */}
+          <div className={cn('mx-auto flex min-h-full w-full flex-col px-3 py-4 md:px-6 md:py-6', columnWidth)}>
+            <div className="flex flex-1 flex-col gap-4 md:gap-5">
               <CourseCompleteBanner course={selectedCourse} />
               <CourseModuleContent />
             </div>

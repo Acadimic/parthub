@@ -2,7 +2,13 @@ import { ExpandAllButton } from '@repo/ui/app';
 import { Accordion, Tabs } from '@repo/ui/core';
 import { useExpandedIds } from '@repo/ui/hooks';
 import { cn } from '@repo/ui/lib';
-import { CONTENT_TYPE_ICONS, CONTENT_TYPE_TONES, ContentTypeBadge } from '@components/app/badges';
+import {
+  CONTENT_TYPE_ICONS,
+  CONTENT_TYPE_TONES,
+  ContentKinds,
+  ContentTypeBadge,
+  getMaterialKinds,
+} from '@components/app/badges';
 import { BlankState } from '@components/others';
 import { CourseOutlineTab, ModuleContentType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
@@ -82,6 +88,7 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect, moduleName }: IRowPr
   const isCompleted = isItemCompleted(item);
   const isSelected = !isPreview && isItemSelected(item);
   const details = item.material ?? item.testPaper;
+  const kinds = item.material ? getMaterialKinds(item.material) : [];
   const RowIcon = isLocked ? LockSimpleIcon : CONTENT_TYPE_ICONS[isCompleted ? ModuleContentType.COMPLETED : type];
   const rowRef = useRef<HTMLButtonElement>(null);
 
@@ -119,7 +126,8 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect, moduleName }: IRowPr
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">{details?.name}</span>
         <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xxs text-muted-foreground/70">
-          <ContentTypeBadge type={type} size="xs" />
+          {/* A lesson of several kinds shows an icon for each; one kind keeps its named label. */}
+          {kinds.length > 1 ? <ContentKinds kinds={kinds} size="xs" /> : <ContentTypeBadge type={type} size="xs" />}
           <span aria-hidden className="h-[3px] w-[3px] shrink-0 rounded-full bg-muted-foreground/50" />
           <span className="shrink-0">{details?.durationMins ?? 0} min</span>
           {moduleName ? (

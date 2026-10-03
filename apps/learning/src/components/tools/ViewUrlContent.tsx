@@ -68,10 +68,10 @@ export const ViewUrlContent = ({ url, isStatic, isFullScreen, onFullScreenChange
         onClose={() => onFullScreenChange(false)}
         component={
           <div className="flex h-full w-full flex-col overflow-hidden">
-            <FullScreenBar onExit={() => onFullScreenChange(false)} />
             {/* The iframe is scaled past its box to hide the viewer's edge; clip it here, or it
-                paints over the bar above. */}
+                paints over the bar below. */}
             <div className="min-h-0 flex-1 overflow-hidden">{IFRAME}</div>
+            <FullScreenBar onExit={() => onFullScreenChange(false)} />
           </div>
         }
       />

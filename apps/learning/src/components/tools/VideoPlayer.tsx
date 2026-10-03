@@ -1,11 +1,11 @@
 import { BlankState } from '@components/others';
 import { useAttachment } from '@hooks/attachment.hook';
-import { XIcon } from '@phosphor-icons/react';
-import { Button, Loader } from '@repo/ui/app';
+import { Loader } from '@repo/ui/app';
 import { useCloseOnBack } from '@repo/ui/hooks';
 import { cn } from '@repo/ui/lib';
 import { useEffect, useState } from 'react';
 import ReactPlayer from 'react-player';
+import { FullScreenBar } from './FullScreenBar';
 
 interface IProps {
   url: string;
@@ -34,7 +34,7 @@ export const VideoPlayer = ({ url, isStatic, isFullScreen, onFullScreenChange }:
     else fetchAndSetPresignedUrl();
   }, [url]);
 
-  // Besides the overlaid close button, the back button and Escape are the way out.
+  // Besides the footer's exit button, the back button and Escape are the way out.
   useCloseOnBack(isFullScreen, () => onFullScreenChange(false));
 
   useEffect(() => {
@@ -59,22 +59,12 @@ export const VideoPlayer = ({ url, isStatic, isFullScreen, onFullScreenChange }:
   };
 
   // Not FullScreenModal, which the other viewers use: mounting the player a second time inside it
-  // restarts playback. The same node is pinned over the page instead, at the modal's layer.
+  // restarts playback. The same node is pinned over the page instead, at the modal's layer, with
+  // the shared footer under it; the player's wrapper is there in both modes so it never remounts.
   return (
-    <div className={cn('relative h-full w-full', isFullScreen && 'fixed inset-0 z-[1300] bg-black')}>
-      {getPlayer()}
-      {isFullScreen ? (
-        // Top right, clear of the player's own controls along the bottom. Dark over the video,
-        // whatever the theme, since the backdrop is black in both.
-        <Button
-          isSubtle
-          isRound
-          aria-label="Exit full screen"
-          className="absolute right-3 top-3 h-10 w-10 !bg-black/60 !text-white hover:!bg-black/80"
-          onClick={() => onFullScreenChange(false)}
-          leftsection={<XIcon weight="bold" className="h-5 w-5" />}
-        />
-      ) : null}
+    <div className={cn('relative h-full w-full', isFullScreen && 'fixed inset-0 z-[1300] flex flex-col bg-black')}>
+      <div className={cn('relative w-full', isFullScreen ? 'min-h-0 flex-1' : 'h-full')}>{getPlayer()}</div>
+      {isFullScreen ? <FullScreenBar onExit={() => onFullScreenChange(false)} /> : null}
     </div>
   );
 };

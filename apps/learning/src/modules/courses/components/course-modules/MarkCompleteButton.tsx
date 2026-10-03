@@ -1,7 +1,6 @@
 import { Button, SwipeButton } from '@repo/ui/app';
-import { Badge } from '@repo/ui/core';
 import { CollectionType } from '@enums';
-import { ArrowCounterClockwiseIcon, CheckCircleIcon } from '@phosphor-icons/react';
+import { ArrowCounterClockwiseIcon, CheckIcon } from '@phosphor-icons/react';
 import { CourseService } from '@services';
 import { type IMaterial, type ITestPaper, useCourseLookups, useSelectorLookups } from '@stores';
 import { errorToast, successToast } from '@utils/helpers';
@@ -51,16 +50,18 @@ export const MarkCompleteButton = ({ testPaper, material }: IProps) => {
 
   if (isCompleted) {
     return (
-      <div className="flex w-full items-center justify-between gap-3 rounded-full border border-success/30 bg-success/10 py-1.5 pl-4 pr-1.5 sm:w-[240px]">
-        <Badge tone="success" appearance="solid" className="gap-1 px-2">
-          <CheckCircleIcon weight="fill" className="h-3.5 w-3.5" />
+      <div className="flex h-9 w-full items-center justify-between gap-2 rounded-full border border-success/30 bg-success/10 pl-1 pr-1 sm:w-[200px]">
+        <span className="flex items-center gap-2 text-sm font-semibold text-success">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-success text-success-foreground">
+            <CheckIcon weight="bold" className="h-4 w-4" />
+          </span>
           Completed
-        </Badge>
+        </span>
         <Button
           isSubtle
           disabled={isSaving}
           aria-label="Mark as not completed"
-          className="rounded-full px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
+          className="h-7 rounded-full px-2.5 text-xs text-muted-foreground hover:text-foreground"
           leftsection={<ArrowCounterClockwiseIcon weight="bold" className="h-3.5 w-3.5" />}
           onClick={() => save(false)}
         >
@@ -72,8 +73,8 @@ export const MarkCompleteButton = ({ testPaper, material }: IProps) => {
 
   // Full width on a phone, where a 220px track is too short a swipe to feel deliberate.
   return (
-    <div className="w-full sm:w-[240px]">
-      <SwipeButton onComplete={() => save(true)} isCompleted={false} disabled={isSaving} isFull height={44} />
+    <div className="w-full sm:w-[200px]">
+      <SwipeButton onComplete={() => save(true)} isCompleted={false} disabled={isSaving} isFull height={36} />
     </div>
   );
 };

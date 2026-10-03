@@ -11,7 +11,7 @@ interface IProps {
   collectionRef: CollectionType;
 }
 
-/** A thumbs-up that fills when the learner has liked the item, with the running count beside it. */
+/** A thumbs-up that fills when the learner has liked the item, with the running count beside it. Sized for the lesson's action bar. */
 export const LikeCourse = ({ collectionItem, collectionRef }: IProps) => {
   const resourceStore = useResourceLookups();
   const { loadReactionsCount: loadMaterialReactionsCount } = useMaterialLookups();
@@ -41,26 +41,20 @@ export const LikeCourse = ({ collectionItem, collectionRef }: IProps) => {
     <Tooltip title={isLiked ? 'Unlike' : 'Like'}>
       <Button
         isRound
-        isSecondary={!isLiked}
+        isSubtle
         aria-pressed={isLiked}
+        aria-label={isLiked ? 'Unlike' : 'Like'}
         isLoading={isToggling}
         hideLoadingIcon
-        className="px-3.5 py-1.5"
+        className={cn('h-8 gap-1.5 px-2.5', isLiked ? 'text-primary' : 'text-muted-foreground hover:text-foreground')}
         onClick={handleToggle}
         leftsection={<ThumbsUpIcon weight={isLiked ? 'fill' : 'bold'} className="h-4 w-4" />}
       >
-        <span className="flex items-center gap-1.5">
-          <span className="hidden sm:inline">{isLiked ? 'Liked' : 'Like'}</span>
-          <span
-            className={cn(
-              'min-w-[1.25rem] rounded-full px-1.5 text-center font-mono text-xs',
-              isLiked ? 'bg-primary-foreground/20' : 'bg-muted',
-              isCounting && 'animate-pulse',
-            )}
-            aria-label={`${count} ${getPlural(count, 'like')}`}
-          >
-            {count}
-          </span>
+        <span
+          className={cn('font-mono text-xs tabular-nums', isCounting && 'animate-pulse')}
+          aria-label={`${count} ${getPlural(count, 'like')}`}
+        >
+          {count}
         </span>
       </Button>
     </Tooltip>

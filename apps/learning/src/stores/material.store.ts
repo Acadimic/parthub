@@ -50,7 +50,7 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
   }, {});
 
 /** A link attachment that plays as video rather than opening as a document. */
-const VIDEO_LINK_TYPES: LinkType[] = [LinkType.YOUTUBE, LinkType.VIDEO];
+export const VIDEO_LINK_TYPES: LinkType[] = [LinkType.YOUTUBE, LinkType.VIDEO];
 
 export const useMaterialStore = create<IMaterialState>()((set, get) => ({
   materialMap: {},

@@ -20,20 +20,15 @@ export const BookmarkCourse = ({ collectionItem, collectionRef }: IProps) => {
     <Tooltip title={isSaved ? 'Remove bookmark' : 'Bookmark'}>
       <Button
         isRound
-        isSecondary
+        isSubtle
         aria-pressed={isSaved}
-        aria-label={isSaved ? 'Saved' : 'Save'}
-        labelClassName="hidden sm:block"
+        aria-label={isSaved ? 'Remove bookmark' : 'Bookmark'}
         isLoading={isLoadingBookmark}
         hideLoadingIcon
-        className="px-3.5 py-1.5"
+        className={cn('h-8 w-8 p-0', isSaved ? 'text-warning' : 'text-muted-foreground hover:text-foreground')}
         onClick={() => toggleBookmark(collectionItem, collectionRef)}
-        leftsection={
-          <BookmarkSimpleIcon weight={isSaved ? 'fill' : 'bold'} className={cn('h-4 w-4', isSaved && 'text-warning')} />
-        }
-      >
-        {isSaved ? 'Saved' : 'Save'}
-      </Button>
+        leftsection={<BookmarkSimpleIcon weight={isSaved ? 'fill' : 'bold'} className="h-4 w-4" />}
+      />
     </Tooltip>
   );
 };

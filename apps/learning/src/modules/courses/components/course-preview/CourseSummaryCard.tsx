@@ -129,13 +129,13 @@ export const CourseSummaryCard = ({ course }: IProps) => {
             >
               {progress.total === 0 ? 'No content yet' : getCtaLabel()}
             </Button>
-            <ShareCourse courseId={course._id} isCompact />
+            <ShareCourse courseId={course._id} appearance="outline" />
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             <CoursePlans course={course} plans={plans} />
             <div className="flex justify-end">
-              <ShareCourse courseId={course._id} isCompact />
+              <ShareCourse courseId={course._id} appearance="outline" />
             </div>
           </div>
         )}
