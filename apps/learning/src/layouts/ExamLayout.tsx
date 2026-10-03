@@ -100,7 +100,9 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
             openExit={openExit}
           />
         </div>
-        <div className="h-[100vh] overflow-auto pt-14 xl:pt-16">
+        {/* `dvh`, not `vh`: on a phone `100vh` runs behind the address bar and pushed the footer
+            below the screen. */}
+        <div className="h-[100dvh] overflow-auto pt-14 xl:pt-16">
           <div className="flex h-full w-full justify-between space-x-0 overflow-x-hidden">
             {/* The footer lives in this column, so "Next" sits under the question beside the palette
                 rather than under the palette at the far edge of the window. */}
