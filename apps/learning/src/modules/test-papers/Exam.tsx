@@ -81,6 +81,7 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
   const {
     getAnswersByQuestionId,
     getCurrentQuestionIndex,
+    getQuestionIdsBySectionId,
     getResponsesByQuestionId,
     getResultByQuestionId,
     getSelectedQuestionReplyTime,
@@ -108,9 +109,16 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
     <div className="flex h-full flex-col gap-3 py-3 md:py-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
-          <span className="hidden text-muted-foreground md:inline">Sections</span>
-          {sectionObjects.map((section) => (
-            <TestPaperSection section={section} key={section._id} />
+          <span className="hidden bg-gradient-to-r from-chart-1 via-chart-5 to-chart-4 bg-clip-text text-xs font-semibold uppercase tracking-caps text-transparent md:inline">
+            Sections
+          </span>
+          {sectionObjects.map((section, index) => (
+            <TestPaperSection
+              key={section._id}
+              section={section}
+              index={index}
+              isActive={getQuestionIdsBySectionId(section._id).includes(selectedQuestion._id)}
+            />
           ))}
         </div>
         {/* Below `xl` the palette is a sheet; this is what opens it. */}

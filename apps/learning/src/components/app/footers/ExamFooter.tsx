@@ -14,7 +14,10 @@ interface IProps {
   toggleTimer: () => void;
 }
 
-/** A footer button whose text shows from `sm` up and whose icon stands alone below that. */
+/**
+ * A footer button whose text shows from `sm` up and whose icon stands alone below that, unless it
+ * is always labelled.
+ */
 const FooterButton = ({
   label,
   icon,
@@ -24,6 +27,8 @@ const FooterButton = ({
   isSubtle,
   isPressed,
   trailing,
+  isAlwaysLabelled,
+  className,
 }: {
   label: string;
   icon: React.ReactNode;
@@ -35,6 +40,9 @@ const FooterButton = ({
   isPressed?: boolean;
   /** Puts the icon after the label, for "Next". */
   trailing?: boolean;
+  /** Previous and Next keep their words on a phone too: they are the footer's main actions. */
+  isAlwaysLabelled?: boolean;
+  className?: string;
 }) => (
   <Button
     isSecondary={!isPrimary && !isSubtle}
@@ -42,8 +50,13 @@ const FooterButton = ({
     aria-label={label}
     aria-pressed={isPressed}
     disabled={disabled}
-    className={cn('px-2.5 py-1.5 sm:px-3', isSubtle && 'px-2 py-1 text-muted-foreground', isPressed && 'bg-accent')}
-    labelClassName={cn('hidden sm:block', isSubtle && 'text-xs')}
+    className={cn(
+      'px-2.5 py-1.5 sm:px-3',
+      isSubtle && 'px-2 py-1 text-muted-foreground',
+      isPressed && 'bg-accent',
+      className,
+    )}
+    labelClassName={cn(!isAlwaysLabelled && 'hidden sm:block', isSubtle && 'text-xs')}
     onClick={onClick}
     leftsection={trailing ? undefined : icon}
     rightsection={trailing ? icon : undefined}
@@ -55,6 +68,8 @@ const FooterButton = ({
 /**
  * The bar under the paper. Left: back. Middle: what can be done to the answer on screen, quietly.
  * Right: forward, then the way out of the paper — the same places in every mode, so nothing jumps.
+ * Below `xl` the palette is a sheet that carries the way out, so here it takes Next's place only on
+ * the last question, where Next has nowhere to go.
  */
 export const ExamFooter = ({
   isResultPage,
@@ -108,6 +123,7 @@ export const ExamFooter = ({
         <FooterButton
           label="Previous"
           icon={<CaretLeftIcon weight="bold" className="h-4 w-4" />}
+          isAlwaysLabelled
           disabled={isFirstQuestion()}
           onClick={selectPrevQuestion}
         />
@@ -150,13 +166,16 @@ export const ExamFooter = ({
             icon={<CaretRightIcon weight="bold" className="h-4 w-4" />}
             isPrimary={!isLast}
             trailing
+            isAlwaysLabelled
             disabled={isLast}
+            className={cn(isLast && 'hidden xl:inline-block')}
             onClick={selectNextQuestion}
           />
-          {/* Outlined while there are questions ahead, filled on the last one, where it is the next step. */}
+          {/* Outlined while there are questions ahead, filled on the last one, where it is the next step.
+              Below `xl` it lives in the palette sheet until the last question. */}
           <ExamFinishButton
             isPrimary={isLast}
-            className={cn(isFinishInPalette && 'xl:hidden')}
+            className={cn(!isLast && 'hidden xl:inline-block', isFinishInPalette && 'xl:hidden')}
             openResultPage={openResultPage}
             openSubmitSummary={openSubmitSummary}
           />

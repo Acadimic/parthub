@@ -156,6 +156,21 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
             openInstruction={openInstruction}
             closeExamSummary={closeExamSummary}
             isResultPage={isResultPage}
+            // The sheet closes first, so the confirmation or the result is not opened behind it.
+            footer={
+              <ExamFinishButton
+                isPrimary
+                isFull
+                openResultPage={() => {
+                  closeExamSummary();
+                  openResultPage();
+                }}
+                openSubmitSummary={() => {
+                  closeExamSummary();
+                  openSubmitSummary();
+                }}
+              />
+            }
           />
         }
         onClose={closeExamSummary}

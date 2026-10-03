@@ -129,15 +129,20 @@ export const ExamSidebar = ({ isResultPage, closeExamSummary, openInstruction, i
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-auto">
-          {sections.map((sectionId: string) => {
+          {sections.map((sectionId: string, sectionIndex: number) => {
             const section = getTestPaperSectionById(sectionId);
             const questionIds = getQuestionIdsBySectionId(sectionId);
             if (!section) return null;
             return (
               <div key={sectionId} className="border-b border-border px-4 py-4">
-                <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <TestPaperSection section={section} />
-                  <span className="text-xs text-muted-foreground">
+                {/* The section on the left and its count on the right, on the grid's edges below. */}
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <TestPaperSection
+                    section={section}
+                    index={sectionIndex}
+                    isActive={!!selectedQuestionId && questionIds.includes(selectedQuestionId)}
+                  />
+                  <span className="shrink-0 text-xs text-muted-foreground">
                     {questionIds.length} {getPlural(questionIds.length, 'question')}
                   </span>
                 </div>
