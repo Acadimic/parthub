@@ -236,7 +236,7 @@ paragraphs, so no input is dropped.
 | blank-line separated text                                                        | paragraphs                                                           |
 | `- `, `* `, `+ `                                                                 | bullet list                                                          |
 | `1. `, `1) `                                                                     | ordered list                                                         |
-| `> `                                                                             | blockquote                                                           |
+| `> `; a quoted `- ` or `1. ` list stays a list                                   | blockquote                                                           |
 | ` ``` ` fences                                                                   | code block                                                           |
 | `---`, `***`, `___`                                                              | horizontal rule                                                      |
 | GFM pipe table (header row, separator, body rows); `<br>` in a cell              | table, bordered, header row; `<br>` is a hard break                  |
@@ -310,8 +310,9 @@ Content imported before these safeguards existed can be repaired in place with *
 equations** on a subject's material page (header button for every content, card menu for one).
 `repairRichText` restores commands, escapes `%` and `$`, turns parenthesised equations that lost
 their `\(` back into nodes, re-joins a paragraph a `\n` inside an equation had split, converts prose
-swallowed into an equation back to text, and re-pairs bold that was split around an equation. It
-returns how many places changed.
+swallowed into an equation back to text, re-pairs bold that was split around an equation, and
+also turns a quote whose list was flattened into one line (`- a - b - c`, how older imports stored
+"Important notes") back into a bulleted list. It returns how many places changed.
 
 ## 9. The Editor Lab (`/editor` in the teaching app)
 

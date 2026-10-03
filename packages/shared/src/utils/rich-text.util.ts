@@ -1,7 +1,9 @@
 import { RichTextFormat } from '../enums/rich-text.enum';
 import type { IRichText, IRichTextDoc, IRichTextMark, IRichTextNode } from '../interfaces/rich-text.interface';
 import { normaliseLatex, repairLatexControlEscapes } from './latex-repair.util';
-import { IMAGE_NODE, imageNode } from './rich-text-image.util';
+import { repairQuoteLists } from './quote-list.util';
+import { imageNode } from './rich-text-image.util';
+import { createEmptyRichText, docToPlainText, INLINE_CONTAINERS } from './rich-text-plain.util';
 import {
   LISTENING_MODES,
   LISTENING_NODE,
@@ -11,58 +13,11 @@ import {
   pronunciationMarkFrom,
 } from './pronunciation.util';
 
+export { createEmptyRichText, docToPlainText, isRichTextEmpty } from './rich-text-plain.util';
+
 /** `Array.prototype.flatMap` is past this package's compile target, so the same thing by hand. */
 const flatMap = <T, U>(items: T[], map: (item: T) => U[]): U[] =>
   items.reduce<U[]>((out, item) => out.concat(map(item)), []);
-
-/**
- * An empty authored value.
- *
- * A function rather than a constant so callers cannot share — and then mutate — one object. The
- * document is a single empty paragraph rather than no content at all, because ProseMirror requires
- * a block to place the caret in and an editor loaded with `content: []` renders nothing typeable.
- */
-export const createEmptyRichText = (): IRichText => ({
-  format: RichTextFormat.DOC_V1,
-  doc: { type: 'doc', content: [{ type: 'paragraph' }] },
-  text: '',
-});
-
-/** Containers whose children are inline, and so join without a newline between them. */
-const INLINE_CONTAINERS = new Set(['paragraph', 'heading', 'codeBlock']);
-
-/** The text of a node that has no children to walk: an equation's LaTeX, a picture's description. */
-const leafText = (node: IRichTextNode): string | null => {
-  if (node.type === 'inlineMath' || node.type === 'blockMath') return String(node.attrs?.latex ?? '');
-  // A picture reads as its description, so a document holding only an image is not "empty".
-  if (node.type === IMAGE_NODE) return String(node.attrs?.alt || node.attrs?.caption || 'Image');
-  return null;
-};
-
-/**
- * Document → plain text, equations reduced to their LaTeX.
- *
- * The projection stored on every `IRichText`. It lives here rather than beside the editor because
- * both sides need it: the editor computes it on each keystroke, and the importers below compute it
- * for content that never passed through an editor at all.
- */
-export const docToPlainText = (doc: IRichTextNode | null): string => {
-  if (!doc) return '';
-  const walk = (node: IRichTextNode): string => {
-    if (node.type === 'text') return node.text ?? '';
-    const leaf = leafText(node);
-    if (leaf !== null) return leaf;
-    // A row reads across, so its cells sit on one line; the table's rows then stack as usual.
-    if (node.type === 'tableRow') return (node.content ?? []).map(walk).join('\t');
-    return (node.content ?? []).map(walk).join(INLINE_CONTAINERS.has(node.type) ? '' : '\n');
-  };
-  return walk(doc)
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-};
-
-/** True when the value holds no readable text. Cheap: reads the projection, never walks `doc`. */
-export const isRichTextEmpty = (value?: IRichText | null): boolean => !value?.text?.trim();
 
 // ---------------------------------------------------------------------------
 // Markdown → document. The inverse of `docToMarkdown` in @repo/ui/editor, and the AI/import write path.
@@ -339,10 +294,12 @@ const readQuote: BlockReader = (lines, index) => {
     quoted.push(match[1]);
     cursor += 1;
   }
-  return {
-    node: { type: 'blockquote', content: [{ type: 'paragraph', content: parseInline(quoted.join(' ')) }] },
-    next: cursor,
-  };
+  // A quoted list keeps its items; quoted prose is one paragraph, as a wrapped quote reads.
+  const isList = quoted.some((line) => BULLET.test(line.trim()) || ORDERED.test(line.trim()));
+  const content = isList
+    ? parseBlocks(quoted.join('\n'))
+    : [{ type: 'paragraph', content: parseInline(quoted.join(' ')) }];
+  return { node: { type: 'blockquote', content }, next: cursor };
 };
 
 const TABLE_ROW = /^\|(.*)\|\s*$/;
@@ -693,6 +650,8 @@ export const repairRichText = (value: IRichText): { value: IRichText; repairs: n
   };
   const merged = mergeSplitMathParagraphs(value.doc.content ?? []);
   repairs += merged.merges;
-  const doc: IRichTextDoc = { ...value.doc, content: flatMap(merged.blocks, walk) };
+  const lists = repairQuoteLists(merged.blocks);
+  repairs += lists.repairs;
+  const doc: IRichTextDoc = { ...value.doc, content: flatMap(lists.blocks, walk) };
   return { value: { ...value, doc, text: docToPlainText(doc) }, repairs };
 };
