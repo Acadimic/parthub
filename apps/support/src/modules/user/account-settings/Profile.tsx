@@ -25,7 +25,7 @@ export const Profile = () => {
 
   if (!user) return <></>;
 
-  const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleUpload = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!file) {

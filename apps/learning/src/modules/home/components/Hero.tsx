@@ -3,7 +3,7 @@ import { Chip, TextInput } from '@repo/ui/core';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { useCourseLookups, useSelectedUser, useStandardLookups } from '@stores';
 import { useRouter } from 'next/router';
-import { type FormEvent, useState } from 'react';
+import { type SubmitEvent, useState } from 'react';
 import banner from '../assets/banner.webp';
 
 /** How many standards to offer as one-tap searches under the box. */
@@ -47,7 +47,7 @@ export const Hero = () => {
   );
   const tests = courses.reduce((sum, course) => sum + (course.stats?.testsCount ?? 0), 0);
 
-  const search = (event: FormEvent) => {
+  const search = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     const q = query.trim();
     push(q ? { pathname: '/courses', query: { q } } : '/courses');
