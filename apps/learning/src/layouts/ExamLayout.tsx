@@ -5,6 +5,7 @@ import { ExamFinishButton, ExamSidebar, ExamSkeleton, Instruction } from '@compo
 import { BlankState } from '@components/others';
 import { useExam } from '@hooks/exam.hook';
 import { TestPaperSummary } from '@modules/test-papers/components/TestPaperSummary';
+import { handOffSitting } from '@modules/print/sitting-handoff';
 import { Exam } from '@modules/test-papers/Exam';
 import { useSelectorLookups, useTestPaperLookups } from '@stores';
 import { useEffect, useState } from 'react';
@@ -57,6 +58,13 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
   // const isPractice = query.isPractice ? true : false;
   // const testPaperId = query.testPaperId as string;
   // const testPaperResultId = query.testPaperResultId as string;
+
+  /** Hands the sitting on screen to a print tab; works for practice, which is never saved. */
+  const printResult = () => {
+    if (!exam?.course) return;
+    handOffSitting(exam, testPaperStore.getMarksObtained());
+    window.open(`/courses/${exam.course}/print?result=${exam._id}`, '_blank');
+  };
 
   const confirmExit = () => {
     unsetExam();
@@ -122,6 +130,7 @@ export const ExamLayout = ({ testPaperId, isPractice, onCloseExam }: IProps) => 
                 isFinishInPalette={isPaletteOpen}
                 openResultPage={openResultPage}
                 closeResultPage={closeResultPage}
+                onPrintResult={exam.course ? printResult : null}
                 openSubmitSummary={openSubmitSummary}
                 toggleTimer={toggleTimer}
               />

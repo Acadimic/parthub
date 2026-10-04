@@ -39,7 +39,7 @@ const blockTitle = (isDialogue: boolean, isTask: boolean): string => {
 
 /** In place of the lines of a listening task: what to do, and a way to check the text afterwards. */
 const HiddenText = ({ isDialogue, onReveal }: { isDialogue: boolean; onReveal: () => void }) => (
-  <div className="flex flex-wrap items-center gap-3 px-4 py-4">
+  <div className="flex flex-wrap items-center gap-3 px-4 py-4 print:hidden">
     <p className="flex-1 text-sm text-muted-foreground">
       Listen to the {isDialogue ? 'conversation' : 'recording'} as many times as you like, then answer. The text is
       hidden so you train your ear.
@@ -92,7 +92,7 @@ export const ListeningBlock = ({ lang, mode, audio, isTranscriptHidden, lines, c
             <span className="text-xxs uppercase tracking-caps text-muted-foreground">{language}</span>
           </span>
         </span>
-        <span className="ml-auto flex items-center gap-1.5">
+        <span className="ml-auto flex items-center gap-1.5 print:hidden">
           {isPlaying && all.segment >= 0 ? (
             <span className="mr-1 font-mono text-xxs text-muted-foreground" aria-live="polite">
               {all.segment + 1} / {segments.length}
@@ -122,12 +122,12 @@ export const ListeningBlock = ({ lang, mode, audio, isTranscriptHidden, lines, c
         </span>
       </header>
       {!canPlay ? (
-        <p className="border-b border-border px-4 py-2 text-xs text-muted-foreground">
+        <p className="border-b border-border px-4 py-2 text-xs text-muted-foreground print:hidden">
           This device has no {language} voice, so this passage cannot be played here.
         </p>
       ) : null}
       {isTextHidden ? <HiddenText isDialogue={isDialogue} onReveal={() => setIsRevealed(true)} /> : null}
-      <div className={cn('py-2', isDialogue && 'divide-y divide-border/60', isTextHidden && 'hidden')}>
+      <div className={cn('py-2', isDialogue && 'divide-y divide-border/60', isTextHidden && 'hidden print:block')}>
         {children.map((child, index) => (
           <ListeningLine
             key={index}
@@ -179,7 +179,7 @@ const ListeningLine = ({ children, isActive, isDialogue, canPlay, text, lang }: 
           }
           aria-label={isLinePlaying ? 'Stop this line' : `Play line: ${text}`}
           className={cn(
-            'mt-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            'mt-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors print:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             isLinePlaying
               ? 'bg-primary text-primary-foreground'
               : 'bg-primary/10 text-primary hover:bg-primary/20 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100',

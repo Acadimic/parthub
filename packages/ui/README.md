@@ -40,6 +40,7 @@ package imports an app.
 | `@repo/ui/themes`   | `light`, `dark`, `getTheme`                                     |
 | `@repo/ui/content`  | `RichTextView`, `MathRender` — what a student downloads         |
 | `@repo/ui/editor`   | `RichTextEditor`, the equation editor and its data              |
+| `@repo/ui/print`    | A4 printouts of a course or a test paper, through the browser   |
 
 The `content` and `editor` subpaths — the document model, what the editor can hold, Markdown import
 and export, equation handling — are documented in `src/editor/README.md`.

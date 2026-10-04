@@ -323,6 +323,8 @@ export class CourseService {
     org: Types.ObjectId,
     courseId: string,
     shape: CourseModulesShape = 'contents',
+    /** One module rather than all of them, for a printout of that module alone. */
+    moduleId: string | null = null,
   ): Promise<ICourseModuleContents[] | null> {
     const course = await this.getVisibleCourse(org, courseId);
     if (!course) return null;
@@ -330,7 +332,7 @@ export class CourseService {
 
     const courseOrg = course.org;
     const courseModules = await this.courseModuleModel
-      .find({ course: courseId, _deleted: { $ne: true } })
+      .find({ course: courseId, ...(moduleId ? { _id: moduleId } : {}), _deleted: { $ne: true } })
       .sort({ day: 1 })
       .lean<CourseModuleDocument[]>();
 

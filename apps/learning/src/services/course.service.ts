@@ -45,6 +45,10 @@ class CourseService {
     return resData;
   };
 
+  /** One module with its lesson bodies, for printing that module without the whole course. */
+  getCourseModuleContents = async (courseId: string, moduleId: string) =>
+    callAuthApi<ICourseModuleContents>(`course/course/module/contents/${courseId}/${moduleId}`, API.GET);
+
   /** The syllabus with no lesson bodies or files — a fraction of the contents payload. */
   getCourseModulesOutlineByCourseId = async (courseId: string) =>
     callAuthApi<ICourseModuleContents[]>(`course/course/modules/outline/${courseId}`, API.GET);

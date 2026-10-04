@@ -1,7 +1,21 @@
-import { type CourseDto, type CourseModuleDto, type PlanDto } from '@repo/shared/contracts';
+import {
+  type CourseDto,
+  type CourseModuleDto,
+  type MaterialDto,
+  type MeetDto,
+  type PlanDto,
+  type TestPaperDto,
+} from '@repo/shared/contracts';
 import { type ILinkCourseModule } from '@interfaces';
 import { API } from '../enums';
 import { callAuthApi } from './http.service';
+
+/** A module with its items embedded rather than as ids, as `course/modules/contents` returns it. */
+export interface ICourseModuleContents extends Omit<CourseModuleDto, 'materials' | 'testPapers' | 'meets'> {
+  materials: MaterialDto[];
+  testPapers: TestPaperDto[];
+  meets: MeetDto[];
+}
 
 class CourseService {
   upsertCourse = async (payload: CourseDto) => {
@@ -54,6 +68,14 @@ class CourseService {
     const resData = await callAuthApi<CourseModuleDto[]>(url, API.GET);
     return resData;
   };
+
+  /** One module with its lessons (bodies included), papers and meets. */
+  getCourseModuleWithContents = async (courseId: string, moduleId: string) =>
+    callAuthApi<ICourseModuleContents>(`course/course/module/contents/${courseId}/${moduleId}`, API.GET);
+
+  /** Every module with its lessons (bodies included), papers and meets, in course order. */
+  getCourseModulesWithContents = async (courseId: string) =>
+    callAuthApi<ICourseModuleContents[]>(`course/course/modules/contents/${courseId}`, API.GET);
 }
 
 const instance = new CourseService();

@@ -1,7 +1,14 @@
+import { ExamFinishButton } from '@components/exam';
+import {
+  ArrowCounterClockwiseIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+  EraserIcon,
+  FlagIcon,
+  PrinterIcon,
+} from '@phosphor-icons/react';
 import { Button } from '@repo/ui/app';
 import { cn } from '@repo/ui/lib';
-import { ExamFinishButton } from '@components/exam';
-import { ArrowCounterClockwiseIcon, CaretLeftIcon, CaretRightIcon, EraserIcon, FlagIcon } from '@phosphor-icons/react';
 import { useTestPaperLookups } from '@stores';
 
 interface IProps {
@@ -10,6 +17,8 @@ interface IProps {
   isFinishInPalette: boolean;
   openResultPage: () => void;
   closeResultPage: () => void;
+  /** Prints the result on screen; null where the paper was not opened from a course. */
+  onPrintResult: (() => void) | null;
   openSubmitSummary: () => void;
   toggleTimer: () => void;
 }
@@ -65,6 +74,22 @@ const FooterButton = ({
   </Button>
 );
 
+/** The result page's bar: back to the paper, and the printout of this result. */
+const ResultFooter = ({ onBack, onPrintResult }: { onBack: () => void; onPrintResult: (() => void) | null }) => (
+  <div className="h-14 shrink-0 border-t border-border bg-background xl:h-16">
+    <div className="flex h-full items-center justify-center gap-2 px-3 md:px-6">
+      <Button onClick={onBack} leftsection={<CaretLeftIcon weight="bold" className="h-4 w-4" />}>
+        Back
+      </Button>
+      {onPrintResult ? (
+        <Button isSecondary onClick={onPrintResult} leftsection={<PrinterIcon weight="bold" className="h-4 w-4" />}>
+          Print
+        </Button>
+      ) : null}
+    </div>
+  </div>
+);
+
 /**
  * The bar under the paper. Left: back. Middle: what can be done to the answer on screen, quietly.
  * Right: forward, then the way out of the paper — the same places in every mode, so nothing jumps.
@@ -76,6 +101,7 @@ export const ExamFooter = ({
   isFinishInPalette,
   openResultPage,
   closeResultPage,
+  onPrintResult,
   openSubmitSummary,
   toggleTimer,
 }: IProps) => {
@@ -102,17 +128,7 @@ export const ExamFooter = ({
     if (exam.isPractice) toggleTimer();
   };
 
-  if (isResultPage) {
-    return (
-      <div className="h-14 shrink-0 border-t border-border bg-background xl:h-16">
-        <div className="flex h-full items-center justify-center px-3 md:px-6">
-          <Button onClick={handleBackClick} leftsection={<CaretLeftIcon weight="bold" className="h-4 w-4" />}>
-            Back
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  if (isResultPage) return <ResultFooter onBack={handleBackClick} onPrintResult={onPrintResult} />;
 
   const isMarked = isSelectedQuestionMarkedForReview();
   const isLast = isLastQuestion();

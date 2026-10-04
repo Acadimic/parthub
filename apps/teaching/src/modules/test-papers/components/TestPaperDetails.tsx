@@ -6,10 +6,13 @@ import {
   ClockIcon,
   GitMergeIcon,
   GraduationCapIcon,
+  KeyIcon,
+  ListChecksIcon,
   ListNumbersIcon,
   MedalIcon,
   PencilSimpleIcon,
   PlusIcon,
+  PrinterIcon,
   SparkleIcon,
   StackIcon,
 } from '@phosphor-icons/react';
@@ -78,6 +81,13 @@ const PaperStats = ({ testPaper, sectionCount }: { testPaper: TestPaperDto; sect
     </div>
   );
 };
+
+/** The print menu items; each opens the printout in its own tab, where the dialog opens by itself. */
+const PRINT_VERSIONS = [
+  { version: 'answers', label: 'Print with answers', icon: <ListChecksIcon weight="bold" className="h-4 w-4" /> },
+  { version: 'questions', label: 'Print question paper', icon: <PrinterIcon weight="bold" className="h-4 w-4" /> },
+  { version: 'key', label: 'Print answer key', icon: <KeyIcon weight="bold" className="h-4 w-4" /> },
+];
 
 /**
  * The paper's header: what it is, how big it is, and what can be done to it.
@@ -153,6 +163,11 @@ export const TestPaperDetails = ({ testPaper, sectionCount, addNewSection, onEdi
                 onClick: () => setState({ isOpenMergeTestPapersModal: true }),
                 icon: <GitMergeIcon weight="bold" className="h-4 w-4" />,
               },
+              ...PRINT_VERSIONS.map(({ version, label, icon }) => ({
+                label,
+                onClick: () => window.open(`/test-papers/${testPaper._id}/print?version=${version}`, '_blank'),
+                icon,
+              })),
             ]}
             className="px-1"
           />

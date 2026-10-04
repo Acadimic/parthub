@@ -36,6 +36,7 @@ import { BookmarkCourse } from './BookmarkCourse';
 import { Content } from './content';
 import { LikeCourse } from './LikeCourse';
 import { MarkCompleteButton } from './MarkCompleteButton';
+import { PrintCourse } from './PrintCourse';
 import { ShareCourse } from './ShareCourse';
 import { NextSessionBanner } from '@modules/sessions';
 
@@ -287,6 +288,11 @@ export const CourseModuleContent = () => {
                 <LikeCourse collectionItem={item} collectionRef={collectionRef} />
                 <BookmarkCourse collectionItem={item._id} collectionRef={collectionRef} />
                 <ShareCourse courseId={selectedCourseId} appearance="subtle" />
+                <PrintCourse
+                  courseId={selectedCourseId}
+                  courseModuleId={selectedCourseModuleId}
+                  testPaperId={selectedTestPaper?._id ?? null}
+                />
               </div>
             </>
           }

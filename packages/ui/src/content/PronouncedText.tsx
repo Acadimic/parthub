@@ -16,7 +16,7 @@ export interface IPronouncedTextProps {
 
 /** A round icon control; inline, so it sits on the text's baseline without breaking the line. */
 const SPEAKER_CLASS =
-  'ml-1 inline-flex h-5 w-5 shrink-0 translate-y-[-1px] items-center justify-center rounded-full align-middle transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+  'ml-1 inline-flex h-5 w-5 shrink-0 translate-y-[-1px] items-center justify-center rounded-full align-middle transition-colors print:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 const SpeakerIcon = ({ canPlay, status }: { canPlay: boolean; status: SpeechStatus }) => {
   if (!canPlay) return <SpeakerSimpleSlashIcon className="h-3 w-3" weight="bold" />;

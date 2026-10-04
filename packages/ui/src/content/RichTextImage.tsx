@@ -41,14 +41,16 @@ export const useResolvedImageUrl = (src: string): { url: string; isLoading: bool
  */
 export const RichTextImage = ({ src, alt, caption, width, className }: IRichTextImageProps) => {
   const { url, isLoading } = useResolvedImageUrl(src);
+  const { imageLoading } = useRichTextMedia();
   const [hasFailed, setHasFailed] = useState(false);
   // A new address gets a fresh attempt; a failure belongs to the URL that failed.
   useEffect(() => setHasFailed(false), [url]);
   const frame = cn('mx-auto w-full', IMAGE_WIDTH_CLASSES[width] ?? IMAGE_WIDTH_CLASSES.full);
 
   let picture;
-  if (isLoading) picture = <div className={cn(frame, 'h-48 animate-pulse rounded bg-muted')} aria-label={alt} />;
-  else if (!url || hasFailed) {
+  if (isLoading) {
+    picture = <div className={cn(frame, 'h-48 animate-pulse rounded bg-muted')} aria-label={alt} data-pending />;
+  } else if (!url || hasFailed) {
     picture = (
       <div
         className={cn(
@@ -65,7 +67,7 @@ export const RichTextImage = ({ src, alt, caption, width, className }: IRichText
       <img
         src={url}
         alt={alt}
-        loading="lazy"
+        loading={imageLoading}
         onError={() => setHasFailed(true)}
         // Natural size, capped by the column: a photo never blurs and a figure drawn as a small
         // tile (an answer option) stays a tile. Generated SVGs carry their width for this reason.

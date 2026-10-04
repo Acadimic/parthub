@@ -6,12 +6,13 @@ import {
   ClockIcon,
   FileTextIcon,
   PencilSimpleIcon,
+  PrinterIcon,
   SparkleIcon,
   TrashIcon,
   VideoCameraIcon,
   YoutubeLogoIcon,
 } from '@phosphor-icons/react';
-import { Collapse, Link, Menu } from '@repo/ui/app';
+import { Button, Collapse, Link, Menu, Tooltip } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
 import { MaterialType } from '@enums';
@@ -55,6 +56,9 @@ const Row = ({
     {meta ? <span className="shrink-0 text-xs text-muted-foreground">{meta}</span> : null}
   </li>
 );
+
+/** A printout opens in its own tab, where the print dialog opens by itself. */
+const openPrint = (path: string) => window.open(path, '_blank');
 
 /** The lessons and quizzes an AI plan still owes this module. */
 const pendingWork = (courseModule: ICourseModule): IAiPendingWork[] =>
@@ -212,6 +216,11 @@ export const CourseModuleCard = ({ courseModule, number, isExpanded, onToggle, o
         <Menu
           menuItems={[
             { label: 'Edit module', onClick: onEdit, icon: <PencilSimpleIcon weight="bold" className="h-4 w-4" /> },
+            {
+              label: 'Print module',
+              onClick: () => openPrint(`/courses/${courseModule.course}/print?module=${courseModule._id}`),
+              icon: <PrinterIcon weight="bold" className="h-4 w-4" />,
+            },
             { label: 'Delete module', onClick: onDelete, icon: <TrashIcon weight="bold" className="h-4 w-4" /> },
           ]}
           className="px-1"
@@ -249,7 +258,21 @@ export const CourseModuleCard = ({ courseModule, number, isExpanded, onToggle, o
               <Row
                 key={paper._id}
                 icon={<FileTextIcon className="h-4 w-4" />}
-                meta={`${paper.totalQuestions ?? 0} questions · ${paper.maxMarks ?? 0} marks · ${paper.durationMins ?? 0} min`}
+                meta={
+                  <span className="flex items-center gap-2">
+                    {`${paper.totalQuestions ?? 0} questions · ${paper.maxMarks ?? 0} marks · ${paper.durationMins ?? 0} min`}
+                    <Tooltip title="Print paper">
+                      <Button
+                        isSubtle
+                        isRound
+                        aria-label={`Print ${paper.name}`}
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => openPrint(`/test-papers/${paper._id}/print`)}
+                        leftsection={<PrinterIcon weight="bold" className="h-4 w-4" />}
+                      />
+                    </Tooltip>
+                  </span>
+                }
               >
                 <Link
                   href={`/test-papers/${paper._id}`}

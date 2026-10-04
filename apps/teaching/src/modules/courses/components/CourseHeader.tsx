@@ -5,6 +5,7 @@ import {
   FileTextIcon,
   PencilSimpleIcon,
   PlusIcon,
+  PrinterIcon,
   RocketLaunchIcon,
   StackIcon,
   VideoCameraIcon,
@@ -114,6 +115,12 @@ export const CourseHeader = ({ course, moduleCount, onEdit, onAddModule }: IProp
             text="Add module"
             leftsection={<PlusIcon className="h-4 w-4" weight="bold" />}
             onClick={onAddModule}
+          />
+          <Button
+            isSecondary
+            text="Print"
+            leftsection={<PrinterIcon className="h-4 w-4" weight="bold" />}
+            onClick={() => window.open(`/courses/${course._id}/print`, '_blank')}
           />
           <Button
             text={isPublished ? 'Unpublish' : 'Publish'}

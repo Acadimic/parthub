@@ -108,6 +108,24 @@ export class CourseController {
     return courseModules;
   }
 
+  /**
+   * One module with its items embedded. A whole course's lesson bodies can run to megabytes, so a
+   * printout of a single module asks for that module alone.
+   */
+  @Get('course/module/contents/:courseId/:moduleId')
+  @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
+  @Permissions(PermissionItem.VIEW_COURSE)
+  async getCourseModuleWithContents(
+    @Param('courseId') courseId: string,
+    @Param('moduleId') moduleId: string,
+  ): Promise<ICourseModuleContents> {
+    const org = this.requestContextService.getOrgId();
+    const [courseModule] =
+      (await this.courseService.getCourseModulesWithContents(org, courseId, 'contents', moduleId)) ?? [];
+    if (!courseModule) throw new NotFoundException('Module not found.');
+    return courseModule;
+  }
+
   /** The syllabus alone: modules and their items with no lesson bodies or files. */
   @Get('course/modules/outline/:courseId')
   @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
