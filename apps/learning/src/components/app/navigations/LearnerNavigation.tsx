@@ -1,7 +1,6 @@
 import {
   ChartLineUpIcon,
   CompassIcon,
-  GearIcon,
   HouseIcon,
   type Icon,
   PaperPlaneIcon,
@@ -23,11 +22,8 @@ export const learnerRoutes: INavigation[] = [
   { name: 'Home', route: '/', icon: HouseIcon },
   { name: 'Courses', route: '/courses', icon: PaperPlaneIcon },
   { name: 'Sessions', route: '/sessions', icon: VideoCameraIcon },
-  { name: 'Account', route: '/account-settings', icon: GearIcon },
+  { name: 'Activity', route: '/activity', icon: ChartLineUpIcon },
 ];
-
-/** The learner's own record. In the header and the account menu, not the phone's tab bar. */
-export const activityRoute: INavigation = { name: 'Activity', route: '/activity', icon: ChartLineUpIcon };
 
 /** Active for the route itself and anything under it, so `/courses/:id/preview` lights "Courses". */
 export const isRouteActive = (current: string, route: string) =>
@@ -66,7 +62,7 @@ const Tab = ({ nav, isActive }: { nav: INavigation; isActive: boolean }) => (
 export const LearnerNavigation = () => {
   const { pathname } = useRouter();
   const { isExploreOpen, setIsExploreOpen } = useSelectorLookups();
-  const [home, courses, sessions, account] = learnerRoutes;
+  const [home, courses, sessions, activity] = learnerRoutes;
 
   return (
     <div className="pointer-events-auto mx-4 mb-[calc(env(safe-area-inset-bottom)+0.5rem)] rounded-full border border-border/70 bg-background px-2 shadow-[0_8px_24px_-6px_rgb(0_0_0/0.18)]">
@@ -85,11 +81,7 @@ export const LearnerNavigation = () => {
           </button>
         </div>
         <Tab nav={sessions} isActive={isRouteActive(pathname, sessions.route)} />
-        {/* Activity is reached from the account screen on a phone, so it counts as Account here. */}
-        <Tab
-          nav={account}
-          isActive={isRouteActive(pathname, account.route) || isRouteActive(pathname, activityRoute.route)}
-        />
+        <Tab nav={activity} isActive={isRouteActive(pathname, activity.route)} />
       </nav>
     </div>
   );

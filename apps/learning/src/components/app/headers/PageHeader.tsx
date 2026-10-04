@@ -5,7 +5,7 @@ import { useSelectedUser, useSelectorLookups } from '@stores';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { activityRoute, isRouteActive, learnerRoutes } from '../navigations';
+import { isRouteActive, learnerRoutes } from '../navigations';
 import { ProfileDropdown } from '../sidebars/components';
 import { EXPLORE_SEARCH_ATTRIBUTE, ExploreMenu } from './explore';
 
@@ -51,7 +51,7 @@ export const DesktopNav = () => {
   const { pathname } = useRouter();
   return (
     <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
-      {[...learnerRoutes.filter((nav) => nav.route !== '/account-settings'), activityRoute].map((nav) => {
+      {learnerRoutes.map((nav) => {
         const isActive = isRouteActive(pathname, nav.route);
         return (
           <NextLink
