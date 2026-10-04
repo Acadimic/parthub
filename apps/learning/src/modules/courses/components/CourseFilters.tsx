@@ -4,7 +4,7 @@ import { PresignedImage } from '@components/app/attachments';
 import { type ICourseFilter } from '@interfaces';
 import { CheckIcon, FadersHorizontalIcon, MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react';
 import { useCourseLookups, useStandardLookups } from '@stores';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface IProps {
   filter: ICourseFilter;
@@ -145,20 +145,40 @@ export const CourseFilters = ({ filter, onChange }: IProps) => {
 
   const handleClear = () => onChange({ standards: [], subjects: [] });
 
+  // An edge fades only while chips are clipped on that side, so the row starts and ends flush with
+  // the page instead of padding in room for a fade that is not showing.
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [clipped, setClipped] = useState({ start: false, end: false });
+  const updateClipped = () => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    setClipped({
+      start: scroller.scrollLeft > 0,
+      end: scroller.scrollLeft + scroller.clientWidth < scroller.scrollWidth - 1,
+    });
+  };
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    updateClipped();
+    const observer = new ResizeObserver(updateClipped);
+    observer.observe(scroller);
+    return () => observer.disconnect();
+  }, [standardOptions.length]);
+  const mask = `linear-gradient(to right, ${clipped.start ? 'transparent' : 'black'}, black 12px, black calc(100% - 24px), ${clipped.end ? 'transparent' : 'black'})`;
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2 md:gap-3">
         {/* The standards scroll rather than wrap, so the row stays one line however many there are
-            and the Filter button keeps its place at the end. The edges fade so a clipped chip reads
-            as "more this way" rather than as a cut. */}
-        <div
-          className="relative min-w-0 flex-1"
-          style={{
-            maskImage: 'linear-gradient(to right, transparent, black 12px, black calc(100% - 24px), transparent)',
-            WebkitMaskImage: 'linear-gradient(to right, transparent, black 12px, black calc(100% - 24px), transparent)',
-          }}
-        >
-          <div className="no-scrollbar flex items-center gap-2 overflow-x-auto px-3 py-1">
+            and the Filter button keeps its place at the end. A clipped edge fades so the cut chip
+            reads as "more this way" rather than as a cut. */}
+        <div className="relative min-w-0 flex-1" style={{ maskImage: mask, WebkitMaskImage: mask }}>
+          <div
+            ref={scrollerRef}
+            onScroll={updateClipped}
+            className="no-scrollbar flex items-center gap-2 overflow-x-auto py-1"
+          >
             <Chip label="All" isSelected={!filter.standards.length} onClick={handleClear} />
             {standardOptions.map((option) => (
               <Chip
@@ -193,20 +213,16 @@ export const CourseFilters = ({ filter, onChange }: IProps) => {
                 label={
                   <span className="flex items-center gap-1.5">
                     <span className="hidden sm:inline">Filter</span>
-                    {/* Always in the layout, so the chip keeps its width and the row does not shift. */}
-                    <Badge
-                      tone="primary"
-                      appearance="solid"
-                      aria-hidden={!filter.subjects.length}
-                      className={cn('w-5 justify-center px-0 tabular-nums', !filter.subjects.length && 'invisible')}
-                    >
-                      {filter.subjects.length || 0}
-                    </Badge>
+                    {filter.subjects.length ? (
+                      <Badge tone="primary" appearance="solid" className="w-5 justify-center px-0 tabular-nums">
+                        {filter.subjects.length}
+                      </Badge>
+                    ) : null}
                   </span>
                 }
                 isSelected={Boolean(filter.subjects.length)}
                 leftSection={<FadersHorizontalIcon weight="bold" className="ml-1.5 h-4 w-4" />}
-                className="pl-1.5 pr-2.5 sm:pr-3.5"
+                className="min-h-9 pl-1.5 pr-2.5 sm:pr-3.5"
               />
             }
           >
