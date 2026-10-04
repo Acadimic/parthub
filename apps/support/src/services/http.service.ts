@@ -71,7 +71,7 @@ export const callAuthApi = async <T = unknown>(
   shouldNotThrowError?: boolean,
 ): Promise<SuccessResponse<T>> => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+    const baseUrl = process.env.API_SERVER_URL || '';
     const axiosInstance = createAxiosInstance(false, baseUrl);
     // Strip UI-only keys here rather than at each call site: the server's validation pipe runs
     // with `forbidNonWhitelisted`, so one `isNew` on a posted store instance fails the whole

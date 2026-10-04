@@ -94,6 +94,6 @@ export class Course extends BaseSchema {
 export const CourseSchema = SchemaFactory.createForClass(Course);
 
 CourseSchema.index({ org: 1, _deleted: 1 });
-// CourseService.getPublishedCourses, the public catalogue. `_deleted` is a `$ne`, a range, so it goes
+// CourseService.getPublicCourses, the public catalogue. `_deleted` is a `$ne`, a range, so it goes
 // after the sort keys or the sort cannot come from the index.
 CourseSchema.index({ isPublished: 1, order: 1, publishedDate: -1, _deleted: 1 });

@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@repo/shared', '@repo/ui'],
+  // Next exposes only NEXT_PUBLIC_* to the browser on its own; this inlines the server's address at
+  // build time so the same name serves the browser and the Next server.
+  env: { API_SERVER_URL: process.env.API_SERVER_URL },
   experimental: {
     optimizePackageImports: ['@phosphor-icons/react'],
   },
@@ -13,12 +16,6 @@ const nextConfig = {
       // `/profile` was an unreferenced stub next to the real page under account settings.
       { source: '/profile', destination: '/account-settings/profile', permanent: false },
     ];
-  },
-  // With API_SERVER_URL set at build time, `/api/*` is proxied to the server, so
-  // NEXT_PUBLIC_BASE_URL can be `/api` and the browser never calls another origin.
-  async rewrites() {
-    const target = process.env.API_SERVER_URL;
-    return target ? [{ source: '/api/:path*', destination: `${target.replace(/\/$/, '')}/:path*` }] : [];
   },
 };
 

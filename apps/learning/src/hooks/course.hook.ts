@@ -6,6 +6,7 @@ import {
   type ITestPaper,
   useCourseLookups,
   useMaterialLookups,
+  useSelectedUser,
   useSelectorLookups,
   useTestPaperLookups,
 } from '@stores';
@@ -35,6 +36,7 @@ export const useCourse = () => {
   const { getCourseModuleByCourseId, isCourseModuleItemCompleted } = courseStore;
   const { getMaterialVideos, getMaterialsByIds } = materialStore;
   const { getTestPapersByIds } = testPaperStore;
+  const selectedUser = useSelectedUser();
   const { push } = useRouter();
 
   const getCourseModules = (courseId: string) => sortByDay(getCourseModuleByCourseId(courseId));
@@ -114,15 +116,25 @@ export const useCourse = () => {
     if (next) selectItem(next);
   };
 
+  /** Sends a visitor with no session to sign in, and back to `redirectUri` afterwards. */
+  const pushToSignIn = (redirectUri: string) => push({ pathname: '/sign-in', query: { redirectUri } });
+
+  /** Opens the learning view, by way of signing in when there is no session; the selection survives it. */
+  const pushToModules = (courseId: string) => {
+    const url = `/courses/${courseId}/modules`;
+    if (selectedUser) push(url);
+    else pushToSignIn(url);
+  };
+
   /** From the preview page: select the item, then open the learning view. */
   const openItem = (item: ICourseModuleItem) => {
     selectItem(item);
-    push(`/courses/${item.courseId}/modules`);
+    pushToModules(item.courseId);
   };
 
   const openCourse = (courseId: string) => {
     selectResumeItem(courseId);
-    push(`/courses/${courseId}/modules`);
+    pushToModules(courseId);
   };
 
   const getModuleContentType = (material?: IMaterial, testPaper?: ITestPaper) => {
@@ -148,6 +160,7 @@ export const useCourse = () => {
     selectAdjacentItem,
     openItem,
     openCourse,
+    pushToSignIn,
     getModuleContentType,
   };
 };

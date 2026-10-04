@@ -1,6 +1,7 @@
 import { Button, Link } from '@repo/ui/app';
 import { useRequest } from '@repo/ui/hooks';
 import { BlankState } from '@components/others';
+import { Subdomain } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { ArrowClockwiseIcon } from '@phosphor-icons/react';
 import {
@@ -13,6 +14,7 @@ import {
   useSelectedUser,
   useSelectorLookups,
 } from '@stores';
+import { getToken } from '@utils/helpers';
 import { useEffect, useState } from 'react';
 import { CourseModules, CourseModulesSkeleton, CoursePreview, CoursePreviewSkeleton } from './components';
 
@@ -50,7 +52,9 @@ export const Course = ({ courseId, isPreview }: IProps) => {
   };
 
   const fetchCourseData = async () => {
-    if (!selectedUser) return;
+    // The preview is public, so it loads without a session; the learning view waits for the user.
+    const isSignedIn = !!getToken(Subdomain.LEARN);
+    if (isSignedIn ? !selectedUser : !isPreview) return;
     setIsLoading(true);
     // The course list has to land before the modules load: `loadCourseModules` reads the course
     // back out of the store and returns early when it is not there yet.
@@ -59,10 +63,10 @@ export const Course = ({ courseId, isPreview }: IProps) => {
     await Promise.all([
       // The preview renders titles, so it asks for the outline; the learning view needs the bodies.
       loadModulesFor(course),
-      selectedUser.isLoadedCompletedModules ? Promise.resolve() : loadCompletedModules(),
+      !selectedUser || selectedUser.isLoadedCompletedModules ? Promise.resolve() : loadCompletedModules(),
       // The plans say whether a seat is needed and the seats say whether the learner holds one.
       loadCoursePlans(courseId),
-      enrollmentsRequest.isLoaded ? Promise.resolve() : loadMyEnrollments(),
+      !selectedUser || enrollmentsRequest.isLoaded ? Promise.resolve() : loadMyEnrollments(),
     ]);
     setSelectedCourseId(courseId);
     setIsLoading(false);

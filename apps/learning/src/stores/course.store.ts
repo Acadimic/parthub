@@ -112,11 +112,17 @@ const loadModules = (courseId: string, shape: 'contents' | 'outline'): Promise<v
     const store = useCourseStore.getState();
     const course = store.getCourseById(courseId);
     if (!course) return;
-    const meetIds = course.meets ?? [];
-    const [modulesResult, meetsResult] = await Promise.all([
-      shape === 'outline'
+    // A visitor with no session can read a published course's outline and nothing more.
+    const isSignedIn = !!getToken(Subdomain.LEARN);
+    const meetIds = isSignedIn ? (course.meets ?? []) : [];
+    const getModules = () => {
+      if (shape === 'contents') return CourseService.getCourseModulesContentsByCourseId(courseId);
+      return isSignedIn
         ? CourseService.getCourseModulesOutlineByCourseId(courseId)
-        : CourseService.getCourseModulesContentsByCourseId(courseId),
+        : CourseService.getPublishedCourseOutline(courseId);
+    };
+    const [modulesResult, meetsResult] = await Promise.all([
+      getModules(),
       // `meet/by-ids` requires a non-empty list, and a course with no sessions has nothing to ask
       // for. Skipping keeps a 400 out of a page that is not showing sessions anyway.
       meetIds.length ? MeetService.getMeetsByIds(meetIds) : Promise.resolve(null),
@@ -343,7 +349,9 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   loadCoursePlans: (courseId) =>
     onceInFlight(`coursePlans:${courseId}`, () =>
       get().run('plans', async () => {
-        const result = await PlanService.getCoursePlans(courseId);
+        const result = getToken(Subdomain.LEARN)
+          ? await PlanService.getCoursePlans(courseId)
+          : await PlanService.getPublishedCoursePlans(courseId);
         if (result?.data) get().addPlans(result.data);
       }),
     ),

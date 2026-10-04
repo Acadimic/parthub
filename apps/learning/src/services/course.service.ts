@@ -53,6 +53,10 @@ class CourseService {
   getCourseModulesOutlineByCourseId = async (courseId: string) =>
     callAuthApi<ICourseModuleContents[]>(`course/course/modules/outline/${courseId}`, API.GET);
 
+  /** The same syllabus for a visitor with no session; only a published course answers. */
+  getPublishedCourseOutline = async (courseId: string) =>
+    callUnAuthApi<ICourseModuleContents[]>(`course/published/outline/${courseId}`, API.GET);
+
   upsertCompletedModule = async (payload: ICompletedModuleFields) => {
     const url = 'course/completed/module/upsert';
     const resData = await callAuthApi(url, API.POST, payload);

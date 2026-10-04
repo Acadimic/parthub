@@ -236,7 +236,7 @@ fixing regardless — those are marked **stands**.
 `getSubdomainFromUrl` (`apps/server/src/utils/util.ts:21`) extracts
 `learn` | `teach` | `support` from the request *path*; its docblock gives
 `/user/teach/profile` as the example. Nothing produces such a path: every client
-service writes a bare resource path, `NEXT_PUBLIC_BASE_URL` carries no path
+service writes a bare resource path, `API_SERVER_URL` carries no path
 segment in any app, and `main.ts` calls no `setGlobalPrefix`.
 
 So the subdomain is always `undefined`, and `AccessGuard` refuses every route

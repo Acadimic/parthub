@@ -9,7 +9,7 @@ export const callDefaultApi = () => axios.create();
 
 const createAxiosInstance = (isUnAuth: boolean) => {
   const axiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_BASE_URL,
+    baseURL: process.env.API_SERVER_URL,
     headers: {
       'Content-Type': 'application/json',
       // Sent on every request, not just authenticated ones: the server refuses an authenticated or

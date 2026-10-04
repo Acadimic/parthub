@@ -44,6 +44,15 @@ export interface PublishedCoursesResponse {
 }
 
 /**
+ * The `course/published/:courseId` response: one published course, with its images always signed.
+ * The learning app reads it on the server to describe a shared course link to a link preview.
+ */
+export interface PublishedCourseResponse {
+  course: CourseDto;
+  presignedUrls: IPresignedUrl[];
+}
+
+/**
  * The response for `GET test-paper/sections-with-questions/:testPaperId`: a paper's sections plus
  * their questions, in one round trip.
  *

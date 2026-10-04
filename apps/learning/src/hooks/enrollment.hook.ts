@@ -31,7 +31,7 @@ export const loadCheckoutScript = () =>
 export const useEnrollment = () => {
   const enrollmentStore = useEnrollmentLookups();
   const selectedUser = useSelectedUser();
-  const { openCourse } = useCourse();
+  const { openCourse, pushToSignIn } = useCourse();
   const [isEnrolling, setIsEnrolling] = useState(false);
 
   const finish = (courseId: string, message: string) => {
@@ -40,6 +40,11 @@ export const useEnrollment = () => {
   };
 
   const enroll = async (course: ICourse, plan: PlanDto | null) => {
+    // A seat belongs to an account, so a visitor signs in first and comes back to choose again.
+    if (!selectedUser) {
+      pushToSignIn(`/courses/${course._id}/preview`);
+      return;
+    }
     setIsEnrolling(true);
     try {
       const checkout = await enrollmentStore.checkout(course._id, plan?._id);

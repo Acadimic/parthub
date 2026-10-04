@@ -45,7 +45,7 @@ const readEnvFile = (file) => {
 };
 
 const env = { ...readEnvFile(path.join(ROOT, 'apps/teaching/.env')), ...process.env };
-const API_URL = (env.ACADIMIC_API_URL || env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9000/').replace(/\/?$/, '/');
+const API_URL = (env.ACADIMIC_API_URL || env.API_SERVER_URL || 'http://localhost:9000/').replace(/\/?$/, '/');
 const FIREBASE_KEY = env.NEXT_PUBLIC_FIREBASE_API_KEY;
 
 const readJson = (file, fallback = null) => (fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : fallback);

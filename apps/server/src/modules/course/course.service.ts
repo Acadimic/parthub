@@ -67,6 +67,59 @@ export class CourseService {
     private readonly requestContextService: RequestContextService,
   ) {}
 
+  // The public reads: a visitor who is not signed in has no organization to scope by, so each of these
+  // answers for published courses only, and none takes an org.
+
+  /**
+   * The public catalogue: published courses from every organization, in each course's display
+   * `order` (set by its teacher on the Courses page), newest first among equal orders.
+   *
+   * Not org-scoped because `isPublished` is the organization's own opt-in to being listed, and the
+   * catalogue is browsed by anonymous visitors who have no organization at all.
+   */
+  async getPublicCourses(): Promise<CourseDto[]> {
+    return this.courseModel
+      .find({ isPublished: true, _deleted: { $ne: true } }, CATALOGUE_EXCLUDED_FIELDS)
+      .sort({ order: 1, publishedDate: -1 })
+      .lean<CourseDocument[]>()
+      .then((courses) => this.getTransformedCourses(courses));
+  }
+
+  // An id that is not an ObjectId would make Mongoose throw a CastError; for a public route it is a 404.
+  private async findPublicCourse(courseId: string): Promise<CourseDocument | null> {
+    if (!Types.ObjectId.isValid(courseId)) return null;
+    return this.courseModel
+      .findOne({ _id: courseId, isPublished: true, _deleted: { $ne: true } }, CATALOGUE_EXCLUDED_FIELDS)
+      .lean<CourseDocument>();
+  }
+
+  /** One published course as the catalogue lists it, for a shared link's preview. */
+  async getPublicCourse(courseId: string): Promise<CourseDto | null> {
+    const course = await this.findPublicCourse(courseId);
+    return course ? this.getTransformedCourse(course) : null;
+  }
+
+  /**
+   * The syllabus a learner sees, less each live session's link and attendees, which are for the
+   * people enrolled.
+   */
+  async getPublicCourseOutline(courseId: string): Promise<ICourseModuleContents[] | null> {
+    const course = await this.findPublicCourse(courseId);
+    if (!course) return null;
+    const courseModules = await this.getModulesOfCourse(course, 'outline', null);
+    return courseModules.map((courseModule) => ({
+      ...courseModule,
+      meets: courseModule.meets.map(({ meetingLink, meetingId, attendees, ...meet }) => meet),
+    }));
+  }
+
+  /** The plans a published course is sold on. */
+  async getPublicCoursePlans(courseId: string): Promise<PlanDto[] | null> {
+    const course = await this.findPublicCourse(courseId);
+    if (!course) return null;
+    return this.planService.getPlansByCourseId(course.org, courseId);
+  }
+
   /**
    * Whether the caller may open a course's contents. A teacher reads their own courses from the
    * teaching app without a seat; a learner needs one on any course that carries a price.
@@ -147,22 +200,6 @@ export class CourseService {
     return this.courseModel
       .find({ org, _deleted: { $ne: true } })
       .sort({ order: 1, createdAt: 1 })
-      .lean<CourseDocument[]>()
-      .then((courses) => this.getTransformedCourses(courses));
-  }
-
-  /**
-   * The public catalogue: published courses from every organization, in each course's display
-   * `order` (set by its teacher on the Courses page), newest first among equal orders.
-   *
-   * Deliberately not org-scoped — unlike every other read here — because `isPublished` is the
-   * organization's own opt-in to being listed, and the catalogue is browsed by anonymous visitors
-   * who have no organization at all.
-   */
-  async getPublishedCourses(): Promise<CourseDto[]> {
-    return this.courseModel
-      .find({ isPublished: true, _deleted: { $ne: true } }, CATALOGUE_EXCLUDED_FIELDS)
-      .sort({ order: 1, publishedDate: -1 })
       .lean<CourseDocument[]>()
       .then((courses) => this.getTransformedCourses(courses));
   }
@@ -328,6 +365,19 @@ export class CourseService {
   ): Promise<ICourseModuleContents[] | null> {
     const course = await this.getVisibleCourse(org, courseId);
     if (!course) return null;
+    return this.getModulesOfCourse(course, shape, moduleId);
+  }
+
+  /**
+   * The modules of a course the caller has already been allowed to see. Split from the lookup so a
+   * public read can resolve a published course its own way and assemble it the same.
+   */
+  private async getModulesOfCourse(
+    course: CourseDocument,
+    shape: CourseModulesShape,
+    moduleId: string | null,
+  ): Promise<ICourseModuleContents[]> {
+    const courseId = String(course._id);
     const isOutline = shape === 'outline';
 
     const courseOrg = course.org;

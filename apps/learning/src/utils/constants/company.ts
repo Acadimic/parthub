@@ -17,6 +17,8 @@ export const COMPANY = {
   /** The IT Rules 2021 require a named grievance officer; blank until one is appointed. */
   grievanceOfficer: { name: '', email: 'grievance@acadimic.com' },
   teachUrl: process.env.NEXT_PUBLIC_TEACH_URL ?? 'https://teach.acadimic.com',
+  /** This app's own address, which a shared link's preview needs to name its page and image. */
+  appUrl: process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.acadimic.com',
   /** Prints on every legal page as the date the current text took effect. */
   policiesEffectiveFrom: '2026-09-26',
 } as const;

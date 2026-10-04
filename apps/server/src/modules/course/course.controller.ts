@@ -5,7 +5,11 @@ import { Public } from '@decorators/public.decorator';
 import { S3Service } from '@modules/s3/s3.service';
 import { TestPaperResultService } from '@modules/test-paper/test-paper-result.service';
 import { Controller, Get, Post, Body, Param, NotFoundException, ParseBoolPipe, Query } from '@nestjs/common';
-import { type PublishedCoursesResponse, type TestPaperSectionsResponse } from '@repo/shared/contracts';
+import {
+  type PublishedCourseResponse,
+  type PublishedCoursesResponse,
+  type TestPaperSectionsResponse,
+} from '@repo/shared/contracts';
 import { CourseService, type ICourseModuleContents } from './course.service';
 import { RequestContextService } from '../../context/request-context.service';
 import {
@@ -203,10 +207,38 @@ export class CourseController {
   async getPublishedCourses(
     @Query('signed', new ParseBoolPipe({ optional: true })) signed?: boolean,
   ): Promise<PublishedCoursesResponse> {
-    const courses = await this.courseService.getPublishedCourses();
+    const courses = await this.courseService.getPublicCourses();
     const images = courses.flatMap((course) => (course.attachments ?? []).map((attachment) => attachment.url));
     const presignedUrls = signed ? await this.s3Service.presignStoredReferences(images) : [];
     return { courses, presignedUrls };
+  }
+
+  /** One published course, for the learning app to describe a shared link to a link preview. */
+  @Public()
+  @Get('published/:courseId')
+  async getPublishedCourse(@Param('courseId') courseId: string): Promise<PublishedCourseResponse> {
+    const course = await this.courseService.getPublicCourse(courseId);
+    if (!course) throw new NotFoundException('Course not found.');
+    const images = (course.attachments ?? []).map((attachment) => attachment.url);
+    return { course, presignedUrls: await this.s3Service.presignStoredReferences(images) };
+  }
+
+  /** A published course's syllabus for a visitor who is not signed in. */
+  @Public()
+  @Get('published/outline/:courseId')
+  async getPublishedCourseOutline(@Param('courseId') courseId: string): Promise<ICourseModuleContents[]> {
+    const courseModules = await this.courseService.getPublicCourseOutline(courseId);
+    if (!courseModules) throw new NotFoundException('Course not found.');
+    return courseModules;
+  }
+
+  /** The plans a published course is sold on, for a visitor who is not signed in. */
+  @Public()
+  @Get('published/plans/:courseId')
+  async getPublishedCoursePlans(@Param('courseId') courseId: string): Promise<PlanDto[]> {
+    const plans = await this.courseService.getPublicCoursePlans(courseId);
+    if (!plans) throw new NotFoundException('Course not found.');
+    return plans;
   }
 
   // `published` above and `:id` here are both a single segment, so this one must stay last or it

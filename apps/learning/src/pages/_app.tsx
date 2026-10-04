@@ -3,6 +3,7 @@ import { useRequest } from '@repo/ui/hooks';
 import { ColorModeContext, RichTextMediaContext } from '@repo/ui/contexts';
 import { useRichTextMediaValue } from '@hooks/rich-text-media.hook';
 import { Layout, StorageKey, Theme, Subdomain } from '@enums';
+import { PageMeta } from '@components/app/meta';
 import { AuthLayout, PageLayout, PageNavigationLayout, PublicLayout, SidebarLayout, FocusLayout } from '@layouts';
 import { ToastContainer } from '@modules/toasts';
 import { useStandardStore, useUserLookups } from '@stores';
@@ -12,10 +13,10 @@ import 'katex/dist/katex.min.css';
 // The printouts' embedded face; only the print pages use the family it declares.
 import '@repo/ui/print/print-font.css';
 import { loadFirebaseUser } from '@utils/firebase';
-import { getToken, IS_WINDOW_UNDEFINED } from '@utils/helpers';
+import { DEFAULT_PAGE_META, getToken, IS_WINDOW_UNDEFINED } from '@utils/helpers';
+import { type IPageMeta } from '@interfaces';
 import type { NextPage } from 'next';
 import type { AppProps } from 'next/app';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { type ErrorInfo, useEffect, useMemo, useState } from 'react';
 import { withErrorBoundary } from 'react-error-boundary';
@@ -24,7 +25,8 @@ export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<P
   layout: string;
 };
 
-type AppPropsWithLayout = AppProps & {
+/** `meta` arrives only from a page with `getServerSideProps`; every other page shows the site default. */
+type AppPropsWithLayout = AppProps<{ meta?: IPageMeta }> & {
   Component: NextPageWithLayout;
 };
 
@@ -179,16 +181,22 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
 
   // A spinner rather than nothing: the sign-in and reference loads take long enough on a cold start
   // that a blank page reads as broken.
-  if (!mode || !isReady || (isLoadedLoggedInUsers && !publicData.isLoaded)) return <FullScreenLoader loading />;
+  // Rendered ahead of the loader too: the server only ever renders the loader, and a link preview
+  // reads nothing but that HTML.
+  const pageMeta = <PageMeta meta={pageProps.meta ?? DEFAULT_PAGE_META} />;
+
+  if (!mode || !isReady || (isLoadedLoggedInUsers && !publicData.isLoaded)) {
+    return (
+      <>
+        {pageMeta}
+        <FullScreenLoader loading />
+      </>
+    );
+  }
 
   return (
     <>
-      <Head>
-        <title>Acadimic App</title>
-        <meta name="viewport" content="initial-scale=1, width=device-width" />
-        <meta name="description" content="Acadimic Learning App | Learn, Grow, Succeed | By Academic Courses" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      {pageMeta}
       <ColorModeContext.Provider value={colorMode}>
         <RichTextMediaContext.Provider value={richTextMedia}>
           {isLoadingLoggedInUsers || !isReady || isAwaitingOrganization ? (

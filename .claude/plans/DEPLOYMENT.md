@@ -127,7 +127,7 @@ deploy from, so the projects live in a Pro team.
 
    | Name                                                               | Value                                                                     | Projects |
    | ------------------------------------------------------------------ | ------------------------------------------------------------------------- | -------- |
-   | `NEXT_PUBLIC_BASE_URL`                                             | Cloud Run URL after the first server deploy, later `https://api.<domain>` | all      |
+   | `API_SERVER_URL`                                                   | Cloud Run URL after the first server deploy, later `https://api.<domain>` | all      |
    | `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase web config                                                       | all      |
    | `NEXT_PUBLIC_LEARN_URL`                                            | `https://learn.<domain>` (teaching's order links open here)               | teaching |
    | `NEXT_PUBLIC_PRIVATE_API_KEY`                                      | the same value as the server's `PRIVATE_API_KEY`                          | support  |
@@ -173,12 +173,12 @@ From the terminal: `gh secret set NAME --env production < file` and
 2. GCP setup (4.1); Atlas network access and the DB user.
 3. The `production` environment (4.3).
 4. Dispatch `Deploy server`. It prints the service URL and checks `/health`.
-5. Vercel setup (4.2), with `NEXT_PUBLIC_BASE_URL` set to that URL; importing each project runs
+5. Vercel setup (4.2), with `API_SERVER_URL` set to that URL; importing each project runs
    its first deployment. Add the three `*.vercel.app` production hosts to Firebase Auth →
    Authorized domains. Sign in on each app, upload a file.
 6. Domains: Cloud Run domain mapping for `api.<domain>`; add `learn/teach/support.<domain>` to the
    Vercel projects (Settings → Domains, CNAME to `cname.vercel-dns.com`); update
-   `NEXT_PUBLIC_BASE_URL` and `NEXT_PUBLIC_LEARN_URL`; add the domains to Firebase; point the
+   `API_SERVER_URL` and `NEXT_PUBLIC_LEARN_URL`; add the domains to Firebase; point the
    Razorpay webhook at `api.<domain>`. Redeploy the apps so the new values are inlined.
 7. Smoke test: sign in on all three, upload a file, run through an order.
 
