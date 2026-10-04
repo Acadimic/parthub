@@ -1,5 +1,6 @@
 export * from './course-modules';
 export * from './course-preview';
+export * from './ContinueLearning';
 export * from './CourseCard';
 export * from './CourseCover';
 export * from './CourseFilters';

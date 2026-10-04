@@ -9,6 +9,7 @@ import { getPlural } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useSetState } from 'react-use';
+import { ContinueLearning } from './components/ContinueLearning';
 import { CourseCard } from './components/CourseCard';
 import { CourseFilters } from './components/CourseFilters';
 
@@ -110,6 +111,20 @@ const SectionHeading = ({ standardId, count }: { standardId: string; count: numb
   );
 };
 
+/**
+ * The catalogue page's own title, then the learner's started courses. The home page shows those
+ * above the catalogue itself, and a search is after something new, so neither shows them here.
+ */
+const CatalogueHeading = ({ countLabel, isSearching }: { countLabel: string; isSearching: boolean }) => (
+  <>
+    <div className="flex flex-col gap-1">
+      <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Courses</h1>
+      <p className="text-muted-foreground">{countLabel}</p>
+    </div>
+    {isSearching ? null : <ContinueLearning className="pb-4 md:pb-6" />}
+  </>
+);
+
 export const Courses = ({ isFilter, withHeading }: IProps) => {
   const courseStore = useCourseLookups();
   const { getCompletedModules, loadCompletedModules } = courseStore;
@@ -206,14 +221,12 @@ export const Courses = ({ isFilter, withHeading }: IProps) => {
     <Container>
       <div className="flex flex-col gap-6 py-6 md:py-8">
         {withHeading ? (
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Courses</h1>
-            <p className="text-muted-foreground">
-              {isLoading
-                ? 'Loading the catalogue…'
-                : `${totalCount} ${getPlural(totalCount, 'course')} to choose from.`}
-            </p>
-          </div>
+          <CatalogueHeading
+            countLabel={
+              isLoading ? 'Loading the catalogue…' : `${totalCount} ${getPlural(totalCount, 'course')} to choose from.`
+            }
+            isSearching={Boolean(q)}
+          />
         ) : null}
         {isFilter && !isLoading && !isFailed ? <CourseFilters filter={filter} onChange={setFilter} /> : null}
         {q ? (

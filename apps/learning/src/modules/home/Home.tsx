@@ -1,17 +1,9 @@
 import { Container } from '@components/others';
 import { Courses } from '@modules/courses/Courses';
+import { ContinueLearning } from '@modules/courses/components/ContinueLearning';
 import { TESTIMONIALS } from './testimonials';
 import { Band, SectionHeading } from '@components/app/sections';
-import {
-  ContinueLearning,
-  Faq,
-  Features,
-  Hero,
-  HowItWorks,
-  StandardsGrid,
-  TeachBanner,
-  Testimonials,
-} from './components';
+import { Faq, Features, Hero, HowItWorks, StandardsGrid, TeachBanner, Testimonials } from './components';
 
 /** The landing page: the pitch, the catalogue, and the reasons to trust it. */
 export const Home = () => (
@@ -21,7 +13,7 @@ export const Home = () => (
       <Hero />
     </Band>
     <Container>
-      <ContinueLearning />
+      <ContinueLearning className="py-12 md:py-16" />
       <StandardsGrid />
     </Container>
     <Band className="border-y border-border bg-muted/30">

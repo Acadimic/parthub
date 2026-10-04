@@ -1,4 +1,5 @@
-import { CourseCard } from '@modules/courses/components/CourseCard';
+import { cn } from '@repo/ui/lib';
+import { CourseCard } from './CourseCard';
 import { type ICourse, useCourseLookups, useSelectedUser } from '@stores';
 import { useEffect } from 'react';
 import { SectionHeading } from '@components/app/sections';
@@ -9,8 +10,13 @@ const MAX_CARDS = 3;
 const getCourseTotal = (course: ICourse) =>
   (course.stats?.videosCount ?? 0) + (course.stats?.readingsCount ?? 0) + (course.stats?.testsCount ?? 0);
 
+interface IProps {
+  /** The spacing around the section, which differs between the home page and the catalogue. */
+  className: string;
+}
+
 /** For a signed-in learner with something underway: the way straight back in. Renders nothing otherwise. */
-export const ContinueLearning = () => {
+export const ContinueLearning = ({ className }: IProps) => {
   const selectedUser = useSelectedUser();
   const { getCourses, getCompletedModules, loadCompletedModules } = useCourseLookups();
 
@@ -38,7 +44,7 @@ export const ContinueLearning = () => {
   if (!started.length) return null;
 
   return (
-    <section className="flex flex-col gap-6 py-12 md:py-16">
+    <section className={cn('flex flex-col gap-6', className)}>
       <SectionHeading
         eyebrow="Welcome back"
         title="Pick up where you left off"

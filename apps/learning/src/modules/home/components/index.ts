@@ -1,4 +1,3 @@
-export * from './ContinueLearning';
 export * from './Faq';
 export * from './Features';
 export * from './Hero';
