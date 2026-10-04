@@ -5,11 +5,12 @@ import { cn } from '@repo/ui/lib';
 import { useEnrollment } from '@hooks/enrollment.hook';
 import { CheckCircleIcon, LockSimpleOpenIcon, ShieldCheckIcon } from '@phosphor-icons/react';
 import { type ICourse } from '@stores';
-import { useState } from 'react';
 
 interface IProps {
   course: ICourse;
   plans: PlanDto[];
+  selectedPlanId: string;
+  onSelectPlan: (planId: string) => void;
 }
 
 /** "₹1,499" or "$19", in the plan's currency with no decimals unless it has them. */
@@ -82,18 +83,45 @@ const PlanOption = ({ plan, isSelected, onSelect }: { plan: PlanDto; isSelected:
   );
 };
 
+const sortPlans = (plans: PlanDto[]) =>
+  [...plans].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.amount - b.amount);
+
+/** The plan chosen before the learner picks one: the recommended plan, else the first. */
+export const getDefaultPlanId = (plans: PlanDto[]) => {
+  const sorted = sortPlans(plans);
+  return (sorted.find((plan) => plan.isRecommended) ?? sorted[0])?._id ?? '';
+};
+
+/** Enrols on the chosen plan, or for free when there is none or it costs nothing. */
+export const EnrolButton = ({ course, plan }: { course: ICourse; plan: PlanDto | null }) => {
+  const { enroll, isEnrolling } = useEnrollment();
+  const isFree = !plan || plan.amount === 0;
+  return (
+    <Button
+      isFull
+      className="px-4 py-2.5"
+      isLoading={isEnrolling}
+      onClick={() => enroll(course, plan)}
+      leftsection={
+        isFree ? (
+          <LockSimpleOpenIcon weight="bold" className="h-5 w-5" />
+        ) : (
+          <CheckCircleIcon weight="fill" className="h-5 w-5" />
+        )
+      }
+    >
+      {isFree ? 'Enrol for free' : `Pay ${formatAmount(plan.amount, plan.currency ?? 'INR')} and enrol`}
+    </Button>
+  );
+};
+
 /**
  * The buy box: the plans a course is sold on, one of them chosen, and the button that enrols.
  * A course with no plans, or a chosen plan that costs nothing, enrols for free in one click.
  */
-export const CoursePlans = ({ course, plans }: IProps) => {
-  const { enroll, isEnrolling } = useEnrollment();
-  const sorted = [...plans].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.amount - b.amount);
-  const [selectedId, setSelectedId] = useState<string>(
-    () => (sorted.find((plan) => plan.isRecommended) ?? sorted[0])?._id ?? '',
-  );
-  const selected = sorted.find((plan) => plan._id === selectedId) ?? null;
-  const isFree = !selected || selected.amount === 0;
+export const CoursePlans = ({ course, plans, selectedPlanId, onSelectPlan }: IProps) => {
+  const sorted = sortPlans(plans);
+  const selected = sorted.find((plan) => plan._id === selectedPlanId) ?? null;
   const isPaidCourse = plans.some((plan) => plan.amount > 0);
 
   return (
@@ -104,27 +132,15 @@ export const CoursePlans = ({ course, plans }: IProps) => {
             <PlanOption
               key={plan._id}
               plan={plan}
-              isSelected={plan._id === selectedId}
-              onSelect={() => setSelectedId(plan._id)}
+              isSelected={plan._id === selectedPlanId}
+              onSelect={() => onSelectPlan(plan._id)}
             />
           ))}
         </div>
       ) : null}
-      <Button
-        isFull
-        className="px-4 py-2.5"
-        isLoading={isEnrolling}
-        onClick={() => enroll(course, selected)}
-        leftsection={
-          isFree ? (
-            <LockSimpleOpenIcon weight="bold" className="h-5 w-5" />
-          ) : (
-            <CheckCircleIcon weight="fill" className="h-5 w-5" />
-          )
-        }
-      >
-        {isFree ? 'Enrol for free' : `Pay ${formatAmount(selected.amount, selected.currency ?? 'INR')} and enrol`}
-      </Button>
+      <div data-course-cta>
+        <EnrolButton course={course} plan={selected} />
+      </div>
       {isPaidCourse ? (
         <p className="flex items-center justify-center gap-1.5 text-xxs text-muted-foreground">
           <ShieldCheckIcon weight="bold" className="h-3.5 w-3.5" />

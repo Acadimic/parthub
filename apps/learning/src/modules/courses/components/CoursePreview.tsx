@@ -1,20 +1,51 @@
 import { Container } from '@components/others';
 import { useCourse } from '@hooks/course.hook';
-import { useCourseLookups, useEnrollmentLookups, useSelectedCourse } from '@stores';
-import { CourseHero, CourseHighlights, CourseSummaryCard } from './course-preview';
+import { cn } from '@repo/ui/lib';
+import { useCourseLookups, useEnrollmentLookups, useSelectedCourse, useSelectedUser } from '@stores';
+import { useEffect, useRef, useState } from 'react';
+import {
+  CourseCta,
+  CourseHero,
+  CourseHighlights,
+  CourseSummaryCard,
+  EnrolButton,
+  getDefaultPlanId,
+} from './course-preview';
 import { CourseOutline } from './CourseOutline';
+
+/** The fixed header's height on a phone, which hides whatever scrolls up beneath it. */
+const HEADER_HEIGHT = 56;
 
 export const CoursePreview = () => {
   const selectedCourse = useSelectedCourse();
+  // `PageLayout` shows a signed-in learner the phone tab bar below `md`; the action bar floats above it.
+  const hasTabBar = Boolean(useSelectedUser());
   const { openItem } = useCourse();
   const { getPlansByCourseId } = useCourseLookups();
-  const { isEnrolled } = useEnrollmentLookups();
+  const { isEnrolled, getActiveEnrollment } = useEnrollmentLookups();
+  const plans = selectedCourse ? getPlansByCourseId(selectedCourse._id) : [];
+  const [selectedPlanId, setSelectedPlanId] = useState(() => getDefaultPlanId(plans));
+  const hasEnrollment = selectedCourse ? Boolean(getActiveEnrollment(selectedCourse._id)) : false;
+  const mobileCardRef = useRef<HTMLDivElement>(null);
+  const [isCtaScrolledPast, setIsCtaScrolledPast] = useState(false);
+
+  // The phone's action bar appears only once the card's own button has scrolled up under the header.
+  useEffect(() => {
+    const cta = mobileCardRef.current?.querySelector('[data-course-cta]');
+    if (!cta) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsCtaScrolledPast(!entry.isIntersecting && entry.boundingClientRect.top < HEADER_HEIGHT),
+      { rootMargin: `-${HEADER_HEIGHT}px 0px 0px 0px` },
+    );
+    observer.observe(cta);
+    return () => observer.disconnect();
+  }, [selectedCourse?._id, hasEnrollment]);
 
   if (!selectedCourse) return null;
 
   // Rows lock on a priced course the learner has not bought; the buy box beside them opens it.
-  const isLocked =
-    getPlansByCourseId(selectedCourse._id).some((plan) => plan.amount > 0) && !isEnrolled(selectedCourse._id);
+  const isLocked = plans.some((plan) => plan.amount > 0) && !isEnrolled(selectedCourse._id);
+  const selectedPlan = plans.find((plan) => plan._id === selectedPlanId) ?? null;
 
   return (
     <div className="relative pb-16">
@@ -28,8 +59,12 @@ export const CoursePreview = () => {
         <div className="relative grid gap-8 py-8 md:py-10 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12">
           <div className="flex min-w-0 flex-col gap-10">
             <CourseHero course={selectedCourse} />
-            <div className="lg:hidden">
-              <CourseSummaryCard course={selectedCourse} />
+            <div ref={mobileCardRef} className="lg:hidden">
+              <CourseSummaryCard
+                course={selectedCourse}
+                selectedPlanId={selectedPlanId}
+                onSelectPlan={setSelectedPlanId}
+              />
             </div>
             <CourseHighlights course={selectedCourse} />
             <section className="flex flex-col gap-3">
@@ -41,11 +76,32 @@ export const CoursePreview = () => {
           </div>
           <aside className="hidden lg:block">
             <div className="sticky top-20">
-              <CourseSummaryCard course={selectedCourse} />
+              <CourseSummaryCard
+                course={selectedCourse}
+                selectedPlanId={selectedPlanId}
+                onSelectPlan={setSelectedPlanId}
+              />
             </div>
           </aside>
         </div>
       </Container>
+      {/* Sticky rather than fixed, so it comes to rest above the footer instead of covering it. */}
+      <div
+        inert={!isCtaScrolledPast}
+        className={cn(
+          'sticky z-40 mx-4 rounded-xl border border-border/70 bg-background p-3 shadow-[0_8px_24px_-6px_rgb(0_0_0/0.18)] transition-all duration-200 lg:hidden',
+          isCtaScrolledPast ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0',
+          hasTabBar
+            ? 'bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] md:bottom-4'
+            : 'bottom-[calc(env(safe-area-inset-bottom)+0.75rem)]',
+        )}
+      >
+        {hasEnrollment ? (
+          <CourseCta course={selectedCourse} />
+        ) : (
+          <EnrolButton course={selectedCourse} plan={selectedPlan} />
+        )}
+      </div>
     </div>
   );
 };

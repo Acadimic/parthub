@@ -1,12 +1,10 @@
 import { Badge, Progress } from '@repo/ui/core';
-import { Button } from '@repo/ui/app';
 import { CourseCover } from '../CourseCover';
 import { useCourse } from '@hooks/course.hook';
 import {
   BookOpenTextIcon,
   ClockIcon,
   FileTextIcon,
-  PlayCircleIcon,
   SealCheckIcon,
   VideoCameraIcon,
   YoutubeLogoIcon,
@@ -16,10 +14,14 @@ import { getPlural } from '@utils/helpers';
 import { ShareCourse } from '../course-modules';
 import { AI_GENERATED_COURSE_TAG } from '@utils/constants';
 import { getStringFormattedDate } from '@utils/helpers';
+import { CourseCta } from './CourseCta';
 import { CoursePlans } from './CoursePlans';
 
 interface IProps {
   course: ICourse;
+  /** The plan chosen in the buy box, held by the page so its pinned phone bar enrols on the same one. */
+  selectedPlanId: string;
+  onSelectPlan: (planId: string) => void;
 }
 
 const IncludesRow = ({ icon: RowIcon, label }: { icon: typeof ClockIcon; label: string }) => (
@@ -65,8 +67,8 @@ const IncludesList = ({ course, modulesCount }: { course: ICourse; modulesCount:
  * decide to start. Sticky beside the syllabus on a wide screen, first thing under the title on a
  * phone.
  */
-export const CourseSummaryCard = ({ course }: IProps) => {
-  const { getCourseProgress, openCourse, getCourseModules } = useCourse();
+export const CourseSummaryCard = ({ course, selectedPlanId, onSelectPlan }: IProps) => {
+  const { getCourseProgress, getCourseModules } = useCourse();
   const progress = getCourseProgress(course._id);
   const modulesCount = getCourseModules(course._id).length;
   const hasStarted = progress.completed > 0;
@@ -75,15 +77,6 @@ export const CourseSummaryCard = ({ course }: IProps) => {
   const { getActiveEnrollment } = useEnrollmentLookups();
   const plans = getPlansByCourseId(course._id);
   const enrollment = getActiveEnrollment(course._id);
-  // Opening goes through a seat whatever the course costs: a free one is granted on the spot, so
-  // the box still records the start, and a learner who began before seats existed just claims one.
-
-  const getCtaLabel = () => {
-    if (isDone) return 'Review course';
-    if (hasStarted) return 'Continue learning';
-    return 'Start learning';
-  };
-
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
       <div className="relative aspect-video w-full overflow-hidden bg-muted">
@@ -119,21 +112,12 @@ export const CourseSummaryCard = ({ course }: IProps) => {
           </div>
         ) : null}
         {enrollment ? (
-          <div className="flex items-center gap-2">
-            <Button
-              isFull
-              className="flex-1 px-4 py-2.5"
-              disabled={progress.total === 0}
-              onClick={() => openCourse(course._id)}
-              leftsection={<PlayCircleIcon weight="fill" className="h-5 w-5" />}
-            >
-              {progress.total === 0 ? 'No content yet' : getCtaLabel()}
-            </Button>
-            <ShareCourse courseId={course._id} appearance="outline" />
+          <div data-course-cta>
+            <CourseCta course={course} />
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <CoursePlans course={course} plans={plans} />
+            <CoursePlans course={course} plans={plans} selectedPlanId={selectedPlanId} onSelectPlan={onSelectPlan} />
             <div className="flex justify-end">
               <ShareCourse courseId={course._id} appearance="outline" />
             </div>
