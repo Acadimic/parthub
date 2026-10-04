@@ -9,6 +9,8 @@ import { useStandardStore, useUserLookups } from '@stores';
 import '@styles/globals.scss';
 // KaTeX's stylesheet hides its MathML twin of every equation; without it each formula shows twice.
 import 'katex/dist/katex.min.css';
+// The printouts' embedded face; only the print pages use the family it declares.
+import '@repo/ui/print/print-font.css';
 import { loadFirebaseUser } from '@utils/firebase';
 import { getToken, IS_WINDOW_UNDEFINED } from '@utils/helpers';
 import type { NextPage } from 'next';

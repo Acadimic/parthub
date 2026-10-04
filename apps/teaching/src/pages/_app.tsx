@@ -11,6 +11,8 @@ import '@styles/globals.scss';
 // Global CSS from node_modules can only be imported here: the Pages Router rejects it from any
 // other file. Next rewrites the font URLs inside it, so the woff2 files need no manual copy.
 import 'katex/dist/katex.min.css';
+// The printouts' embedded face; only the print pages use the family it declares.
+import '@repo/ui/print/print-font.css';
 import { loadFirebaseUser } from '@utils/firebase';
 import { getToken, IS_WINDOW_UNDEFINED } from '@utils/helpers';
 import type { NextPage } from 'next';

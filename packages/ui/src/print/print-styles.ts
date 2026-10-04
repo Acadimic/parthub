@@ -4,10 +4,11 @@
  * document and an `@page` margin box takes its content only from CSS.
  */
 
-const FONT =
-  "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+/** The embedded print face first (`print-font.css`): the system font would print as Type 3 shapes. */
+export const PRINT_FONT =
+  "'Inter Print', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
-const MARGIN_TEXT = `font: 600 7.5pt ${FONT}; color: #8a8fa0;`;
+const MARGIN_TEXT = `font: 600 7.5pt ${PRINT_FONT}; color: #8a8fa0;`;
 
 /** A hairline over the footer, set on every box in the row so it runs the full width. */
 const FOOTER_RULE = 'border-top: 0.6pt solid #e3e5ee; margin-top: 6mm; vertical-align: top; padding-top: 3mm;';
@@ -57,7 +58,7 @@ export const buildPrintCss = ({ footer }: IPageText): string => `
     align-items: center; justify-content: center;
   }
   .print-watermark span {
-    transform: rotate(-30deg); font: 800 80pt/1 ${FONT}; letter-spacing: .1em;
+    transform: rotate(-30deg); font: 800 80pt/1 ${PRINT_FONT}; letter-spacing: .1em;
     color: #3b4fd0; opacity: .035; white-space: nowrap;
   }
 }

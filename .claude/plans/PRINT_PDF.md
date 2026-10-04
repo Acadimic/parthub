@@ -223,3 +223,13 @@ machine reads Atlas at roughly 85 KB/s, so `course/modules/contents` took 55 s. 
 printout needs every body now: quiz and result printouts in learning read the outline, and a
 single module reads `GET course/course/module/contents/:courseId/:moduleId` (both apps). The Spanish
 result printout went from 62 s to 13 s on dev; most of the rest is sign-in and the outline.
+
+## 10. File size (2026-10-04)
+
+Chrome cannot embed the macOS system font in a PDF, so every glyph of body text printed as a Type 3
+shape. Printouts now use Inter from `@fontsource/inter`, declared as `'Inter Print'` in
+`packages/ui/src/print/print-font.css` (imported by each app's `_app`) so the app's screens keep
+their font and never download it. Measured: test paper with answers 589 → 376 KB, answer key
+181 → 79 KB, result 492 → 226 KB, a 31-page module 1,017 → 633 KB, Quantitative Aptitude 5
+6,172 → 2,781 KB, Data Interpretation 5,151 → 4,325 KB (its chart figures are SVG images, whose
+labels keep their own font). Pagination is unchanged.

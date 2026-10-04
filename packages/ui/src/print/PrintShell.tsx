@@ -4,7 +4,7 @@ import { Button } from '../app/buttons/Buttons';
 import { Spinner } from '../app/loaders/Spinner';
 import { cn } from '../lib/cn';
 import { RichTextMediaContext, useRichTextMedia } from '../contexts/rich-text-media-context';
-import { buildPrintCss, type IPageText } from './print-styles';
+import { buildPrintCss, type IPageText, PRINT_FONT } from './print-styles';
 import { usePrintReady } from './use-print-ready';
 
 export interface IPrintShellProps extends IPageText {
@@ -46,7 +46,11 @@ export const PrintShell = ({ documentTitle, footer, isLoaded, controls, onClose,
   }, [isReady]);
 
   return (
-    <div data-theme="light" className="min-h-screen bg-muted text-foreground print:min-h-0 print:bg-transparent">
+    <div
+      data-theme="light"
+      style={{ fontFamily: PRINT_FONT }}
+      className="min-h-screen bg-muted text-foreground print:min-h-0 print:bg-transparent"
+    >
       <style>{buildPrintCss({ footer })}</style>
       <div className="print-watermark" aria-hidden="true">
         <span>ACADIMIC</span>
