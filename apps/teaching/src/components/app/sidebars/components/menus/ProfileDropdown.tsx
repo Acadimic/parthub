@@ -67,7 +67,7 @@ export const ProfileDropdown = () => {
   const handleSwitchAccount = (user: IUser) => {
     if (!user?.org || !selectedUser || user._id === selectedUser._id) return;
     if (!isProfileForApp(THIS_APP, user.permission)) {
-      window.location.assign(`${OTHER_APP.url}/?org=${user.org}`);
+      window.open(`${OTHER_APP.url}/?org=${user.org}`, '_blank');
       return;
     }
     selectUserAndOrg(user._id, user.org);
