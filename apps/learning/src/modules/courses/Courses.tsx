@@ -112,16 +112,16 @@ const SectionHeading = ({ standardId, count }: { standardId: string; count: numb
 };
 
 /**
- * The catalogue page's own title, then the learner's started courses. The home page shows those
+ * The learner's started courses, then the catalogue page's own title. The home page shows those
  * above the catalogue itself, and a search is after something new, so neither shows them here.
  */
 const CatalogueHeading = ({ countLabel, isSearching }: { countLabel: string; isSearching: boolean }) => (
   <>
+    {isSearching ? null : <ContinueLearning className="pb-4 md:pb-6" />}
     <div className="flex flex-col gap-1">
       <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Courses</h1>
       <p className="text-muted-foreground">{countLabel}</p>
     </div>
-    {isSearching ? null : <ContinueLearning className="pb-4 md:pb-6" />}
   </>
 );
 
