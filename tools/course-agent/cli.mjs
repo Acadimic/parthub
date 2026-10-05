@@ -488,13 +488,20 @@ commands['course:content'] = async (options) => {
 /** Recomputes and saves the course roll-up from what its modules link. */
 commands['course:stats'] = async (options) => {
   const courseId = options.course ?? fail('--course <id> is required.');
-  const [course, modules, materials, testPapers, meets] = await Promise.all([api(`course/${courseId}`), api(`course/course/modules/${courseId}`), api('material/all'), api('test-paper/all'), api('meet/all')]);
-  const materialById = byId(materials ?? []);
+  const [course, modules, testPapers, meets] = await Promise.all([api(`course/${courseId}`), api(`course/course/modules/${courseId}`), api('test-paper/all'), api('meet/all')]);
   const testPaperById = byId(testPapers ?? []);
   const meetById = byId(meets ?? []);
   const materialIds = modules.flatMap((row) => row.materials ?? []);
   const testPaperIds = modules.flatMap((row) => row.testPapers ?? []);
-  const linkedMaterials = materialIds.map((id) => materialById.get(String(id))).filter(Boolean);
+  // Only the linked lessons, a few at a time: `material/all` sends every lesson body in the org.
+  // A deleted lesson still linked from a module reads back empty and is left out of the count; any
+  // failed read throws, so the stats are never saved from a partial list.
+  const linkedMaterials = [];
+  for (let index = 0; index < materialIds.length; index += 8) {
+    const chunk = materialIds.slice(index, index + 8);
+    const rows = await Promise.all(chunk.map((id) => api(`material/${id}`)));
+    linkedMaterials.push(...rows.filter((row) => row?._id));
+  }
   // The same count as the teaching app: one reading per lesson, one video per video attached.
   const materialsInfo = utils.getMaterialsInfo(linkedMaterials);
   const stats = {
