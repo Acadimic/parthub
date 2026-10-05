@@ -6,6 +6,8 @@ import { Badge, ExpandableText } from '@repo/ui/core';
 import { type ICourse, useStandardLookups, useUserLookups } from '@stores';
 import { AI_GENERATED_COURSE_TAG } from '@utils/constants';
 import { getPlural, getStringFormattedDate } from '@utils/helpers';
+import { CourseActions } from './CourseActions';
+import { formatCourseDuration } from './duration';
 
 interface IProps {
   course: ICourse;
@@ -65,7 +67,7 @@ const TeacherRow = ({ course }: IProps) => {
   );
 };
 
-/** The title block: where the course sits in the catalogue, what it is, and who teaches it. */
+/** The title block: where the course sits in the catalogue, what it is, who teaches it, and its actions. */
 export const CourseHero = ({ course }: IProps) => {
   const { getCourseModules } = useCourse();
   const modulesCount = getCourseModules(course._id).length;
@@ -92,12 +94,15 @@ export const CourseHero = ({ course }: IProps) => {
         <MetaItem icon={StackIcon}>
           {modulesCount} {getPlural(modulesCount, 'module')}
         </MetaItem>
-        {totalMins ? <MetaItem icon={ClockIcon}>{totalMins} min</MetaItem> : null}
+        {totalMins ? <MetaItem icon={ClockIcon}>{formatCourseDuration(totalMins)}</MetaItem> : null}
         {course.publishedDate ? (
           <MetaItem icon={CalendarBlankIcon}>Published {getStringFormattedDate(course.publishedDate)}</MetaItem>
         ) : null}
       </div>
-      <TeacherRow course={course} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <TeacherRow course={course} />
+        <CourseActions course={course} />
+      </div>
     </div>
   );
 };

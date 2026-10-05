@@ -8,8 +8,11 @@ export const useBookmark = () => {
 
   const toggleBookmark = async (collectionItem: string, collectionRef: CollectionType) => {
     setIsLoadingBookmark(true);
-    await resourceStore.toggleBookmark(collectionItem, collectionRef);
-    setIsLoadingBookmark(false);
+    try {
+      await resourceStore.toggleBookmark(collectionItem, collectionRef);
+    } finally {
+      setIsLoadingBookmark(false);
+    }
   };
 
   return {

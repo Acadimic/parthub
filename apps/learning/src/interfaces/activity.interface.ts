@@ -68,7 +68,7 @@ export interface IActivityDay {
   count: number;
 }
 
-export type SavedItemKind = 'lesson' | 'test' | 'question';
+export type SavedItemKind = 'course' | 'lesson' | 'test' | 'question';
 
 /** A bookmark resolved against the stores: what it points at, and where it lives. */
 export interface ISavedItem {

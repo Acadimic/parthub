@@ -12,6 +12,7 @@ import {
   BookmarkSimpleIcon,
   BookOpenTextIcon,
   ClipboardTextIcon,
+  GraduationCapIcon,
   QuestionIcon,
 } from '@phosphor-icons/react';
 import {
@@ -22,26 +23,35 @@ import {
   useTestPaperLookups,
 } from '@stores';
 import { getPlural, getStringFormattedDate } from '@utils/helpers';
+import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 type Filter = SavedItemKind | 'all';
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: 'all', label: 'Everything' },
+  { value: 'course', label: 'Courses' },
   { value: 'lesson', label: 'Lessons' },
   { value: 'test', label: 'Tests' },
   { value: 'question', label: 'Questions' },
 ];
 
-const KIND_LABEL: Record<SavedItemKind, string> = { lesson: 'Lesson', test: 'Test paper', question: 'Question' };
+const KIND_LABEL: Record<SavedItemKind, string> = {
+  course: 'Course',
+  lesson: 'Lesson',
+  test: 'Test paper',
+  question: 'Question',
+};
 
 const KIND_ICON = {
+  course: GraduationCapIcon,
   lesson: BookOpenTextIcon,
   test: ClipboardTextIcon,
   question: QuestionIcon,
 };
 
 const KIND_BY_REF: Partial<Record<CollectionType, SavedItemKind>> = {
+  [CollectionType.COURSE]: 'course',
   [CollectionType.MATERIAL]: 'lesson',
   [CollectionType.TEST_PAPER]: 'test',
   [CollectionType.QUESTION]: 'question',
@@ -79,6 +89,7 @@ const useSavedItems = (): { items: ISavedItem[]; rows: Record<string, BookmarkDt
       if (!kind || !course) return [];
       rows[bookmark._id] = bookmark;
       const title = (() => {
+        if (kind === 'course') return course.name;
         if (kind === 'lesson') return getMaterialById(bookmark.collectionItem)?.name ?? 'A lesson';
         if (kind === 'test') return getTestPaperById(bookmark.collectionItem)?.name ?? 'A test paper';
         const preview = getPlainText(getQuestionById(bookmark.collectionItem)?.body);
@@ -144,26 +155,36 @@ const SavedCard = ({ item, onRemove, onOpen }: { item: ISavedItem; onRemove: () 
   );
 };
 
+/** Saved courses are listed together rather than each under a heading repeating its own name. */
+const SAVED_COURSES_GROUP = { courseId: '', courseName: 'Courses saved for later' };
+
 /**
- * Everything the learner has bookmarked, grouped by course. A lesson or test opens in place in the
- * learning view; a question opens its course, since the paper it sits in is only known once that
- * paper is loaded.
+ * Everything the learner has bookmarked, grouped by course. A saved course opens its page; a lesson
+ * or test opens in place in the learning view; a question opens its course, since the paper it sits
+ * in is only known once that paper is loaded.
  */
 export const SavedItems = () => {
   const [filter, setFilter] = useState<Filter>('all');
   const { items, rows } = useSavedItems();
   const { removeBookmark } = useResourceLookups();
   const { getCourseItems, openItem, openCourse } = useCourse();
+  const { getCoursePathById } = useCourseLookups();
+  const { push } = useRouter();
 
   const visible = filter === 'all' ? items : items.filter((item) => item.kind === filter);
   const byCourse = visible.reduce<{ courseId: string; courseName: string; items: ISavedItem[] }[]>((groups, item) => {
-    const group = groups.find((entry) => entry.courseId === item.courseId);
+    const key = item.kind === 'course' ? SAVED_COURSES_GROUP : item;
+    const group = groups.find((entry) => entry.courseId === key.courseId);
     if (group) group.items.push(item);
-    else groups.push({ courseId: item.courseId, courseName: item.courseName, items: [item] });
+    else groups.push({ courseId: key.courseId, courseName: key.courseName, items: [item] });
     return groups;
   }, []);
 
   const open = (item: ISavedItem) => {
+    if (item.kind === 'course') {
+      push(getCoursePathById(item.courseId));
+      return;
+    }
     const courseItem = getCourseItems(item.courseId).find(
       (entry) => (entry.material?._id ?? entry.testPaper?._id) === item.collectionItem,
     );
@@ -181,7 +202,7 @@ export const SavedItems = () => {
       <BlankState
         className="py-16"
         label="Nothing saved yet"
-        description="Use the bookmark on a lesson, a test paper or a question to keep it here for later."
+        description="Save a course, or bookmark a lesson, a test paper or a question, to keep it here for later."
         action={
           <Link href="/courses" isSecondary>
             Browse courses
