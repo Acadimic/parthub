@@ -6,16 +6,17 @@ import {
   ClockIcon,
   FileTextIcon,
   SealCheckIcon,
+  StackIcon,
   VideoCameraIcon,
   YoutubeLogoIcon,
 } from '@phosphor-icons/react';
 import { type ICourse, useCourseLookups, useEnrollmentLookups } from '@stores';
 import { getPlural } from '@utils/helpers';
-import { ShareCourse } from '../course-modules';
 import { AI_GENERATED_COURSE_TAG } from '@utils/constants';
 import { getStringFormattedDate } from '@utils/helpers';
 import { CourseCta } from './CourseCta';
 import { CoursePlans } from './CoursePlans';
+import { formatCourseDuration } from './duration';
 
 interface IProps {
   course: ICourse;
@@ -38,10 +39,9 @@ const countLabel = (count: number, noun: string) => (count ? `${count} ${getPlur
 const IncludesList = ({ course, modulesCount }: { course: ICourse; modulesCount: number }) => {
   const stats = course.stats;
   const totalMins = stats ? stats.testsDurationMins + stats.materialsDurationMins + stats.meetsDurationMins : 0;
-  const hours = Math.round((totalMins / 60) * 10) / 10;
   const rows = [
-    { icon: ClockIcon, label: hours ? `${hours} hours of content` : 'Self-paced' },
-    { icon: BookOpenTextIcon, label: countLabel(modulesCount, 'module') },
+    { icon: ClockIcon, label: totalMins ? `${formatCourseDuration(totalMins)} of content` : 'Self-paced' },
+    { icon: StackIcon, label: countLabel(modulesCount, 'module') },
     { icon: YoutubeLogoIcon, label: countLabel(stats?.videosCount ?? 0, 'video') },
     { icon: BookOpenTextIcon, label: countLabel(stats?.readingsCount ?? 0, 'reading') },
     { icon: FileTextIcon, label: countLabel(stats?.testsCount ?? 0, 'test') },
@@ -49,7 +49,7 @@ const IncludesList = ({ course, modulesCount }: { course: ICourse; modulesCount:
   ].filter((row) => row.label);
 
   return (
-    <div>
+    <div className="border-t border-border pt-4">
       <div className="mb-2 text-xs font-semibold uppercase tracking-caps text-muted-foreground">
         This course includes
       </div>
@@ -116,12 +116,7 @@ export const CourseSummaryCard = ({ course, selectedPlanId, onSelectPlan }: IPro
             <CourseCta course={course} />
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            <CoursePlans course={course} plans={plans} selectedPlanId={selectedPlanId} onSelectPlan={onSelectPlan} />
-            <div className="flex justify-end">
-              <ShareCourse courseId={course._id} appearance="outline" />
-            </div>
-          </div>
+          <CoursePlans course={course} plans={plans} selectedPlanId={selectedPlanId} onSelectPlan={onSelectPlan} />
         )}
         <IncludesList course={course} modulesCount={modulesCount} />
       </div>

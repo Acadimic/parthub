@@ -5,6 +5,7 @@ import { cn } from '@repo/ui/lib';
 import { useEnrollment } from '@hooks/enrollment.hook';
 import { CheckCircleIcon, LockSimpleOpenIcon, ShieldCheckIcon } from '@phosphor-icons/react';
 import { type ICourse } from '@stores';
+import Link from 'next/link';
 
 interface IProps {
   course: ICourse;
@@ -29,10 +30,14 @@ const getPeriodLabel = (plan: PlanDto) => {
   return interval === 1 ? `per ${unit}` : `for ${interval} ${unit}s`;
 };
 
+/** The percentage off the struck-through price, or 0 when the plan shows none. */
+const getSaving = (plan: PlanDto) =>
+  plan.realAmount && plan.realAmount > plan.amount ? Math.round((1 - plan.amount / plan.realAmount) * 100) : 0;
+
 const PlanOption = ({ plan, isSelected, onSelect }: { plan: PlanDto; isSelected: boolean; onSelect: () => void }) => {
   const isFree = plan.amount === 0;
-  const hasStrike = Boolean(plan.realAmount && plan.realAmount > plan.amount);
-  const saving = hasStrike ? Math.round((1 - plan.amount / (plan.realAmount as number)) * 100) : 0;
+  const saving = getSaving(plan);
+  const hasStrike = saving > 0;
   return (
     <button
       type="button"
@@ -77,9 +82,34 @@ const PlanOption = ({ plan, isSelected, onSelect }: { plan: PlanDto; isSelected:
             {formatAmount(plan.realAmount as number, plan.currency ?? 'INR')}
           </span>
         ) : null}
-        <span className="block text-xxs text-muted-foreground">{getPeriodLabel(plan)}</span>
+        {isFree ? null : <span className="block text-xxs text-muted-foreground">{getPeriodLabel(plan)}</span>}
       </span>
     </button>
+  );
+};
+
+/** A course sold on one paid plan has nothing to choose, so its price is shown as a line, not a picker. */
+const PlanPrice = ({ plan }: { plan: PlanDto }) => {
+  const currency = plan.currency ?? 'INR';
+  const saving = getSaving(plan);
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span className="font-mono text-2xl font-semibold">{formatAmount(plan.amount, currency)}</span>
+        {saving ? (
+          <span className="font-mono text-sm text-muted-foreground line-through">
+            {formatAmount(plan.realAmount as number, currency)}
+          </span>
+        ) : null}
+        <span className="text-xs text-muted-foreground">{getPeriodLabel(plan)}</span>
+        {saving ? (
+          <Badge tone="success" className="px-1.5 text-xxs">
+            Save {saving}%
+          </Badge>
+        ) : null}
+      </div>
+      {plan.description ? <p className="text-xs text-muted-foreground">{plan.description}</p> : null}
+    </div>
   );
 };
 
@@ -117,16 +147,19 @@ export const EnrolButton = ({ course, plan }: { course: ICourse; plan: PlanDto |
 
 /**
  * The buy box: the plans a course is sold on, one of them chosen, and the button that enrols.
- * A course with no plans, or a chosen plan that costs nothing, enrols for free in one click.
+ * A course with no plans, or a chosen plan that costs nothing, enrols for free in one click; a
+ * single plan is shown as its price rather than a choice of one.
  */
 export const CoursePlans = ({ course, plans, selectedPlanId, onSelectPlan }: IProps) => {
   const sorted = sortPlans(plans);
   const selected = sorted.find((plan) => plan._id === selectedPlanId) ?? null;
   const isPaidCourse = plans.some((plan) => plan.amount > 0);
+  const [onlyPlan] = sorted;
 
   return (
     <div className="flex flex-col gap-3">
-      {sorted.length ? (
+      {sorted.length === 1 && onlyPlan.amount > 0 ? <PlanPrice plan={onlyPlan} /> : null}
+      {sorted.length > 1 ? (
         <div role="radiogroup" aria-label="Plans" className="flex flex-col gap-2">
           {sorted.map((plan) => (
             <PlanOption
@@ -144,7 +177,12 @@ export const CoursePlans = ({ course, plans, selectedPlanId, onSelectPlan }: IPr
       {isPaidCourse ? (
         <p className="flex items-center justify-center gap-1.5 text-xxs text-muted-foreground">
           <ShieldCheckIcon weight="bold" className="h-3.5 w-3.5" />
-          Secure payment by Razorpay · 7-day refund, see Terms
+          <span>
+            Secure payment by Razorpay · 7-day refund, see{' '}
+            <Link href="/terms#payments" className="text-primary hover:underline">
+              Terms
+            </Link>
+          </span>
         </p>
       ) : (
         <p className="text-center text-xxs text-muted-foreground">No payment needed. Start straight away.</p>

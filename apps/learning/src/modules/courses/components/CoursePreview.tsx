@@ -75,7 +75,8 @@ export const CoursePreview = () => {
             </section>
           </div>
           <aside className="hidden lg:block">
-            <div className="sticky top-20">
+            {/* Capped at the viewport so a card with several plans can still be scrolled to its end. */}
+            <div className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto">
               <CourseSummaryCard
                 course={selectedCourse}
                 selectedPlanId={selectedPlanId}
