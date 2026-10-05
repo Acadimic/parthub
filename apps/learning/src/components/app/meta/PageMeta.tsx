@@ -5,6 +5,9 @@ interface IProps {
   meta: IPageMeta;
 }
 
+/** Google Search Console's ownership proof for an "HTML tag" property; unset leaves the tag out. */
+const GOOGLE_SITE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+
 /**
  * The title, description and Open Graph tags a browser tab and a shared link's preview read, plus
  * the canonical address and structured data a search engine reads where the page knows them.
@@ -16,6 +19,7 @@ export const PageMeta = ({ meta }: IProps) => (
     <meta name="description" content={meta.description} />
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+    {GOOGLE_SITE_VERIFICATION ? <meta name="google-site-verification" content={GOOGLE_SITE_VERIFICATION} /> : null}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Acadimic" />
     <meta property="og:title" content={meta.title} />
