@@ -4,7 +4,15 @@ import { CourseService } from '@services';
 import { useCourseStore, useMaterialStore } from '@stores';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { buildEyebrow, closePrintTab, loadEnrolledCourse, loadQuizzes, readQuiz, toErrorMessage } from './print-data';
+import {
+  buildEyebrow,
+  closePrintTab,
+  getPrintCourseUrl,
+  loadEnrolledCourse,
+  loadQuizzes,
+  readQuiz,
+  toErrorMessage,
+} from './print-data';
 
 interface IProps {
   courseId: string;
@@ -47,6 +55,7 @@ const loadCourse = async (courseId: string, moduleId: string | null): Promise<IS
     title: moduleId ? picked[0].row.name : course.name,
     data: {
       course,
+      courseUrl: getPrintCourseUrl(course),
       modules: picked.map(({ row, number }) => ({
         module: row,
         number,

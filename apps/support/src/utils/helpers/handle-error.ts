@@ -1,8 +1,12 @@
 import { type AxiosError } from 'axios';
 
-/** The body the server's exception filter returns. */
+/**
+ * The bodies the server returns: `{ error: { code, message } }` from `HttpExceptionFilter` and
+ * `MongoDuplicateKeyFilter`, a bare `{ message }` from the validation pipe.
+ */
 interface IApiErrorBody {
-  message?: string;
+  message?: string | string[];
+  error?: { message?: string | string[] };
 }
 
 import { errorToast } from './toasts';
@@ -16,8 +20,11 @@ export const handleError = (errorData: AxiosError, shouldNotThrowError?: boolean
   //   return;
   // }
   if (errorData.response) {
+    // Reading only the bare form showed Axios's "Request failed with status code 409" in place of
+    // the server's reason, such as which standard or subject name was already taken.
     const error = errorData.response.data as IApiErrorBody | undefined;
-    message = error?.message || errorData?.message;
+    const messages = error?.error?.message || error?.message || errorData?.message;
+    message = Array.isArray(messages) ? messages.join('. ') : messages;
     errorToast({ message });
   } else if (errorData.request) {
     message = 'Network error. Refresh the page.';

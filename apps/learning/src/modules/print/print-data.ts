@@ -9,6 +9,7 @@ import {
   useStandardStore,
   useTestPaperStore,
 } from '@stores';
+import { getAbsoluteUrl, getCoursePath } from '@utils/helpers';
 
 /**
  * A quiz always prints with its correct answers; the worked solutions follow only once the learner
@@ -23,6 +24,10 @@ export const readQuiz = (testPaperId: string): IPrintQuiz | null => {
   const isSubmitted = testPapers.getMyAttemptsByTestPaperId(testPaperId).length > 0;
   return { paper: { paper, sections, questions }, version: 'answers', solutions: isSubmitted ? 'shown' : 'hidden' };
 };
+
+/** The course's full public address for the closing panel; a draft has none anyone else could open. */
+export const getPrintCourseUrl = (course: ICourse): string | null =>
+  course.isPublished ? getAbsoluteUrl(getCoursePath(course)) : null;
 
 /** "Course · Class 11 · Physics": a kind, then the standards and subjects the course is tagged with. */
 export const buildEyebrow = (kind: string, course: ICourse) => {

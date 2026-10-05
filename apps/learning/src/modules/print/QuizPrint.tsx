@@ -2,7 +2,15 @@ import { type IPrintQuiz, PrintClosing, PrintSheet, PrintShell, PrintTestPaper }
 import { BlankState } from '@components/others';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { buildEyebrow, closePrintTab, loadEnrolledCourse, loadQuizzes, readQuiz, toErrorMessage } from './print-data';
+import {
+  buildEyebrow,
+  closePrintTab,
+  getPrintCourseUrl,
+  loadEnrolledCourse,
+  loadQuizzes,
+  readQuiz,
+  toErrorMessage,
+} from './print-data';
 
 interface IProps {
   courseId: string;
@@ -12,6 +20,7 @@ interface IProps {
 interface ISnapshot {
   quiz: IPrintQuiz;
   eyebrow: string;
+  courseUrl: string | null;
 }
 
 /** Read through its course, so a quiz in another organization's published course prints too. */
@@ -24,7 +33,7 @@ const loadQuiz = async (courseId: string, testPaperId: string): Promise<ISnapsho
   const quiz = readQuiz(testPaperId);
   if (!quiz) throw new Error('This quiz could not be loaded.');
   const reveals = quiz.solutions === 'shown' ? 'Quiz · With answers and solutions' : 'Quiz · With answers';
-  return { quiz, eyebrow: buildEyebrow(reveals, course) };
+  return { quiz, eyebrow: buildEyebrow(reveals, course), courseUrl: getPrintCourseUrl(course) };
 };
 
 /** One quiz from a course: a question paper until the learner submits it, then with its answers. */
@@ -67,7 +76,7 @@ export const QuizPrint = ({ courseId, testPaperId }: IProps) => {
             placement="standalone"
             sitting={null}
           />
-          <PrintClosing />
+          <PrintClosing courseUrl={snapshot.courseUrl} />
         </PrintSheet>
       ) : null}
     </PrintShell>

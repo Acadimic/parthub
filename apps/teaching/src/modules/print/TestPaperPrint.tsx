@@ -77,7 +77,8 @@ export const TestPaperPrint = ({ testPaperId }: IProps) => {
             placement="standalone"
             sitting={null}
           />
-          <PrintClosing />
+          {/* A test paper stands alone; it has no course to link to. */}
+          <PrintClosing courseUrl={null} />
         </PrintSheet>
       ) : null}
     </PrintShell>

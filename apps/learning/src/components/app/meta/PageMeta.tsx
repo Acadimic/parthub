@@ -6,9 +6,8 @@ interface IProps {
 }
 
 /**
- * The title, description and Open Graph tags a browser tab and a shared link's preview read. No
- * `og:url` or canonical: a statically built dynamic route only knows its pattern (`/order/[code]`),
- * and a preview falls back to the address it fetched, which is always right.
+ * The title, description and Open Graph tags a browser tab and a shared link's preview read, plus
+ * the canonical address and structured data a search engine reads where the page knows them.
  */
 export const PageMeta = ({ meta }: IProps) => (
   <Head>
@@ -21,11 +20,14 @@ export const PageMeta = ({ meta }: IProps) => (
     <meta property="og:site_name" content="Acadimic" />
     <meta property="og:title" content={meta.title} />
     <meta property="og:description" content={meta.description} />
+    {meta.url ? <link rel="canonical" href={meta.url} /> : null}
+    {meta.url ? <meta property="og:url" content={meta.url} /> : null}
     <meta property="og:image" content={meta.image} />
     <meta property="og:image:alt" content={meta.title} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={meta.title} />
     <meta name="twitter:description" content={meta.description} />
     <meta name="twitter:image" content={meta.image} />
+    {meta.jsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: meta.jsonLd }} /> : null}
   </Head>
 );

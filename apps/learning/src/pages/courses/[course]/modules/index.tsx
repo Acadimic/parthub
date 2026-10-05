@@ -4,9 +4,8 @@ import { useRouter } from 'next/router';
 
 const CourseModulesPage = () => {
   const { query } = useRouter();
-  const { courseId } = query;
 
-  return <Course courseId={courseId as string} isPreview={false} />;
+  return <Course courseId={query.course as string} isPreview={false} />;
 };
 
 CourseModulesPage.layout = Layout.FOCUS;

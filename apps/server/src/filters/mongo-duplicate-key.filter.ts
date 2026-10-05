@@ -3,7 +3,8 @@ import { ErrorResponse } from '@repo/shared/responses';
 import { FastifyReply } from 'fastify';
 import { mongo } from 'mongoose';
 
-const DUPLICATE_KEY = 11000;
+/** MongoDB's code for a write a unique index refused. */
+export const DUPLICATE_KEY = 11000;
 
 /**
  * Turns a MongoDB duplicate-key error into a 409 the apps can show.

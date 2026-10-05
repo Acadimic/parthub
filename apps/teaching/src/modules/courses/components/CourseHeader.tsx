@@ -16,6 +16,7 @@ import { useCourseStore, useStandardLookups } from '@stores';
 import { ALL } from '@repo/shared/utils';
 import { reportError, successToast } from '@utils/helpers';
 import { useSetState } from 'react-use';
+import { CoursePublicLink } from './CoursePublicLink';
 
 interface IProps {
   course: CourseDto;
@@ -130,6 +131,7 @@ export const CourseHeader = ({ course, moduleCount, onEdit, onAddModule }: IProp
           />
         </div>
       </div>
+      <CoursePublicLink course={course} />
       <CourseStats course={course} moduleCount={moduleCount} />
       <SoftConfirmModal
         title={isPublished ? 'Unpublish this course?' : 'Publish this course?'}

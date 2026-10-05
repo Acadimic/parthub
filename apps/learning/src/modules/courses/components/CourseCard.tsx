@@ -3,6 +3,7 @@ import { ArrowRightIcon, BookOpenTextIcon, ClockIcon, FileTextIcon, VideoCameraI
 import { type ICourse, useSelectorLookups, useStandardLookups } from '@stores';
 import Link from 'next/link';
 import { type ReactNode } from 'react';
+import { getCoursePath } from '@utils/helpers';
 import { CourseCover } from './CourseCover';
 
 interface IProps {
@@ -72,7 +73,7 @@ export const CourseCard = ({ course, progress }: IProps) => {
 
   return (
     <Link
-      href={`/courses/${course._id}/preview`}
+      href={getCoursePath(course)}
       onClick={() => setSelectedCourseId(course._id)}
       className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-background transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >

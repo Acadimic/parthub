@@ -40,6 +40,10 @@ Shared print stylesheet, A4 only, light theme forced whatever the app's colour m
   `https://www.acadimic.com`; Chrome keeps `<a href>` clickable in a saved PDF. There is no running
   header (Manish, 2026-10-04): an `@page` margin box can't hold a link, and the header read as part
   of the content.
+- **Course link** (Manish, 2026-10-05): the closing panel of a course, module, quiz or result
+  printout also prints the course's full public address, `/courses/<slug>`, as a live link, so a
+  reader can open it on Acadimic. Each app passes it as `courseUrl`; it is `null`, and the line is
+  left out, for a draft and for a standalone test paper.
 - **Watermark**: the word "ACADIMIC", rotated −30°, in the accent colour at ~4% opacity, centred on
   every page. It is one `position: fixed` element inside `@media print`, which Chrome and Firefox
   repeat on every printed page. That makes it about ten lines, so it stays in. It is

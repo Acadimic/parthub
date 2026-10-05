@@ -97,3 +97,7 @@ CourseSchema.index({ org: 1, _deleted: 1 });
 // CourseService.getPublicCourses, the public catalogue. `_deleted` is a `$ne`, a range, so it goes
 // after the sort keys or the sort cannot come from the index.
 CourseSchema.index({ isPublished: 1, order: 1, publishedDate: -1, _deleted: 1 });
+// The public address, unique across organizations among live rows; CourseService.upsert turns a
+// duplicate into a 409 the teaching app shows. An empty slug is left out, so those rows do not
+// collide. CourseService.getPublicCourseBySlug filters `_deleted: false` so this index serves it.
+CourseSchema.index({ slug: 1 }, { unique: true, partialFilterExpression: { _deleted: false, slug: { $gt: '' } } });

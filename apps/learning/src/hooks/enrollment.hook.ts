@@ -1,7 +1,7 @@
 import { type PlanDto } from '@repo/shared/contracts';
 import { useCourse } from '@hooks/course.hook';
 import { type ICourse, useEnrollmentLookups, useSelectedUser } from '@stores';
-import { errorToast, successToast } from '@utils/helpers';
+import { errorToast, getCoursePath, successToast } from '@utils/helpers';
 import { useState } from 'react';
 
 const CHECKOUT_SCRIPT = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -42,7 +42,7 @@ export const useEnrollment = () => {
   const enroll = async (course: ICourse, plan: PlanDto | null) => {
     // A seat belongs to an account, so a visitor signs in first and comes back to choose again.
     if (!selectedUser) {
-      pushToSignIn(`/courses/${course._id}/preview`);
+      pushToSignIn(getCoursePath(course));
       return;
     }
     setIsEnrolling(true);

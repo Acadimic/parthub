@@ -14,6 +14,7 @@ import {
 } from '@phosphor-icons/react';
 import { type ICourse, useSelectedCourse } from '@stores';
 import { useState } from 'react';
+import { getCoursePath } from '@utils/helpers';
 import { CourseCompleteBanner, CourseModuleContent } from './course-modules';
 import { CourseOutline } from './CourseOutline';
 
@@ -29,7 +30,7 @@ const OutlineHeader = ({ course }: { course: ICourse }) => {
           <div className="text-xs font-semibold uppercase tracking-caps text-muted-foreground">Course</div>
           <div className="truncate text-sm font-semibold">{course.name}</div>
         </div>
-        <Link href={`/courses/${course._id}/preview`} isSubtle className="shrink-0 px-2 py-1 text-xs text-primary">
+        <Link href={getCoursePath(course)} isSubtle className="shrink-0 px-2 py-1 text-xs text-primary">
           Overview
         </Link>
       </div>
@@ -66,7 +67,7 @@ export const CourseModules = () => {
 
   if (!selectedCourse) return null;
 
-  const previewHref = `/courses/${selectedCourse._id}/preview`;
+  const previewHref = getCoursePath(selectedCourse);
   const progress = getCourseProgress(selectedCourse._id);
   const isDone = progress.total > 0 && progress.completed >= progress.total;
   const crumbs: IBreadcrumbItem[] = [

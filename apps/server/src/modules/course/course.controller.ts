@@ -223,6 +223,16 @@ export class CourseController {
     return { course, presignedUrls: await this.s3Service.presignStoredReferences(images) };
   }
 
+  /** One published course by its public address, `/courses/<slug>` in the learning app. */
+  @Public()
+  @Get('published/slug/:slug')
+  async getPublishedCourseBySlug(@Param('slug') slug: string): Promise<PublishedCourseResponse> {
+    const course = await this.courseService.getPublicCourseBySlug(slug);
+    if (!course) throw new NotFoundException('Course not found.');
+    const images = (course.attachments ?? []).map((attachment) => attachment.url);
+    return { course, presignedUrls: await this.s3Service.presignStoredReferences(images) };
+  }
+
   /** A published course's syllabus for a visitor who is not signed in. */
   @Public()
   @Get('published/outline/:courseId')

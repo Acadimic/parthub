@@ -11,6 +11,7 @@ import {
 import { getMeetRepeatText, toRecurringMeet } from '@repo/shared/utils';
 import NextLink from 'next/link';
 import dayjs from 'dayjs';
+import { useCourseStore } from '@stores';
 import { getSessionPoints, getSessionSpan, getSessionState } from '../session.utils';
 import { DateLeaf, JoinAction, LivePulse, SessionHost, SessionTiming } from './SessionBits';
 
@@ -25,6 +26,7 @@ interface IProps {
  * glows when the class is on or about to start, so a learner landing here knows to hurry.
  */
 export const NextSessionHero = ({ meet, courseId, courseName }: IProps) => {
+  const courseHref = useCourseStore((state) => state.getCoursePathById(courseId));
   const state = getSessionState(meet);
   const isHot = state === 'live' || state === 'soon';
   const points = getSessionPoints(meet);
@@ -61,7 +63,7 @@ export const NextSessionHero = ({ meet, courseId, courseName }: IProps) => {
           <h2 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">{meet.title}</h2>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
             <NextLink
-              href={`/courses/${courseId}/preview`}
+              href={courseHref}
               className="flex min-w-0 items-center gap-1.5 truncate font-medium text-foreground hover:text-primary hover:underline"
             >
               <GraduationCapIcon weight="bold" className="h-4 w-4 shrink-0" />

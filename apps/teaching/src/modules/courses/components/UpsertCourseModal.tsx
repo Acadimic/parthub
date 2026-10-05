@@ -16,7 +16,7 @@ import {
   useSelectorLookups,
   useStandardLookups,
 } from '@stores';
-import { ALL } from '@repo/shared/utils';
+import { ALL, slugify } from '@repo/shared/utils';
 import { errorToast, reportError, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
@@ -38,6 +38,8 @@ interface ISnapshot {
  */
 const getValidationError = (course: CourseDto, plans: PlanDto[], hasNewFiles: boolean): string | undefined => {
   if (course.name.trim() === '') return 'Please enter a valid course name.';
+  // The public link is made from the name's English letters and digits; with none it would be empty.
+  if (slugify(course.name) === '') return 'Course name must contain at least one English letter or number.';
   if ((course.standards ?? []).length === 0) return 'Please select at least one standard.';
   if ((course.attachments ?? []).length === 0 && !hasNewFiles) return 'Please add at least one course image.';
   if (plans.length === 0) return 'Please add at least one plan.';
@@ -173,7 +175,13 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
       const result = await CourseService.upsertCourseAndPlans({
         // Picking the "All" item clears the selection, but a row saved before that did could still
         // carry the sentinel, and the server validates every id as a MongoId.
-        course: { ...course, subjects: (course.subjects ?? []).filter((subjectId) => subjectId !== ALL) },
+        // The slug, the course's public address, follows the name. A name another course already
+        // has is refused by the server's unique index, and its 409 is toasted by `handleError`.
+        course: {
+          ...course,
+          slug: slugify(course.name),
+          subjects: (course.subjects ?? []).filter((subjectId) => subjectId !== ALL),
+        },
         plans,
       });
       if (result?.data) {
@@ -251,6 +259,11 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
                 }
                 required
               />
+              {selectedCourse.slug ? (
+                <p className="-mt-1 text-xs text-muted-foreground">
+                  Renaming changes the course’s public link; links already shared will stop working.
+                </p>
+              ) : null}
               <TextArea
                 label="Course Description"
                 value={selectedCourse.description || ''}

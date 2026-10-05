@@ -7,7 +7,14 @@ import { useShallow } from 'zustand/react/shallow';
 import { type CollectionType, PeriodType, CurrencyType, Subdomain } from '../enums';
 import { CourseService, MeetService, PlanService } from '../services';
 import { type ICourseModuleContents } from '../services/course.service';
-import { capitalize, getObjectId, getToken, onceInFlight, seedPresignedUrlCache } from '../utils/helpers';
+import {
+  capitalize,
+  getCoursePath,
+  getObjectId,
+  getToken,
+  onceInFlight,
+  seedPresignedUrlCache,
+} from '../utils/helpers';
 import { useMaterialStore } from './material.store';
 import { useMeetStore } from './meet.store';
 import { useSelectorStore } from './selector.store';
@@ -33,6 +40,10 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   completedModuleMap: Record<string, ICompletedModuleFields>;
 
   getCourseById: (courseId: string) => ICourse | undefined;
+  /** A published course by its public address; the catalogue holds every one. */
+  getCourseBySlug: (slug: string) => ICourse | undefined;
+  /** The course's public address, or its id address while it is not in the store. */
+  getCoursePathById: (courseId: string) => string;
   getCourseModuleById: (courseModuleId: string) => ICourseModule | undefined;
   getCourses: () => ICourse[];
   getPlans: () => PlanDto[];
@@ -159,6 +170,15 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   ...createRequestSlice(['courses', 'plans', 'courseModules', 'completedModules'], set, get),
 
   getCourseById: (courseId) => (courseId ? get().courseMap[courseId] : undefined),
+
+  getCourseBySlug: (slug) =>
+    slug
+      ? get()
+          .getCourses()
+          .find((course) => course.slug === slug)
+      : undefined,
+
+  getCoursePathById: (courseId) => getCoursePath(get().courseMap[courseId] ?? { _id: courseId }),
 
   getCourseModuleById: (courseModuleId) => (courseModuleId ? get().courseModuleMap[courseModuleId] : undefined),
 

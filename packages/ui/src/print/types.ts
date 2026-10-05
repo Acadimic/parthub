@@ -60,6 +60,11 @@ export interface IPrintCourse {
   course: IPrintCourseFields;
   /** In course order. */
   modules: IPrintModule[];
+  /**
+   * The course's full public address, printed as a link at the end so a reader can open it on
+   * Acadimic. `null` when there is nothing anyone else could open: a draft, or no slug yet.
+   */
+  courseUrl: string | null;
 }
 
 /** How a learner answered one question in a sitting. */

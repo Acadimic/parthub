@@ -1,6 +1,7 @@
 import { type IPrintCourse, type IPrintPaper, PrintCourse, PrintOptionPicker, PrintShell } from '@repo/ui/print';
 import { BlankState } from '@components/others';
 import { CourseService, TestPaperService } from '@services';
+import { getCoursePublicUrl } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { buildEyebrow, closePrintTab } from './print-data';
@@ -66,6 +67,8 @@ const loadCourse = async (courseId: string, moduleId: string | null): Promise<IS
     title: moduleId ? modules[0].name : course.name,
     data: {
       course,
+      // Only a published course opens for a reader; a draft's address would not.
+      courseUrl: course.isPublished ? getCoursePublicUrl(course) : null,
       modules: picked.map(({ row, number }) => ({
         module: row,
         number,

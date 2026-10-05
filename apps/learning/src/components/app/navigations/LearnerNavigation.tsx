@@ -25,7 +25,7 @@ export const learnerRoutes: INavigation[] = [
   { name: 'Activity', route: '/activity', icon: ChartLineUpIcon },
 ];
 
-/** Active for the route itself and anything under it, so `/courses/:id/preview` lights "Courses". */
+/** Active for the route itself and anything under it, so `/courses/<slug>` lights "Courses". */
 export const isRouteActive = (current: string, route: string) =>
   route === '/' ? current === '/' : current === route || current.startsWith(`${route}/`);
 

@@ -12,7 +12,15 @@ import { useTestPaperStore } from '@stores';
 import { getStringFormattedDate } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { buildEyebrow, closePrintTab, loadEnrolledCourse, loadQuizzes, readQuiz, toErrorMessage } from './print-data';
+import {
+  buildEyebrow,
+  closePrintTab,
+  getPrintCourseUrl,
+  loadEnrolledCourse,
+  loadQuizzes,
+  readQuiz,
+  toErrorMessage,
+} from './print-data';
 import { fromSavedResult, type ISittingHandoff, readHandedOffSitting } from './sitting-handoff';
 
 interface IProps {
@@ -24,6 +32,7 @@ interface ISnapshot {
   quiz: IPrintQuiz;
   sitting: IPrintSitting;
   eyebrow: string;
+  courseUrl: string | null;
 }
 
 const toSitting = (handoff: ISittingHandoff, questionIds: string[]): IPrintSitting => ({
@@ -65,6 +74,7 @@ const loadResult = async (courseId: string, sittingId: string): Promise<ISnapsho
     quiz: { ...quiz, version: 'answers', solutions: 'shown' },
     sitting,
     eyebrow: `${buildEyebrow(kind, course)}${when}`,
+    courseUrl: getPrintCourseUrl(course),
   };
 };
 
@@ -106,7 +116,7 @@ export const ResultPrint = ({ courseId, sittingId }: IProps) => {
             placement="standalone"
             sitting={snapshot.sitting}
           />
-          <PrintClosing />
+          <PrintClosing courseUrl={snapshot.courseUrl} />
         </PrintSheet>
       ) : null}
     </PrintShell>

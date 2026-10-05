@@ -7,7 +7,7 @@ import { EnrollmentService } from '@modules/enrollment/enrollment.service';
 import { RequestContextService } from '../../context/request-context.service';
 import { TestPaperService } from '@modules/test-paper/test-paper.service';
 import { TestPaperResultService } from '@modules/test-paper/test-paper-result.service';
-import { ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { type TestPaperSectionsResponse } from '@repo/shared/contracts';
 import {
@@ -22,7 +22,8 @@ import {
   TestPaperDto,
   TestPaperResultDto,
 } from '@repo/shared/validations';
-import { Model, Types } from 'mongoose';
+import { Model, Types, mongo } from 'mongoose';
+import { DUPLICATE_KEY } from '../../filters/mongo-duplicate-key.filter';
 import { Course, CourseDocument } from './course.schema';
 import { CompletedModule, CompletedModuleDocument } from './schemas/completed-module.schema';
 import { CourseModule, CourseModuleDocument } from './schemas/course-module.schema';
@@ -97,6 +98,17 @@ export class CourseService {
   async getPublicCourse(courseId: string): Promise<CourseDto | null> {
     const course = await this.findPublicCourse(courseId);
     return course ? this.getTransformedCourse(course) : null;
+  }
+
+  /**
+   * One published course by its public address. `_deleted: false` rather than the usual `$ne: true`
+   * so the partial unique index on `slug` serves the lookup.
+   */
+  async getPublicCourseBySlug(slug: string): Promise<CourseDto | null> {
+    return this.courseModel
+      .findOne({ slug, isPublished: true, _deleted: false }, CATALOGUE_EXCLUDED_FIELDS)
+      .lean<CourseDocument>()
+      .then((course) => (course ? this.getTransformedCourse(course) : null));
   }
 
   /**
@@ -193,6 +205,15 @@ export class CourseService {
         // the miss has to be checked rather than trusted.
         if (!course) throw new InternalServerErrorException('Course was not saved.');
         return this.getTransformedCourse(course);
+      })
+      .catch((error: unknown) => {
+        // The slug is the name's public address, so a taken slug is a taken name to the teacher.
+        const isSlugTaken =
+          error instanceof mongo.MongoServerError && error.code === DUPLICATE_KEY && 'slug' in (error.keyValue ?? {});
+        if (isSlugTaken) {
+          throw new ConflictException('Another course already uses this name. Please choose a different name.');
+        }
+        throw error;
       });
   }
 

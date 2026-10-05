@@ -5,6 +5,7 @@ import { BlankState } from '@components/others';
 import { ArrowRightIcon, CaretDownIcon, SquaresFourIcon } from '@phosphor-icons/react';
 import { capitalize } from '@utils/helpers';
 import { useRouter } from 'next/router';
+import { useCourseStore } from '@stores';
 import {
   EXPLORE_SEARCH_ATTRIBUTE,
   groupStandards,
@@ -164,7 +165,7 @@ export const ExploreMenu = ({ isOpen, onOpenChange, query }: IProps) => {
         }}
         onOpenCourse={(courseId) => {
           close();
-          push(`/courses/${courseId}/preview`);
+          push(useCourseStore.getState().getCoursePathById(courseId));
         }}
       />
     </Popover>

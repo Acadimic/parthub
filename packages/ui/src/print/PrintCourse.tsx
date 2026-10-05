@@ -318,7 +318,7 @@ export const PrintCourse = ({ data, eyebrow, scope }: IPrintCourseProps) => (
       />
     ))}
     <PrintSheet isNewPage={false}>
-      <PrintClosing />
+      <PrintClosing courseUrl={data.courseUrl} />
     </PrintSheet>
   </>
 );

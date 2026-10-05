@@ -3,7 +3,7 @@ import { Link, Modal, TextInput } from '@repo/ui/app';
 import { Tabs } from '@repo/ui/core';
 import { BlankState } from '@components/others';
 import { ArrowRightIcon, MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react';
-import { useSelectorLookups } from '@stores';
+import { useSelectorLookups, useCourseStore } from '@stores';
 import { capitalize } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -177,7 +177,7 @@ export const ExploreSheet = () => {
             }}
             onOpenCourse={(courseId) => {
               close();
-              push(`/courses/${courseId}/preview`);
+              push(useCourseStore.getState().getCoursePathById(courseId));
             }}
           />
         </div>

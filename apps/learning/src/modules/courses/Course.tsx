@@ -14,9 +14,23 @@ import {
   useSelectedUser,
   useSelectorLookups,
 } from '@stores';
-import { getToken } from '@utils/helpers';
+import { getCoursePath, getToken } from '@utils/helpers';
 import { useEffect, useState } from 'react';
 import { CourseModules, CourseModulesSkeleton, CoursePreview, CoursePreviewSkeleton } from './components';
+
+/** A course that is not there: unpublished, renamed, or a link that never pointed at one. */
+export const CourseNotFound = () => (
+  <BlankState
+    className="py-24"
+    label="Course not found"
+    description="It may have been renamed or unpublished, or the link is no longer valid."
+    action={
+      <Link href="/courses" isSecondary>
+        Browse courses
+      </Link>
+    }
+  />
+);
 
 interface IProps {
   courseId: string;
@@ -107,20 +121,7 @@ export const Course = ({ courseId, isPreview }: IProps) => {
       />
     );
   }
-  if (!selectedCourse) {
-    return (
-      <BlankState
-        className="py-24"
-        label="Course not found"
-        description="It may have been unpublished, or the link is no longer valid."
-        action={
-          <Link href="/courses" isSecondary>
-            Browse courses
-          </Link>
-        }
-      />
-    );
-  }
+  if (!selectedCourse) return <CourseNotFound />;
   // A priced course opens only on a seat. The server strips lesson bodies and refuses tests and
   // progress without one, so this is the honest screen rather than a hollow lesson.
   const isPaidCourse = getPlansByCourseId(courseId).some((plan) => plan.amount > 0);
@@ -131,7 +132,7 @@ export const Course = ({ courseId, isPreview }: IProps) => {
         label="Enrol to open this course"
         description={`${selectedCourse.name} is a paid course. Choose a plan on its page to unlock the lessons and tests.`}
         action={
-          <Link href={`/courses/${courseId}/preview`} isSecondary>
+          <Link href={getCoursePath(selectedCourse)} isSecondary>
             See plans
           </Link>
         }

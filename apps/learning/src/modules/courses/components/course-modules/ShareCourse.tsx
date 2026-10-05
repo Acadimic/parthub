@@ -1,7 +1,8 @@
 import { Button, Tooltip } from '@repo/ui/app';
 import { cn } from '@repo/ui/lib';
 import { ShareFatIcon } from '@phosphor-icons/react';
-import { successToast } from '@utils/helpers';
+import { useCourseStore } from '@stores';
+import { getAbsoluteUrl, successToast } from '@utils/helpers';
 
 interface IProps {
   courseId: string;
@@ -9,10 +10,10 @@ interface IProps {
   appearance: 'outline' | 'subtle';
 }
 
-/** Copies the course's public preview address, which any learner on any organization can open. */
+/** Shares the course's public address, `/courses/<slug>`, which anyone can open signed in or not. */
 export const ShareCourse = ({ courseId, appearance }: IProps) => {
   const handleShare = async () => {
-    const url = `${window.location.origin}/courses/${courseId}/preview`;
+    const url = getAbsoluteUrl(useCourseStore.getState().getCoursePathById(courseId));
     const canShare = typeof navigator.share === 'function';
     if (canShare) {
       try {

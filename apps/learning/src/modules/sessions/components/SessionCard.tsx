@@ -5,6 +5,7 @@ import { cn } from '@repo/ui/lib';
 import { ArrowRightIcon, ArrowsClockwiseIcon, ClockIcon, GraduationCapIcon } from '@phosphor-icons/react';
 import { getMeetRepeatText, toRecurringMeet } from '@repo/shared/utils';
 import NextLink from 'next/link';
+import { useCourseStore } from '@stores';
 import { getSessionPoints, getSessionSpan, getSessionState } from '../session.utils';
 import { DateLeaf, JoinAction, SessionHost, SessionTiming } from './SessionBits';
 
@@ -25,7 +26,7 @@ const MAX_POINTS = 3;
  * lists what will be covered; a past one sits back in grey.
  */
 export const SessionCard = ({ meet, courseId, courseName, isMine }: IProps) => {
-  const courseHref = `/courses/${courseId}/preview`;
+  const courseHref = useCourseStore((state) => state.getCoursePathById(courseId));
   const state = getSessionState(meet);
   const points = getSessionPoints(meet);
   const isOpen = state !== 'ended' && state !== 'cancelled';

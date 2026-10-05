@@ -1,8 +1,6 @@
 import { type CouponDto, type PlanDto } from '@repo/shared/contracts';
 import { CouponType, OrderStatus } from '@repo/shared/enums';
-
-/** The learning app is where a buyer opens the link; the teaching app only mints it. */
-const LEARN_URL = process.env.NEXT_PUBLIC_LEARN_URL ?? 'http://localhost:3000';
+import { LEARN_URL } from '@utils/constants';
 
 export const getOrderLink = (code: string) => `${LEARN_URL}/order/${code}`;
 
