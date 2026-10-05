@@ -5,7 +5,7 @@ import { BlankState, Container } from '@components/others';
 import { type ICourseFilter } from '@interfaces';
 import { XIcon } from '@phosphor-icons/react';
 import { type ICourse, useCourseLookups, useCourseStore, useSelectedUser, useStandardLookups } from '@stores';
-import { getPlural } from '@utils/helpers';
+import { getCourseItemsCount, getPlural } from '@utils/helpers';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useSetState } from 'react-use';
@@ -51,10 +51,6 @@ const matchesQuery = (course: ICourse, q: string) => {
   const needle = q.toLowerCase();
   return course.name.toLowerCase().includes(needle) || (course.description ?? '').toLowerCase().includes(needle);
 };
-
-/** A course's item count, from the rollups the catalogue already carries. */
-const getCourseTotal = (course: ICourse) =>
-  (course.stats?.videosCount ?? 0) + (course.stats?.readingsCount ?? 0) + (course.stats?.testsCount ?? 0);
 
 /** A section shows this many cards before it asks to be expanded, so one big standard cannot bury the rest. */
 const SECTION_PREVIEW = 6;
@@ -155,7 +151,7 @@ export const Courses = ({ isFilter, withHeading }: IProps) => {
   const getProgress = (course: ICourse): number | null => {
     const completed = completedByCourse[course._id] ?? 0;
     if (!completed) return null;
-    const total = getCourseTotal(course);
+    const total = getCourseItemsCount(course);
     return total ? Math.min(100, (completed / total) * 100) : 0;
   };
 

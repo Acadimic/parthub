@@ -495,14 +495,16 @@ commands['course:stats'] = async (options) => {
   const materialIds = modules.flatMap((row) => row.materials ?? []);
   const testPaperIds = modules.flatMap((row) => row.testPapers ?? []);
   const linkedMaterials = materialIds.map((id) => materialById.get(String(id))).filter(Boolean);
+  // The same count as the teaching app: one reading per lesson, one video per video attached.
+  const materialsInfo = utils.getMaterialsInfo(linkedMaterials);
   const stats = {
     daysCount: modules.length,
-    videosCount: linkedMaterials.filter((row) => row.type === enums.MaterialType.VIDEO).length,
-    readingsCount: linkedMaterials.filter((row) => row.type !== enums.MaterialType.VIDEO).length,
+    videosCount: materialsInfo.types[enums.MaterialType.VIDEO],
+    readingsCount: materialsInfo.types[enums.MaterialType.READING],
     testsCount: testPaperIds.length,
     meetsCount: (course.meets ?? []).length,
     testsDurationMins: testPaperIds.reduce((sum, id) => sum + (testPaperById.get(String(id))?.durationMins ?? 0), 0),
-    materialsDurationMins: linkedMaterials.reduce((sum, row) => sum + (row.durationMins ?? 0), 0),
+    materialsDurationMins: materialsInfo.durationMins,
     meetsDurationMins: (course.meets ?? []).reduce((sum, id) => sum + (meetById.get(String(id))?.durationMins ?? 0), 0),
   };
   await api('course/upsert', { method: 'POST', body: { ...course, stats } });

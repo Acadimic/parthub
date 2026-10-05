@@ -1,9 +1,8 @@
 import { type AttachmentDto, type MaterialDto } from '@repo/shared/contracts';
-import { type IRequestSlice, createRequestSlice } from '@repo/shared/utils';
-import { type IMaterialInfo, type IMaterialStat, type IStandardSubjectQuery } from '@interfaces';
+import { type IRequestSlice, createRequestSlice, isVideoAttachment } from '@repo/shared/utils';
+import { type IMaterialStat, type IStandardSubjectQuery } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { DocumentType, LinkType, MaterialType } from '../enums';
 import { MaterialService, ReactionService } from '../services';
 import { useSelectorStore } from './selector.store';
 
@@ -27,9 +26,6 @@ export interface IMaterialState extends IRequestSlice<MaterialFetch> {
   getMaterialsByStandardIds: (standardIds: string[]) => IMaterial[];
   /** The attachments that play as video, rather than opening as a document. */
   getMaterialVideos: (material: IMaterial) => AttachmentDto[];
-  getMaterialDocuments: (material: IMaterial) => AttachmentDto[];
-  /** Duration and per-type counts across a set of materials. */
-  getMaterialsInfoMaterialIds: (materialIds: string[]) => IMaterialInfo;
 
   addMaterials: (materials: IMaterial[]) => void;
   patchMaterial: (materialId: string, fields: Partial<IMaterial>) => void;
@@ -48,9 +44,6 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
     map[row._id] = row;
     return map;
   }, {});
-
-/** A link attachment that plays as video rather than opening as a document. */
-export const VIDEO_LINK_TYPES: LinkType[] = [LinkType.YOUTUBE, LinkType.VIDEO];
 
 export const useMaterialStore = create<IMaterialState>()((set, get) => ({
   materialMap: {},
@@ -76,39 +69,7 @@ export const useMaterialStore = create<IMaterialState>()((set, get) => ({
       .getMaterials()
       .filter((material) => !!material.standard && standardIds.includes(material.standard)),
 
-  getMaterialVideos: (material) =>
-    (material.attachments ?? []).filter(
-      (attachment) =>
-        attachment.documentType === DocumentType.VIDEO ||
-        (attachment.documentType === DocumentType.LINK &&
-          !!attachment.linkType &&
-          VIDEO_LINK_TYPES.includes(attachment.linkType)),
-    ),
-
-  getMaterialDocuments: (material) =>
-    (material.attachments ?? []).filter(
-      (attachment) =>
-        attachment.fileType === DocumentType.FILE ||
-        (attachment.fileType === DocumentType.LINK &&
-          !!attachment.linkType &&
-          !VIDEO_LINK_TYPES.includes(attachment.linkType)),
-    ),
-
-  getMaterialsInfoMaterialIds: (materialIds) => {
-    const counts: Record<MaterialType, number> = { [MaterialType.VIDEO]: 0, [MaterialType.READING]: 0 };
-    let durationMins = 0;
-    get()
-      .getMaterialsByIds(materialIds)
-      .forEach((material) => {
-        durationMins += material.durationMins ?? 0;
-        const videos = get().getMaterialVideos(material).length;
-        const documents = get().getMaterialDocuments(material).length;
-        counts[MaterialType.VIDEO] += videos;
-        // A material with neither still counts as one reading, so it is never invisible.
-        counts[MaterialType.READING] += documents || (videos ? 0 : 1);
-      });
-    return { durationMins, types: counts };
-  },
+  getMaterialVideos: (material) => (material.attachments ?? []).filter(isVideoAttachment),
 
   addMaterials: (materials) => {
     set((state) => ({ materialMap: { ...state.materialMap, ...keyById(materials) } }));

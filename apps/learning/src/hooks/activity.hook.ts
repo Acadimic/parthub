@@ -8,7 +8,8 @@ import {
   type ILessonActivity,
   type ITestActivity,
 } from '@interfaces';
-import { type ICourse, useCourseLookups, useMaterialLookups, useTestPaperLookups, useTestPaperStore } from '@stores';
+import { useCourseLookups, useMaterialLookups, useTestPaperLookups, useTestPaperStore } from '@stores';
+import { getCourseItemsCount } from '@utils/helpers';
 import dayjs from 'dayjs';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -16,10 +17,6 @@ import { useShallow } from 'zustand/react/shallow';
 export const ACTIVITY_GRID_DAYS = 84;
 
 const byNewest = (a: { at: string }, b: { at: string }) => b.at.localeCompare(a.at);
-
-/** A course's item count, from the rollups the catalogue already carries. */
-const getCourseTotal = (course: ICourse) =>
-  (course.stats?.videosCount ?? 0) + (course.stats?.readingsCount ?? 0) + (course.stats?.testsCount ?? 0);
 
 const toTestActivity = (result: TestPaperResultDto, courseName: string): ITestActivity => {
   const results = Object.values(result.resultMaps);
@@ -88,7 +85,7 @@ export const useActivity = () => {
       const completed = lessons.filter((lesson) => lesson.courseId === course._id).length;
       const courseAttempts = attempts.filter((attempt) => attempt.courseId === course._id).length;
       if (!completed && !courseAttempts) return [];
-      const total = getCourseTotal(course);
+      const total = getCourseItemsCount(course);
       const latest = events.find((event) => event.courseId === course._id);
       const row: ICourseActivity = {
         courseId: course._id,

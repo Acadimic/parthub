@@ -41,10 +41,7 @@ export const Hero = () => {
     .filter((standard) => countByStandard[standard._id])
     .sort((a, b) => countByStandard[b._id] - countByStandard[a._id])
     .slice(0, QUICK_PICKS);
-  const lessons = courses.reduce(
-    (sum, course) => sum + (course.stats?.videosCount ?? 0) + (course.stats?.readingsCount ?? 0),
-    0,
-  );
+  const lessons = courses.reduce((sum, course) => sum + (course.stats?.readingsCount ?? 0), 0);
   const tests = courses.reduce((sum, course) => sum + (course.stats?.testsCount ?? 0), 0);
 
   const search = (event: SubmitEvent<HTMLFormElement>) => {

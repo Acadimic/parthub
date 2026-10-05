@@ -1,14 +1,12 @@
 import { cn } from '@repo/ui/lib';
 import { CourseCard } from './CourseCard';
-import { type ICourse, useCourseLookups, useSelectedUser } from '@stores';
+import { useCourseLookups, useSelectedUser } from '@stores';
 import { useEffect } from 'react';
 import { SectionHeading } from '@components/app/sections';
+import { getCourseItemsCount } from '@utils/helpers';
 
 /** How many started courses the strip shows; the activity page lists them all. */
 const MAX_CARDS = 3;
-
-const getCourseTotal = (course: ICourse) =>
-  (course.stats?.videosCount ?? 0) + (course.stats?.readingsCount ?? 0) + (course.stats?.testsCount ?? 0);
 
 interface IProps {
   /** The spacing around the section, which differs between the home page and the catalogue. */
@@ -53,7 +51,7 @@ export const ContinueLearning = ({ className }: IProps) => {
       />
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {started.map((course) => {
-          const total = getCourseTotal(course);
+          const total = getCourseItemsCount(course);
           const progress = total ? Math.min(100, (countByCourse[course._id] / total) * 100) : 0;
           return <CourseCard key={course._id} course={course} progress={progress} />;
         })}

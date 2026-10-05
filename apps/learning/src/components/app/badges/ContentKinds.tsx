@@ -9,7 +9,8 @@ import {
   SpeakerHighIcon,
   VideoIcon,
 } from '@phosphor-icons/react';
-import { type IMaterial, VIDEO_LINK_TYPES } from '@stores';
+import { type IMaterial } from '@stores';
+import { VIDEO_LINK_TYPES } from '@repo/shared/utils';
 
 /** What a lesson is made of. One lesson can hold several: written content plus videos and links. */
 export type ContentKind = 'reading' | 'video' | 'document' | 'link' | 'audio';

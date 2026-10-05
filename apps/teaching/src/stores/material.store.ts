@@ -1,9 +1,9 @@
 import { type AttachmentDto, type MaterialDto } from '@repo/shared/contracts';
-import { type IRequestSlice, createEmptyRichText, createRequestSlice } from '@repo/shared/utils';
+import { type IRequestSlice, createEmptyRichText, createRequestSlice, getMaterialsInfo } from '@repo/shared/utils';
 import { type IMaterialInfo, type IMaterialStat, type IStandardSubjectQuery } from '@interfaces';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { DocumentType, FileExtension, LevelType, LinkType, MaterialType } from '../enums';
+import { DocumentType, FileExtension, LevelType, LinkType } from '../enums';
 import { MaterialService } from '../services';
 import { getObjectId, getSlug } from '../utils/helpers';
 import { useSelectorStore } from './selector.store';
@@ -71,21 +71,6 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
     map[row._id] = row;
     return map;
   }, {});
-
-/** A link attachment that plays as video rather than opening as a document. */
-const VIDEO_LINK_TYPES: LinkType[] = [LinkType.YOUTUBE, LinkType.VIDEO];
-
-const isVideo = (attachment: AttachmentDto): boolean =>
-  attachment.fileType === DocumentType.VIDEO ||
-  (attachment.fileType === DocumentType.LINK &&
-    !!attachment.linkType &&
-    VIDEO_LINK_TYPES.includes(attachment.linkType));
-
-const isDocument = (attachment: AttachmentDto): boolean =>
-  attachment.fileType === DocumentType.FILE ||
-  (attachment.fileType === DocumentType.LINK &&
-    !!attachment.linkType &&
-    !VIDEO_LINK_TYPES.includes(attachment.linkType));
 
 /** How long a new material is assumed to take. */
 const DEFAULT_DURATION_MINS = 30;
@@ -158,22 +143,7 @@ export const useMaterialStore = create<IMaterialState>()((set, get) => ({
       .getMaterials()
       .filter((material) => material.standard && standardIds.includes(material.standard)),
 
-  getMaterialsStatsByMaterialIds: (materialIds) => {
-    const counts: Record<MaterialType, number> = { [MaterialType.VIDEO]: 0, [MaterialType.READING]: 0 };
-    let durationMins = 0;
-    get()
-      .getMaterialsByIds(materialIds)
-      .forEach((material) => {
-        durationMins += material.durationMins ?? 0;
-        const attachments = material.attachments ?? [];
-        const videos = attachments.filter(isVideo).length;
-        const documents = attachments.filter(isDocument).length;
-        counts[MaterialType.VIDEO] += videos;
-        // A material with neither still counts as one reading, so it is never invisible.
-        counts[MaterialType.READING] += documents || (videos ? 0 : 1);
-      });
-    return { durationMins, types: counts };
-  },
+  getMaterialsStatsByMaterialIds: (materialIds) => getMaterialsInfo(get().getMaterialsByIds(materialIds)),
 
   getMaterialStats: () => get().materialStats,
 

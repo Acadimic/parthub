@@ -6,5 +6,6 @@ export * from './util';
 export * from './presigned-url-cache';
 export * from './page-meta';
 export * from './course-path';
+export * from './course-items';
 export * from './server-api';
 export * from './site-files';
