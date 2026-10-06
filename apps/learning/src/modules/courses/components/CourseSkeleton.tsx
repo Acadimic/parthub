@@ -70,6 +70,26 @@ const ModuleRowsSkeleton = ({ rows }: { rows: number }) => (
 );
 
 /**
+ * The lesson inside its frame: a title and a few paragraphs, so the frame reads as text loading.
+ * The whole-page skeleton uses it, and so does a lesson whose module is still being fetched.
+ */
+export const LessonBodySkeleton = () => (
+  <div className="flex min-h-[240px] flex-1 flex-col gap-3 overflow-hidden px-4 pt-6 md:px-8">
+    <RectangleSkeleton height={28} width="55%" />
+    <RectangleSkeleton height={14} />
+    <RectangleSkeleton height={14} width="92%" />
+    <RectangleSkeleton height={14} width="80%" />
+    <div className="h-3" />
+    <RectangleSkeleton height={20} width="30%" />
+    <RectangleSkeleton height={14} />
+    <RectangleSkeleton height={14} width="88%" />
+    <div className="mt-2 h-40 shrink-0">
+      <RectangleSkeleton />
+    </div>
+  </div>
+);
+
+/**
  * Mirrors the learning view as it lays out now, so nothing jumps when the lesson arrives: the top
  * bar, the lesson filling the height left under its header with the actions in its footer, and
  * the outline pane from `lg` up. The footer wraps on a phone the way the real one does.
@@ -112,20 +132,7 @@ export const CourseModulesSkeleton = () => (
             </div>
           </div>
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-background shadow-sm">
-            {/* The lesson: a title and a few paragraphs, so the frame reads as text loading. */}
-            <div className="flex min-h-[240px] flex-1 flex-col gap-3 overflow-hidden px-4 pt-6 md:px-8">
-              <RectangleSkeleton height={28} width="55%" />
-              <RectangleSkeleton height={14} />
-              <RectangleSkeleton height={14} width="92%" />
-              <RectangleSkeleton height={14} width="80%" />
-              <div className="h-3" />
-              <RectangleSkeleton height={20} width="30%" />
-              <RectangleSkeleton height={14} />
-              <RectangleSkeleton height={14} width="88%" />
-              <div className="mt-2 h-40 shrink-0">
-                <RectangleSkeleton />
-              </div>
-            </div>
+            <LessonBodySkeleton />
             {/* The footer: mark complete and the reactions, then full screen and the pager. */}
             <div className="flex flex-wrap items-center gap-2 border-t border-border px-2 py-2 md:px-3">
               <Pill className="h-9 w-full rounded-full sm:w-[200px]" />

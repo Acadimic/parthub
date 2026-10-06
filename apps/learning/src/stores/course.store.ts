@@ -27,11 +27,12 @@ import { useUserStore } from './user.store';
  * `CLIENT_ONLY_KEYS` strips them from every request.
  */
 export type ICourse = CourseDto & { isLoadedContents?: boolean; isLoadedOutline?: boolean };
-export type ICourseModule = ICourseModuleFields & { isNew?: boolean };
+/** `isLoadedContents` is client-only: this module's lesson bodies are in the material store. */
+export type ICourseModule = ICourseModuleFields & { isNew?: boolean; isLoadedContents?: boolean };
 export type ICourseStats = NonNullable<ICourse['stats']>;
 
 /** The fetches this store tracks. */
-type CourseFetch = 'courses' | 'plans' | 'courseModules' | 'completedModules';
+type CourseFetch = 'courses' | 'plans' | 'courseModules' | 'moduleContents' | 'completedModules';
 
 export interface ICourseState extends IRequestSlice<CourseFetch> {
   courseMap: Record<string, ICourse>;
@@ -81,6 +82,11 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   loadCourseModules: (courseId: string) => Promise<void>;
   /** The syllabus alone. Enough for a preview or a list; the learning view needs the whole thing. */
   loadCourseOutline: (courseId: string) => Promise<void>;
+  /**
+   * One module's lesson bodies, for the learning view: it opens on the outline and fetches a
+   * module when it is opened rather than every lesson of the course up front.
+   */
+  loadModuleContents: (courseId: string, courseModuleId: string) => Promise<void>;
   loadCompletedModules: () => Promise<void>;
   reset: () => void;
 }
@@ -101,16 +107,22 @@ const keyById = <T extends { _id: string }>(rows: T[]): Record<string, T> =>
 /**
  * A module arrives with its test papers, materials and meets embedded. Each collection goes to the
  * store that owns it, and the module keeps only ids — which is what the rest of the app reads.
+ *
+ * An outline's lessons carry no body, so they are filed only for a module whose bodies have not
+ * arrived yet: a syllabus fetched after a module was opened must not blank the lesson on screen.
  */
-const distributeCourseModule = (courseModule: ICourseModuleContents) => {
+const distributeCourseModule = (courseModule: ICourseModuleContents, shape: 'contents' | 'outline'): ICourseModule => {
+  const known = useCourseStore.getState().getCourseModuleById(courseModule._id);
+  const isKeepingBodies = shape === 'outline' && !!known?.isLoadedContents;
   useTestPaperStore.getState().addTestPapers(courseModule.testPapers);
-  useMaterialStore.getState().addMaterials(courseModule.materials);
+  if (!isKeepingBodies) useMaterialStore.getState().addMaterials(courseModule.materials);
   useMeetStore.getState().addMeets(courseModule.meets);
   return {
     ...courseModule,
     testPapers: courseModule.testPapers.map((testPaper) => testPaper._id),
     materials: courseModule.materials.map((material) => material._id),
     meets: courseModule.meets.map((meet) => meet._id),
+    isLoadedContents: shape === 'contents' || isKeepingBodies,
   };
 };
 
@@ -120,20 +132,24 @@ const distributeCourseModule = (courseModule: ICourseModuleContents) => {
  */
 const loadModules = (courseId: string, shape: 'contents' | 'outline'): Promise<void> =>
   useCourseStore.getState().run('courseModules', async () => {
-    const store = useCourseStore.getState();
-    const course = store.getCourseById(courseId);
-    if (!course) return;
     // A visitor with no session can read a published course's outline and nothing more.
     const isSignedIn = !!getToken(Subdomain.LEARN);
-    const meetIds = isSignedIn ? (course.meets ?? []) : [];
     const getModules = () => {
       if (shape === 'contents') return CourseService.getCourseModulesContentsByCourseId(courseId);
       return isSignedIn
         ? CourseService.getCourseModulesOutlineByCourseId(courseId)
         : CourseService.getPublishedCourseOutline(courseId);
     };
+    // The modules are asked for at once; only the sessions need the course record, so the
+    // catalogue (when it is not here yet) loads alongside rather than in front.
+    const modulesRequest = getModules();
+    const store = useCourseStore.getState();
+    if (!store.getCourseById(courseId)) await store.loadCourses();
+    const course = useCourseStore.getState().getCourseById(courseId);
+    if (!course) return;
+    const meetIds = isSignedIn ? (course.meets ?? []) : [];
     const [modulesResult, meetsResult] = await Promise.all([
-      getModules(),
+      modulesRequest,
       // `meet/by-ids` requires a non-empty list, and a course with no sessions has nothing to ask
       // for. Skipping keeps a 400 out of a page that is not showing sessions anyway.
       meetIds.length ? MeetService.getMeetsByIds(meetIds) : Promise.resolve(null),
@@ -141,14 +157,11 @@ const loadModules = (courseId: string, shape: 'contents' | 'outline'): Promise<v
     // The sessions are a separate concern from the syllabus: this used to bail when either call
     // came back empty, so a failed meets fetch threw away modules that had loaded perfectly.
     if (!modulesResult?.data) return;
-    // The modules arrive with their test papers, materials and meets embedded. Each collection
-    // goes to the store that owns it and the module keeps only ids, which is what the rest of the
-    // app reads.
-    const courseModules = modulesResult.data.map(distributeCourseModule);
+    const courseModules = modulesResult.data.map((row) => distributeCourseModule(row, shape));
     if (meetsResult?.data) useMeetStore.getState().addMeets(meetsResult.data);
     store.addCourseModules(courseModules);
     // Only when nothing in this course is selected: the preview picks an item and then opens the
-    // learning view, which loads the contents, and that pick must survive the load.
+    // learning view, and that pick must survive the load.
     const selector = useSelectorStore.getState();
     const isSelectionInCourse = courseModules.some(
       (courseModule) => courseModule._id === selector.selectedCourseModuleId,
@@ -167,7 +180,7 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   planMap: {},
   courseModuleMap: {},
   completedModuleMap: {},
-  ...createRequestSlice(['courses', 'plans', 'courseModules', 'completedModules'], set, get),
+  ...createRequestSlice(['courses', 'plans', 'courseModules', 'moduleContents', 'completedModules'], set, get),
 
   getCourseById: (courseId) => (courseId ? get().courseMap[courseId] : undefined),
 
@@ -379,6 +392,16 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   loadCourseModules: (courseId) => onceInFlight(`courseModules:${courseId}`, () => loadModules(courseId, 'contents')),
 
   loadCourseOutline: (courseId) => onceInFlight(`courseOutline:${courseId}`, () => loadModules(courseId, 'outline')),
+
+  loadModuleContents: (courseId, courseModuleId) =>
+    onceInFlight(`moduleContents:${courseModuleId}`, () =>
+      get().run('moduleContents', async () => {
+        if (get().getCourseModuleById(courseModuleId)?.isLoadedContents) return;
+        const result = await CourseService.getCourseModuleContents(courseId, courseModuleId);
+        if (!result?.data) throw new Error('This lesson could not be loaded.');
+        get().addCourseModules([distributeCourseModule(result.data, 'contents')]);
+      }),
+    ),
 
   loadCompletedModules: () =>
     onceInFlight('completedModules', () =>

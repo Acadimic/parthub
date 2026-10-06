@@ -40,18 +40,10 @@ interface IProps {
 export const Course = ({ courseId, isPreview }: IProps) => {
   const courseStore = useCourseLookups();
   const selectorStore = useSelectorLookups();
-  const {
-    loadCourseModules,
-    loadCourseOutline,
-    loadCourses,
-    loadCompletedModules,
-    loadCoursePlans,
-    getCourseById,
-    getPlansByCourseId,
-  } = courseStore;
+  const { loadCourseOutline, loadCompletedModules, loadCoursePlans, getCourseById, getPlansByCourseId } = courseStore;
   const { getActiveEnrollment, loadMyEnrollments } = useEnrollmentLookups();
   const enrollmentsRequest = useRequest(useEnrollmentStore, 'enrollments');
-  const { setSelectedCourseId } = selectorStore;
+  const { setSelectedCourseId, selectedCourseModuleId } = selectorStore;
   const { getSelectedItemIndex, selectResumeItem } = useCourse();
   const selectedCourse = useSelectedCourse();
   const selectedUser = useSelectedUser();
@@ -59,24 +51,20 @@ export const Course = ({ courseId, isPreview }: IProps) => {
   const modulesRequest = useRequest(useCourseStore, 'courseModules');
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadModulesFor = (course: ICourse | undefined) => {
-    if (!course || course.isLoadedContents) return Promise.resolve();
-    if (isPreview) return course.isLoadedOutline ? Promise.resolve() : loadCourseOutline(courseId);
-    return loadCourseModules(courseId);
-  };
+  // Both views open on the outline — titles, kinds and durations — and the learning view then
+  // fetches a module's lesson bodies when it is opened (below). A course's bodies run to megabytes, and
+  // waiting for all of them held the page on a skeleton for seconds.
+  const loadModulesFor = (course: ICourse | undefined) =>
+    course?.isLoadedContents || course?.isLoadedOutline ? Promise.resolve() : loadCourseOutline(courseId);
 
   const fetchCourseData = async () => {
     // The preview is public, so it loads without a session; the learning view waits for the user.
     const isSignedIn = !!getToken(Subdomain.LEARN);
     if (isSignedIn ? !selectedUser : !isPreview) return;
     setIsLoading(true);
-    // The course list has to land before the modules load: `loadCourseModules` reads the course
-    // back out of the store and returns early when it is not there yet.
-    if (!getCourseById(courseId)) await loadCourses();
-    const course = getCourseById(courseId);
+    // All at once: the outline asks for the catalogue itself when the course is not in it yet.
     await Promise.all([
-      // The preview renders titles, so it asks for the outline; the learning view needs the bodies.
-      loadModulesFor(course),
+      loadModulesFor(getCourseById(courseId)),
       !selectedUser || selectedUser.isLoadedCompletedModules ? Promise.resolve() : loadCompletedModules(),
       // The plans say whether a seat is needed and the seats say whether the learner holds one.
       loadCoursePlans(courseId),
@@ -97,6 +85,13 @@ export const Course = ({ courseId, isPreview }: IProps) => {
     if (isLoading || isPreview || !selectedCourse) return;
     if (getSelectedItemIndex(courseId) === -1) selectResumeItem(courseId);
   }, [isLoading, isPreview, selectedCourse?._id]);
+
+  // The lesson bodies of the module on screen, fetched when the learner opens it. A module already
+  // loaded is skipped by the store.
+  useEffect(() => {
+    if (isLoading || isPreview || !selectedCourseModuleId) return;
+    useCourseStore.getState().loadModuleContents(courseId, selectedCourseModuleId);
+  }, [isLoading, isPreview, courseId, selectedCourseModuleId]);
 
   if (isLoading) return isPreview ? <CoursePreviewSkeleton /> : <CourseModulesSkeleton />;
 
