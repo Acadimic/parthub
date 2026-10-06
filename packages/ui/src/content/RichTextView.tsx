@@ -33,15 +33,24 @@ const stringAttr = (attrs: Record<string, RichTextAttrValue> | undefined, key: s
   return typeof value === 'string' ? value : '';
 };
 
+/** A numbering cell: a number or a short Latin label, such as 1, 12., F3, (a), Q2. */
+const NUMBER_LABEL = /^[(]?[A-Za-z]{0,2}[0-9]{0,3}[.)]?$/;
+
 const NUMBER_COLUMN_CLASS =
   '[&_tr>*:first-child]:w-px [&_tr>*:first-child]:min-w-0 [&_tr>*:first-child]:whitespace-nowrap';
 
-/** True when the table's first header cell is a short label, which marks a numbering column. */
+/**
+ * True when the first column is a numbering column: a short header label over short plain labels
+ * ("No." over 1, 2, 3; "F" over F1, F2). A short header over words or letters ("Row" over a run of
+ * Devanagari) is not one, and squeezing it would wrap every cell to a character or two.
+ */
 const hasNumberColumn = (table: IRichTextNode): boolean => {
-  const first = table.content?.[0]?.content?.[0];
+  const [header, ...rows] = table.content ?? [];
+  const first = header?.content?.[0];
   if (first?.type !== 'tableHeader') return false;
   const label = docToPlainText(first).trim();
-  return label.length > 0 && label.length <= 4;
+  const isLabel = (cell: IRichTextNode | undefined) => NUMBER_LABEL.test(docToPlainText(cell ?? null).trim());
+  return label.length > 0 && label.length <= 4 && rows.every((row) => isLabel(row.content?.[0]));
 };
 
 /** Only these schemes may leave the page from authored content; anything else renders as text. */
