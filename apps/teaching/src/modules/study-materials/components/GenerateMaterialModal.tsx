@@ -135,7 +135,7 @@ export const GenerateMaterialModal = ({ isOpen, onClose }: IProps) => {
       setSelectedFiles([]);
       setState(initialState);
       // The server's row, not a patched local one: it carries the timestamps the list rolls up, and
-      // replacing the draft is what clears `isNew`.
+      // merging it over the draft is what clears `isNew`.
       if (result?.data) addMaterials([result.data]);
       else patchMaterial(material._id, { isNew: false });
       successToast({ message: `Material generated successfully!` });

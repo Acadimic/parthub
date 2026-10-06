@@ -234,6 +234,7 @@ collections, and reads must not filter on it.
 | Create or update  | `POST <resource>/upsert`                         | `POST course/upsert`       |
 | List for an org   | `GET <resource>/all`                             | `GET course/all`           |
 | Single item       | `GET <resource>/:id`                             | `GET course/:id`           |
+| Several in full   | `POST <resource>/ids` with `{ ids }`             | `POST material/ids`        |
 | Nested list       | `GET <resource>/<parent>/:parentId`              | `GET chapter/course/:id`   |
 | Bulk write        | `POST <resource>/bulk-upsert`                    | `POST subject/bulk-upsert` |
 | Soft delete       | `POST <resource>/delete` with `{ <resource>Id }` | `POST standard/delete`     |
@@ -246,6 +247,22 @@ answers 404 when no live row has that id.
 
 Do not put a subdomain in the path. `@Subdomains(...)` carries that, and it is
 enforced rather than implied.
+
+## List rows and full documents
+
+A list route sends what its tables read, not whole documents. When an entity carries a heavy
+field that no list shows (a lesson's `content` was 30 of an organization's 31 MB), the list query
+leaves it out with an exclusion, `.select('-content')`, and the field stays optional on the DTO.
+Exclude rather than list fields: `getTransformedBaseFields` reads `_id`, `org`, `createdBy` and
+`updatedBy` unguarded, and an exclusion keeps them. Today: `material/*all` drop `content`,
+`course/all` drops the AI syllabus arrays, `test-paper/all` drops `instruction`.
+
+The screen that shows or edits the field reads the full document: `GET <resource>/:id`, or
+`POST <resource>/ids` (a DTO with `@ArrayMaxSize`, so a body cannot ask for the whole collection).
+The client store merges rows by id rather than replacing them, so a list load never takes back a
+field an earlier full read brought, and an editor waits for the full row before it opens: opened
+on a list row, a save would write an empty body over the real one. A write that leaves the field
+out is safe on the server: `findOneAndUpdate` with a plain object is a `$set` of what was sent.
 
 ## Responses and errors
 

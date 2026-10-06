@@ -9,8 +9,12 @@ import { useCallback, useState } from 'react';
  * Fixes equations that arrived broken from an AI import — commands whose backslash became a
  * control character, bare percent signs, equations left in prose — and saves the material.
  */
-const repairMaterial = async (material: MaterialDto): Promise<number> => {
-  if (!material.content) return 0;
+const repairMaterial = async (row: MaterialDto): Promise<number> => {
+  // List rows carry no body, so the full lesson is read first; repairing without it finds nothing.
+  const store = useMaterialStore.getState();
+  await store.requestFullMaterials([row._id]);
+  const material = useMaterialStore.getState().getMaterialById(row._id);
+  if (!material?.content) return 0;
   const { value, repairs } = repairRichText(material.content);
   if (!repairs) return 0;
   const result = await MaterialService.upsertMaterial({ ...material, content: value });
@@ -41,6 +45,8 @@ export const useMaterialRepair = (materials: MaterialDto[]) => {
     try {
       let total = 0;
       let touched = 0;
+      // Every body in one batched request up front, rather than one request per lesson in the loop.
+      await useMaterialStore.getState().requestFullMaterials(materials.map((material) => material._id));
       for (const material of materials) {
         const repairs = await repairMaterial(material);
         total += repairs;

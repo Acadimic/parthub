@@ -9,6 +9,7 @@ import { QuestionService, TestPaperService } from '@services';
 import {
   type ITestPaperSection,
   useStandardLookups,
+  useStandardStore,
   useQuestionStore,
   useSelectedTestPaper,
   useSelectedTestPaperSection,
@@ -363,7 +364,7 @@ export const TestPaper = ({ testPaperId }: IProps) => {
     else {
       setSelectedTestPaperId(testPaperId);
       loadTestPaperSectionsWithQuestions(testPaperId);
-      loadOrgChapters();
+      if (useStandardStore.getState().shouldLoad('orgChapters')) loadOrgChapters();
     }
   }, [testPaperId]);
 

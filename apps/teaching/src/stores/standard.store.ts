@@ -13,7 +13,8 @@ import { useSelectorStore } from './selector.store';
 import { getObjectId } from '../utils/helpers';
 
 /** The fetches this store tracks. `run`, `isLoading` and friends accept only these names. */
-type StandardFetch = 'standards' | 'subjects' | 'mappings' | 'chapters' | 'initialData';
+/** `orgChapters` is its own key: a subject's chapters loading must not mark the org's as loaded. */
+type StandardFetch = 'standards' | 'subjects' | 'mappings' | 'chapters' | 'orgChapters' | 'initialData';
 
 export interface IStandardState extends IRequestSlice<StandardFetch> {
   standardMap: Record<string, StandardDto>;
@@ -83,7 +84,7 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
   subjectMap: {},
   chapterMap: {},
   mappingMap: {},
-  ...createRequestSlice(['standards', 'subjects', 'mappings', 'chapters', 'initialData'], set, get),
+  ...createRequestSlice(['standards', 'subjects', 'mappings', 'chapters', 'orgChapters', 'initialData'], set, get),
 
   getStandardById: (standardId) => (standardId ? get().standardMap[standardId] : undefined),
 
@@ -253,7 +254,7 @@ export const useStandardStore = create<IStandardState>()((set, get) => ({
     }),
 
   loadOrgChapters: () =>
-    get().run('chapters', async () => {
+    get().run('orgChapters', async () => {
       const result = await ChapterService.getOrgChapters();
       if (result?.data) get().addChapters(result.data);
     }),

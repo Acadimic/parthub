@@ -45,7 +45,7 @@ const getValidationError = (course: CourseDto, plans: PlanDto[], hasNewFiles: bo
   if (plans.length === 0) return 'Please add at least one plan.';
   for (const plan of plans) {
     if (plan.name.trim() === '') return 'Please enter a valid plan name.';
-    if (plan.amount === 0 || plan.realAmount === 0) return 'Please enter valid amount for each plan.';
+    // An amount of 0 is a free plan, which the learning app enrols in without a payment.
     if (plan.amount > (plan.realAmount ?? 0)) return 'Real amount should be greater than or equal to amount.';
   }
   return undefined;
@@ -61,7 +61,7 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
   const { push } = useRouter();
   const courseStore = useCourseLookups();
   const { patchCourse, patchPlan, getCourseSubjectItems, createPlan, removePlanById } = courseStore;
-  const { addCourses, addPlans, removeCourseById, loadCoursePlans, calculateAndSetCourseStatsByCourseId } = courseStore;
+  const { addCourses, addPlans, restoreCourse, removeCourseById, loadCoursePlans } = courseStore;
   const { selectedCourseId, removeSelectedCourseId } = useSelectorLookups();
   const selectedCoursePlans = useSelectedCoursePlans();
   const selectedCourse = useSelectedCourse();
@@ -98,7 +98,7 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
       removeCourseById(course._id);
       selectedCoursePlans.forEach((plan) => removePlanById(plan._id));
     } else if (snapshotRef.current) {
-      addCourses([snapshotRef.current.course]);
+      restoreCourse(snapshotRef.current.course);
       addPlans(snapshotRef.current.plans);
     }
     resetAndClose();
@@ -159,9 +159,10 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
         setUploadProgress((current) => ({ ...current, [index]: percent })),
       );
       if (uploaded.length) patchCourse(courseId, { attachments: [...(currentCourse.attachments ?? []), ...uploaded] });
-      calculateAndSetCourseStatsByCourseId(courseId);
+      // No stats recompute here: nothing in this form changes them, and from the courses table the
+      // course's modules are not loaded, so a recompute would save every count as zero.
       // Read the rows back rather than posting `selectedCourse`: the store holds immutable rows, so
-      // the copy captured during render carries neither the upload above nor the fresh stats.
+      // the copy captured during render does not carry the upload above.
       const fresh = useCourseStore.getState();
       const course = fresh.getCourseById(courseId);
       if (!course) return;
@@ -185,8 +186,8 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
         plans,
       });
       if (result?.data) {
-        // The saved rows replace the drafts outright, which is what clears `isNew` and brings the
-        // server's own fields (org, timestamps) into the store.
+        // The saved rows are merged over the drafts, which clears `isNew` (the server never sends it)
+        // and brings the server's own fields (org, timestamps) into the store.
         addCourses([result.data.course]);
         addPlans(result.data.plans);
       }
@@ -342,7 +343,7 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
                               type="number"
                               min={0}
                               label="Amount"
-                              value={plan.amount === 0 ? '' : plan.amount}
+                              value={plan.amount}
                               className="w-32"
                               disabled={isLoading}
                               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -357,7 +358,7 @@ export const UpsertCourseModal = ({ isOpen, onClose }: IProps) => {
                               min={0}
                               label="Real Amount"
                               className="w-32"
-                              value={plan.realAmount === 0 ? '' : plan.realAmount}
+                              value={plan.realAmount ?? 0}
                               disabled={isLoading}
                               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                                 patchPlan(plan._id, { realAmount: toAmount(e.target.value) })

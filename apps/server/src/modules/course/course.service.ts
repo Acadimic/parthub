@@ -41,9 +41,10 @@ export interface ICourseModuleContents extends Omit<CourseModuleDto, 'materials'
 }
 
 /**
- * Dropped from the catalogue read. These are the AI generator's syllabus arrays — a line per topic,
- * so dozens on a generated course — and no screen in the learning app reads any of them. Stated as
- * an exclusion rather than a field list so the transform keeps the ownership fields it needs.
+ * Dropped from list reads: the learning catalogue and the teaching course list. These are the AI
+ * generator's syllabus arrays — a line per topic, so dozens on a generated course — and only the
+ * teaching course review reads them, from the course page's read by id. Stated as an exclusion
+ * rather than a field list so the transform keeps the ownership fields it needs.
  */
 const CATALOGUE_EXCLUDED_FIELDS = { outline: 0, outcomes: 0, prerequisites: 0 } as const;
 
@@ -220,6 +221,7 @@ export class CourseService {
   async getOrgCourses(org: Types.ObjectId): Promise<CourseDto[]> {
     return this.courseModel
       .find({ org, _deleted: { $ne: true } })
+      .select(CATALOGUE_EXCLUDED_FIELDS)
       .sort({ order: 1, createdAt: 1 })
       .lean<CourseDocument[]>()
       .then((courses) => this.getTransformedCourses(courses));

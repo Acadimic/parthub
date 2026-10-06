@@ -11,9 +11,11 @@ import {
   useCourseStore,
   useMaterialLookups,
   useMeetLookups,
+  useMeetStore,
   useSelectedCourse,
   useSelectorLookups,
   useTestPaperLookups,
+  useTestPaperStore,
 } from '@stores';
 import { reportError, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
@@ -158,19 +160,20 @@ export const Course = ({ courseId }: IProps) => {
     if (!courseId) return;
     setSelectedCourseId(courseId);
     const loadCourseData = async () => {
-      // A refresh or a deep link arrives with an empty store, so the course is fetched before the
-      // screen decides the id is wrong. The effect used to read the selection instead and bounced
-      // straight back to the list on every reload.
-      if (!useCourseStore.getState().getCourseById(courseId)) await loadCourse(courseId);
+      // Always read by id: the list row lacks the syllabus the course review checks against, and a
+      // refresh or a deep link arrives with an empty store. A list row, when there is one, shows
+      // meanwhile; the effect used to read the selection instead and bounced back on every reload.
+      await loadCourse(courseId);
       const course = useCourseStore.getState().getCourseById(courseId);
       if (!course) {
         push('/courses');
         return;
       }
       loadCourseModules(courseId);
-      testPaperStore.loadTestPapers();
+      // Org-wide lists, loaded once per session; the course's own modules and lessons refresh per visit.
+      if (useTestPaperStore.getState().shouldLoad('testPapers')) testPaperStore.loadTestPapers();
       materialStore.loadStandardsMaterials(course.standards ?? []);
-      meetStore.loadMeets();
+      if (useMeetStore.getState().shouldLoad('meets')) meetStore.loadMeets();
     };
     loadCourseData();
   }, [courseId]);

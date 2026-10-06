@@ -93,7 +93,7 @@ export const AiWholeMaterialDrawer = ({ isOpen, onClose }: IProps) => {
     setLinkChecks(new Map());
     checkedFor.current = '';
     // Chapters give the prompt its ids; the list page has no reason to have loaded them.
-    if (standardStore.shouldLoad('chapters')) standardStore.loadOrgChapters();
+    if (standardStore.shouldLoad('orgChapters')) standardStore.loadOrgChapters();
   }, [isOpen]);
 
   // Every standard-and-subject pair the setup names, in the order the standards were picked.

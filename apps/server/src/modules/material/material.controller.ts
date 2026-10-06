@@ -7,6 +7,7 @@ import { RequestContextService } from '../../context/request-context.service';
 import {
   BulkUpsertMaterialsDto,
   MaterialDto,
+  MaterialIdsDto,
   StandardIdsQueryDto,
   StandardSubjectQueryDto,
 } from '@repo/shared/validations';
@@ -61,6 +62,15 @@ export class MaterialController {
   async getStandardsMaterials(@Body() body: StandardIdsQueryDto) {
     const org = this.requestContextService.getOrgId();
     const data = await this.materialService.getMaterialsByStandardIds(org, body.standards);
+    return data;
+  }
+
+  /** Several lessons in full, bodies included: what a screen asks for when it opens them. */
+  @Post('ids')
+  @Subdomains(Subdomain.TEACH)
+  @Permissions(PermissionItem.VIEW_MATERIAL)
+  async getMaterialsByIds(@Body() payload: MaterialIdsDto) {
+    const data = await this.materialService.getByIds(this.requestContextService.getOrgId(), payload.ids);
     return data;
   }
 

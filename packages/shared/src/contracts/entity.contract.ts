@@ -33,6 +33,7 @@ export type { PlanDto } from '../dtos/validations/plan/plan.dto';
 export type { StandardDto } from '../dtos/validations/standard/standard.dto';
 export type { StandardSubjectMappingDto } from '../dtos/validations/standard/standard-subject-mapping.dto';
 export type { StandardIdsQueryDto } from '../dtos/validations/standard/standard-ids-query.dto';
+export type { MaterialIdsDto } from '../dtos/validations/material/material-ids.dto';
 export type { StudentStandardMappingDto } from '../dtos/validations/mappings/student-standard-mapping.dto';
 export type { UserBatchMappingDto } from '../dtos/validations/mappings/user-batch-mapping.dto';
 export type { UserStudentMappingDto } from '../dtos/validations/mappings/user-student-mapping.dto';

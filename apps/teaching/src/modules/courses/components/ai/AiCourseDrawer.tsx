@@ -79,7 +79,7 @@ export const AiCourseDrawer = ({ isOpen, onClose }: IProps) => {
     setIssues([]);
     setFile(null);
     // The prompt lists chapters and every saved test paper; the list page has loaded neither.
-    if (standardStore.shouldLoad('chapters')) standardStore.loadOrgChapters();
+    if (standardStore.shouldLoad('orgChapters')) standardStore.loadOrgChapters();
     if (testPaperStore.shouldLoad('testPapers')) testPaperStore.loadTestPapers();
   }, [isOpen]);
 

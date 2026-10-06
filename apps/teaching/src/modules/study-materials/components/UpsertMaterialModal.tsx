@@ -1,5 +1,6 @@
 import { RichTextEditor } from '@components/others';
 import { useSpeechLocale } from '@hooks/speech-locale.hook';
+import { useFullMaterial } from '@hooks/full-material.hook';
 import { Attachments, UploadFiles } from '@components/app/attachments';
 import { Select } from '@components/app/selects';
 import { Button, Label, Modal, ModalFooter, SimpleAccordions, TextInput } from '@repo/ui/app';
@@ -36,6 +37,9 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
   const { addAttachment } = materialStore;
   const { selectedStandardId, selectedSubjectId } = selectorStore;
   const selectedMaterial = useSelectedMaterial();
+  // A list row has no body. The editor waits for it: opened on an empty body, a save would replace
+  // the real lesson with nothing.
+  const { isFull, isFailed: isLoadFailed } = useFullMaterial(isOpen && selectedMaterial ? selectedMaterial._id : null);
   const speechLocale = useSpeechLocale([selectedMaterial?.standard]);
   const { addLinkAttachment, addMaterials } = materialStore;
   const { getStandardSubjectChapters } = useStandardLookups();
@@ -95,7 +99,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
   };
 
   const saveMaterial = async () => {
-    if (!selectedMaterial) return;
+    if (!selectedMaterial || !isFull) return;
     // The title is trimmed for the check so a row of spaces does not count as a name; the stored
     // value is left as typed, because renaming happens as the user types.
     const errors = validateFieldValues(
@@ -124,7 +128,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
       await deleteAttachments(removedAttachments);
       setRemovedAttachments([]);
       // The server's row, not a patched local one: it carries the timestamps and ownership fields
-      // the list rolls up, and replacing the draft is what clears `isNew`.
+      // the list rolls up, and merging it over the draft is what clears `isNew`.
       if (result?.data) addMaterials([result.data]);
       else patchMaterial(material._id, { isNew: false });
       successToast({ message: 'Content saved successfully!' });
@@ -159,8 +163,8 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                   value={selectedMaterial.name}
                   onChange={(e) => renameMaterial(selectedMaterial._id, e.target.value)}
                 />
-                <div>
-                  <div className="max-w-full">
+                <div className="max-w-full">
+                  {isFull ? (
                     <RichTextEditor
                       // Keyed by the row: without it the editor keeps its own document across a
                       // switch of material, and the next one opens showing the previous one's text.
@@ -171,7 +175,13 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                       defaultLanguage={speechLocale}
                       editorClassName="min-h-[18rem]"
                     />
-                  </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {isLoadFailed
+                        ? 'Could not load this content. Close and open it again to retry.'
+                        : 'Loading content…'}
+                    </p>
+                  )}
                 </div>
                 <div className="flex flex-col gap-3">
                   <Label label="Attachments" />
@@ -241,7 +251,9 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
             </div>
           )
         }
-        footer={<ModalFooter onCancel={handleClose} onSave={saveMaterial} isLoading={isLoading} />}
+        footer={
+          <ModalFooter onCancel={handleClose} onSave={saveMaterial} isLoading={isLoading} isSaveDisabled={!isFull} />
+        }
       />
       <UpsertAttachmentModal
         selectedAttachment={selectedAttachment}

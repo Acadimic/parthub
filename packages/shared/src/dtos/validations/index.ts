@@ -12,6 +12,7 @@ export * from './subject/subject.dto';
 export * from './subject/subject-id.dto';
 export * from './question/question.dto';
 export * from './material/material.dto';
+export * from './material/material-ids.dto';
 export * from './chapter/chapter.dto';
 export * from './reaction/reaction.dto';
 export * from './bookmark/bookmark.dto';

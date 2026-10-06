@@ -5,6 +5,13 @@ import { MaterialDto } from '@repo/shared/validations';
 import { Model, Types } from 'mongoose';
 import { Material, MaterialDocument } from './material.schema';
 
+/**
+ * What the list routes leave out: the lesson body, which is nearly all of a lesson's size (30 MB of
+ * an organization's 31 MB on dev). Attachments stay, because list screens count them and their
+ * videos. A screen that shows or edits the body reads the lesson by id, or several by `material/ids`.
+ */
+const LIST_EXCLUDED_FIELDS = '-content';
+
 @Injectable()
 export class MaterialService {
   constructor(@InjectModel(Material.name) private materialModel: Model<MaterialDocument>) {}
@@ -63,6 +70,7 @@ export class MaterialService {
   async getOrgMaterials(org: Types.ObjectId): Promise<MaterialDto[]> {
     return this.materialModel
       .find({ org, _deleted: { $ne: true } })
+      .select(LIST_EXCLUDED_FIELDS)
       .lean<MaterialDocument[]>()
       .then((materials) => this.getTransformedMaterials(materials));
   }
@@ -70,6 +78,7 @@ export class MaterialService {
   async getStandardAndSubjectMaterials(org: Types.ObjectId, standard: string, subject: string): Promise<MaterialDto[]> {
     return this.materialModel
       .find({ org, standard, subject, _deleted: { $ne: true } })
+      .select(LIST_EXCLUDED_FIELDS)
       .sort({ order: 1 })
       .lean<MaterialDocument[]>()
       .then((materials) => this.getTransformedMaterials(materials));
@@ -79,6 +88,7 @@ export class MaterialService {
   async getMaterialsByStandardIds(org: Types.ObjectId, standardIds: string[]): Promise<MaterialDto[]> {
     return this.materialModel
       .find({ org, standard: { $in: standardIds }, _deleted: { $ne: true } })
+      .select(LIST_EXCLUDED_FIELDS)
       .sort({ order: 1 })
       .lean<MaterialDocument[]>()
       .then((materials) => this.getTransformedMaterials(materials));

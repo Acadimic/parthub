@@ -78,6 +78,9 @@ identical, so read the equivalent screen in a sibling app before inventing anyth
 - Read entities through the store's lookups (`getBatches()`, `getBatchById(id)`), not by reaching
   into the map directly. Stores keep entities in a `Record<string, T>` keyed by `_id`; the array
   getters exist for the UI.
+- Merge rows in an `add*` action (`{ ...map[id], ...row }`) when the list route sends fewer fields
+  than a read by id, as materials and courses do; replacing would drop what the full read brought.
+  A screen that needs the omitted field fetches it first (`requestFullMaterials`, `loadCourse`).
 - Put a derivation in the store, not in a selector. A `useShallow` selector says *how to compare*;
   anything with more than one step — a lookup chained into a `map`, a `reduce`, a `filter` encoding
   a rule — becomes a named store method.

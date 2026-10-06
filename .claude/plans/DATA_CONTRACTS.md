@@ -81,6 +81,9 @@ These rules are absolute so the interfaces never need to say "or ObjectId".
 - A field the client must not see is absent from the interface and stripped by
   the mapper, not sent and ignored.
 - An optional field means the API may omit it. Anything else is always present.
+- A list route may omit a heavy optional field that a read by id sends (`MaterialDto.content`
+  from `material/*all`). That is the same contract, not a second "summary" type; see
+  `## List rows and full documents` in `API_CONVENTIONS.md`.
 
 ## File layout
 

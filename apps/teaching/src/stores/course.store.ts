@@ -38,7 +38,13 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   /** A course's subjects as select items, led by a "None" entry. Was a view on the model. */
   getCourseSubjectItems: (courseId: string) => { label: string; value: string }[];
 
+  /**
+   * Merges rows into the ones held: `course/all` leaves out the AI syllabus arrays a read by id
+   * carries. `isNew` is taken as sent, since the server never returns it and a saved row clears it.
+   */
   addCourses: (courses: CourseDto[]) => void;
+  /** Puts a row back exactly as given, dropping anything set since: what cancelling an edit needs. */
+  restoreCourse: (course: CourseDto) => void;
   addPlans: (plans: PlanDto[]) => void;
   addCourseModules: (courseModules: ICourseModule[]) => void;
   patchCourse: (courseId: string, fields: Partial<CourseDto>) => void;
@@ -134,7 +140,17 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   },
 
   addCourses: (courses) => {
-    set((state) => ({ courseMap: { ...state.courseMap, ...keyById(courses) } }));
+    set((state) => {
+      const courseMap = { ...state.courseMap };
+      for (const course of courses) {
+        courseMap[course._id] = { ...courseMap[course._id], ...course, isNew: course.isNew };
+      }
+      return { courseMap };
+    });
+  },
+
+  restoreCourse: (course) => {
+    set((state) => ({ courseMap: { ...state.courseMap, [course._id]: course } }));
   },
 
   addPlans: (plans) => {

@@ -17,7 +17,14 @@ class MaterialService {
     return resData;
   };
 
-  /** Every material the org owns, as rows — the list screen rolls them up itself. */
+  /** Several materials in full, at most `MAX_MATERIAL_IDS` per call. */
+  getMaterialsByIds = async (ids: string[]) => {
+    const url = 'material/ids';
+    const resData = await callAuthApi<MaterialDto[]>(url, API.POST, { ids });
+    return resData;
+  };
+
+  /** Every material the org owns, without bodies — the list screen rolls them up itself. */
   getMaterials = async () => {
     const url = 'material/all';
     const resData = await callAuthApi<MaterialDto[]>(url, API.GET);

@@ -141,7 +141,7 @@ export const AiCourseModulesDrawer = ({ isOpen, onClose, course, modules }: IPro
     setState({ step: 'prompts', replies: [] });
     setDraft('');
     paperIds.current = new Map();
-    if (standardStore.shouldLoad('chapters')) standardStore.loadOrgChapters();
+    if (standardStore.shouldLoad('orgChapters')) standardStore.loadOrgChapters();
     materialStore.loadStandardsMaterials(course.standards ?? []);
   }, [isOpen]);
 

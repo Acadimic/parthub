@@ -1,6 +1,9 @@
 import { DocumentType, LinkType, MaterialType } from '../enums/material.enum';
 import { type IMaterialInfo } from '../interfaces/material.interface';
 
+/** The most lessons one `material/ids` call returns in full; a caller with more sends batches. */
+export const MAX_MATERIAL_IDS = 100;
+
 /** The link kinds the learning app plays as video rather than opening as a page. */
 export const VIDEO_LINK_TYPES: readonly LinkType[] = [LinkType.YOUTUBE, LinkType.VIDEO];
 

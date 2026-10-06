@@ -96,7 +96,7 @@ export const AiWholePaperDrawer = ({ isOpen, onClose }: IProps) => {
     setIssues([]);
     setImported([]);
     // Chapters are what the prompt lists per section; the list page has no reason to have loaded them.
-    if (standardStore.shouldLoad('chapters')) standardStore.loadOrgChapters();
+    if (standardStore.shouldLoad('orgChapters')) standardStore.loadOrgChapters();
   }, [isOpen]);
 
   const standards = standardStore.getStandardsByIds(state.setup.standards);

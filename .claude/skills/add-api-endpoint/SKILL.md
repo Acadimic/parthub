@@ -62,6 +62,9 @@ they pass review, and they leak data across organizations at runtime.
 - Write a mapper (`x.mapper.ts`) that lists every response field explicitly. That is the one place
   that knows about `ObjectId` and `Date`, and listing fields keeps `__v` and anything added later
   out of the response.
+- Keep a list route light: leave a heavy field no table reads out of it with an exclusion
+  (`.select('-content')`) and serve it from `:id` or `POST <resource>/ids`. See
+  `## List rows and full documents` in `API_CONVENTIONS.md`.
 - Return the document, not an envelope. `callAuthApi` is typed `Promise<SuccessResponse<T>>` and
   callers read `result.data`, so wrapping the payload again on the server yields
   `{ data: { data } }`.

@@ -71,9 +71,11 @@ export class TestPaperService {
       });
   }
 
+  /** The org's papers for its lists. The instructions stay out: only a read by id carries them. */
   async getOrgTestPapers(org: Types.ObjectId): Promise<TestPaperDto[]> {
     return this.testPaperModel
       .find({ org, _deleted: { $ne: true } })
+      .select({ instruction: 0 })
       .lean<TestPaperDocument[]>()
       .then((testPapers) => this.getTransformedTestPapers(testPapers));
   }
