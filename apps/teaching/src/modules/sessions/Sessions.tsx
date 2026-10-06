@@ -1,3 +1,4 @@
+import { useLoadOnce } from '@repo/ui/hooks';
 import { type MeetDto } from '@repo/shared/contracts';
 import { DataTable } from '@components/app/tables';
 import { CopyUrl } from '@components/common';
@@ -14,7 +15,7 @@ import {
   ViewMeetAttendees,
 } from '@modules/calender/components';
 import { useMeetHooks } from '@modules/calender/hooks';
-import { useMeetLookups } from '@stores';
+import { useMeetLookups, useUserStore } from '@stores';
 import { MEET_FREQUENCIES, MEET_FREQUENCY_ORDER, getMeetFrequencyMeta } from '@utils/constants';
 import { getFormattedTime, getFrequencyText, getFullFormattedDate } from '@utils/helpers';
 import { useEffect, useMemo } from 'react';
@@ -52,6 +53,8 @@ const NextRun = ({ meet }: { meet: MeetDto }) => {
 };
 
 export const Sessions = () => {
+  // The org's people are loaded by each screen that shows them; nothing loads them up front.
+  useLoadOnce(useUserStore, 'users', (state) => state.loadUsers);
   const meetStore = useMeetLookups();
   const { loadMeets } = meetStore;
   const meets = meetStore.getMeets();

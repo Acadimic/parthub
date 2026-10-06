@@ -1,3 +1,4 @@
+import { useLoadOnce } from '@repo/ui/hooks';
 import { RectangleSkeleton } from '@repo/ui/app';
 import {
   useBatchLookups,
@@ -7,6 +8,7 @@ import {
   useSelectedUser,
   useTestPaperLookups,
   useUserLookups,
+  useUserStore,
 } from '@stores';
 import { addDaysToDate, getEndOfWeek, getFullCalendarEvents, getStartOfWeek } from '@utils/helpers';
 import { useEffect } from 'react';
@@ -45,6 +47,8 @@ const WorkspaceSkeleton = () => (
 );
 
 export const Workspace = () => {
+  // The org's people are loaded by each screen that shows them; nothing loads them up front.
+  useLoadOnce(useUserStore, 'users', (state) => state.loadUsers);
   const courseStore = useCourseLookups();
   const testPaperStore = useTestPaperLookups();
   const materialStore = useMaterialLookups();

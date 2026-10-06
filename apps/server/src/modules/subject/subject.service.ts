@@ -50,7 +50,7 @@ export class SubjectService {
     return this.subjectModel.find({ org, _deleted: { $ne: true } }).lean<SubjectDocument[]>();
   }
 
-  async findById(id: string) {
-    return this.subjectModel.findById(id).lean<SubjectDocument>();
+  async findById(id: string): Promise<SubjectDocument | null> {
+    return this.subjectModel.findOne({ _id: id, _deleted: { $ne: true } }).lean<SubjectDocument>();
   }
 }

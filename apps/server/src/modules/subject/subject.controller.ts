@@ -69,6 +69,8 @@ export class SubjectController {
   @Get(':id')
   @Permissions()
   async findById(@Param('id') id: string) {
-    return this.subjectService.findById(id);
+    const subject = await this.subjectService.findById(id);
+    if (!subject) throw new NotFoundException('Subject not found.');
+    return subject;
   }
 }

@@ -1,3 +1,4 @@
+import { useLoadOnce } from '@repo/ui/hooks';
 import { type BatchDto } from '@repo/shared/contracts';
 import { GroupAvatars } from '@components/app/avatars';
 import { DataTable } from '@components/app/tables';
@@ -5,7 +6,7 @@ import { BlankState } from '@components/others';
 import { MagnifyingGlassIcon, PencilIcon, PlusIcon } from '@phosphor-icons/react';
 import { Button, TextInput } from '@repo/ui/app';
 import { type IColumnData, type ISelectItem } from '@interfaces';
-import { useBatchLookups, useSelectorLookups, useStandardLookups } from '@stores';
+import { useBatchLookups, useSelectorLookups, useStandardLookups, useUserStore } from '@stores';
 import { ACTIONS } from '@repo/shared/utils';
 import { useEffect, useMemo } from 'react';
 import { useSetState } from 'react-use';
@@ -28,6 +29,8 @@ const People = ({ users }: { users: ReturnType<ReturnType<typeof useBatchLookups
   );
 
 export const Batches = () => {
+  // The org's people are loaded by each screen that shows them; nothing loads them up front.
+  useLoadOnce(useUserStore, 'users', (state) => state.loadUsers);
   const { setSelectedBatchId, removeSelectedBatchId } = useSelectorLookups();
   const batchStore = useBatchLookups();
   const standardStore = useStandardLookups();

@@ -1,3 +1,4 @@
+import { useLoadOnce } from '@repo/ui/hooks';
 import { UserCell } from '@components/app/avatars';
 import { DataTable } from '@components/app/tables';
 import { BlankState } from '@components/others';
@@ -6,7 +7,7 @@ import { Button, TextInput } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
 import { AccountType, Gender } from '@enums';
 import { type IColumnData, type ISelectItem } from '@interfaces';
-import { type IUser, useSelectorLookups, useStandardLookups, useUserLookups } from '@stores';
+import { type IUser, useSelectorLookups, useStandardLookups, useUserLookups, useUserStore } from '@stores';
 import { ACTIONS } from '@repo/shared/utils';
 import { getStringFormattedDate, getStringFormattedDateWithTime, capitalizeFirstWord } from '@utils/helpers';
 import { useMemo } from 'react';
@@ -42,6 +43,9 @@ export const AccountStatusBadge = ({ accountType }: { accountType: AccountType }
   );
 
 export const Students = () => {
+  // The org's people are loaded by each screen that shows them; nothing loads them up front.
+  useLoadOnce(useUserStore, 'users', (state) => state.loadUsers);
+  useLoadOnce(useUserStore, 'studentStandardMappings', (state) => state.loadStudentStandardMappings);
   const { setSelectedStudentId } = useSelectorLookups();
   const userStore = useUserLookups();
   const standardStore = useStandardLookups();

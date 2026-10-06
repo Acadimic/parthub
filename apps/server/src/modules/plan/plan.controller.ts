@@ -1,7 +1,7 @@
 import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common';
 import { PlanService } from './plan.service';
 import { PlanDto } from '@repo/shared/validations';
 import { RequestContextService } from '../../context/request-context.service';
@@ -43,7 +43,8 @@ export class PlanController {
   @Subdomains(Subdomain.TEACH)
   @Permissions(PermissionItem.VIEW_PLAN)
   async getPlanById(@Param('id') id: string) {
-    const data = await this.planService.getPlanById(id);
+    const data = await this.planService.getOrgPlanById(this.requestContextService.getOrgId(), id);
+    if (!data) throw new NotFoundException('Plan not found.');
     return data;
   }
 }

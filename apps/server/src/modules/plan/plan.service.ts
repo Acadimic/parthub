@@ -62,6 +62,19 @@ export class PlanService {
       .then((plans) => this.getTransformedPlans(plans));
   }
 
+  /** One plan of the caller's organization, for the route; a deleted or foreign plan reads as missing. */
+  async getOrgPlanById(org: Types.ObjectId, id: string): Promise<PlanDto | null> {
+    return this.planModel
+      .findOne({ _id: id, org, _deleted: { $ne: true } })
+      .lean<PlanDocument>()
+      .then((plan) => (plan ? this.getTransformedPlan(plan) : null));
+  }
+
+  /**
+   * Any plan by id, deleted or not and in any organization. Server-side only: a payment settles on
+   * the plan its seat was sold on even after that plan is removed, and order creation checks the
+   * organization itself. Never expose it through a route.
+   */
   async getPlanById(id: string): Promise<PlanDto | null> {
     return this.planModel
       .findById(id)
