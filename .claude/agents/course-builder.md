@@ -115,6 +115,19 @@ caption)` for the entry. Pass the same data object the text uses, so the picture
 - Explain why, not just what. Concrete before abstract, one idea at a time.
 - A lesson stands alone but names what it assumes from earlier days.
 - Quizzes test what was taught, after it was taught; distractors are real misconceptions.
+- **Linguistic accuracy** in a language course: teach a form by the rule that actually governs it
+  (कः / का / किम् agree with the noun or answer — they do not mean "a boy / a girl / a thing"), and
+  give the reply, phrase or usage a real teacher would, checked against a reliable source rather than
+  remembered.
+- **Media agree with the question.** A listening text, a figure (its drawing, alt and caption) and the
+  question and answer that use them state the same counts, names, objects, times and positions.
+  Check every question that combines them.
+- **Accept every valid answer.** A single-choice item has exactly one correct option; a distractor
+  that is also correct (another gender of the word, an optional sandhi result, an alternative
+  paradigm form, a different but valid word order) is a defect. Accept all valid forms (multiple
+  choice) or set the context so that one answer is uniquely right.
+- **Accurate maps.** A map is drawn from an authoritative boundary (for India, the official outline,
+  e.g. the Survey of India–based datameet data), never sketched freehand.
 - Resources are few and real: two or three per lesson that a student should actually open.
 - Plain, warm prose. No filler, no "in this lesson we will".
 

@@ -17,7 +17,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const STATE_DIR = path.join(ROOT, '.course-agent');
-const SESSION_FILE = path.join(STATE_DIR, 'session.json');
+// Overridable so a dev run and a production run can hold separate sign-ins at the same time.
+const SESSION_FILE = process.env.COURSE_AGENT_SESSION ?? path.join(STATE_DIR, 'session.json');
 
 // The shared package is consumed as its compiled output, as the apps consume it. This tool sits
 // outside the workspaces, so it reaches the output directly rather than through a package name.
