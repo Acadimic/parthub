@@ -1,4 +1,5 @@
 export * from './course.store';
+export * from './discussion.store';
 export * from './enrollment.store';
 export * from './material.store';
 export * from './meet.store';

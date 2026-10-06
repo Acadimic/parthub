@@ -1,4 +1,5 @@
 import {
+  ChatsCircleIcon,
   CalendarBlankIcon,
   ChalkboardTeacherIcon,
   ColumnsIcon,
@@ -80,6 +81,11 @@ const APP_ROUTES: ISidebarRoute[] = [
         name: 'Courses',
         route: '/courses',
         icon: GridFourIcon,
+      },
+      {
+        name: 'Discussions',
+        route: '/discussions',
+        icon: ChatsCircleIcon,
       },
       {
         name: 'Orders',

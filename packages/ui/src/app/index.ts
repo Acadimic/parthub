@@ -8,6 +8,7 @@ export * from './buttons';
 export * from './cards';
 export * from './carousel';
 export * from './confirms';
+export * from './discussion';
 export * from './headers';
 export * from './icons';
 export * from './indicators';

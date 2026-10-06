@@ -1,3 +1,4 @@
+import { CourseDiscussionSection } from '@modules/discussions';
 import { type CourseDto, type MeetDto } from '@repo/shared/contracts';
 import { MeetItem } from '@components/common';
 import { BlankState } from '@components/others';
@@ -264,6 +265,7 @@ export const Course = ({ courseId }: IProps) => {
       />
       {renderModules()}
       <SessionsSection meets={meets} onAdd={() => setState({ isOpenUpsertSessionsModal: true })} />
+      <CourseDiscussionSection courseId={selectedCourse._id} />
       <AiCourseModulesDrawer
         isOpen={state.isOpenContent}
         onClose={() => setState({ isOpenContent: false })}

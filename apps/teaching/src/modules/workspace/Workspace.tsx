@@ -15,6 +15,7 @@ import { useEffect } from 'react';
 import {
   AddItem,
   CourseItem,
+  DoubtsToAnswer,
   GettingStarted,
   type ISetupStep,
   MaterialItem,
@@ -127,6 +128,7 @@ export const Workspace = () => {
           <UpcomingSessions />
         </section>
         <div className="flex flex-col gap-4">
+          <DoubtsToAnswer />
           <WeekActivity meets={meets} />
           {!isSetUp ? <GettingStarted steps={steps} /> : null}
         </div>

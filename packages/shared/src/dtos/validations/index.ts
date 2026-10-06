@@ -34,3 +34,7 @@ export * from './activity-log-query.dto';
 export * from './rich-text.dto';
 export * from './test-paper/test-paper-section.dto';
 export * from './test-paper/test-paper-result.dto';
+export * from './discussion/course-comment.dto';
+export * from './discussion/course-review.dto';
+export * from './discussion/discussion-page-query.dto';
+export * from './discussion/comment-inbox-query.dto';

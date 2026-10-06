@@ -22,3 +22,4 @@ export * from './subdomain.enum';
 export * from './auth.enum';
 export * from './editor.enum';
 export * from './rich-text.enum';
+export * from './discussion.enum';

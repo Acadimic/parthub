@@ -4,6 +4,8 @@ import { BookmarkModule } from '@modules/bookmark/bookmark.module';
 import { ChapterModule } from '@modules/chapter/chapter.module';
 import { CommonModule } from '@modules/common/common.module';
 import { CourseModule } from '@modules/course/course.module';
+import { CourseCommentModule } from '@modules/course-comment/course-comment.module';
+import { CourseReviewModule } from '@modules/course-review/course-review.module';
 import { FirebaseModule } from '@modules/firebase/firebase.module';
 import { FollowerModule } from '@modules/follower/follower.module';
 import { InviteModule } from '@modules/invite/invite.module';
@@ -124,6 +126,8 @@ const CLOUD_LOGGING_SEVERITY: Record<string, string> = { trace: 'DEBUG', warn: '
     StandardModule,
     SubjectModule,
     CourseModule,
+    CourseCommentModule,
+    CourseReviewModule,
     MaterialModule,
     ChapterModule,
     TestPaperModule,

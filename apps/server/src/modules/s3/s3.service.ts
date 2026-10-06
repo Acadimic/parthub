@@ -75,6 +75,22 @@ export class S3Service {
 
   private static readonly ORG_FOLDER = 'orgs';
 
+  /**
+   * Whether an address is an object in the private bucket under this organization's own folder:
+   * the only kind of file a comment may carry, so a post cannot point every viewer at another site.
+   */
+  isOwnObjectUrl(url: string, orgId: string): boolean {
+    if (!URL.canParse(url)) return false;
+    const parsed = new URL(url);
+    const hosts = [`${this.bucketName}.s3.${this.region}.amazonaws.com`, `${this.bucketName}.s3.amazonaws.com`];
+    const folder = `/${this.prefix}${S3Service.ORG_FOLDER}/${orgId}/`;
+    return (
+      parsed.protocol === 'https:' &&
+      hosts.includes(parsed.host) &&
+      decodeURIComponent(parsed.pathname).startsWith(folder)
+    );
+  }
+
   async deleteObjects(keys: string[], orgId: string): Promise<void> {
     if (!keys.length) return;
     const command = new DeleteObjectsCommand({

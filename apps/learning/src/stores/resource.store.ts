@@ -5,6 +5,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { CollectionType } from '../enums';
 import { BookmarkService, FollowerService, ReactionService } from '../services';
 import { getObjectId } from '../utils/helpers';
+import { useDiscussionStore } from './discussion.store';
 import { useMaterialStore } from './material.store';
 import { useSelectorStore } from './selector.store';
 import { useTestPaperStore } from './test-paper.store';
@@ -58,6 +59,8 @@ const adjustReactionsCount = (collectionRef: CollectionType, collectionItem: str
         reactionsCount: Math.max(0, (material.reactionsCount ?? 0) + delta),
       });
     }
+  } else if (collectionRef === CollectionType.COURSE_COMMENT || collectionRef === CollectionType.COURSE_REVIEW) {
+    useDiscussionStore.getState().adjustLikes(collectionItem, delta);
   } else if (collectionRef === CollectionType.TEST_PAPER) {
     const testPaper = useTestPaperStore.getState().getTestPaperById(collectionItem);
     if (testPaper) {

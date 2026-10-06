@@ -3,6 +3,7 @@ import BatchService from './batch.service';
 import ChapterService from './chapter.service';
 import CommonService from './common.service';
 import CourseService from './course.service';
+import DiscussionService from './discussion.service';
 import MappingService from './mapping.service';
 import MaterialService from './material.service';
 import MeetService from './meet.service';
@@ -20,6 +21,7 @@ export {
   ChapterService,
   CommonService,
   CourseService,
+  DiscussionService,
   MappingService,
   MaterialService,
   MeetService,

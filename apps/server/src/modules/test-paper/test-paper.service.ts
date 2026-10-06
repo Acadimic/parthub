@@ -1,3 +1,4 @@
+import { type IDiscussionSource } from '@repo/shared/interfaces';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { getTransformedBaseFields } from '@database/base.transform';
 import { InjectModel } from '@nestjs/mongoose';
@@ -89,6 +90,18 @@ export class TestPaperService {
       .findOne({ _id: id, org, _deleted: { $ne: true } })
       .lean<TestPaperDocument>()
       .then((testPaper) => (testPaper ? this.getTransformedTestPaper(testPaper) : null));
+  }
+
+  /**
+   * Names only, for labelling discussion comments. Deleted rows are included: a comment written on
+   * a lesson that was later removed still says where it came from.
+   */
+  async getNamesByIds(org: Types.ObjectId, ids: string[]): Promise<IDiscussionSource[]> {
+    if (!ids.length) return [];
+    const rows = await this.testPaperModel
+      .find({ _id: { $in: ids }, org }, { name: 1 })
+      .lean<{ _id: Types.ObjectId; name: string }[]>();
+    return rows.map((row) => ({ _id: String(row._id), name: row.name }));
   }
 
   /** The test papers a course module embeds, fetched in one round trip rather than one id at a time. */

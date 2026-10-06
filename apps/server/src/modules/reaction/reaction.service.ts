@@ -33,4 +33,14 @@ export class ReactionService {
       _deleted: { $ne: true },
     });
   }
+
+  /** Like counts for many items in one query, keyed by item id; an item with none is absent. */
+  async getCountsByItems(ids: Types.ObjectId[]): Promise<Record<string, number>> {
+    if (!ids.length) return {};
+    const groups = await this.reactionModel.aggregate<{ _id: Types.ObjectId; count: number }>([
+      { $match: { collectionItem: { $in: ids }, _deleted: { $ne: true } } },
+      { $group: { _id: '$collectionItem', count: { $sum: 1 } } },
+    ]);
+    return Object.fromEntries(groups.map((group) => [String(group._id), group.count]));
+  }
 }

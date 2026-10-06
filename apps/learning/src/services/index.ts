@@ -3,6 +3,7 @@ import BookmarkService from './bookmark.service';
 import ChapterService from './chapter.service';
 import CommonService from './common.service';
 import CourseService from './course.service';
+import DiscussionService from './discussion.service';
 import EnrollmentService from './enrollment.service';
 import FollowerService from './follower.service';
 import MappingService from './mapping.service';
@@ -23,6 +24,7 @@ export {
   ChapterService,
   CommonService,
   CourseService,
+  DiscussionService,
   EnrollmentService,
   FollowerService,
   MappingService,

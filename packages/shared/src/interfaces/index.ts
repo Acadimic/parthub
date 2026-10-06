@@ -18,3 +18,4 @@ export * from './ai-study-material.interface';
 export * from './ai-course.interface';
 export * from './enrollment.interface';
 export * from './order.interface';
+export * from './discussion.interface';

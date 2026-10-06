@@ -1,4 +1,5 @@
 import { Avatar } from '@components/app/avatars';
+import { CourseRatingLink } from '../course-discussion';
 import { useCourse } from '@hooks/course.hook';
 import { CalendarBlankIcon, ClockIcon, HouseIcon, SparkleIcon, StackIcon } from '@phosphor-icons/react';
 import { Breadcrumb, type IBreadcrumbItem } from '@repo/ui/app';
@@ -95,6 +96,7 @@ export const CourseHero = ({ course }: IProps) => {
           {modulesCount} {getPlural(modulesCount, 'module')}
         </MetaItem>
         {totalMins ? <MetaItem icon={ClockIcon}>{formatCourseDuration(totalMins)}</MetaItem> : null}
+        <CourseRatingLink courseId={course._id} />
         {course.publishedDate ? (
           <MetaItem icon={CalendarBlankIcon}>Published {getStringFormattedDate(course.publishedDate)}</MetaItem>
         ) : null}

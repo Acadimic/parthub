@@ -62,6 +62,9 @@ export enum PermissionItem {
   // Follower
   MANAGE_FOLLOWER = 'manageFollower',
 
+  // Course discussion: comments and reviews
+  MANAGE_DISCUSSION = 'manageDiscussion',
+
   // Student
   STUDENT = 'student',
 }

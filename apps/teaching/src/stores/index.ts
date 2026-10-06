@@ -9,3 +9,4 @@ export * from './standard.store';
 export * from './test-paper.store';
 export * from './toast.store';
 export * from './user.store';
+export * from './discussion.store';

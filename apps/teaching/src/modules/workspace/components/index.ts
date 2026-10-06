@@ -8,3 +8,4 @@ export * from './WorkspaceSummary';
 export * from './GettingStarted';
 export * from './WeekActivity';
 export * from './WorkspaceHero';
+export * from './DoubtsToAnswer';

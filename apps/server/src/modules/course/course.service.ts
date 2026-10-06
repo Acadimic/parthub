@@ -1,7 +1,8 @@
+import { type IDiscussionSource } from '@repo/shared/interfaces';
 import { getTransformedBaseFields } from '@database/base.transform';
 import { MaterialService } from '@modules/material/material.service';
 import { MeetService } from '@modules/meet/meet.service';
-import { Subdomain } from '@repo/shared/enums';
+import { DefaultRole, Subdomain } from '@repo/shared/enums';
 import { PlanService } from '@modules/plan/plan.service';
 import { EnrollmentService } from '@modules/enrollment/enrollment.service';
 import { RequestContextService } from '../../context/request-context.service';
@@ -88,7 +89,7 @@ export class CourseService {
   }
 
   // An id that is not an ObjectId would make Mongoose throw a CastError; for a public route it is a 404.
-  private async findPublicCourse(courseId: string): Promise<CourseDocument | null> {
+  async findPublicCourse(courseId: string): Promise<CourseDocument | null> {
     if (!Types.ObjectId.isValid(courseId)) return null;
     return this.courseModel
       .findOne({ _id: courseId, isPublished: true, _deleted: { $ne: true } }, CATALOGUE_EXCLUDED_FIELDS)
@@ -140,6 +141,37 @@ export class CourseService {
   private async canOpen(course: CourseDocument): Promise<boolean> {
     if (this.requestContextService.getSubdomain() !== Subdomain.LEARN) return true;
     return this.enrollmentService.hasAccess(this.requestContextService.getUserId(), course);
+  }
+
+  /** Every live course the organization owns, by id and name: the scope of a teacher's discussion inbox. */
+  async getOrgCourseNames(org: Types.ObjectId): Promise<IDiscussionSource[]> {
+    const rows = await this.courseModel
+      .find({ org, _deleted: { $ne: true } }, { name: 1 })
+      .lean<{ _id: Types.ObjectId; name: string }[]>();
+    return rows.map((row) => ({ _id: String(row._id), name: row.name }));
+  }
+
+  /**
+   * Whether the caller may comment on or review a course: a learner who may open it, or staff of the
+   * organization that owns it. Seeing a published course is not enough on either side.
+   */
+  async canDiscuss(org: Types.ObjectId, course: CourseDocument): Promise<boolean> {
+    if (this.isCourseStaff(org, course)) return true;
+    if (this.requestContextService.getSubdomain() !== Subdomain.LEARN) return false;
+    return this.enrollmentService.hasAccess(this.requestContextService.getUserId(), course);
+  }
+
+  /**
+   * Whether the caller is staff of the organization that owns the course. The app header alone is
+   * not proof: the support app admits a student membership, so the role is checked as well.
+   */
+  isCourseStaff(org: Types.ObjectId, course: CourseDocument): boolean {
+    const { requestContextService } = this;
+    return (
+      requestContextService.getSubdomain() === Subdomain.TEACH &&
+      requestContextService.getPermission() !== DefaultRole.STUDENT &&
+      String(course.org) === String(org)
+    );
   }
 
   /** The plans a visible course is sold on, for the learner to pick from. */

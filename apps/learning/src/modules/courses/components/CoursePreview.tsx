@@ -12,14 +12,16 @@ import {
   getDefaultPlanId,
 } from './course-preview';
 import { CourseOutline } from './CourseOutline';
+import { CourseReviewsSection } from './course-discussion';
 
 /** The fixed header's height on a phone, which hides whatever scrolls up beneath it. */
 const HEADER_HEIGHT = 56;
 
 export const CoursePreview = () => {
   const selectedCourse = useSelectedCourse();
+  const isSignedIn = Boolean(useSelectedUser());
   // `PageLayout` shows a signed-in learner the phone tab bar below `md`; the action bar floats above it.
-  const hasTabBar = Boolean(useSelectedUser());
+  const hasTabBar = isSignedIn;
   const { openItem } = useCourse();
   const { getPlansByCourseId } = useCourseLookups();
   const { isEnrolled, getActiveEnrollment } = useEnrollmentLookups();
@@ -73,6 +75,7 @@ export const CoursePreview = () => {
                 <CourseOutline courseId={selectedCourse._id} isPreview isLocked={isLocked} onSelectItem={openItem} />
               </div>
             </section>
+            <CourseReviewsSection courseId={selectedCourse._id} canReview={isSignedIn && !isLocked} />
           </div>
           <aside className="hidden lg:block">
             {/* Capped at the viewport so a card with several plans can still be scrolled to its end. */}

@@ -50,10 +50,12 @@ export const DEFAULT_PERMISSIONS: Record<DefaultRole, PermissionItem[]> = {
     PermissionItem.VIEW_TEST_PAPER,
     PermissionItem.VIEW_QUESTION,
     PermissionItem.VIEW_MEET,
-    // Learner-owned features: a student manages only their own bookmarks, reactions and follows.
+    // Learner-owned features: a student manages only their own bookmarks, reactions, follows,
+    // comments and reviews.
     PermissionItem.MANAGE_BOOKMARK,
     PermissionItem.MANAGE_REACTION,
     PermissionItem.MANAGE_FOLLOWER,
+    PermissionItem.MANAGE_DISCUSSION,
     PermissionItem.STUDENT,
   ],
 };

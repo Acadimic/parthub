@@ -13,7 +13,14 @@ import { BlankState } from '@components/others';
 import { CourseOutlineTab, ModuleContentType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { type ICourseModuleItem } from '@interfaces';
-import { CheckIcon, ClipboardTextIcon, ListBulletsIcon, LockSimpleIcon, VideoCameraIcon } from '@phosphor-icons/react';
+import {
+  ChatsCircleIcon,
+  CheckIcon,
+  ClipboardTextIcon,
+  ListBulletsIcon,
+  LockSimpleIcon,
+  VideoCameraIcon,
+} from '@phosphor-icons/react';
 import { LivePulse, LiveClassesPanel, hasLiveSession } from '@modules/sessions';
 import { type ITabItem } from '@repo/ui/core';
 import {
@@ -26,6 +33,7 @@ import {
 } from '@stores';
 import { getPlural } from '@utils/helpers';
 import { useEffect, useRef } from 'react';
+import { CourseDiscussion } from './course-discussion';
 
 interface IProps {
   courseId: string;
@@ -382,6 +390,16 @@ export const CourseOutline = (props: IProps) => {
     icon: hasLiveSession(meets) ? <LivePulse /> : <VideoCameraIcon weight="bold" className="h-3.5 w-3.5" />,
     component: <LiveClassesPanel meets={meets} isSticky={!isPreview} />,
   });
+  // Comments and reviews belong to the learning view, where the learner is enrolled; the preview
+  // page shows reviews in a section of its own.
+  if (!isPreview) {
+    tabs.push({
+      key: CourseOutlineTab.DISCUSSION,
+      label: 'Discussion',
+      icon: <ChatsCircleIcon weight="bold" className="h-3.5 w-3.5" />,
+      component: <CourseDiscussion courseId={courseId} />,
+    });
+  }
   const selectedIndex = tabs.findIndex((tab) => tab.key === selectedCourseOutlineTab);
 
   return (

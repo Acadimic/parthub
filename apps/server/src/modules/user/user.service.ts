@@ -3,7 +3,9 @@ import { OrgService } from '@modules/org/org.service';
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
+  forwardRef,
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
@@ -18,6 +20,7 @@ import {
   UpdateProfileDto,
   UserDto,
 } from '@repo/shared/validations';
+import { type IDiscussionAuthor } from '@repo/shared/interfaces';
 import { isProfileForApp } from '@repo/shared/utils';
 import { getObjectId } from '@utils/util';
 import { Model, Types } from 'mongoose';
@@ -32,6 +35,8 @@ export class UserService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly orgService: OrgService,
+    // A forward reference because the two services import each other.
+    @Inject(forwardRef(() => InviteService))
     private readonly inviteService: InviteService,
     private readonly requestContextService: RequestContextService,
   ) {}
@@ -122,6 +127,23 @@ export class UserService {
 
   async getUserById(_id: string): Promise<UserDocument | null> {
     return await this.userModel.findOne({ _id, _deleted: { $ne: true } }).lean<UserDocument>();
+  }
+
+  /**
+   * The name and picture shown beside comments and reviews, and never more: these rows are read by
+   * learners of other organizations. A removed user still has a name, so deleted rows are included.
+   */
+  async getDiscussionAuthors(ids: string[], courseOrg: Types.ObjectId): Promise<IDiscussionAuthor[]> {
+    if (!ids.length) return [];
+    const users = await this.userModel
+      .find({ _id: { $in: ids } }, { name: 1, firstName: 1, lastName: 1, avatar: 1, permission: 1, org: 1 })
+      .lean<UserDocument[]>();
+    return users.map((user) => ({
+      _id: String(user._id),
+      name: user.name || [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Learner',
+      avatar: user.avatar || null,
+      isTeacher: user.permission !== DefaultRole.STUDENT && String(user.org) === String(courseOrg),
+    }));
   }
 
   async getUserByOrgIdAndUid(payload: FindByOrgIdAndUidDto): Promise<UserDocument | null> {
