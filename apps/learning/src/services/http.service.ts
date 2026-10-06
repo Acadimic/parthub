@@ -5,11 +5,14 @@ import { generateAndSetNewToken } from '../utils/firebase';
 import { getTimezone, getTimezoneOffset, getToken, handleError } from '../utils/helpers';
 import { toPayload } from '@repo/ui/lib';
 
+/** Proxied to the server by the rewrite in next.config.js. */
+const API_BASE_PATH = '/api';
+
 export const callDefaultApi = () => axios.create();
 
 const createAxiosInstance = (isUnAuth: boolean) => {
   const axiosInstance = axios.create({
-    baseURL: process.env.API_SERVER_URL,
+    baseURL: API_BASE_PATH,
     headers: {
       'Content-Type': 'application/json',
       // Sent on every request, not just authenticated ones: the server refuses an authenticated or

@@ -125,12 +125,12 @@ deploy from, so the projects live in a Pro team.
    to the root directory or its dependencies".
 4. Per project, Settings → Environment Variables, for Production (and Preview if wanted):
 
-   | Name                                                               | Value                                                                     | Projects |
-   | ------------------------------------------------------------------ | ------------------------------------------------------------------------- | -------- |
-   | `API_SERVER_URL`                                                   | Cloud Run URL after the first server deploy, later `https://api.<domain>` | all      |
-   | `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase web config                                                       | all      |
-   | `NEXT_PUBLIC_LEARN_URL`                                            | `https://learn.<domain>` (teaching's order links open here)               | teaching |
-   | `NEXT_PUBLIC_PRIVATE_API_KEY`                                      | the same value as the server's `PRIVATE_API_KEY`                          | support  |
+   | Name                                                               | Value                                                                                                                            | Projects |
+   | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | -------- |
+   | `API_SERVER_URL`                                                   | Cloud Run URL after the first server deploy, later `https://api.<domain>` (the `/api` rewrite target; never reaches the browser) | all      |
+   | `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase web config                                                                                                              | all      |
+   | `NEXT_PUBLIC_LEARN_URL`                                            | `https://learn.<domain>` (teaching's order links open here)                                                                      | teaching |
+   | `NEXT_PUBLIC_PRIVATE_API_KEY`                                      | the same value as the server's `PRIVATE_API_KEY`                                                                                 | support  |
 
 5. For `parthhub-support` turn on Deployment Protection (Vercel Authentication), because its
    `NEXT_PUBLIC_PRIVATE_API_KEY` is inlined into the bundle and the page itself must not be public.

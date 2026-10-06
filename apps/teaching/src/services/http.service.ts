@@ -5,9 +5,12 @@ import { generateAndSetNewToken } from '../utils/firebase';
 import { getTimezone, getTimezoneOffset, getToken, handleError } from '../utils/helpers';
 import { toPayload } from '@repo/ui/lib';
 
-const createAxiosInstance = (isUnAuth: boolean, url: string) => {
+/** Proxied to the server by the rewrite in next.config.js. */
+const API_BASE_PATH = '/api';
+
+const createAxiosInstance = (isUnAuth: boolean) => {
   const axiosInstance = axios.create({
-    baseURL: url,
+    baseURL: API_BASE_PATH,
     headers: {
       'Content-Type': 'application/json',
       'timezone-offset': getTimezoneOffset(),
@@ -67,8 +70,7 @@ export const callAuthApi = async <T = unknown>(
   shouldNotThrowError?: boolean,
 ): Promise<SuccessResponse<T>> => {
   try {
-    const baseUrl = process.env.API_SERVER_URL || '';
-    const axiosInstance = createAxiosInstance(false, baseUrl);
+    const axiosInstance = createAxiosInstance(false);
     // Strip UI-only keys here rather than at each call site: the server's validation pipe runs
     // with `forbidNonWhitelisted`, so one `isNew` on a posted store instance fails the whole
     // request. Binary uploads go through `callDefaultApi` and never reach this.
@@ -89,7 +91,7 @@ export const callUnAuthApi = async <T = unknown>(
   shouldNotThrowError?: boolean,
 ): Promise<SuccessResponse<T>> => {
   try {
-    const axiosInstance = createAxiosInstance(true, url);
+    const axiosInstance = createAxiosInstance(true);
     const body = data ? toPayload(data) : data;
     const response = await send(axiosInstance, method, url, body);
     return response.data;
