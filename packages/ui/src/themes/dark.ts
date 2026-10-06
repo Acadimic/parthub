@@ -31,6 +31,10 @@ export const dark = {
     popover: '#1a1c22',
     'popover-foreground': '#edeef2',
 
+    // See light.ts: a deep indigo, lifted above both the canvas and the table it frames.
+    panel: '#1c2138',
+    'panel-foreground': '#edeef2',
+
     // Lifted from the light theme's `#3b4fd0`: the same hue has to clear AA against a near-black
     // ground here, and a value tuned for white would read as a dark smudge.
     primary: '#6d86f5',

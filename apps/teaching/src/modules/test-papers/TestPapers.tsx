@@ -2,7 +2,7 @@ import { type TestPaperDto } from '@repo/shared/contracts';
 import { BlankState } from '@components/others';
 import { DataTable } from '@components/app/tables';
 import { Badge } from '@repo/ui/core';
-import { Button, Link, SoftConfirmModal, TextInput } from '@repo/ui/app';
+import { Button, SoftConfirmModal, TextInput } from '@repo/ui/app';
 import { useLoadOnce } from '@repo/ui/hooks';
 import { PaperType } from '@enums';
 import { type IColumnData, type ISelectItem } from '@interfaces';
@@ -21,7 +21,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo } from 'react';
 import { useSetState } from 'react-use';
 import { useShallow } from 'zustand/react/shallow';
-import { AiWholePaperDrawer, CreateTestPaperModal } from './components';
+import { AiWholePaperDrawer, CreateTestPaperModal, PaperGroupCard } from './components';
 
 interface IState {
   isOpenCreateModal: boolean;
@@ -30,7 +30,19 @@ interface IState {
   /** The paper the delete confirm is asking about, or `null` while it is closed. */
   paperToDelete: TestPaperDto | null;
   isDeleting: boolean;
+  /** Standard groups the teacher has opened, by group key. Every group starts folded. */
+  expandedGroups: string[];
 }
+
+/** The papers filed under one standard, or under none. */
+interface IPaperGroup {
+  key: string;
+  label: string;
+  papers: TestPaperDto[];
+}
+
+/** The group for papers with no standard, or only standards that no longer exist. */
+const NO_STANDARD_GROUP = 'no-standard';
 
 /**
  * Whether the search term appears in the paper's derived columns — standard and subject names, the
@@ -78,6 +90,7 @@ export const TestPapers = () => {
     search: '',
     paperToDelete: null,
     isDeleting: false,
+    expandedGroups: [],
   });
 
   // A draft being typed into the drawer is not a row yet; it joins the list when the save lands.
@@ -91,11 +104,37 @@ export const TestPapers = () => {
     [savedTestPapers, standardStore, state.search],
   );
 
-  const standardOptions: ISelectItem[] = standardStore
-    .getStandards()
-    .map((standard) => ({ label: standard.name, value: standard._id }));
+  // One group per standard, in the standards' own order, with papers that have none last. A paper
+  // filed under two standards is listed in both, since a teacher looks for it under either.
+  const paperGroups = useMemo((): IPaperGroup[] => {
+    const papersByStandard = new Map<string, TestPaperDto[]>();
+    for (const paper of visibleTestPapers) {
+      const standardIds = (paper.standards ?? []).filter((id) => standardStore.getStandardById(id));
+      for (const key of standardIds.length ? standardIds : [NO_STANDARD_GROUP]) {
+        papersByStandard.set(key, [...(papersByStandard.get(key) ?? []), paper]);
+      }
+    }
+    const groups = standardStore
+      .getStandards()
+      .filter((standard) => papersByStandard.has(standard._id))
+      .map((standard) => ({
+        key: standard._id,
+        label: standard.name,
+        papers: papersByStandard.get(standard._id) ?? [],
+      }));
+    const unfiled = papersByStandard.get(NO_STANDARD_GROUP);
+    return unfiled ? [...groups, { key: NO_STANDARD_GROUP, label: 'No standard', papers: unfiled }] : groups;
+  }, [visibleTestPapers, standardStore]);
+
+  const toggleGroup = (key: string) =>
+    setState((current) => ({
+      expandedGroups: current.expandedGroups.includes(key)
+        ? current.expandedGroups.filter((item) => item !== key)
+        : [...current.expandedGroups, key],
+    }));
+
   const subjectOptions: ISelectItem[] = standardStore.getStandardsSubjectItems(
-    standardOptions.map((option) => option.value),
+    standardStore.getStandards().map((standard) => standard._id),
   );
   /** A paper with no subjects, or the ALL marker, covers every subject of its standards, so it matches any of them. */
   const paperSubjectIds = (paper: TestPaperDto) => {
@@ -157,12 +196,9 @@ export const TestPapers = () => {
     }
   };
 
-  /** The second line under a paper's name: its standards and subjects, which used to be two columns. */
-  const describeScope = (row: TestPaperDto) => {
-    const standards = getStandardNamesText(row.standards ?? []) || 'No standard';
-    const subjects = getSubjectNamesText((row.subjects ?? []).filter((id) => id !== ALL)) || 'All subjects';
-    return `${standards} · ${subjects}`;
-  };
+  /** The second line under a paper's name: its subjects. The standard is the group it sits in. */
+  const describeSubjects = (row: TestPaperDto) =>
+    getSubjectNamesText((row.subjects ?? []).filter((id) => id !== ALL)) || 'All subjects';
 
   const columns: IColumnData<TestPaperDto>[] = [
     {
@@ -170,32 +206,22 @@ export const TestPapers = () => {
       dataKey: 'name',
       width: 260,
       isSortable: true,
-      filters: [
-        { key: 'standard', label: 'Standard', options: standardOptions, getValues: (row) => row.standards ?? [] },
-        { key: 'subject', label: 'Subject', options: subjectOptions, getValues: paperSubjectIds },
-      ],
+      filters: [{ key: 'subject', label: 'Subject', options: subjectOptions, getValues: paperSubjectIds }],
+      // Plain text, as on the courses table: the row is the target. A `Link` here centred the name
+      // and clipped it at both ends, since the link lays its content out as a centred button.
       component: (row) => (
         <div className="flex min-w-0 flex-col">
-          <Link
-            href={`/test-papers/${row._id}`}
-            isSubtle
-            className="h-auto justify-start px-0 py-0 text-left"
-            // The row is a target too, so the link stops the event rather than navigating twice.
-            onClick={(event) => {
-              event.stopPropagation();
-              selectTestPaper(row);
-            }}
-          >
-            <span className="truncate font-semibold text-foreground">{row.name}</span>
-          </Link>
-          <span className="truncate text-xs text-muted-foreground">{describeScope(row)}</span>
+          <span className="truncate font-semibold text-foreground" title={row.name}>
+            {row.name}
+          </span>
+          <span className="truncate text-xs text-muted-foreground">{describeSubjects(row)}</span>
         </div>
       ),
     },
     {
       label: 'Type',
       dataKey: 'paperType',
-      width: 125,
+      width: 105,
       isSortable: true,
       filters: [
         {
@@ -219,14 +245,14 @@ export const TestPapers = () => {
     {
       label: 'Year',
       dataKey: 'year',
-      width: 100,
+      width: 95,
       isSortable: true,
       filters: [{ key: 'year', label: 'Year', getValues: (row) => row.year }],
     },
     {
       label: 'Sections',
       dataKey: 'sections',
-      width: 115,
+      width: 110,
       align: 'right',
       sortValue: (row) => (row.sections ?? []).length,
       valueFormatter: (row) => <span className="font-mono">{(row.sections ?? []).length}</span>,
@@ -234,7 +260,7 @@ export const TestPapers = () => {
     {
       label: 'Questions',
       dataKey: 'totalQuestions',
-      width: 125,
+      width: 120,
       align: 'right',
       sortValue: (row) => row.totalQuestions ?? 0,
       valueFormatter: (row) => <span className="font-mono">{row.totalQuestions ?? 0}</span>,
@@ -242,7 +268,7 @@ export const TestPapers = () => {
     {
       label: 'Marks',
       dataKey: 'maxMarks',
-      width: 100,
+      width: 85,
       align: 'right',
       sortValue: (row) => row.maxMarks ?? 0,
       valueFormatter: (row) => <span className="font-mono">{row.maxMarks ?? 0}</span>,
@@ -250,7 +276,7 @@ export const TestPapers = () => {
     {
       label: 'Duration',
       dataKey: 'durationMins',
-      width: 120,
+      width: 105,
       align: 'right',
       sortValue: (row) => row.durationMins ?? 0,
       valueFormatter: (row) => (row.durationMins ? <span className="font-mono">{row.durationMins} min</span> : ''),
@@ -258,7 +284,7 @@ export const TestPapers = () => {
     {
       label: 'Status',
       dataKey: 'isPublished',
-      width: 125,
+      width: 115,
       sortValue: (row) => (row.isPublished ? 1 : 0),
       filters: [
         {
@@ -280,7 +306,7 @@ export const TestPapers = () => {
     {
       label: 'Actions',
       dataKey: ACTIONS,
-      width: 90,
+      width: 80,
       menuItems: [
         {
           label: 'Open',
@@ -329,9 +355,41 @@ export const TestPapers = () => {
       />
     );
 
+  const renderPapers = () => {
+    if (isFailed) {
+      return (
+        <BlankState
+          label="Could not load test papers"
+          description={error}
+          action={<Button text="Retry" onClick={() => loadTestPapers()} />}
+          className="rounded-lg border border-border"
+        />
+      );
+    }
+    if (isLoading || !paperGroups.length) {
+      return <DataTable rows={[]} columns={columns} isLoading={isLoading} emptyState={renderEmptyState()} />;
+    }
+    return (
+      <div className="flex min-w-0 flex-col gap-3">
+        {paperGroups.map((group) => (
+          <PaperGroupCard
+            key={group.key}
+            label={group.label}
+            papers={group.papers}
+            columns={columns}
+            // A search opens every group it matches, so the results show without a click each.
+            isOpen={!!state.search.trim() || state.expandedGroups.includes(group.key)}
+            onToggle={() => toggleGroup(group.key)}
+            onOpenPaper={onClickTestPaper}
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <>
-      <div className="flex flex-col gap-3">
+      <div className="flex min-w-0 flex-col gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="w-full sm:w-72">
             <TextInput
@@ -344,10 +402,10 @@ export const TestPapers = () => {
           </div>
           <p className="text-xs text-muted-foreground">
             {savedTestPapers.length} {savedTestPapers.length === 1 ? 'paper' : 'papers'}
-            <span className="hidden md:inline">
-              {' '}
-              · Filter by standard, type, year or status from the column headers.
-            </span>
+            {paperGroups.length
+              ? ` in ${paperGroups.length} ${paperGroups.length === 1 ? 'standard' : 'standards'}`
+              : ''}
+            <span className="hidden xl:inline"> · Filter a group from its column headers.</span>
           </p>
           <div className="ml-auto flex items-center gap-2">
             <Button
@@ -362,22 +420,7 @@ export const TestPapers = () => {
             </Button>
           </div>
         </div>
-        {isFailed ? (
-          <BlankState
-            label="Could not load test papers"
-            description={error}
-            action={<Button text="Retry" onClick={() => loadTestPapers()} />}
-            className="rounded-lg border border-border"
-          />
-        ) : (
-          <DataTable
-            rows={visibleTestPapers}
-            columns={columns}
-            isLoading={isLoading}
-            onRowClick={onClickTestPaper}
-            emptyState={renderEmptyState()}
-          />
-        )}
+        {renderPapers()}
       </div>
 
       {/* Mounted only while the dialog is open. It used to be mounted whenever *any* paper was

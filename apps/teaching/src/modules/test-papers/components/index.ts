@@ -15,3 +15,4 @@ export * from './UpsertQuestionFooter';
 export * from './UpsertTestPaperSection';
 export * from './question-types';
 export * from './ai';
+export * from './PaperGroupCard';

@@ -198,7 +198,8 @@ export const AppSidebar = ({ children }: IProps) => {
         </div>
       </aside>
       {/* Main content */}
-      <main className="flex-1 h-screen w-full">
+      {/* `min-w-0`: a flex item never shrinks below its content, so a wide table widened the page. */}
+      <main className="flex-1 h-screen w-full min-w-0">
         {/* Top bar */}
         <header className="sticky top-0 z-30 bg-background border-b border-border">
           <div className="flex justify-between items-center w-full px-4 h-16">

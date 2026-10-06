@@ -25,6 +25,12 @@ const SURFACE_SEPARATION = 1.06; // below this two surfaces read as one flat she
 
 const SURFACES = ['background', 'card', 'popover', 'muted', 'accent', 'secondary'];
 
+/**
+ * Tinted frames, checked against the surfaces they actually touch rather than the whole grey ramp:
+ * a hue carries the separation from a grey of similar lightness, which a luminance ratio cannot see.
+ */
+const FRAMES = { panel: ['background', 'muted'] };
+
 const toRgb = (hex) => {
   let h = hex.replace('#', '').trim();
   if (h.length === 3) h = h.split('').map((c) => c + c).join('');
@@ -117,6 +123,19 @@ for (let i = 0; i < surfaces.length; i++) {
     }
     const r = contrast(tokens[a], tokens[b]);
     if (r < SURFACE_SEPARATION) row(false, `bg-${a} vs bg-${b}`, `${r.toFixed(3)}  (need ${SURFACE_SEPARATION})`);
+  }
+}
+
+console.log('\nframes stand apart from what they touch, and carry readable text');
+for (const [frame, touches] of Object.entries(FRAMES)) {
+  if (!tokens[frame]) continue;
+  for (const s of touches.filter((x) => tokens[x])) {
+    const r = contrast(tokens[frame], tokens[s]);
+    row(r >= SURFACE_SEPARATION, `bg-${frame} vs bg-${s}`, `${r.toFixed(3)}  (need ${SURFACE_SEPARATION})`);
+  }
+  for (const text of ['foreground', 'muted-foreground'].filter((x) => tokens[x])) {
+    const r = contrast(tokens[text], tokens[frame]);
+    row(r >= AA, `text-${text} on bg-${frame}`, `${r.toFixed(2)}  (need ${AA})`);
   }
 }
 

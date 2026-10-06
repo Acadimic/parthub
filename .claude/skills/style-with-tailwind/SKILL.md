@@ -70,6 +70,7 @@ Surfaces and text, which is what most code needs:
 | `background` / `foreground`          | the base surface and its text                               |
 | `muted` / `muted-foreground`         | the page canvas; secondary and helper text                  |
 | `card` / `popover` (+ `-foreground`) | raised surfaces — cards, dropdowns, dialogs                 |
+| `panel` / `panel-foreground`         | a primary-tinted frame around content with its own surface (a group card) |
 | `accent` / `secondary`               | hover and active fills                                      |
 | `border` / `input` / `ring`          | dividers and outlines, field borders, focus rings           |
 

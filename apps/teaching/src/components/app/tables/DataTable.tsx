@@ -14,6 +14,8 @@ const EMPTY_VALUE = '—';
 /** Enough placeholder rows to fill the frame's first fold without pretending to know the count. */
 const SKELETON_ROW_COUNT = 8;
 
+const ROW_CLASS = 'group/row transition-colors hover:bg-accent';
+
 /** What the row component needs from the table and cannot get from its props: the click handler. */
 interface ITableContext {
   onRowClick?: (row: Record<string, unknown>) => void;
@@ -32,7 +34,7 @@ const VirtuosoTableComponents: TableComponents<Record<string, unknown>, ITableCo
   TableRow: ({ item, context, ...props }) => (
     <tr
       {...props}
-      className={`group/row transition-colors hover:bg-accent ${context?.onRowClick ? 'cursor-pointer' : ''}`}
+      className={cn(ROW_CLASS, context?.onRowClick && 'cursor-pointer')}
       onClick={context?.onRowClick ? () => context.onRowClick?.(item) : undefined}
     />
   ),
@@ -57,6 +59,12 @@ interface IProps<T extends object> {
   onRowClick?: (row: T) => void;
   /** Overrides the frame — its height, most often, when the toolbar above the table is taller than usual. */
   className?: string;
+  /**
+   * `viewport` (the default) fills the screen below the toolbar and scrolls its rows inside, which
+   * suits one long list. `content` grows to its rows and lets the page scroll, for several tables
+   * stacked on one screen, such as one per group.
+   */
+  height?: 'viewport' | 'content';
 }
 
 type SortDirection = 'asc' | 'desc';
@@ -213,7 +221,9 @@ export const DataTable = <T extends object>({
   isLoading,
   onRowClick,
   className,
+  height = 'viewport',
 }: IProps<T>) => {
+  const isContentHeight = height === 'content';
   const [sort, setSort] = React.useState<ISort | null>(null);
   const [activeFilters, setActiveFilters] = React.useState<ActiveFilters>({});
 
@@ -408,6 +418,24 @@ export const DataTable = <T extends object>({
         </div>
       );
     }
+    if (isContentHeight) {
+      return (
+        <table className="w-full table-fixed border-collapse text-sm">
+          <thead>{fixedHeaderContent()}</thead>
+          <tbody>
+            {sortedRows.map((row, index) => (
+              <tr
+                key={(row as { _id?: string })._id ?? index}
+                className={cn(ROW_CLASS, onRowClick && 'cursor-pointer')}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+              >
+                {rowContent(index, row)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
+    }
     return (
       <TableVirtuoso
         data={sortedRows as Record<string, unknown>[]}
@@ -424,7 +452,11 @@ export const DataTable = <T extends object>({
   return (
     <div
       className={cn(
-        'flex h-[calc(100vh-148px)] w-full flex-col overflow-hidden rounded-lg border border-border bg-background sm:h-[calc(100vh-156px)]',
+        // `min-w-0` lets the frame shrink below its columns, so a wide table scrolls inside it rather
+        // than pushing the page sideways. `isolate` keeps the sticky actions column's z-index inside
+        // the table, so it never paints over a sticky header above it on the page.
+        'isolate flex w-full min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-background',
+        !isContentHeight && 'h-[calc(100vh-148px)] sm:h-[calc(100vh-156px)]',
         className,
       )}
     >
@@ -444,7 +476,7 @@ export const DataTable = <T extends object>({
           </button>
         </div>
       ) : null}
-      <div className="min-h-0 flex-1">{renderBody()}</div>
+      <div className={isContentHeight ? 'overflow-x-auto' : 'min-h-0 flex-1'}>{renderBody()}</div>
     </div>
   );
 };

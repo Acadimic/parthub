@@ -39,6 +39,13 @@ export const light = {
     popover: '#ffffff',
     'popover-foreground': '#1a1c22',
 
+    // A frame around content that has its own surface, such as a group card around the table it
+    // holds: a faint `primary` tint, so a card that opens reads as the product's own. Measured
+    // against the canvas outside and the white inside (`contrast.mjs` FRAMES), not the grey ramp,
+    // which it sits close to in lightness but never touches.
+    panel: '#e3e8fb',
+    'panel-foreground': '#1a1c22',
+
     // The one interactive hue: buttons, links, active nav, focus rings, selected rows. Darkened
     // from the reference `#5773f0`, which only clears AA on a dark ground — this value is picked
     // to work both as `text-primary` on white (6.5:1) and as a fill under white text.
