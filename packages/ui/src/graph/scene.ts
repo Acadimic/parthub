@@ -29,6 +29,7 @@ import {
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GraphLabels } from './labels';
 import type { IGraphPalette } from './palettes';
+import { composeGraphImage, type IGraphImageColours, type IGraphImageFooter } from './snapshot';
 
 /** Half the side of the cube every graph is scaled into, so each axis spans `-S..S`. */
 const S = 3;
@@ -213,6 +214,18 @@ export class GraphScene {
     else this.drawCurve(sample);
     this.labels.setSample(sample);
     this.clearHover();
+  }
+
+  /** The graph as it is on screen, with its axis labels and `footer` under it, as a PNG. */
+  snapshot(footer: IGraphImageFooter, colours: IGraphImageColours): Promise<Blob | null> {
+    const isMarked = this.marker.visible;
+    this.marker.visible = false;
+    this.renderer.render(this.scene, this.camera);
+    const labels = this.labels.snapshot(this.camera, this.host.clientWidth, this.host.clientHeight);
+    const image = composeGraphImage(this.renderer.domElement, labels, footer, colours);
+    this.marker.visible = isMarked;
+    this.requestRender();
+    return image;
   }
 
   dispose(): void {

@@ -1,6 +1,7 @@
 import {
   ArrowCounterClockwiseIcon,
   CrosshairIcon,
+  DownloadSimpleIcon,
   GridFourIcon,
   PauseIcon,
   PlayIcon,
@@ -9,8 +10,10 @@ import {
 import {
   compileGraph,
   formatGraphNumber,
+  type GraphKind,
   type GraphParam,
   graphParamValues,
+  type IGraphView,
   parseGraphView,
   sampleGraph,
 } from '@repo/shared/utils';
@@ -18,12 +21,17 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../core/Button';
 import { Chip } from '../core/Chip';
 import { Slider } from '../core/Slider';
+import { Spinner } from '../core/Spinner';
 import { Tooltip } from '../core/Tooltip';
 import { cn } from '../lib/cn';
 import { DEFAULT_GRAPH_PALETTE, GRAPH_PALETTES, type IGraphPalette, paletteGradient } from './palettes';
 import { GraphScene, type IGraphPoint } from './scene';
+import { renderEquationImage } from './equation-image';
+import { saveBlob } from './snapshot';
 
 export interface IGraph3DViewerProps {
+  /** The equation as written, typeset into a downloaded image. */
+  latex: string;
   /** The expression that is plotted. */
   graph: string;
   graphView: string | null;
@@ -40,13 +48,29 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
 const readColour = (element: HTMLElement | null): string =>
   element ? getComputedStyle(element).color : 'rgb(128, 128, 128)';
 
+/** The plotted expression as a caption line, `z = a*(x^2 - y^2)`, for when no typeset equation is available. */
+const imageExpression = (graph: string, kind: GraphKind): string =>
+  `${kind === 'surface' ? 'z' : 'r(t)'} = ${graph.trim().replace(/^(z|r\s*\(\s*t\s*\))\s*=\s*/i, '')}`;
+
+/** The ranges and the slider values a saved image was taken at: "x from -2 to 2, y from -2 to 2  ·  a = 1.5". */
+const imageDetails = (kind: GraphKind, view: IGraphView, values: Partial<Record<GraphParam, number>>): string => {
+  const range = (axis: 'x' | 'y' | 't') =>
+    `${axis} from ${formatGraphNumber(view[axis].min)} to ${formatGraphNumber(view[axis].max)}`;
+  const sliders = Object.entries(values)
+    .map(([param, value]) => `${param} = ${formatGraphNumber(value ?? 0)}`)
+    .join(', ');
+  return [kind === 'surface' ? `${range('x')}, ${range('y')}` : range('t'), sliders].filter(Boolean).join('  ·  ');
+};
+
 interface IStageToolbarProps {
   isSpinning: boolean;
   onSpin: () => void;
   onReset: () => void;
+  onDownload: () => void;
+  isSaving: boolean;
 }
 
-const StageToolbar = ({ isSpinning, onSpin, onReset }: IStageToolbarProps) => (
+const StageToolbar = ({ isSpinning, onSpin, onReset, onDownload, isSaving }: IStageToolbarProps) => (
   <div className="absolute right-3 top-3 flex items-center gap-1 border border-border bg-card/90 p-1 shadow-sm">
     <Tooltip title={isSpinning ? 'Stop turning' : 'Turn slowly'}>
       <Button
@@ -67,6 +91,18 @@ const StageToolbar = ({ isSpinning, onSpin, onReset }: IStageToolbarProps) => (
         className="flex h-8 w-8 items-center justify-center p-0"
       >
         <ArrowCounterClockwiseIcon weight="bold" className="h-4 w-4" />
+      </Button>
+    </Tooltip>
+    <Tooltip title={isSaving ? 'Saving the image…' : 'Download as image'}>
+      <Button
+        isSubtle
+        aria-label="Download as image"
+        aria-busy={isSaving}
+        disabled={isSaving}
+        onClick={onDownload}
+        className="flex h-8 w-8 items-center justify-center p-0"
+      >
+        {isSaving ? <Spinner size="sm" /> : <DownloadSimpleIcon weight="bold" className="h-4 w-4" />}
       </Button>
     </Tooltip>
   </div>
@@ -120,7 +156,7 @@ const PalettePicker = ({ value, onChange }: IPalettePickerProps) => (
  *
  * Loaded on demand (see `GraphModal`), so three.js reaches a reader only when they open a graph.
  */
-const Graph3DViewer = ({ graph, graphView }: IGraph3DViewerProps) => {
+const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
   const compiled = useMemo(() => compileGraph(graph), [graph]);
   const view = useMemo(() => parseGraphView(graphView), [graphView]);
   const [values, setValues] = useState<Record<GraphParam, number>>(() => graphParamValues(view));
@@ -129,10 +165,13 @@ const Graph3DViewer = ({ graph, graphView }: IGraph3DViewerProps) => {
   const [showWire, setShowWire] = useState(true);
   const [hover, setHover] = useState<IGraphPoint | null>(null);
   const [isUnsupported, setIsUnsupported] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
   const lineProbe = useRef<HTMLSpanElement>(null);
   const accentProbe = useRef<HTMLSpanElement>(null);
+  const backgroundProbe = useRef<HTMLSpanElement>(null);
+  const foregroundProbe = useRef<HTMLSpanElement>(null);
   const sceneRef = useRef<GraphScene | null>(null);
 
   // A teacher editing the view in the preview sees the sliders move back to the new defaults.
@@ -179,12 +218,39 @@ const Graph3DViewer = ({ graph, graphView }: IGraph3DViewerProps) => {
 
   const params = compiled.isValid ? compiled.graph.params : [];
 
+  const downloadImage = async () => {
+    if (!compiled.isValid || !sceneRef.current || isSaving) return;
+    const { kind } = compiled.graph;
+    const used = Object.fromEntries(params.map((param) => [param, values[param]]));
+    const colours = {
+      background: readColour(backgroundProbe.current),
+      foreground: readColour(foregroundProbe.current),
+      muted: readColour(lineProbe.current),
+    };
+    // The first save waits for the equation's fonts; the button stays busy so a second click
+    // cannot start a second download meanwhile.
+    setIsSaving(true);
+    try {
+      // The same pixel ratio the 3D canvas is drawn at, so the equation is as sharp as the graph.
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      const equation = await renderEquationImage(latex, colours.foreground, pixelRatio);
+      const details = imageDetails(kind, view, used);
+      const caption = equation ? details : `${imageExpression(graph, kind)}  ·  ${details}`;
+      const blob = await sceneRef.current?.snapshot({ equation, caption }, colours);
+      if (blob) saveBlob(blob, '3d-graph.png');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 text-foreground md:flex-row">
       <div className="relative min-h-[55vh] flex-1 overflow-hidden border border-border bg-gradient-to-br from-muted via-background to-muted md:min-h-0">
         <div className="pointer-events-none absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent" />
         <span ref={lineProbe} className="hidden text-muted-foreground" aria-hidden="true" />
         <span ref={accentProbe} className="hidden text-primary" aria-hidden="true" />
+        <span ref={backgroundProbe} className="hidden text-background" aria-hidden="true" />
+        <span ref={foregroundProbe} className="hidden text-foreground" aria-hidden="true" />
         <div ref={stageRef} className="absolute inset-0" />
         <div ref={labelRef} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true" />
         {isUnsupported || !compiled.isValid ? (
@@ -202,6 +268,8 @@ const Graph3DViewer = ({ graph, graphView }: IGraph3DViewerProps) => {
               isSpinning={isSpinning}
               onSpin={() => setIsSpinning(!isSpinning)}
               onReset={() => sceneRef.current?.resetView()}
+              onDownload={() => void downloadImage()}
+              isSaving={isSaving}
             />
             <Readout point={hover} />
           </>

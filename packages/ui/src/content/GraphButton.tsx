@@ -108,7 +108,7 @@ export const GraphModal = ({ latex, graph, graphView, isOpen, onClose }: IGraphM
               </div>
             }
           >
-            <Graph3DViewer graph={graph} graphView={graphView} />
+            <Graph3DViewer latex={latex} graph={graph} graphView={graphView} />
           </Suspense>
         ) : null}
       </div>

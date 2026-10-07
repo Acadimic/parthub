@@ -131,6 +131,11 @@ on a control with a tooltip), a click outside, and the back button; focus return
   changes. Colours come from the shadcn tokens, not literals (`style-with-tailwind`).
 - A one-line status while the chunk loads, and a plain message if WebGL is unavailable.
 
+**Download as image** (added 2026-10-07): a button in the graph's toolbar saves `3d-graph.png` —
+the graph as it is on screen, its axis labels, the equation typeset by KaTeX (turned into a picture
+by `html-to-image`, loaded on the first download only), and a line with the ranges and slider
+values. If the equation cannot be rendered, the caption carries the plain expression instead.
+
 **Performance rules**, all already in the demo:
 
 - render on demand: a frame only when the camera, a slider or the size changes;
