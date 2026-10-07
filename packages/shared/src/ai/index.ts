@@ -4,6 +4,7 @@
 // runner share one implementation.
 export * from './common';
 export * from './figures';
+export * from './graphs';
 export * from './pronunciation';
 export * from './defaults';
 export * from './test-paper-generator';

@@ -2,6 +2,8 @@ import type { IRichTextNode } from '@repo/shared/interfaces';
 import { BLOCK_MATH_NAME, INLINE_MATH_NAME } from '../extensions/math-names';
 import {
   formatMarkdownAttrs,
+  graphAttrsOfNode,
+  graphAttrsToMarkdown,
   IMAGE_NODE as IMAGE_NAME,
   isSamePronunciation,
   LISTENING_NODE,
@@ -62,9 +64,15 @@ const applyMarks = (text: string, node: IRichTextNode): string => {
   return result;
 };
 
+/** `{graph="…"}` straight after an equation that has a 3D graph, nothing for one that does not. */
+const graphSuffix = (node: IRichTextNode): string => {
+  const graph = graphAttrsOfNode(node.attrs);
+  return graph ? graphAttrsToMarkdown(graph) : '';
+};
+
 const serializeInlineNode = (node: IRichTextNode): string => {
   if (node.type === 'text') return applyMarks(escapeText(node.text ?? ''), node);
-  if (node.type === INLINE_MATH_NAME) return `$${String(node.attrs?.latex ?? '')}$`;
+  if (node.type === INLINE_MATH_NAME) return `$${String(node.attrs?.latex ?? '')}$${graphSuffix(node)}`;
   if (node.type === 'hardBreak') return '\\\n';
   return '';
 };
@@ -196,7 +204,7 @@ const SIMPLE_BLOCKS: Record<string, (node: IRichTextNode) => string> = {
   table: serializeTable,
   paragraph: (node) => serializeInline(node.content),
   heading: serializeHeading,
-  [BLOCK_MATH_NAME]: (node) => `$$\n${String(node.attrs?.latex ?? '')}\n$$`,
+  [BLOCK_MATH_NAME]: (node) => `$$\n${String(node.attrs?.latex ?? '')}\n$$${graphSuffix(node)}`,
   bulletList: (node) => serializeListItems(node, false),
   orderedList: (node) => serializeListItems(node, true),
   blockquote: serializeQuote,

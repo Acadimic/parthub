@@ -1,6 +1,7 @@
 import type { IRichText, IRichTextMark, IRichTextNode, RichTextAttrValue } from '@repo/shared/interfaces';
 import {
   docToPlainText,
+  graphAttrsOfNode,
   isSamePronunciation,
   LISTENING_NODE,
   type ListeningMode,
@@ -9,6 +10,7 @@ import {
 } from '@repo/shared/utils';
 import { createElement, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
+import { GraphButton } from './GraphButton';
 import { ListeningBlock } from './ListeningBlock';
 import { MathRender } from './MathRender';
 import { PronouncedText } from './PronouncedText';
@@ -165,7 +167,18 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
       width={stringAttr(node.attrs, 'width') || 'full'}
     />
   ),
-  inlineMath: (node, _children, key) => <MathRender key={key} latex={stringAttr(node.attrs, 'latex')} />,
+  inlineMath: (node, _children, key) => {
+    const latex = stringAttr(node.attrs, 'latex');
+    const graph = graphAttrsOfNode(node.attrs);
+    if (!graph) return <MathRender key={key} latex={latex} />;
+    // Kept on one line, so the cube never wraps away from its equation.
+    return (
+      <span key={key} className="whitespace-nowrap">
+        <MathRender latex={latex} />
+        <GraphButton latex={latex} {...graph} className="ml-0.5" />
+      </span>
+    );
+  },
   [LISTENING_NODE]: (node, children, key) => (
     <ListeningBlock
       key={key}
@@ -178,11 +191,25 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
       {Array.isArray(children) ? children : [children]}
     </ListeningBlock>
   ),
-  blockMath: (node, _children, key) => (
-    <div key={key} className="my-4 overflow-x-auto">
-      <MathRender latex={stringAttr(node.attrs, 'latex')} displayMode />
-    </div>
-  ),
+  blockMath: (node, _children, key) => {
+    const latex = stringAttr(node.attrs, 'latex');
+    const graph = graphAttrsOfNode(node.attrs);
+    if (!graph) {
+      return (
+        <div key={key} className="my-4 overflow-x-auto">
+          <MathRender latex={latex} displayMode />
+        </div>
+      );
+    }
+    return (
+      <div key={key} className="my-4 flex items-center gap-2">
+        <div className="min-w-0 flex-1 overflow-x-auto">
+          <MathRender latex={latex} displayMode />
+        </div>
+        <GraphButton latex={latex} {...graph} className="shrink-0" />
+      </div>
+    );
+  },
 };
 
 const pronunciationOf = (node: IRichTextNode): IRichTextMark | undefined =>

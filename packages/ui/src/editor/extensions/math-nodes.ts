@@ -38,12 +38,29 @@ const nodeViewOptions = {
   stopEvent: ({ event }: { event: Event }) => !event.type.startsWith('drag') && event.type !== 'drop',
 };
 
-const latexAttribute = {
+/** A nullable string attribute carried on a `data-*` attribute, left off the element when null. */
+const optionalAttribute = (key: string, name: string) => ({
+  default: null,
+  keepOnSplit: false,
+  parseHTML: (element: HTMLElement) => element.getAttribute(name),
+  renderHTML: (attributes: Record<string, unknown>) => {
+    const value = attributes[key];
+    return typeof value === 'string' && value ? { [name]: value } : {};
+  },
+});
+
+/**
+ * `graph` and `graphView` make an equation plottable in 3D: the expression and any view settings
+ * that differ from the defaults (`@repo/shared/utils` graph-expression). Null on most equations.
+ */
+const mathAttributes = {
   latex: {
     default: '',
     parseHTML: (element: HTMLElement) => element.getAttribute('data-latex') ?? '',
     renderHTML: (attributes: Record<string, unknown>) => ({ 'data-latex': String(attributes.latex ?? '') }),
   },
+  graph: optionalAttribute('graph', 'data-graph'),
+  graphView: optionalAttribute('graphView', 'data-graph-view'),
 };
 
 /** `$$…$$` before `$…$`, so a display equation is never read as two inline ones. */
@@ -62,7 +79,7 @@ export const InlineMath = Node.create({
   selectable: true,
   draggable: true,
 
-  addAttributes: () => latexAttribute,
+  addAttributes: () => mathAttributes,
 
   parseHTML: () => [{ tag: 'span[data-inline-math]' }],
 
@@ -115,7 +132,7 @@ export const InlineMath = Node.create({
             const $pos = state.doc.resolve(pos);
             const after = $pos.after($pos.depth);
             if (dispatch) {
-              tr.insert(after, block.create({ latex: node.attrs.latex }));
+              tr.insert(after, block.create(node.attrs));
               tr.delete(pos, pos + node.nodeSize);
             }
             return true;
@@ -123,11 +140,7 @@ export const InlineMath = Node.create({
           if (node.type === block) {
             // The other way round it becomes a paragraph of its own, so the author can type around it.
             if (dispatch) {
-              tr.replaceWith(
-                pos,
-                pos + node.nodeSize,
-                paragraph.create(null, inline.create({ latex: node.attrs.latex })),
-              );
+              tr.replaceWith(pos, pos + node.nodeSize, paragraph.create(null, inline.create(node.attrs)));
             }
             return true;
           }
@@ -181,7 +194,7 @@ export const BlockMath = Node.create({
   selectable: true,
   draggable: true,
 
-  addAttributes: () => latexAttribute,
+  addAttributes: () => mathAttributes,
 
   parseHTML: () => [{ tag: 'div[data-block-math]' }],
 

@@ -103,6 +103,16 @@ errors; at import each figure goes to the organization's `content/` folder (`upl
 and the image nodes are pointed at it (`withFigureSources`). The editor and every reading view
 then show it like an image a teacher uploaded; see `packages/ui/src/editor/README.md` §3a.
 
+## 3D graphs
+
+An equation may be followed, with no space, by `{graph=EXPR …}`, which makes it open as an
+interactive 3D graph: `$z = x^2 - y^2${graph=x^2-y^2 x=-2..2 y=-2..2}`. The prompt's "3D graphs"
+section (`GRAPH_RULES` in `packages/shared/src/ai/graphs.ts`) asks for one only in maths and physics
+where the shape teaches something — a surface in `x, y` or a curve `(x(t),y(t),z(t))`, with up to
+three sliders `a, b, c`. `checkMarkdownGraphs` (run inside `checkMarkdownMath`) warns on a block
+that does not follow an equation and on an expression that cannot be drawn; the importer drops such
+a graph and keeps the equation. See `packages/ui/src/editor/README.md` §3c.
+
 ## Pronunciation
 
 When the course's standard has a spoken language (`locale`, set on a language standard in the

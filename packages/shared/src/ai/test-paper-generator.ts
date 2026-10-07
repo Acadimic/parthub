@@ -12,6 +12,7 @@ import { LevelType, QuestionType } from '../enums';
 import { createObjectId } from '../utils/object-id.util';
 import { checkMarkdownMath, type IAiIssue, MARKDOWN_RULES, parseJsonObject, repairIssue } from './common';
 import { checkFigures, FIGURE_RULES } from './figures';
+import { GRAPH_RULES } from './graphs';
 import { checkPronunciation, pronunciationRules } from './pronunciation';
 
 /** How many of each type a section should get. */
@@ -210,7 +211,10 @@ ${blueprint.instructions.trim() ? `\n### Additional instructions from the teache
 Markdown, restricted to:${MARKDOWN_RULES}
 
 # Figures
-${FIGURE_RULES}${pronunciationRules(context.standards.find((standard) => standard.locale)?.locale)}
+${FIGURE_RULES}
+
+# 3D graphs
+${GRAPH_RULES}${pronunciationRules(context.standards.find((standard) => standard.locale)?.locale)}
 
 # Output
 

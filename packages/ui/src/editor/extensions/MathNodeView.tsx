@@ -1,6 +1,9 @@
+import { graphAttrsOfNode, type IGraphAttrs } from '@repo/shared/utils';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { useEffect, useId, useRef, useState } from 'react';
+import { GRAPH_MODAL_ID, GraphButton } from '../../content/GraphButton';
 import { MathRender } from '../../content/MathRender';
+import { cn } from '../../lib/cn';
 import { isBlankEquation } from '../equation/chemistry';
 import { EquationEditor } from '../equation/EquationEditor';
 import { BLOCK_MATH_NAME } from './math-names';
@@ -23,6 +26,7 @@ const OPEN_EDITOR_EVENT = 'parthhub:equation-editor-opened';
 export const MathNodeView = ({ node, updateAttributes, deleteNode, editor, getPos }: NodeViewProps) => {
   const displayMode = node.type.name === BLOCK_MATH_NAME;
   const latex = String(node.attrs.latex ?? '');
+  const graph = graphAttrsOfNode(node.attrs);
   /**
    * A freshly inserted equation opens straight into its editor.
    *
@@ -32,9 +36,10 @@ export const MathNodeView = ({ node, updateAttributes, deleteNode, editor, getPo
    * they have to find and click before they can type anything into it.
    */
   const [isEditing, setIsEditing] = useState(() => isBlankEquation(latex) && editor.isEditable);
-  // Captured on entry so Escape can put back what was there, including for an equation that was
-  // inserted empty and then abandoned.
+  // Captured on entry so Escape can put back what was there — the graph included — including for an
+  // equation that was inserted empty and then abandoned.
   const [draftOrigin, setDraftOrigin] = useState(latex);
+  const [graphOrigin, setGraphOrigin] = useState<IGraphAttrs | null>(graph);
 
   const Wrapper = displayMode ? 'div' : 'span';
   const viewId = useId();
@@ -46,6 +51,7 @@ export const MathNodeView = ({ node, updateAttributes, deleteNode, editor, getPo
   const startEditing = () => {
     if (!editor.isEditable) return;
     setDraftOrigin(latex);
+    setGraphOrigin(graph);
     setIsEditing(true);
     window.dispatchEvent(new CustomEvent(OPEN_EDITOR_EVENT, { detail: viewId }));
   };
@@ -85,7 +91,11 @@ export const MathNodeView = ({ node, updateAttributes, deleteNode, editor, getPo
   };
 
   const cancelEditing = () => {
-    updateAttributes({ latex: draftOrigin });
+    updateAttributes({
+      latex: draftOrigin,
+      graph: graphOrigin?.graph ?? null,
+      graphView: graphOrigin?.graphView ?? null,
+    });
     setIsEditing(false);
     if (isBlankEquation(draftOrigin)) deleteNode();
   };
@@ -126,6 +136,7 @@ export const MathNodeView = ({ node, updateAttributes, deleteNode, editor, getPo
       if (!target || editorRef.current?.contains(target)) return;
       if (
         target.closest('[data-radix-popper-content-wrapper]') ||
+        target.closest(`#${GRAPH_MODAL_ID}`) ||
         target.closest('.ML__keyboard') ||
         target.closest('[data-virtual-keyboard-dismiss]')
       ) {
@@ -165,6 +176,8 @@ export const MathNodeView = ({ node, updateAttributes, deleteNode, editor, getPo
       onDelete={deleteNode}
       onToggleDisplayMode={toggleDisplayMode}
       onDuplicate={duplicate}
+      graph={graph}
+      onGraphChange={(next) => updateAttributes({ graph: next?.graph ?? null, graphView: next?.graphView ?? null })}
     />
   );
 
@@ -201,7 +214,11 @@ export const MathNodeView = ({ node, updateAttributes, deleteNode, editor, getPo
   }
 
   return (
-    <NodeViewWrapper as={Wrapper} className={displayMode ? 'my-3 block' : 'inline'}>
+    // A display equation with a graph lays its cube beside it rather than on a line of its own.
+    <NodeViewWrapper
+      as={Wrapper}
+      className={displayMode ? cn('my-3', graph ? 'flex items-center gap-2' : 'block') : 'inline'}
+    >
       {/* A real <button>, not a span with role="button": Tiptap's default `stopEvent` only keeps
           ProseMirror's hands off events whose target is a genuine form control. A span let
           ProseMirror's own `selectClickedLeaf` run on mouseup, racing the React state change. */}
@@ -218,6 +235,7 @@ export const MathNodeView = ({ node, updateAttributes, deleteNode, editor, getPo
       >
         <MathRender latex={latex} displayMode={displayMode} />
       </button>
+      {graph ? <GraphButton latex={latex} {...graph} /> : null}
     </NodeViewWrapper>
   );
 };

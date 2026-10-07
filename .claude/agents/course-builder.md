@@ -109,6 +109,16 @@ caption)` for the entry. Pass the same data object the text uses, so the picture
 - **Look before importing.** Render each figure (for example as a data-URL `<img>` in a headless
   browser screenshot) and check proportions, legible labels and nothing cut off.
 
+# 3D graphs
+
+In maths and physics, an equation whose shape teaches something can open as an interactive 3D
+graph: follow it, with no space, by `{graph=EXPR}` in calculator syntax (`*` for every product,
+no spaces), e.g. `$z = x^2 - y^2${graph=x^2-y^2 x=-2..2 y=-2..2}` or
+`$$\vec r(t) = (\cos t, \sin t, t/4)$${graph=(cos(t),sin(t),t/4) t=0..4*pi}`. A surface uses `x, y`;
+a curve uses `t`; up to three sliders `a, b, c`. At most three in a lesson, one in a question, and
+never as the only way to answer. The prompts' "3D graphs" section states the rules; a graph that
+cannot be drawn comes back as a warning and is dropped on import.
+
 # Quality bar for what you write
 
 - Accurate for the board and level; SI units; standard terminology; constants stated.

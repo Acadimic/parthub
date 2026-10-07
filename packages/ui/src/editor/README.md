@@ -73,7 +73,7 @@ exported to Markdown and imported from Markdown — all four, or it would be los
 | `horizontalRule`                                |                                                                                                              |
 | `hardBreak`                                     | Shift+Enter                                                                                                  |
 | `table`, `tableRow`, `tableHeader`, `tableCell` | `bordered` flag on the table; cells hold **inline content only** (no blocks in cells); optional header row   |
-| `blockMath`                                     | a display equation; `attrs.latex`                                                                            |
+| `blockMath`                                     | a display equation; `attrs.latex`, optional 3D graph `graph`/`graphView` (§3c)                               |
 | `image`                                         | a picture block; `attrs.src`, `alt`, `caption`, `width` (`small`, `medium`, `full`). See §3a                 |
 | `listening`                                     | a listening passage or dialogue; `attrs.lang`, `mode` (`passage`, `dialogue`), `audio`; paragraphs only. §3b |
 
@@ -82,7 +82,7 @@ exported to Markdown and imported from Markdown — all four, or it would be los
 | Node / mark                                     | Notes                                                                                                                    |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `text`                                          | with marks                                                                                                               |
-| `inlineMath`                                    | an inline equation; `attrs.latex`; atomic, selectable, draggable                                                         |
+| `inlineMath`                                    | an inline equation; `attrs.latex`, optional 3D graph `graph`/`graphView` (§3c); atomic, selectable, draggable            |
 | `bold`, `italic`, `underline`, `strike`, `code` | marks                                                                                                                    |
 | `link`                                          | mark with `attrs.href`; only `http(s):`, `mailto:` and `tel:` are rendered as links, anything else renders as plain text |
 | `pronunciation`                                 | mark with `attrs.lang` (BCP-47), `ipa`, `translit`, `audio`; a pronounceable word, phrase or sentence. §3b               |
@@ -133,6 +133,24 @@ editor toggles it on the block (Text shown / Text hidden).
 
 Markdown is Pandoc's: `[Hola]{lang=es-ES ipa="ˈola"}` and `::: listening lang=es-ES mode=dialogue`
 … `:::`. `audio` is not written to Markdown.
+
+### 3c. 3D graphs
+
+Either equation node may carry `graph`, a plain expression that is plotted (`a*(x^2 - y^2)`, or
+`(cos(t), sin(t), t/4)` for a curve), and `graphView`, the ranges and sliders that differ from the
+defaults (`x=-2..2 t=0..4pi a=1[0.1..5]`). Both are null on an ordinary equation. The language, its
+compiler (closures over a fixed list of functions, never `eval`), the view format and sampling live
+in `@repo/shared/utils` (`graph-expression.util.ts`).
+
+- **Reading view**: an equation with a graph shows a cube (`content/GraphButton.tsx`) that opens
+  `GraphModal`. The viewer (`src/graph/`, three.js) is a lazy chunk, fetched on first open; the cube
+  stops click and key events so it never selects an answer option, and is hidden in print.
+- **Editor**: the cube in the equation panel's header opens `equation/GraphPanel.tsx`, pre-filled by
+  `graphExpressionFromLatex`. Only an expression that compiles and draws is written to the node.
+- **Markdown**: `$z = x^2${graph="x^2" x=-2..2}` and `$$ … $${graph="…"}`, read before the marks
+  pass so an expression's `*` is never taken for italic.
+
+The plan and its reasoning: `.claude/plans/GRAPH_3D.md`.
 
 ### Not supported, deliberately
 

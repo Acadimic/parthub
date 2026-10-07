@@ -2,6 +2,13 @@ import { RichTextFormat } from '../enums/rich-text.enum';
 import type { IRichText, IRichTextDoc, IRichTextMark, IRichTextNode } from '../interfaces/rich-text.interface';
 import { normaliseLatex, repairLatexControlEscapes } from './latex-repair.util';
 import { repairQuoteLists } from './quote-list.util';
+import {
+  attachGraphSlot,
+  graphNodeAttrsFromMarkdown,
+  holdGraphBlocks,
+  type IGraphSlot,
+  restoreGraphSlots,
+} from './rich-text-graph.util';
 import { imageNode } from './rich-text-image.util';
 import { createEmptyRichText, docToPlainText, INLINE_CONTAINERS } from './rich-text-plain.util';
 import {
@@ -171,14 +178,21 @@ const parseMarked = (input: string, marks: IRichTextMark[]): IRichTextNode[] => 
 };
 
 /** A marked text node's equations become nodes; the prose around them keeps the marks. */
-const splitMathInNode = (node: IRichTextNode): IRichTextNode[] => {
+const splitMathInNode = (node: IRichTextNode, slots: IGraphSlot[]): IRichTextNode[] => {
+  const restore = (text: string) => restoreGraphSlots(text, slots);
   // Nothing inside a code span is an equation.
-  if (node.marks?.some((mark) => mark.type === 'code')) return [{ ...node, text: unescape(node.text ?? '') }];
-  return splitInlineMath(node.text ?? '').map((piece): IRichTextNode =>
-    piece.kind === 'math'
-      ? { type: 'inlineMath', attrs: { latex: piece.value } }
-      : { ...node, text: unescape(repairLatexControlEscapes(piece.value)) },
-  );
+  if (node.marks?.some((mark) => mark.type === 'code')) return [{ ...node, text: unescape(restore(node.text ?? '')) }];
+  const out: IRichTextNode[] = [];
+  splitInlineMath(node.text ?? '').forEach((piece) => {
+    if (piece.kind === 'math') {
+      out.push({ type: 'inlineMath', attrs: { latex: piece.value } });
+      return;
+    }
+    // A graph block straight after an equation belongs to it.
+    const text = attachGraphSlot(out[out.length - 1], piece.value, slots);
+    if (text) out.push({ ...node, text: unescape(repairLatexControlEscapes(restore(text))) });
+  });
+  return out;
 };
 
 /**
@@ -189,7 +203,10 @@ const splitMathInNode = (node: IRichTextNode): IRichTextNode[] => {
  * could never see, leaving literal asterisks either side. Escapes such as `\$` are resolved last,
  * so an escaped dollar is never mistaken for a delimiter.
  */
-const parseInline = (line: string): IRichTextNode[] => flatMap(parseMarked(line, []), splitMathInNode);
+const parseInline = (line: string): IRichTextNode[] => {
+  const { held, slots } = holdGraphBlocks(line);
+  return flatMap(parseMarked(held, []), (node) => splitMathInNode(node, slots));
+};
 
 const listItem = (line: string): IRichTextNode => ({
   type: 'listItem',
@@ -201,10 +218,11 @@ const BULLET = /^[-*+]\s+(.*)$/;
 const ORDERED = /^\d+[.)]\s+(.*)$/;
 const QUOTE = /^>\s?(.*)$/;
 const RULE = /^(-{3,}|\*{3,}|_{3,})$/;
-const DISPLAY_MATH = /^(?:\$\$(.+)\$\$|\\\[(.+)\\\])$/;
+/** Either form may end with a graph's attribute block, `$$ … $${graph="…"}`; group 3 holds its inside. */
+const DISPLAY_MATH = /^(?:\$\$(.+)\$\$|\\\[(.+)\\\])(?:\{(\s*graph=[^}]*)\})?$/;
 /** A `$$` or `\[` alone (or starting) a line opens a block that closes on a line ending `$$` or `\]`. */
 const DISPLAY_OPEN = /^(\$\$|\\\[)(.*)$/;
-const DISPLAY_CLOSE = /^(.*?)(\$\$|\\\])$/;
+const DISPLAY_CLOSE = /^(.*?)(\$\$|\\\])(?:\{(\s*graph=[^}]*)\})?$/;
 const FENCE = /^```/;
 /** `![alt](src "caption")` alone on its line. The caption is optional and may escape a quote. */
 const IMAGE_LINE = /^!\[([^\]]*)\]\(\s*(\S+?)(?:\s+"((?:[^"\\]|\\.)*)")?\s*\)$/;
@@ -236,15 +254,15 @@ const readFence: BlockReader = (lines, index) => {
 const readRule: BlockReader = (lines, index) =>
   RULE.test(lines[index].trim()) ? { node: { type: 'horizontalRule' }, next: index + 1 } : null;
 
+const blockMathNode = (latex: string, graphSource: string | undefined): IRichTextNode => ({
+  type: 'blockMath',
+  attrs: { latex: normaliseLatex(latex), ...graphNodeAttrsFromMarkdown(graphSource) },
+});
+
 const readDisplayMath: BlockReader = (lines, index) => {
   const line = lines[index].trim();
   const single = DISPLAY_MATH.exec(line);
-  if (single) {
-    return {
-      node: { type: 'blockMath', attrs: { latex: normaliseLatex(single[1] ?? single[2] ?? '') } },
-      next: index + 1,
-    };
-  }
+  if (single) return { node: blockMathNode(single[1] ?? single[2] ?? '', single[3]), next: index + 1 };
   const open = DISPLAY_OPEN.exec(line);
   if (!open) return null;
   // A block: everything up to the line that closes it, joined with spaces since LaTeX ignores them.
@@ -253,7 +271,7 @@ const readDisplayMath: BlockReader = (lines, index) => {
     const close = DISPLAY_CLOSE.exec(lines[cursor].trim());
     if (close) {
       body.push(close[1]);
-      return { node: { type: 'blockMath', attrs: { latex: normaliseLatex(body.join(' ')) } }, next: cursor + 1 };
+      return { node: blockMathNode(body.join(' '), close[3]), next: cursor + 1 };
     }
     body.push(lines[cursor].trim());
   }

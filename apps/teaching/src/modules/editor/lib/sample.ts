@@ -11,6 +11,16 @@ const text = (value: string): IRichTextNode => ({ type: 'text', text: value });
 const code = (value: string): IRichTextNode => ({ type: 'text', text: value, marks: [{ type: 'code' }] });
 const inlineMath = (latex: string): IRichTextNode => ({ type: 'inlineMath', attrs: { latex } });
 const blockMath = (latex: string): IRichTextNode => ({ type: 'blockMath', attrs: { latex } });
+/** An equation with a 3D graph: the LaTeX that is read, and the expression that is plotted. */
+const graphMath = (
+  type: 'inlineMath' | 'blockMath',
+  latex: string,
+  graph: string,
+  graphView: string | null,
+): IRichTextNode => ({
+  type,
+  attrs: { latex, graph, graphView },
+});
 const bullets = (items: IRichTextNode[][]): IRichTextNode => ({
   type: 'bulletList',
   content: items.map((content) => ({ type: 'listItem', content: [paragraph(content)] })),
@@ -190,12 +200,86 @@ export interface IPreset {
 }
 
 /** What the demo page offers. Each one targets a different question the spike has to answer. */
+/** Equations that carry 3D graphs: surfaces, sliders, curves, inline and in answer options. */
+export const GRAPHS_DOC: IRichTextDoc = {
+  type: 'doc',
+  content: [
+    heading(1, '3D graphs of equations'),
+    paragraph([
+      text('An equation with a cube beside it opens as a 3D graph. A ripple spreads out from the origin and fades: '),
+      graphMath(
+        'inlineMath',
+        'z = \\cos\\left(a\\sqrt{x^2+y^2}\\right) e^{-(x^2+y^2)/10}',
+        'cos(a*sqrt(x^2+y^2)) * exp(-(x^2+y^2)/10)',
+        'a=1.5[0.5..4]',
+      ),
+      text('. Drag the slider for '),
+      inlineMath('a'),
+      text(' to tighten the rings.'),
+    ]),
+    heading(2, 'Surfaces'),
+    paragraph([
+      text('A saddle: curving up along one axis and down along the other. Its steepness is '),
+      inlineMath('a'),
+      text('.'),
+    ]),
+    graphMath('blockMath', 'z = a\\left(x^2 - y^2\\right)', 'a*(x^2 - y^2)', 'x=-2..2 y=-2..2'),
+    paragraph([
+      text('Two sliders: '),
+      inlineMath('a'),
+      text(' sets the height of the waves and '),
+      inlineMath('b'),
+      text(' how many there are.'),
+    ]),
+    graphMath('blockMath', 'z = a \\sin(b x) \\cos(y)', 'a*sin(b*x)*cos(y)', null),
+    paragraph([
+      text('A dome: it is defined only inside a circle of radius 3, and outside it there is nothing to draw.'),
+    ]),
+    graphMath('blockMath', 'z = \\sqrt{9 - x^2 - y^2}', 'sqrt(9 - x^2 - y^2)', null),
+    heading(2, 'Curves'),
+    paragraph([text('A helix climbs as it turns; '), inlineMath('a'), text(' sets how fast it rises.')]),
+    graphMath(
+      'blockMath',
+      '\\vec r(t) = \\left(\\cos t,\\ \\sin t,\\ \\frac{a t}{4}\\right)',
+      '(cos(t), sin(t), a*t/4)',
+      't=0..18.85',
+    ),
+    paragraph([text('A trefoil knot, coloured from start to end:')]),
+    graphMath(
+      'blockMath',
+      '\\vec r(t) = \\left(\\sin t + 2\\sin 2t,\\ \\cos t - 2\\cos 2t,\\ -\\sin 3t\\right)',
+      '(sin(t) + 2sin(2t), cos(t) - 2cos(2t), -sin(3t))',
+      null,
+    ),
+    heading(2, 'In a question'),
+    paragraph([text('Which surface has a single highest point at the origin?')]),
+    bullets([
+      [text('(A) '), graphMath('inlineMath', 'z = x^2 + y^2', 'x^2 + y^2', 'x=-2..2 y=-2..2')],
+      [text('(B) '), graphMath('inlineMath', 'z = 4 - x^2 - y^2', '4 - x^2 - y^2', 'x=-2..2 y=-2..2')],
+      [text('(C) '), graphMath('inlineMath', 'z = x^2 - y^2', 'x^2 - y^2', 'x=-2..2 y=-2..2')],
+    ]),
+    heading(2, 'Add one yourself'),
+    paragraph([
+      text(
+        'This equation has no graph yet. Click it, press the cube in its header, and the expression fills in from the equation: ',
+      ),
+    ]),
+    blockMath('z = \\frac{x y}{x^2 + y^2 + 1}'),
+  ],
+};
+
 export const PRESETS: IPreset[] = [
   {
     key: 'question',
     label: 'Question',
     description: 'Prose with equations inside it — the everyday case.',
     doc: QUESTION_DOC,
+  },
+  {
+    key: 'graphs',
+    label: '3D graphs',
+    description: 'Equations that open as 3D graphs: surfaces with sliders, curves, and answer options.',
+    doc: GRAPHS_DOC,
   },
   {
     key: 'stress',

@@ -94,3 +94,6 @@ export { VirtualKeyboardDismiss } from './MathField/VirtualKeyboardDismiss';
 
 export { ExpandableText } from './ExpandableText';
 export type { IExpandableTextProps } from './ExpandableText';
+
+export { Slider } from './Slider';
+export type { ISliderProps } from './Slider';

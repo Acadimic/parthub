@@ -5,6 +5,7 @@ import {
   ClipboardTextIcon,
   CodeIcon,
   CopyIcon,
+  CubeIcon,
   FlaskIcon,
   FunctionIcon,
   KeyboardIcon,
@@ -12,6 +13,7 @@ import {
   TrashIcon,
   XIcon,
 } from '@phosphor-icons/react';
+import type { IGraphAttrs } from '@repo/shared/utils';
 import { useRef, useState } from 'react';
 import { type IMathFieldHandle, MathField } from '../../core/MathField';
 import { toggleVirtualKeyboard, useVirtualKeyboard } from '../../core/MathField/virtual-keyboard';
@@ -22,6 +24,7 @@ import { cn } from '../../lib/cn';
 import { ChemistryEditor } from './ChemistryEditor';
 import { parseChemicalEquation, toChemicalEquationLatex } from './chemistry';
 import { FormulaGallery } from './FormulaGallery';
+import { GraphPanel } from './GraphPanel';
 import { PanelButton } from './panel-controls';
 import { SymbolPalette } from './SymbolPalette';
 
@@ -37,6 +40,9 @@ export interface IEquationEditorProps {
   onToggleDisplayMode?: () => void;
   /** Inserts a copy of the equation right after this one. */
   onDuplicate?: () => void;
+  /** The equation's 3D graph, or null when it has none. */
+  graph: IGraphAttrs | null;
+  onGraphChange: (graph: IGraphAttrs | null) => void;
 }
 
 const ICON = 'h-4 w-4';
@@ -52,6 +58,8 @@ interface IHeaderProps {
   onCopy: () => void;
   onToggleDisplayMode?: () => void;
   onDuplicate?: () => void;
+  isGraphOpen: boolean;
+  onToggleGraph: () => void;
   onDelete: () => void;
   onCancel: () => void;
   onDone: () => void;
@@ -72,6 +80,8 @@ const EquationHeader = ({
   onCopy,
   onToggleDisplayMode,
   onDuplicate,
+  isGraphOpen,
+  onToggleGraph,
   onDelete,
   onCancel,
   onDone,
@@ -99,6 +109,12 @@ const EquationHeader = ({
           <CopyIcon className={ICON} />
         </PanelButton>
       ) : null}
+      {/* A chemical equation has nothing to plot. */}
+      {isChemistry ? null : (
+        <PanelButton label={isGraphOpen ? 'Hide 3D graph' : '3D graph'} onClick={onToggleGraph} isActive={isGraphOpen}>
+          <CubeIcon className={ICON} />
+        </PanelButton>
+      )}
       <PanelButton label={isCopied ? 'Copied' : 'Copy source'} onClick={onCopy} isActive={isCopied}>
         {isCopied ? <CheckIcon className={ICON} /> : <ClipboardTextIcon className={ICON} />}
       </PanelButton>
@@ -161,8 +177,11 @@ export const EquationEditor = ({
   onDelete,
   onToggleDisplayMode,
   onDuplicate,
+  graph,
+  onGraphChange,
 }: IEquationEditorProps) => {
   const handleRef = useRef<IMathFieldHandle | null>(null);
+  const [isGraphOpen, setIsGraphOpen] = useState(graph !== null);
   const [isShowingSource, setIsShowingSource] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const chemistry = parseChemicalEquation(latex);
@@ -214,6 +233,8 @@ export const EquationEditor = ({
         onCopy={copySource}
         onToggleDisplayMode={onToggleDisplayMode}
         onDuplicate={onDuplicate}
+        isGraphOpen={isGraphOpen}
+        onToggleGraph={() => setIsGraphOpen(!isGraphOpen)}
         onDelete={onDelete}
         onCancel={onCancel}
         onDone={onDone}
@@ -266,6 +287,16 @@ export const EquationEditor = ({
           />
         ) : null}
       </div>
+      {isGraphOpen && !chemistry.isChemistry ? (
+        <GraphPanel
+          latex={latex}
+          graph={graph}
+          onChange={(next) => {
+            onGraphChange(next);
+            if (!next) setIsGraphOpen(false);
+          }}
+        />
+      ) : null}
       <VirtualKeyboardDismiss />
     </div>
   );

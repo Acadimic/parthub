@@ -1,4 +1,5 @@
 import { repairJsonEscapes } from '../utils';
+import { checkMarkdownGraphs } from './graphs';
 
 /** One thing wrong with a model's reply, pointed at with the file's own refs so a teacher can find it. */
 export interface IAiIssue {
@@ -120,6 +121,7 @@ export const checkMarkdownMath = (markdown: string, path: string, issues: IAiIss
       message: 'Uses \\( \\) or \\[ \\] delimiters; imported, but $ … $ was asked for.',
     });
   }
+  checkMarkdownGraphs(text, path, issues);
 };
 
 /** The Markdown subset the editor stores, stated for the model. Shared by every AI prompt. */
