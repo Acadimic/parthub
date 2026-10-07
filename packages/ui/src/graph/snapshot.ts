@@ -19,6 +19,16 @@ export interface IGraphImageFooter {
   caption: string;
 }
 
+/** How one frame is drawn: what goes under the graph, in which colours, at which size. */
+export interface IGraphFrameOptions {
+  footer: IGraphImageFooter;
+  colours: IGraphImageColours;
+  /** Output pixels per CSS pixel of the on-screen graph: the device pixel ratio for a PNG, less for a GIF. */
+  scale: number;
+  /** Multiplier for text sizes, kept at a readable size when `scale` shrinks the graph. */
+  textScale: number;
+}
+
 /** Height of the caption line under the graph, in CSS pixels. */
 const CAPTION_LINE = 44;
 const PADDING = 16;
@@ -27,71 +37,81 @@ const EQUATION_GAP = 10;
 
 /**
  * Draws the rendered graph, its axis labels, the typeset equation when there is one, and a caption
- * into one PNG.
+ * onto a new canvas — one PNG, or one frame of a GIF.
  *
  * Call it in the same task as the render that filled `source`: WebGL clears its drawing buffer once
- * a frame is shown, so a copy taken later is blank. The copy happens before this returns; only the
- * PNG encoding is asynchronous.
+ * a frame is shown, so a copy taken later is blank.
  */
-export const composeGraphImage = (
+export const drawGraphFrame = (
   source: HTMLCanvasElement,
   labels: ILabelSnapshot[],
-  { equation, caption }: IGraphImageFooter,
-  colours: IGraphImageColours,
-): Promise<Blob | null> => {
-  // The canvas is drawn at the device's pixel ratio; the labels are in CSS pixels.
-  const scale = source.width / (source.clientWidth || source.width);
-  const maxEquationWidth = source.width - 2 * PADDING * scale;
+  { footer, colours, scale, textScale }: IGraphFrameOptions,
+): HTMLCanvasElement | null => {
+  const { equation, caption } = footer;
+  const graphWidth = Math.round((source.clientWidth || source.width) * scale);
+  const graphHeight = Math.round((source.clientHeight || source.height) * scale);
+  const maxEquationWidth = graphWidth - 2 * PADDING * textScale;
   // A long equation is shrunk to the image's width, never cut.
   const equationScale = equation ? Math.min(1, maxEquationWidth / equation.width) : 0;
   const equationHeight = equation ? Math.round(equation.height * equationScale) : 0;
-  const equationBand = equation ? equationHeight + Math.round(EQUATION_GAP * scale) : 0;
+  const equationBand = equation ? equationHeight + Math.round(EQUATION_GAP * textScale) : 0;
   // Under an equation the caption is a short detail line, so it needs less room.
-  const captionLine = Math.round((equation ? CAPTION_LINE - 12 : CAPTION_LINE) * scale);
-  const band = equationBand + captionLine;
+  const captionLine = Math.round((equation ? CAPTION_LINE - 12 : CAPTION_LINE) * textScale);
   const canvas = document.createElement('canvas');
-  canvas.width = source.width;
-  canvas.height = source.height + band;
+  canvas.width = graphWidth;
+  canvas.height = graphHeight + equationBand + captionLine;
   const context = canvas.getContext('2d');
-  if (!context) return Promise.resolve(null);
+  if (!context) return null;
 
   // The 3D canvas is transparent, so it needs the page's background behind it.
   context.fillStyle = colours.background;
   context.fillRect(0, 0, canvas.width, canvas.height);
-  context.drawImage(source, 0, 0);
+  context.drawImage(source, 0, 0, graphWidth, graphHeight);
 
   context.textAlign = 'center';
   context.textBaseline = 'middle';
   // On screen a label past the edge is clipped; here it would land in the caption band instead.
   const visible = labels.filter(
-    (label) => label.x >= 0 && label.y >= 0 && label.x * scale <= source.width && label.y * scale <= source.height,
+    (label) => label.x >= 0 && label.y >= 0 && label.x * scale <= graphWidth && label.y * scale <= graphHeight,
   );
   visible.forEach((label) => {
     const isTitle = label.kind === 'title';
     context.font = isTitle
-      ? `italic 600 ${14 * scale}px Georgia, 'Times New Roman', serif`
-      : `${11 * scale}px ui-monospace, 'SF Mono', Menlo, Consolas, monospace`;
+      ? `italic 600 ${14 * textScale}px Georgia, 'Times New Roman', serif`
+      : `${11 * textScale}px ui-monospace, 'SF Mono', Menlo, Consolas, monospace`;
     context.fillStyle = isTitle ? colours.foreground : colours.muted;
     context.fillText(label.text, label.x * scale, label.y * scale);
   });
 
   context.globalAlpha = 0.35;
   context.fillStyle = colours.muted;
-  context.fillRect(0, source.height, canvas.width, Math.max(1, Math.round(scale)));
+  context.fillRect(0, graphHeight, canvas.width, Math.max(1, Math.round(textScale)));
   context.globalAlpha = 1;
   if (equation) {
-    const top = source.height + Math.round(EQUATION_GAP * scale);
-    context.drawImage(equation, PADDING * scale, top, equation.width * equationScale, equationHeight);
+    const top = graphHeight + Math.round(EQUATION_GAP * textScale);
+    context.drawImage(equation, PADDING * textScale, top, equation.width * equationScale, equationHeight);
   }
   context.textAlign = 'left';
-  context.font = `${(equation ? 12 : 13) * scale}px ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif`;
+  context.font = `${(equation ? 12 : 13) * textScale}px ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif`;
   // Under a typeset equation the caption is the detail line, so it steps back to the muted colour.
   context.fillStyle = equation ? colours.muted : colours.foreground;
-  const captionY = source.height + equationBand + Math.round(captionLine / 2);
+  const captionY = graphHeight + equationBand + Math.round(captionLine / 2);
   // `maxWidth` narrows a long caption to fit rather than letting it run off the edge.
-  context.fillText(caption, PADDING * scale, captionY, maxEquationWidth);
+  context.fillText(caption, PADDING * textScale, captionY, maxEquationWidth);
+  return canvas;
+};
 
-  return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+/** The graph as a PNG at the device's pixel ratio. Same timing rule as `drawGraphFrame`. */
+export const composeGraphImage = (
+  source: HTMLCanvasElement,
+  labels: ILabelSnapshot[],
+  footer: IGraphImageFooter,
+  colours: IGraphImageColours,
+): Promise<Blob | null> => {
+  // The canvas is drawn at the device's pixel ratio; the labels are in CSS pixels.
+  const scale = source.width / (source.clientWidth || source.width);
+  const canvas = drawGraphFrame(source, labels, { footer, colours, scale, textScale: scale });
+  return canvas ? new Promise((resolve) => canvas.toBlob(resolve, 'image/png')) : Promise.resolve(null);
 };
 
 /** Hands a file to the browser's download, as if the reader had clicked a link to it. */

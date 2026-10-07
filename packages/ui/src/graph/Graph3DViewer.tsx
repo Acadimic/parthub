@@ -20,6 +20,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../core/Button';
 import { Chip } from '../core/Chip';
+import { Progress } from '../core/Progress';
 import { Slider } from '../core/Slider';
 import { Spinner } from '../core/Spinner';
 import { Tooltip } from '../core/Tooltip';
@@ -27,7 +28,8 @@ import { cn } from '../lib/cn';
 import { DEFAULT_GRAPH_PALETTE, GRAPH_PALETTES, type IGraphPalette, paletteGradient } from './palettes';
 import { GraphScene, type IGraphPoint } from './scene';
 import { renderEquationImage } from './equation-image';
-import { saveBlob } from './snapshot';
+import { GIF_RECORDING_SHARE, gifFrameScale, recordGraphGif } from './gif';
+import { type IGraphImageColours, type IGraphImageFooter, saveBlob } from './snapshot';
 
 export interface IGraph3DViewerProps {
   /** The equation as written, typeset into a downloaded image. */
@@ -62,49 +64,92 @@ const imageDetails = (kind: GraphKind, view: IGraphView, values: Partial<Record<
   return [kind === 'surface' ? `${range('x')}, ${range('y')}` : range('t'), sliders].filter(Boolean).join('  ·  ');
 };
 
+/** Which download is being made, if any; the other buttons wait for it. */
+type Saving = 'image' | 'gif' | null;
+
 interface IStageToolbarProps {
   isSpinning: boolean;
   onSpin: () => void;
   onReset: () => void;
-  onDownload: () => void;
-  isSaving: boolean;
+  onDownloadImage: () => void;
+  onDownloadGif: () => void;
+  saving: Saving;
 }
 
-const StageToolbar = ({ isSpinning, onSpin, onReset, onDownload, isSaving }: IStageToolbarProps) => (
+interface IToolbarButtonProps {
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+  isPressed?: boolean;
+  isBusy?: boolean;
+  isDisabled?: boolean;
+}
+
+const ToolbarButton = ({ label, onClick, children, isPressed, isBusy, isDisabled }: IToolbarButtonProps) => (
+  <Tooltip title={label}>
+    <Button
+      isSubtle
+      aria-label={label}
+      aria-pressed={isPressed}
+      aria-busy={isBusy}
+      disabled={isDisabled}
+      onClick={onClick}
+      className={cn('flex h-8 min-w-8 items-center justify-center px-2 py-0', isPressed && 'text-primary')}
+    >
+      {isBusy ? <Spinner size="sm" /> : children}
+    </Button>
+  </Tooltip>
+);
+
+/** A download arrow and the file format it saves; both download buttons use it so they read as a pair. */
+const FormatLabel = ({ children }: { children: string }) => (
+  <span className="flex items-center gap-1">
+    <DownloadSimpleIcon weight="bold" className="h-3.5 w-3.5" />
+    <span className="text-[10px] font-bold leading-none tracking-tighter">{children}</span>
+  </span>
+);
+
+const StageToolbar = ({ isSpinning, onSpin, onReset, onDownloadImage, onDownloadGif, saving }: IStageToolbarProps) => (
   <div className="absolute right-3 top-3 flex items-center gap-1 border border-border bg-card/90 p-1 shadow-sm">
-    <Tooltip title={isSpinning ? 'Stop turning' : 'Turn slowly'}>
-      <Button
-        isSubtle
-        aria-label={isSpinning ? 'Stop turning' : 'Turn slowly'}
-        aria-pressed={isSpinning}
-        onClick={onSpin}
-        className={cn('flex h-8 w-8 items-center justify-center p-0', isSpinning && 'text-primary')}
-      >
-        {isSpinning ? <PauseIcon weight="bold" className="h-4 w-4" /> : <PlayIcon weight="bold" className="h-4 w-4" />}
-      </Button>
-    </Tooltip>
-    <Tooltip title="Reset view">
-      <Button
-        isSubtle
-        aria-label="Reset view"
-        onClick={onReset}
-        className="flex h-8 w-8 items-center justify-center p-0"
-      >
-        <ArrowCounterClockwiseIcon weight="bold" className="h-4 w-4" />
-      </Button>
-    </Tooltip>
-    <Tooltip title={isSaving ? 'Saving the image…' : 'Download as image'}>
-      <Button
-        isSubtle
-        aria-label="Download as image"
-        aria-busy={isSaving}
-        disabled={isSaving}
-        onClick={onDownload}
-        className="flex h-8 w-8 items-center justify-center p-0"
-      >
-        {isSaving ? <Spinner size="sm" /> : <DownloadSimpleIcon weight="bold" className="h-4 w-4" />}
-      </Button>
-    </Tooltip>
+    <ToolbarButton
+      label={isSpinning ? 'Stop turning' : 'Turn slowly'}
+      onClick={onSpin}
+      isPressed={isSpinning}
+      isDisabled={saving === 'gif'}
+    >
+      {isSpinning ? <PauseIcon weight="bold" className="h-4 w-4" /> : <PlayIcon weight="bold" className="h-4 w-4" />}
+    </ToolbarButton>
+    <ToolbarButton label="Reset view" onClick={onReset} isDisabled={saving === 'gif'}>
+      <ArrowCounterClockwiseIcon weight="bold" className="h-4 w-4" />
+    </ToolbarButton>
+    <ToolbarButton
+      label="Download as PNG image"
+      onClick={onDownloadImage}
+      isBusy={saving === 'image'}
+      isDisabled={saving !== null}
+    >
+      <FormatLabel>PNG</FormatLabel>
+    </ToolbarButton>
+    <ToolbarButton
+      label="Download as animated GIF"
+      onClick={onDownloadGif}
+      isBusy={saving === 'gif'}
+      isDisabled={saving !== null}
+    >
+      <FormatLabel>GIF</FormatLabel>
+    </ToolbarButton>
+  </div>
+);
+
+/** Shown over the graph while a GIF records: the graph turns underneath, so input is held off. */
+const GifProgress = ({ fraction }: { fraction: number }) => (
+  <div className="absolute inset-0 flex items-end justify-center p-4" aria-live="polite">
+    <div className="flex w-64 max-w-full flex-col gap-2 border border-border bg-card/95 px-3 py-2.5 text-xs shadow-sm">
+      <span className="font-semibold">
+        {fraction < GIF_RECORDING_SHARE ? 'Recording the turn…' : 'Making the GIF…'} {Math.round(fraction * 100)}%
+      </span>
+      <Progress value={fraction * 100} />
+    </div>
   </div>
 );
 
@@ -165,7 +210,8 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
   const [showWire, setShowWire] = useState(true);
   const [hover, setHover] = useState<IGraphPoint | null>(null);
   const [isUnsupported, setIsUnsupported] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [saving, setSaving] = useState<Saving>(null);
+  const [gifProgress, setGifProgress] = useState(0);
   const stageRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
   const lineProbe = useRef<HTMLSpanElement>(null);
@@ -218,8 +264,11 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
 
   const params = compiled.isValid ? compiled.graph.params : [];
 
-  const downloadImage = async () => {
-    if (!compiled.isValid || !sceneRef.current || isSaving) return;
+  /** The colours and the line under the graph a download is drawn with, at `pixelRatio`. */
+  const prepareDownload = async (
+    pixelRatio: number,
+  ): Promise<{ colours: IGraphImageColours; footer: IGraphImageFooter } | null> => {
+    if (!compiled.isValid) return null;
     const { kind } = compiled.graph;
     const used = Object.fromEntries(params.map((param) => [param, values[param]]));
     const colours = {
@@ -227,21 +276,46 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
       foreground: readColour(foregroundProbe.current),
       muted: readColour(lineProbe.current),
     };
-    // The first save waits for the equation's fonts; the button stays busy so a second click
-    // cannot start a second download meanwhile.
-    setIsSaving(true);
+    const equation = await renderEquationImage(latex, colours.foreground, pixelRatio);
+    const details = imageDetails(kind, view, used);
+    const caption = equation ? details : `${imageExpression(graph, kind)}  ·  ${details}`;
+    return { colours, footer: { equation, caption } };
+  };
+
+  /**
+   * Runs one download with the buttons held busy, so a second click cannot start another meanwhile
+   * (the first one waits for the equation's fonts), and frees them whatever happens.
+   */
+  const runDownload = async (kind: Exclude<Saving, null>, make: () => Promise<void>) => {
+    if (saving || !sceneRef.current) return;
+    setSaving(kind);
     try {
-      // The same pixel ratio the 3D canvas is drawn at, so the equation is as sharp as the graph.
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-      const equation = await renderEquationImage(latex, colours.foreground, pixelRatio);
-      const details = imageDetails(kind, view, used);
-      const caption = equation ? details : `${imageExpression(graph, kind)}  ·  ${details}`;
-      const blob = await sceneRef.current?.snapshot({ equation, caption }, colours);
-      if (blob) saveBlob(blob, '3d-graph.png');
+      await make();
     } finally {
-      setIsSaving(false);
+      setSaving(null);
     }
   };
+
+  const downloadImage = () =>
+    runDownload('image', async () => {
+      // The same pixel ratio the 3D canvas is drawn at, so the equation is as sharp as the graph.
+      const prepared = await prepareDownload(Math.min(window.devicePixelRatio || 1, 2));
+      const blob = prepared ? await sceneRef.current?.snapshot(prepared.footer, prepared.colours) : null;
+      if (blob) saveBlob(blob, '3d-graph.png');
+    });
+
+  const downloadGif = () =>
+    runDownload('gif', async () => {
+      const scene = sceneRef.current;
+      const width = stageRef.current?.clientWidth ?? 0;
+      if (!scene || !width) return;
+      const { scale, textScale } = gifFrameScale(width);
+      const prepared = await prepareDownload(textScale);
+      if (!prepared) return;
+      setGifProgress(0);
+      const blob = await recordGraphGif(scene, { ...prepared, scale, textScale }, setGifProgress);
+      if (blob) saveBlob(blob, '3d-graph.gif');
+    });
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 text-foreground md:flex-row">
@@ -268,10 +342,11 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
               isSpinning={isSpinning}
               onSpin={() => setIsSpinning(!isSpinning)}
               onReset={() => sceneRef.current?.resetView()}
-              onDownload={() => void downloadImage()}
-              isSaving={isSaving}
+              onDownloadImage={() => void downloadImage()}
+              onDownloadGif={() => void downloadGif()}
+              saving={saving}
             />
-            <Readout point={hover} />
+            {saving === 'gif' ? <GifProgress fraction={gifProgress} /> : <Readout point={hover} />}
           </>
         )}
       </div>

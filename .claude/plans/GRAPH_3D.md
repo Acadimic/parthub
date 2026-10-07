@@ -135,6 +135,10 @@ on a control with a tooltip), a click outside, and the back button; focus return
 the graph as it is on screen, its axis labels, the equation typeset by KaTeX (turned into a picture
 by `html-to-image`, loaded on the first download only), and a line with the ranges and slider
 values. If the equation cannot be rendered, the caption carries the plain expression instead.
+A second button saves an **animated GIF** of the graph turning once round from the current view
+(60 frames at 70 ms, 640 px wide, looping, Floyd–Steinberg dithering against GIF's 255-colour
+banding; about 2–4 MB), encoded by `modern-gif`, loaded on the first GIF only. A progress panel
+covers the graph while it records, and the view is put back exactly afterwards.
 
 **Performance rules**, all already in the demo:
 

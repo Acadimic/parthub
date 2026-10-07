@@ -29,7 +29,7 @@ import {
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GraphLabels } from './labels';
 import type { IGraphPalette } from './palettes';
-import { composeGraphImage, type IGraphImageColours, type IGraphImageFooter } from './snapshot';
+import { composeGraphImage, type IGraphImageColours, type IGraphImageFooter, type ILabelSnapshot } from './snapshot';
 
 /** Half the side of the cube every graph is scaled into, so each axis spans `-S..S`. */
 const S = 3;
@@ -115,6 +115,8 @@ export class GraphScene {
   private readonly pointer = new Vector2();
   private pressedAt: { x: number; y: number } | null = null;
   private isFramed = false;
+  /** True while `captureTurn` drives the camera; the render loop and the controls stand aside. */
+  private isCapturing = false;
 
   constructor(
     private readonly host: HTMLElement,
@@ -226,6 +228,49 @@ export class GraphScene {
     this.marker.visible = isMarked;
     this.requestRender();
     return image;
+  }
+
+  /**
+   * Turns the camera once round the vertical axis in `count` even steps, starting from the current
+   * view, and hands each rendered frame to `onFrame`, which must copy the canvas before its first
+   * `await` (see `drawGraphFrame`). The view, the spin and the controls are put back afterwards.
+   * Resolves false when the graph was closed before the turn finished.
+   */
+  async captureTurn(
+    count: number,
+    onFrame: (source: HTMLCanvasElement, labels: ILabelSnapshot[], index: number) => Promise<void>,
+  ): Promise<boolean> {
+    const target = this.controls.target.clone();
+    const start = this.camera.position.clone();
+    const offset = start.clone().sub(target);
+    const wasSpinning = this.isSpinning;
+    const isMarked = this.marker.visible;
+    this.setSpin(false);
+    this.marker.visible = false;
+    this.controls.enabled = false;
+    this.isCapturing = true;
+    try {
+      for (let index = 0; index < count; index += 1) {
+        if (this.isDisposed) return false;
+        const turned = offset.clone().applyAxisAngle(Z_AXIS, (2 * Math.PI * index) / count);
+        this.camera.position.copy(target).add(turned);
+        this.camera.lookAt(target);
+        this.renderer.render(this.scene, this.camera);
+        const width = this.host.clientWidth;
+        const height = this.host.clientHeight;
+        this.labels.place(this.camera, width, height);
+        await onFrame(this.renderer.domElement, this.labels.snapshot(this.camera, width, height), index);
+      }
+      return !this.isDisposed;
+    } finally {
+      this.isCapturing = false;
+      this.camera.position.copy(start);
+      this.controls.target.copy(target);
+      this.controls.enabled = true;
+      this.marker.visible = isMarked;
+      this.setSpin(wasSpinning);
+      this.requestRender();
+    }
   }
 
   dispose(): void {
@@ -425,7 +470,7 @@ export class GraphScene {
 
   private readonly renderFrame = (): void => {
     this.isPending = false;
-    if (this.isDisposed) return;
+    if (this.isDisposed || this.isCapturing) return;
     const isMoving = this.controls.update();
     this.renderer.render(this.scene, this.camera);
     this.labels.place(this.camera, this.host.clientWidth, this.host.clientHeight);
