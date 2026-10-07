@@ -10,6 +10,7 @@ import {
   restoreGraphSlots,
 } from './rich-text-graph.util';
 import { imageNode } from './rich-text-image.util';
+import { sceneFenceNode } from './scene3d.util';
 import { createEmptyRichText, docToPlainText, INLINE_CONTAINERS } from './rich-text-plain.util';
 import {
   LISTENING_MODES,
@@ -245,10 +246,10 @@ const readFence: BlockReader = (lines, index) => {
     body.push(lines[cursor]);
     cursor += 1;
   }
-  return {
-    node: { type: 'codeBlock', content: [{ type: 'text', text: body.join('\n') }] },
-    next: cursor + 1, // step past the closing fence
-  };
+  const text = body.join('\n');
+  const scene = sceneFenceNode(lines[index].trim().slice(3).trim(), text);
+  // `next` steps past the closing fence.
+  return { node: scene ?? { type: 'codeBlock', content: [{ type: 'text', text }] }, next: cursor + 1 };
 };
 
 const readRule: BlockReader = (lines, index) =>

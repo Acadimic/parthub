@@ -1,5 +1,5 @@
 import type { Encoder } from 'modern-gif';
-import type { GraphScene } from './scene';
+import type { Stage } from './stage';
 import { drawGraphFrame, type IGraphFrameOptions } from './snapshot';
 
 /** One full turn in 60 frames at 70 ms: about four seconds, smooth enough to read the shape. */
@@ -45,7 +45,7 @@ const fitFrame = (canvas: HTMLCanvasElement, width: number, height: number): HTM
  * turn is not offered as a download.
  */
 export const recordGraphGif = async (
-  scene: GraphScene,
+  scene: Stage,
   frame: IGraphFrameOptions,
   onProgress: (fraction: number) => void,
 ): Promise<Blob | null> => {

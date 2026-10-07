@@ -1,4 +1,5 @@
 import { RichTextFormat } from '../enums/rich-text.enum';
+import { SCENE3D_NODE, sceneTitleOf } from './scene3d.util';
 import type { IRichText, IRichTextNode } from '../interfaces/rich-text.interface';
 import { IMAGE_NODE } from './rich-text-image.util';
 
@@ -23,6 +24,8 @@ const leafText = (node: IRichTextNode): string | null => {
   if (node.type === 'inlineMath' || node.type === 'blockMath') return String(node.attrs?.latex ?? '');
   // A picture reads as its description, so a document holding only an image is not "empty".
   if (node.type === IMAGE_NODE) return String(node.attrs?.alt || node.attrs?.caption || 'Image');
+  // A 3D scene reads as its title, so search finds it and a document holding only a scene is not "empty".
+  if (node.type === SCENE3D_NODE) return sceneTitleOf(node.attrs?.spec);
   return null;
 };
 

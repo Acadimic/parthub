@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useMemo, useRef } from 'react';
 import { Button } from '../app/buttons/Buttons';
 import { Spinner } from '../app/loaders/Spinner';
 import { cn } from '../lib/cn';
+import { PrintContext } from '../contexts/print-context';
 import { RichTextMediaContext, useRichTextMedia } from '../contexts/rich-text-media-context';
 import { buildPrintCss, type IPageText, PRINT_FONT } from './print-styles';
 import { usePrintReady } from './use-print-ready';
@@ -76,7 +77,7 @@ export const PrintShell = ({ documentTitle, footer, isLoaded, controls, onClose,
           className="print-exact mx-auto flex max-w-[210mm] flex-col gap-8 px-4 py-8 text-[10.5pt] leading-[1.55] max-sm:gap-4 max-sm:px-2 max-sm:py-4 print:block print:max-w-none print:p-0 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden"
         >
           {isLoaded ? (
-            children
+            <PrintContext.Provider value>{children}</PrintContext.Provider>
           ) : (
             <div className="mt-24 flex flex-col items-center gap-3 text-center text-sm text-muted-foreground">
               <Spinner className="h-8 w-8" />

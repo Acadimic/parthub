@@ -7,6 +7,7 @@ import type {
   SceneNumber,
   SceneObjectType,
 } from '../interfaces/scene3d.interface';
+import type { IRichTextNode } from '../interfaces/rich-text.interface';
 import { compileExpression } from './graph-expression.util';
 
 /**
@@ -15,6 +16,31 @@ import { compileExpression } from './graph-expression.util';
  * or the AI can act on. Pure TypeScript, so the editor, the AI validators and the course agent all
  * check a scene the same way. See `.claude/plans/3D_SCENES.md` §4.
  */
+
+/** The rich-text node a scene is stored in; its `spec` attribute holds the scene's JSON. */
+export const SCENE3D_NODE = 'scene3d';
+
+/**
+ * The scene block a ```` ```scene3d ```` fence becomes, or null. A fence whose JSON is not a valid
+ * scene stays a code block, so a broken scene from an AI reply shows as its source rather than as a
+ * broken scene; the reply's validator says what is wrong with it.
+ */
+export const sceneFenceNode = (language: string, body: string): IRichTextNode | null => {
+  if (language !== SCENE3D_NODE) return null;
+  const parsed = parseScene(body);
+  return parsed.isValid ? { type: SCENE3D_NODE, attrs: { spec: JSON.stringify(parsed.scene) } } : null;
+};
+
+/** A scene's title, read without the full check — for search text and previews. */
+export const sceneTitleOf = (spec: unknown): string => {
+  try {
+    const raw: unknown = typeof spec === 'string' ? JSON.parse(spec) : null;
+    const title = typeof raw === 'object' && raw !== null && 'title' in raw ? raw.title : null;
+    return typeof title === 'string' && title.trim() ? title.trim() : '3D scene';
+  } catch {
+    return '3D scene';
+  }
+};
 
 export const SCENE_LIMITS = { bytes: 20_000, objects: 60, sliders: 8, steps: 12 } as const;
 

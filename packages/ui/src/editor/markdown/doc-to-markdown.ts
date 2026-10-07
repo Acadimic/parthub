@@ -9,6 +9,7 @@ import {
   LISTENING_NODE,
   PRONUNCIATION_MARK,
   pronunciationAttrsOf,
+  SCENE3D_NODE,
 } from '@repo/shared/utils';
 import type { IRichTextMark } from '@repo/shared/interfaces';
 
@@ -199,6 +200,16 @@ const serializeImage = (node: IRichTextNode): string => {
   return src ? `![${alt}](${src}${caption ? ` "${caption}"` : ''})` : '';
 };
 
+/** A ` ```scene3d ` fence holding the scene's JSON, indented so a reader can follow it. */
+const serializeScene = (node: IRichTextNode): string => {
+  const spec = String(node.attrs?.spec ?? '');
+  try {
+    return `\`\`\`scene3d\n${JSON.stringify(JSON.parse(spec), null, 2)}\n\`\`\``;
+  } catch {
+    return '';
+  }
+};
+
 /** The blocks with no attributes to read and no nesting to flatten. */
 const SIMPLE_BLOCKS: Record<string, (node: IRichTextNode) => string> = {
   table: serializeTable,
@@ -212,6 +223,7 @@ const SIMPLE_BLOCKS: Record<string, (node: IRichTextNode) => string> = {
   horizontalRule: () => '---',
   [IMAGE_NAME]: serializeImage,
   [LISTENING_NODE]: serializeListening,
+  [SCENE3D_NODE]: serializeScene,
 };
 
 function serializeBlock(node: IRichTextNode): string {

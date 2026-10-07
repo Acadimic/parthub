@@ -7,6 +7,7 @@ import {
   type ListeningMode,
   PRONUNCIATION_MARK,
   pronunciationAttrsOf,
+  SCENE3D_NODE,
 } from '@repo/shared/utils';
 import { createElement, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
@@ -15,6 +16,7 @@ import { ListeningBlock } from './ListeningBlock';
 import { MathRender } from './MathRender';
 import { PronouncedText } from './PronouncedText';
 import { RichTextImage } from './RichTextImage';
+import { SceneCard } from './SceneCard';
 
 export interface IRichTextViewProps {
   value?: IRichText | null;
@@ -191,6 +193,7 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
       {Array.isArray(children) ? children : [children]}
     </ListeningBlock>
   ),
+  [SCENE3D_NODE]: (node, _children, key) => <SceneCard key={key} spec={stringAttr(node.attrs, 'spec')} />,
   blockMath: (node, _children, key) => {
     const latex = stringAttr(node.attrs, 'latex');
     const graph = graphAttrsOfNode(node.attrs);

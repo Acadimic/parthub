@@ -1,5 +1,6 @@
 import type { IRichTextDoc, IRichTextNode } from '@repo/shared/interfaces';
 import { richTextFromMarkdown } from '@repo/shared/utils';
+import { SCENES_DOC } from './scene-samples';
 
 const paragraph = (content: IRichTextNode[]): IRichTextNode => ({ type: 'paragraph', content });
 const heading = (level: number, value: string): IRichTextNode => ({
@@ -311,6 +312,12 @@ export const PRESETS: IPreset[] = [
     label: '3D graphs',
     description: 'Equations that open as 3D graphs: surfaces with sliders, curves, and answer options.',
     doc: GRAPHS_DOC,
+  },
+  {
+    key: 'scenes',
+    label: '3D scenes',
+    description: 'Solids, planes, vectors and angles that open in 3D, with sliders.',
+    doc: SCENES_DOC,
   },
   {
     key: 'stress',

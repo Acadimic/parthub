@@ -12,6 +12,7 @@ import { IMAGE_ACCEPT, ImageBlock } from './extensions/image';
 import { ListeningNode } from './extensions/listening';
 import { MathExtensions } from './extensions/math-nodes';
 import { Pronunciation } from './extensions/pronunciation';
+import { Scene3DBlock } from './extensions/scene3d';
 import { TableExtensions } from './extensions/table';
 import { EditorToolbar } from './toolbar/EditorToolbar';
 
@@ -119,6 +120,7 @@ export const RichTextEditor = ({
       ImageBlock.configure({ upload: uploadImage, onUploadError: reportUploadError }),
       Pronunciation.configure({ defaultLanguage }),
       ListeningNode.configure({ defaultLanguage }),
+      Scene3DBlock,
     ],
     content: value?.doc ?? null,
     // Required under the Pages Router: Tiptap renders to the DOM, so letting it render during SSR

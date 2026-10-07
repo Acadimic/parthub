@@ -1,8 +1,11 @@
 # Interactive 3D scenes in course content
 
-Written 2026-10-08. Status: **phase 1 committed (5f58493); phase 2 built (2026-10-08), uncommitted;** phases 3–8 not
-started. Phase 2 lives in `packages/shared`: `interfaces/scene3d.interface.ts` (the format) and
-`utils/scene3d.util.ts` (`parseScene`, `sceneNumber`, `MOLECULE_SHAPES`, `SCENE_LIMITS`). Decided (Manish, 2026-10-08): scenes go in study materials,
+Written 2026-10-08. Status: **phases 1 (5f58493) and 2 (3f72120) committed; phase 3 built (2026-10-08),
+uncommitted;** phases 4–8 not started. Phase 3: the `scene3d` node (`editor/extensions/scene3d.ts`),
+`content/SceneCard.tsx` and `Viewer3DModal.tsx`, `graph/stage.ts` (what graphs and scenes share),
+`scene-builder.ts`, `scene-stage.ts`, `Scene3DViewer.tsx`, and `ScenePrintStill.tsx` under the print
+context. Not in phase 3: the `caption` attribute (the scene's own `title` serves), Edit in the node
+view (phase 7), and an arc for a line square to a plane. Decided (Manish, 2026-10-08): scenes go in study materials,
 questions and solutions, not answer options. Follows `GRAPH_3D.md`, whose viewer, popup,
 sliders, PNG/GIF export, lazy loading and AI pipeline this reuses.
 

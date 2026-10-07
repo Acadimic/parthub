@@ -1,7 +1,8 @@
 /** One axis label as it sits on screen, in CSS pixels from the canvas's top-left corner. */
 export interface ILabelSnapshot {
   text: string;
-  kind: 'title' | 'tick';
+  /** An axis title, an axis tick, or a note such as a scene object's label. */
+  kind: 'title' | 'tick' | 'note';
   x: number;
   y: number;
 }
@@ -82,11 +83,13 @@ export const drawGraphFrame = (
     (label) => label.x >= 0 && label.y >= 0 && label.x * scale <= graphWidth && label.y * scale <= graphHeight,
   );
   visible.forEach((label) => {
-    const isTitle = label.kind === 'title';
-    context.font = isTitle
-      ? `italic 600 ${14 * textScale}px Georgia, 'Times New Roman', serif`
-      : `${11 * textScale}px ui-monospace, 'SF Mono', Menlo, Consolas, monospace`;
-    context.fillStyle = isTitle ? colours.foreground : colours.muted;
+    const fonts = {
+      title: `italic 600 ${14 * textScale}px Georgia, 'Times New Roman', serif`,
+      tick: `${11 * textScale}px ui-monospace, 'SF Mono', Menlo, Consolas, monospace`,
+      note: `500 ${12 * textScale}px ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif`,
+    };
+    context.font = fonts[label.kind];
+    context.fillStyle = label.kind === 'tick' ? colours.muted : colours.foreground;
     context.fillText(label.text, label.x * scale, label.y * scale);
   });
 

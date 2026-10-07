@@ -63,19 +63,20 @@ exported to Markdown and imported from Markdown — all four, or it would be los
 
 ### Blocks
 
-| Node                                            | Notes                                                                                                        |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `paragraph`                                     |                                                                                                              |
-| `heading`                                       | levels **1–3 only**; deeper headings are not admitted                                                        |
-| `bulletList`, `orderedList`, `listItem`         | list items hold paragraphs                                                                                   |
-| `blockquote`                                    |                                                                                                              |
-| `codeBlock`                                     | fenced; contents are literal                                                                                 |
-| `horizontalRule`                                |                                                                                                              |
-| `hardBreak`                                     | Shift+Enter                                                                                                  |
-| `table`, `tableRow`, `tableHeader`, `tableCell` | `bordered` flag on the table; cells hold **inline content only** (no blocks in cells); optional header row   |
-| `blockMath`                                     | a display equation; `attrs.latex`, optional 3D graph `graph`/`graphView` (§3c)                               |
-| `image`                                         | a picture block; `attrs.src`, `alt`, `caption`, `width` (`small`, `medium`, `full`). See §3a                 |
-| `listening`                                     | a listening passage or dialogue; `attrs.lang`, `mode` (`passage`, `dialogue`), `audio`; paragraphs only. §3b |
+| Node                                            | Notes                                                                                                                  |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `paragraph`                                     |                                                                                                                        |
+| `heading`                                       | levels **1–3 only**; deeper headings are not admitted                                                                  |
+| `bulletList`, `orderedList`, `listItem`         | list items hold paragraphs                                                                                             |
+| `blockquote`                                    |                                                                                                                        |
+| `codeBlock`                                     | fenced; contents are literal                                                                                           |
+| `horizontalRule`                                |                                                                                                                        |
+| `hardBreak`                                     | Shift+Enter                                                                                                            |
+| `table`, `tableRow`, `tableHeader`, `tableCell` | `bordered` flag on the table; cells hold **inline content only** (no blocks in cells); optional header row             |
+| `blockMath`                                     | a display equation; `attrs.latex`, optional 3D graph `graph`/`graphView` (§3c)                                         |
+| `image`                                         | a picture block; `attrs.src`, `alt`, `caption`, `width` (`small`, `medium`, `full`). See §3a                           |
+| `listening`                                     | a listening passage or dialogue; `attrs.lang`, `mode` (`passage`, `dialogue`), `audio`; paragraphs only. §3b           |
+| `scene3d`                                       | an interactive 3D scene; `attrs.spec` is the scene's JSON (`IScene`, `.claude/plans/3D_SCENES.md`); printed as a still |
 
 ### Inline
 
@@ -271,6 +272,7 @@ paragraphs, so no input is dropped.
 | `![alt](src "caption")` alone on a line; `src` is `https:` or `figure:<ref>`     | image                                                                |
 | `[text]{lang=es-ES ipa="ˈola" translit=…}` (a `lang` is required)                | pronunciation mark                                                   |
 | `::: listening lang=… mode=passage\|dialogue [transcript=hidden]` … `:::`        | listening block; anything but paragraphs inside is flattened to text |
+| a ` ```scene3d ` fence holding a scene's JSON                                    | `scene3d` block when `parseScene` accepts it; a code block otherwise |
 
 Rules worth knowing:
 

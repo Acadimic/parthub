@@ -6,6 +6,8 @@ export type { IMathRenderProps } from './MathRender';
 export { RichTextView } from './RichTextView';
 export { GraphButton, GraphModal, GRAPH_MODAL_ID, preloadGraphViewer } from './GraphButton';
 export type { IGraphButtonProps, IGraphModalProps } from './GraphButton';
+export { SceneCard, preloadSceneViewer } from './SceneCard';
+export type { ISceneCardProps } from './SceneCard';
 export type { IRichTextViewProps } from './RichTextView';
 export { RichTextImage, useResolvedImageUrl, IMAGE_WIDTH_CLASSES } from './RichTextImage';
 export type { IRichTextImageProps } from './RichTextImage';
