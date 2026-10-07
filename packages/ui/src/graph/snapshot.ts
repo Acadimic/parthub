@@ -17,6 +17,8 @@ export interface IGraphImageColours {
 export interface IGraphImageFooter {
   equation: HTMLCanvasElement | null;
   caption: string;
+  /** The Acadimic mark for the bottom-right corner, or null to leave it out. */
+  mark: HTMLImageElement | null;
 }
 
 /** How one frame is drawn: what goes under the graph, in which colours, at which size. */
@@ -34,6 +36,8 @@ const CAPTION_LINE = 44;
 const PADDING = 16;
 /** Space above and below the typeset equation, in CSS pixels. */
 const EQUATION_GAP = 10;
+/** Side of the Acadimic mark in the footer's bottom-right corner, in CSS pixels. */
+const MARK_SIZE = 26;
 
 /**
  * Draws the rendered graph, its axis labels, the typeset equation when there is one, and a caption
@@ -47,10 +51,13 @@ export const drawGraphFrame = (
   labels: ILabelSnapshot[],
   { footer, colours, scale, textScale }: IGraphFrameOptions,
 ): HTMLCanvasElement | null => {
-  const { equation, caption } = footer;
+  const { equation, caption, mark } = footer;
   const graphWidth = Math.round((source.clientWidth || source.width) * scale);
   const graphHeight = Math.round((source.clientHeight || source.height) * scale);
-  const maxEquationWidth = graphWidth - 2 * PADDING * textScale;
+  const markSize = mark ? Math.round(MARK_SIZE * textScale) : 0;
+  // The equation and caption stop short of the mark, so nothing runs underneath it.
+  const markRoom = mark ? markSize + PADDING * textScale : 0;
+  const maxEquationWidth = graphWidth - 2 * PADDING * textScale - markRoom;
   // A long equation is shrunk to the image's width, never cut.
   const equationScale = equation ? Math.min(1, maxEquationWidth / equation.width) : 0;
   const equationHeight = equation ? Math.round(equation.height * equationScale) : 0;
@@ -98,6 +105,11 @@ export const drawGraphFrame = (
   const captionY = graphHeight + equationBand + Math.round(captionLine / 2);
   // `maxWidth` narrows a long caption to fit rather than letting it run off the edge.
   context.fillText(caption, PADDING * textScale, captionY, maxEquationWidth);
+  if (mark) {
+    const band = equationBand + captionLine;
+    const left = graphWidth - PADDING * textScale - markSize;
+    context.drawImage(mark, left, graphHeight + Math.round((band - markSize) / 2), markSize, markSize);
+  }
   return canvas;
 };
 

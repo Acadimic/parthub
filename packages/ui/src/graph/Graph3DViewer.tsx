@@ -27,6 +27,7 @@ import { Tooltip } from '../core/Tooltip';
 import { cn } from '../lib/cn';
 import { DEFAULT_GRAPH_PALETTE, GRAPH_PALETTES, type IGraphPalette, paletteGradient } from './palettes';
 import { GraphScene, type IGraphPoint } from './scene';
+import { loadBrandMark } from './brand';
 import { renderEquationImage } from './equation-image';
 import { GIF_RECORDING_SHARE, gifFrameScale, recordGraphGif } from './gif';
 import { type IGraphImageColours, type IGraphImageFooter, saveBlob } from './snapshot';
@@ -276,10 +277,13 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
       foreground: readColour(foregroundProbe.current),
       muted: readColour(lineProbe.current),
     };
-    const equation = await renderEquationImage(latex, colours.foreground, pixelRatio);
+    const [equation, mark] = await Promise.all([
+      renderEquationImage(latex, colours.foreground, pixelRatio),
+      loadBrandMark(colours.background),
+    ]);
     const details = imageDetails(kind, view, used);
     const caption = equation ? details : `${imageExpression(graph, kind)}  ·  ${details}`;
-    return { colours, footer: { equation, caption } };
+    return { colours, footer: { equation, caption, mark } };
   };
 
   /**
