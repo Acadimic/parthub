@@ -65,10 +65,12 @@ phase.
 2. Answer each prompt yourself, one file per reply. For lessons: research the topic (WebSearch,
    WebFetch), write the ten-section lesson the prompt specifies, 900–1600 words, LaTeX for every
    formula, `20\%` inside maths, `\$` for money, figures wherever a picture helps (see "Figures"),
+   3D graphs on every equation whose shape is the point (see "3D graphs"),
    and **cite only resources you have opened with
    WebFetch** — a real YouTube watch page, a real article, a real PDF; never a URL you have not
    seen. Every backslash inside a JSON string is doubled. For quizzes: original questions with
-   airtight keys and worked solutions, the counts the prompt gives.
+   airtight keys and worked solutions, the counts the prompt gives, and a 3D graph on any question
+   or option whose equation is a surface or a space curve.
 3. `cli.mjs course:content --course <id> --reply <file...>` imports and links them, checking
    every reference. Work through the manifest until `cli.mjs course:status --course <id>` shows
    nothing left to write. Checkpoint after each week's worth, not after each file.
@@ -111,13 +113,43 @@ caption)` for the entry. Pass the same data object the text uses, so the picture
 
 # 3D graphs
 
-In maths and physics, an equation whose shape teaches something can open as an interactive 3D
-graph: follow it, with no space, by `{graph=EXPR}` in calculator syntax (`*` for every product,
-no spaces), e.g. `$z = x^2 - y^2${graph=x^2-y^2 x=-2..2 y=-2..2}` or
-`$$\vec r(t) = (\cos t, \sin t, t/4)$${graph=(cos(t),sin(t),t/4) t=0..4*pi}`. A surface uses `x, y`;
-a curve uses `t`; up to three sliders `a, b, c`. At most three in a lesson, one in a question, and
-never as the only way to answer. The prompts' "3D graphs" section states the rules; a graph that
-cannot be drawn comes back as a warning and is dropped on import.
+In maths, physics and the other sciences, an equation can open as an interactive 3D graph that the
+student turns, zooms and reshapes with sliders. Add one **wherever the shape is the point** — do not
+wait to be asked, and do not ration them in a topic that is about shapes:
+
+- **Surfaces z = f(x, y):** functions of two variables, paraboloids, saddles, planes, cones, waves,
+  maxima, minima and saddle points, partial derivatives and tangent planes, regions under a surface.
+- **Curves in space:** a line in 3D as `(x0 + a t, y0 + b t, z0 + c t)`, the helix, projectile and
+  charged-particle paths, any motion given by `x(t), y(t), z(t)`.
+- **Quantities over a plane:** potential and field strength of point charges, gravitational
+  potential, temperature across a plate, membrane and water waves, two-source interference, a
+  two-variable probability density.
+- **A coefficient that changes the picture:** one graph with a slider (`a`, `b`, `c`) instead of
+  several static equations — the slider is where the understanding happens.
+
+Not for a plain number, a one-variable function (`y = f(x)` is a figure, see "Figures"), an
+identity, or a subject where nothing has a shape. One graph per idea; never two of the same thing.
+In a quiz, a question about a shape gets a graph on its equation, and when the options are shapes
+to compare, each option gets its own. The question must still be answerable without opening one.
+
+- **How.** Straight after the closing `$` or `$$`, with no space, write `{graph=EXPR}` in calculator
+  syntax: `*` for every product, no spaces, no quotes; a surface uses `x, y`, a curve
+  `(x(t),y(t),z(t))` uses `t`; up to three sliders `a, b, c`, each one a quantity the text names.
+  Settings follow only when a default is wrong: `x=-2..2 y=-2..2`, `t=0..4*pi`, `a=1[0.1..5]`.
+  Examples: `$z = x^2 - y^2${graph=x^2-y^2 x=-2..2 y=-2..2}`,
+  `$$\vec r(t) = (\cos t, \sin t, t/4)$${graph=(cos(t),sin(t),t/4) t=0..4*pi}`.
+  The prompts' "3D graphs" section has the full rules.
+- **Only explicit surfaces and curves draw.** A sphere `x^2 + y^2 + z^2 = 9` cannot; graph its upper
+  half `z = sqrt(9 - x^2 - y^2)` when the shape matters.
+- **In a `.mjs` builder**, `${` inside a `String.raw` template starts an interpolation, so never type
+  the block by hand there. Return it from a helper —
+  `const G = (expr, view) => '{graph=' + expr + (view ? ' ' + view : '') + '}';` — and write
+  `$z = x^2 - y^2$${G('x^2-y^2', 'x=-2..2 y=-2..2')}`.
+- **Check before importing.** Every graph must compile and draw: run each Markdown field through
+  `checkMarkdownMath` from `packages/shared/dist/ai` (it warns on a graph that cannot be drawn or
+  that does not follow its equation) and fix every graph warning — the importer drops a graph it
+  cannot draw. The expression must plot exactly the function the LaTeX shows, over a range that
+  shows its interesting part: open one or two in the teaching app's preview when unsure.
 
 # Quality bar for what you write
 
@@ -138,6 +170,9 @@ cannot be drawn comes back as a warning and is dropped on import.
   choice) or set the context so that one answer is uniquely right.
 - **Accurate maps.** A map is drawn from an authoritative boundary (for India, the official outline,
   e.g. the Survey of India–based datameet data), never sketched freehand.
+- **Graphs show what the text says.** A 3D graph plots exactly the equation beside it, its sliders
+  are quantities the lesson explains, and its range shows the feature the text talks about (the
+  saddle point, the peak, the turn of the helix).
 - Resources are few and real: two or three per lesson that a student should actually open.
 - Plain, warm prose. No filler, no "in this lesson we will".
 

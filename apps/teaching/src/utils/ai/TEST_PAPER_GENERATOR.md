@@ -99,9 +99,10 @@ then show it like an image a teacher uploaded; see `packages/ui/src/editor/READM
 
 An equation may be followed, with no space, by `{graph=EXPR …}`, which makes it open as an
 interactive 3D graph: `$z = x^2 - y^2${graph=x^2-y^2 x=-2..2 y=-2..2}`. The prompt's "3D graphs"
-section (`GRAPH_RULES` in `packages/shared/src/ai/graphs.ts`) asks for one only in maths and physics
-where the shape teaches something — a surface in `x, y` or a curve `(x(t),y(t),z(t))`, with up to
-three sliders `a, b, c`. `checkMarkdownGraphs` (run inside `checkMarkdownMath`) warns on a block
+section (`GRAPH_RULES` in `packages/shared/src/ai/graphs.ts`) asks for one on every equation whose
+shape is the point — surfaces in `x, y`, curves `(x(t),y(t),z(t))`, quantities over a plane, and a
+slider (`a, b, c`) wherever a coefficient changes the picture — in maths and the sciences, and one
+per option when a question's options are shapes to compare. `checkMarkdownGraphs` (run inside `checkMarkdownMath`) warns on a block
 that does not follow an equation and on an expression that cannot be drawn; the importer drops such
 a graph and keeps the equation. See `packages/ui/src/editor/README.md` §3c.
 
