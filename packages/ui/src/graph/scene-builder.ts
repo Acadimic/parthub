@@ -10,20 +10,21 @@ import type {
 import { sceneNumber } from '@repo/shared/utils';
 import {
   Box3,
-  BoxGeometry,
-  type BufferGeometry,
-  CircleGeometry,
   ConeGeometry,
   CylinderGeometry,
   DoubleSide,
   EdgesGeometry,
+  Euler,
   Group,
   Line,
   LineBasicMaterial,
   LineDashedMaterial,
   LineSegments,
+  type Material,
+  Matrix4,
   Mesh,
   MeshStandardMaterial,
+  type Object3D,
   PlaneGeometry,
   Quaternion,
   SphereGeometry,
@@ -31,6 +32,8 @@ import {
   BufferGeometry as LineGeometry,
 } from 'three';
 import type { ISceneLabel } from './labels';
+import { solidExtent, solidGroup } from './scene-solids';
+import type { IObjectState, SceneState } from './scene-steps';
 
 /** The theme's colour for each role a scene may name, read off the page. */
 export type SceneColours = Record<SceneColour, string>;
@@ -162,37 +165,27 @@ const planeCorners = (plane: IScenePlane, values: Values): Vector3[] => {
   ].map(([x, y]) => new Vector3(x * half, y * half, 0).applyQuaternion(turn).add(point));
 };
 
-/** How far a solid reaches sideways and up and down from its `position`. */
-const solidExtent = (object: SceneObject, values: Values): { radius: number; below: number; above: number } | null => {
-  switch (object.type) {
-    case 'cube': {
-      const size = num(object.size, values, 1);
-      return { radius: size / 2, below: 0, above: size };
-    }
-    case 'cuboid': {
-      const half = Math.max(num(object.length, values, 1), num(object.width, values, 1)) / 2;
-      return { radius: half, below: 0, above: num(object.height, values, 1) };
-    }
-    case 'sphere': {
-      const radius = num(object.radius, values, 1);
-      return { radius, below: -radius, above: radius };
-    }
-    case 'hemisphere':
-      return { radius: num(object.radius, values, 1), below: 0, above: num(object.radius, values, 1) };
-    case 'prism':
-    case 'pyramid':
-    case 'cylinder':
-    case 'cone':
-    case 'frustum':
-      return { radius: num(object.radius, values, 1), below: 0, above: num(object.height, values, 1) };
-    default:
-      return null;
-  }
+/** The colour of the face a slice leaves, so the cut stands out from the solid. */
+const SECTION_COLOUR: SceneColour = 'chart-4';
+
+/** Multiplies the opacity of everything in `root` by `factor`, for a fading or dimmed object. */
+const fade = (root: Object3D, factor: number): void => {
+  if (factor >= 0.999) return;
+  root.traverse((node) => {
+    if (!(node instanceof Mesh || node instanceof Line)) return;
+    (Array.isArray(node.material) ? node.material : [node.material]).forEach((material: Material) => {
+      material.opacity *= factor;
+      material.transparent = true;
+      material.depthWrite = false;
+    });
+  });
 };
 
 /** Builds a scene's objects from its numbers at the given slider values. */
 export class SceneBuilder {
   private readonly group = new Group();
+  /** The group the object being drawn goes into, so its step can turn and fade it as one. */
+  private layer = new Group();
   private readonly labels: ISceneLabel[] = [];
   private readonly skipped = new Set<SceneObjectType>();
   /** Lengths for thin things, relative to the scene. */
@@ -204,6 +197,7 @@ export class SceneBuilder {
     private readonly scene: IScene,
     private readonly values: Values,
     private readonly colours: SceneColours,
+    private readonly state: SceneState,
   ) {
     const size = sceneBox(scene.objects, values).getSize(new Vector3());
     this.extent = Math.max(size.x, size.y, size.z, 1e-6);
@@ -213,11 +207,37 @@ export class SceneBuilder {
   build(): IBuiltScene {
     // Angles measure what the other objects define, so they are drawn last.
     const ordered = [...this.scene.objects].sort((a, b) => Number(a.type === 'angle') - Number(b.type === 'angle'));
+    const strongest = Math.max(0, ...Object.values(this.state).map((object) => object.highlight));
     ordered.forEach((object) => {
+      const state = this.state[object.id];
       if (!DRAWN_SCENE_TYPES.includes(object.type)) this.skipped.add(object.type);
-      else this.draw(object);
+      else if (state && state.shown > 0.01) this.drawStaged(object, state, 1 - 0.75 * (strongest - state.highlight));
     });
     return { group: this.group, labels: this.labels, skipped: [...this.skipped] };
+  }
+
+  /** Draws one object into its own group, then turns it and fades it as its step says. */
+  private drawStaged(object: SceneObject, state: IObjectState, emphasis: number): void {
+    this.layer = new Group();
+    const firstLabel = this.labels.length;
+    this.draw(object, state);
+    const pivot = 'position' in object && object.position ? vec(object.position, this.values) : new Vector3();
+    const turn = new Quaternion().setFromEuler(new Euler(...state.turn, 'XYZ'));
+    const move = new Matrix4()
+      .makeTranslation(pivot.x, pivot.y, pivot.z)
+      .multiply(new Matrix4().makeRotationFromQuaternion(turn))
+      .multiply(new Matrix4().makeTranslation(-pivot.x, -pivot.y, -pivot.z));
+    this.layer.applyMatrix4(move);
+    this.labels.slice(firstLabel).forEach((label) => label.position.applyMatrix4(move));
+    // A label shows once its object is mostly in; a half-faded word reads as a mistake.
+    if (state.shown < 0.5) this.labels.splice(firstLabel);
+    const direction = this.directions.get(object.id);
+    if (direction) {
+      direction.at.applyMatrix4(move);
+      direction.direction.applyQuaternion(turn);
+    }
+    fade(this.layer, state.shown * emphasis);
+    this.group.add(this.layer);
   }
 
   private colour(object: SceneObject, fallback: SceneColour): string {
@@ -257,18 +277,18 @@ export class SceneBuilder {
       : new LineBasicMaterial({ color: colour });
     const line = new Line(geometry, material);
     if (isDashed) line.computeLineDistances();
-    this.group.add(line);
+    this.layer.add(line);
     return line;
   }
 
-  private draw(object: SceneObject): void {
+  private draw(object: SceneObject, state: IObjectState): void {
     const values = this.values;
     switch (object.type) {
       case 'point': {
         const at = vec(object.position, values);
         const dot = new Mesh(new SphereGeometry(this.unit * 1.6, 16, 12), this.surface(object, 'foreground', 1));
         dot.position.copy(at);
-        this.group.add(dot);
+        this.layer.add(dot);
         return this.label(object.label, at.clone().add(new Vector3(0, 0, this.unit * 5)));
       }
       case 'segment': {
@@ -300,7 +320,7 @@ export class SceneBuilder {
       case 'label':
         return this.label(object.text, vec(object.position, values));
       default:
-        return this.solid(object);
+        return this.solid(object, state);
     }
   }
 
@@ -317,7 +337,7 @@ export class SceneBuilder {
     tip.quaternion.copy(turn);
     shaft.position.copy(from).add(direction.clone().multiplyScalar((length - head) / 2 / length));
     tip.position.copy(to).sub(direction.clone().multiplyScalar(head / 2 / length));
-    this.group.add(shaft, tip);
+    this.layer.add(shaft, tip);
     this.directions.set(id, { at: from, direction, isPlane: false });
     this.label(
       object.label,
@@ -338,7 +358,7 @@ export class SceneBuilder {
     sheet.quaternion.setFromUnitVectors(UP, normal.clone().normalize());
     sheet.position.copy(point);
     this.outline(sheet);
-    this.group.add(sheet);
+    this.layer.add(sheet);
     this.directions.set(object.id, { at: point, direction: normal.clone().normalize(), isPlane: true });
     this.label(
       object.label,
@@ -372,54 +392,26 @@ export class SceneBuilder {
     this.label(showValue ? `${label ?? 'θ'} = ${value}` : label, middle);
   }
 
-  /** The solids, each standing on its base at `position` with its axis along z; a sphere is centred. */
-  private solid(object: SceneObject): void {
+  /** A solid as its step leaves it — whole, cut, or opening into its net — standing on its base at `position`. */
+  private solid(object: SceneObject, state: IObjectState): void {
     const values = this.values;
-    const geometry = this.solidGeometry(object);
+    const group = solidGroup(object, values, state, {
+      face: (geometry) => {
+        const mesh = new Mesh(geometry, this.surface(object, 'primary', 0.92));
+        this.outline(mesh);
+        return mesh;
+      },
+      section: (geometry) => new Mesh(geometry, this.surface({ ...object, colour: SECTION_COLOUR }, 'primary', 0.95)),
+    });
     const extent = solidExtent(object, values);
-    if (!geometry || !extent) return;
-    const mesh = new Mesh(geometry, this.surface(object, 'primary', 0.92));
+    if (!group || !extent) return;
     const at = 'position' in object && object.position ? vec(object.position, values) : new Vector3();
-    // three.js builds round solids along y; turned upright here, and lifted so the base is at `at`.
-    if (!['cube', 'cuboid', 'sphere'].includes(object.type)) mesh.rotation.x = Math.PI / 2;
-    const lift = object.type === 'sphere' || object.type === 'hemisphere' ? 0 : (extent.above - extent.below) / 2;
-    mesh.position.copy(at).add(new Vector3(0, 0, lift));
-    this.outline(mesh);
-    this.group.add(mesh);
-    if (object.type === 'hemisphere') {
-      const base = new Mesh(new CircleGeometry(extent.radius, 48), this.surface(object, 'primary', 0.92));
-      base.position.copy(at);
-      this.group.add(base);
-    }
+    group.position.copy(at);
+    this.layer.add(group);
+    // A label sits over the solid while it is whole; an opened net has no top to sit over.
+    if (state.open > 0.5) return;
     const top = object.type === 'sphere' ? extent.above : extent.above + this.unit * 4;
     this.label('label' in object ? object.label : undefined, at.clone().add(new Vector3(0, 0, top)));
-  }
-
-  private solidGeometry(object: SceneObject): BufferGeometry | null {
-    const n = (value: SceneNumber) => sceneNumber(value, this.values);
-    switch (object.type) {
-      case 'cube':
-        return new BoxGeometry(n(object.size), n(object.size), n(object.size));
-      case 'cuboid':
-        return new BoxGeometry(n(object.length), n(object.width), n(object.height));
-      case 'prism':
-        return new CylinderGeometry(n(object.radius), n(object.radius), n(object.height), object.sides);
-      case 'pyramid':
-        return new ConeGeometry(n(object.radius), n(object.height), object.sides);
-      case 'cylinder':
-        return new CylinderGeometry(n(object.radius), n(object.radius), n(object.height), 64);
-      case 'cone':
-        return new ConeGeometry(n(object.radius), n(object.height), 64);
-      case 'frustum':
-        return new CylinderGeometry(n(object.topRadius), n(object.radius), n(object.height), 64);
-      case 'sphere':
-        return new SphereGeometry(n(object.radius), 64, 32);
-      case 'hemisphere':
-        // The upper half about three's y axis, which the upright turn makes the z axis.
-        return new SphereGeometry(n(object.radius), 64, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-      default:
-        return null;
-    }
   }
 }
 

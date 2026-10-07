@@ -238,7 +238,13 @@ export interface ISceneSlider {
   step?: number;
 }
 
-/** What a step does besides showing and hiding objects. One kind per step. */
+/**
+ * What a step does besides showing and hiding objects. One kind per step, and each lasts until a
+ * later step changes it: `slice` cuts a solid across at height `at` above its base (a sphere's base
+ * is its lowest point) and lifts the top part away; `unfold` opens a solid into its net and `fold`
+ * closes it; `rotate` turns an object by `angle` degrees about its own position; `highlight` dims
+ * everything else for that step only.
+ */
 export type SceneAction =
   | { slice: string; at: SceneNumber }
   | { unfold: string }

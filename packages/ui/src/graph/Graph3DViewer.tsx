@@ -21,7 +21,7 @@ import { DEFAULT_GRAPH_PALETTE, GRAPH_PALETTES, type IGraphPalette, paletteGradi
 import { GraphScene, type IGraphPoint } from './scene';
 import { loadBrandMark } from './brand';
 import { renderEquationImage } from './equation-image';
-import { gifFrameScale, recordGraphGif } from './gif';
+import { gifFrameScale, recordGif, turnRecording } from './gif';
 import { type IGraphImageColours, type IGraphImageFooter, saveBlob } from './snapshot';
 
 export interface IGraph3DViewerProps {
@@ -192,7 +192,7 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
       const prepared = await prepareDownload(textScale);
       if (!prepared) return;
       setGifProgress(0);
-      const blob = await recordGraphGif(scene, { ...prepared, scale, textScale }, setGifProgress);
+      const blob = await recordGif(turnRecording(scene), { ...prepared, scale, textScale }, setGifProgress);
       if (blob) saveBlob(blob, '3d-graph.gif');
     });
 

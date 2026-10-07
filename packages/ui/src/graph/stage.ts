@@ -22,6 +22,18 @@ const HOME = new Vector3(8.8, -10.6, 7.2);
 /** Aimed a little below the centre, which lifts the cube and leaves room for the labels under it. */
 const TARGET = new Vector3(0, 0, -0.6);
 export const Z_AXIS = new Vector3(0, 0, 1);
+/** How long a camera flight to a step's view takes. */
+const FLIGHT_MS = 1200;
+
+/** Receives one captured frame; it must copy the canvas before its first `await`. */
+export type FrameCallback = (source: HTMLCanvasElement, labels: ILabelSnapshot[], index: number) => Promise<void>;
+
+/** A recording for a GIF: how many frames, how long each shows, and the capture itself. */
+export interface IFrameRecording {
+  count: number;
+  delay: (index: number) => number;
+  capture: (onFrame: FrameCallback) => Promise<boolean>;
+}
 
 export interface IGraphPoint {
   x: number;
@@ -58,8 +70,15 @@ export abstract class Stage {
   private readonly pointer = new Vector2();
   private pressedAt: { x: number; y: number } | null = null;
   private isFramed = false;
-  /** True while `captureTurn` drives the camera; the render loop and the controls stand aside. */
+  /** True while a capture drives the camera; the render loop and the controls stand aside. */
   private isCapturing = false;
+  private flight: {
+    fromPosition: Vector3;
+    fromTarget: Vector3;
+    toPosition: Vector3;
+    toTarget: Vector3;
+    startedAt: number;
+  } | null = null;
 
   constructor(
     protected readonly host: HTMLElement,
@@ -87,6 +106,8 @@ export abstract class Stage {
     this.controls.maxDistance = 40;
     this.controls.autoRotateSpeed = 1.6;
     this.controls.addEventListener('change', this.requestRender);
+    // The reader taking hold of the view ends any flight to a step's view.
+    this.controls.addEventListener('start', () => (this.flight = null));
 
     const key = new DirectionalLight(0xffffff, 1.7);
     key.position.set(5, -6, 9);
@@ -122,13 +143,56 @@ export abstract class Stage {
   }
 
   resetView(): void {
+    this.flight = null;
+    const home = this.homePose();
+    this.camera.position.copy(home.position);
+    this.controls.target.copy(home.target);
+    this.controls.update();
+    this.requestRender();
+  }
+
+  /** Where `resetView` puts the camera, in cube coordinates. */
+  protected homePose(): { position: Vector3; target: Vector3 } {
     const aspect = this.camera.aspect || 1;
     // A tall, narrow phone screen needs the camera further back to keep the cube in frame.
     const distance = aspect < 1 ? Math.pow(1 / aspect, 0.75) : 1;
-    this.camera.position.copy(HOME).multiplyScalar(distance).add(TARGET);
-    this.controls.target.copy(TARGET);
-    this.controls.update();
+    return { position: HOME.clone().multiplyScalar(distance).add(TARGET), target: TARGET.clone() };
+  }
+
+  /** Moves the camera smoothly to `position`, looking at `target`, both in cube coordinates. */
+  protected flyTo(position: Vector3, target: Vector3): void {
+    this.flight = {
+      fromPosition: this.camera.position.clone(),
+      fromTarget: this.controls.target.clone(),
+      toPosition: position.clone(),
+      toTarget: target.clone(),
+      startedAt: performance.now(),
+    };
     this.requestRender();
+  }
+
+  /** Puts the camera `t` of the way along a flight between two poses, with no animation. */
+  protected placeCamera(
+    from: { position: Vector3; target: Vector3 },
+    to: { position: Vector3; target: Vector3 },
+    t: number,
+  ): void {
+    this.camera.position.copy(from.position).lerp(to.position, t);
+    this.controls.target.copy(from.target).lerp(to.target, t);
+    this.camera.lookAt(this.controls.target);
+  }
+
+  /** The camera's pose now, in cube coordinates. */
+  protected cameraPose(): { position: Vector3; target: Vector3 } {
+    return { position: this.camera.position.clone(), target: this.controls.target.clone() };
+  }
+
+  /**
+   * Called before each frame is drawn, for content that animates; returns true while it still
+   * moves, which asks for another frame.
+   */
+  protected advance(_now: number): boolean {
+    return false;
   }
 
   /** The content as it is on screen, with its labels and `footer` under it, as a PNG. */
@@ -145,29 +209,44 @@ export abstract class Stage {
 
   /**
    * Turns the camera once round the vertical axis in `count` even steps, starting from the current
-   * view, and hands each rendered frame to `onFrame`, which must copy the canvas before its first
-   * `await` (see `drawGraphFrame`). The view, the spin and the controls are put back afterwards.
-   * Resolves false when the content was closed before the turn finished.
+   * view. See `captureFrames`.
    */
-  async captureTurn(
-    count: number,
-    onFrame: (source: HTMLCanvasElement, labels: ILabelSnapshot[], index: number) => Promise<void>,
-  ): Promise<boolean> {
+  captureTurn(count: number, onFrame: FrameCallback): Promise<boolean> {
     const target = this.controls.target.clone();
-    const start = this.camera.position.clone();
-    const offset = start.clone().sub(target);
+    const offset = this.camera.position.clone().sub(target);
+    return this.captureFrames(
+      count,
+      (index) => {
+        const turned = offset.clone().applyAxisAngle(Z_AXIS, (2 * Math.PI * index) / count);
+        this.camera.position.copy(target).add(turned);
+        this.camera.lookAt(target);
+      },
+      onFrame,
+    );
+  }
+
+  /**
+   * Renders `count` frames, each set up by `prepare`, and hands each to `onFrame`, which must copy
+   * the canvas before its first `await` (see `drawGraphFrame`). The view, the spin and the controls
+   * are put back afterwards. Resolves false when the content was closed before the last frame.
+   */
+  protected async captureFrames(
+    count: number,
+    prepare: (index: number) => void,
+    onFrame: FrameCallback,
+  ): Promise<boolean> {
+    const start = this.cameraPose();
     const wasSpinning = this.isSpinning;
     const isMarked = this.marker.visible;
     this.setSpin(false);
+    this.flight = null;
     this.marker.visible = false;
     this.controls.enabled = false;
     this.isCapturing = true;
     try {
       for (let index = 0; index < count; index += 1) {
         if (this.isDisposed) return false;
-        const turned = offset.clone().applyAxisAngle(Z_AXIS, (2 * Math.PI * index) / count);
-        this.camera.position.copy(target).add(turned);
-        this.camera.lookAt(target);
+        prepare(index);
         this.renderer.render(this.scene, this.camera);
         const width = this.host.clientWidth;
         const height = this.host.clientHeight;
@@ -177,8 +256,8 @@ export abstract class Stage {
       return !this.isDisposed;
     } finally {
       this.isCapturing = false;
-      this.camera.position.copy(start);
-      this.controls.target.copy(target);
+      this.camera.position.copy(start.position);
+      this.controls.target.copy(start.target);
       this.controls.enabled = true;
       this.marker.visible = isMarked;
       this.setSpin(wasSpinning);
@@ -218,11 +297,29 @@ export abstract class Stage {
   private readonly renderFrame = (): void => {
     this.isPending = false;
     if (this.isDisposed || this.isCapturing) return;
+    const now = performance.now();
+    const isAnimating = this.advance(now);
+    const isFlying = this.fly(now);
     const isMoving = this.controls.update();
     this.renderer.render(this.scene, this.camera);
     this.labels.place(this.camera, this.host.clientWidth, this.host.clientHeight);
-    if (isMoving || this.isSpinning) this.requestRender();
+    if (isMoving || isAnimating || isFlying || this.isSpinning) this.requestRender();
   };
+
+  /** One frame of a camera flight; true while it is still under way. */
+  private fly(now: number): boolean {
+    const flight = this.flight;
+    if (!flight) return false;
+    const t = Math.min(1, (now - flight.startedAt) / FLIGHT_MS);
+    const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+    this.placeCamera(
+      { position: flight.fromPosition, target: flight.fromTarget },
+      { position: flight.toPosition, target: flight.toTarget },
+      eased,
+    );
+    if (t >= 1) this.flight = null;
+    return t < 1;
+  }
 
   private readonly resize = (): void => {
     const width = this.host.clientWidth;

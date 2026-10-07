@@ -1,15 +1,16 @@
 import { InfoIcon, WarningCircleIcon } from '@phosphor-icons/react';
 import type { SceneObjectType } from '@repo/shared/interfaces';
 import { formatGraphNumber, parseScene, sceneSliderValues } from '@repo/shared/utils';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../core/Button';
 import { Slider } from '../core/Slider';
 import { loadBrandMark } from './brand';
-import { gifFrameScale, recordGraphGif } from './gif';
-import { SceneStage } from './scene-stage';
+import { gifFrameScale, recordGif, turnRecording } from './gif';
+import { SceneStage, STEP_MS } from './scene-stage';
 import { readSceneTheme, SceneThemeProbes } from './scene-theme';
 import { type IGraphImageColours, type IGraphImageFooter, saveBlob } from './snapshot';
 import type { IGraphPoint } from './stage';
+import { StepBar, useSteps } from './StepBar';
 import { GifProgress, Readout, type Saving, SectionTitle, StageToolbar } from './viewer-parts';
 
 export interface IScene3DViewerProps {
@@ -50,6 +51,9 @@ const Scene3DViewer = ({ spec }: IScene3DViewerProps) => {
   const stage = useRef<SceneStage | null>(null);
 
   const readTheme = () => readSceneTheme(probesRef.current);
+  const stepLabels = useMemo(() => (scene?.steps ?? []).map((step) => step.label), [scene]);
+  const goToStep = useCallback((index: number) => stage.current?.setStep(index), []);
+  const steps = useSteps(stepLabels.length, STEP_MS, goToStep);
 
   useEffect(() => {
     const host = stageRef.current;
@@ -85,19 +89,22 @@ const Scene3DViewer = ({ spec }: IScene3DViewerProps) => {
     if (scene && stage.current) setSkipped(stage.current.setScene(scene, values));
   }, [scene, values]);
 
-  /** The line under a saved image: the scene's title and the slider values it was taken at. */
-  const caption = () => {
+  /** The line under a saved image: the scene's title, `step` when there is one, and the slider values. */
+  const caption = (step: string) => {
     const sliders = (scene?.sliders ?? [])
       .map((slider) => `${slider.label ?? slider.name} = ${formatGraphNumber(values[slider.name] ?? slider.value)}`)
       .join(', ');
-    return [scene?.title ?? '3D scene', sliders].filter(Boolean).join('  ·  ');
+    return [scene?.title ?? '3D scene', step, sliders].filter(Boolean).join('  ·  ');
   };
 
-  const prepareDownload = async (): Promise<{ colours: IGraphImageColours; footer: IGraphImageFooter }> => {
+  /** The step a picture shows; a GIF of the steps shows them all, so its caption names none. */
+  const stepCaption = stepLabels.length > 1 ? `Step ${steps.index + 1}: ${stepLabels[steps.index]}` : '';
+
+  const prepareDownload = async (step: string): Promise<{ colours: IGraphImageColours; footer: IGraphImageFooter }> => {
     const theme = readTheme();
     const colours = { background: theme.background, foreground: theme.colours.foreground, muted: theme.line };
     const mark = await loadBrandMark(colours.background);
-    return { colours, footer: { equation: null, caption: caption(), mark } };
+    return { colours, footer: { equation: null, caption: caption(step), mark } };
   };
 
   /** One download at a time; the buttons stay busy until it is saved, whatever happens. */
@@ -113,7 +120,7 @@ const Scene3DViewer = ({ spec }: IScene3DViewerProps) => {
 
   const downloadImage = () =>
     runDownload('image', async () => {
-      const prepared = await prepareDownload();
+      const prepared = await prepareDownload(stepCaption);
       const blob = await stage.current?.snapshot(prepared.footer, prepared.colours);
       if (blob) saveBlob(blob, '3d-scene.png');
     });
@@ -124,9 +131,11 @@ const Scene3DViewer = ({ spec }: IScene3DViewerProps) => {
       const width = stageRef.current?.clientWidth ?? 0;
       if (!current || !width) return;
       const { scale, textScale } = gifFrameScale(width);
-      const prepared = await prepareDownload();
+      const prepared = await prepareDownload('');
       setGifProgress(0);
-      const blob = await recordGraphGif(current, { ...prepared, scale, textScale }, setGifProgress);
+      // A scene with steps plays them; one without turns once round, as a graph does.
+      const recording = stepLabels.length > 1 ? current.stepRecording() : turnRecording(current);
+      const blob = await recordGif(recording, { ...prepared, scale, textScale }, setGifProgress);
       if (blob) saveBlob(blob, '3d-scene.gif');
     });
 
@@ -135,33 +144,45 @@ const Scene3DViewer = ({ spec }: IScene3DViewerProps) => {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 text-foreground md:flex-row">
-      <div className="relative min-h-[55vh] flex-1 overflow-hidden border border-border bg-gradient-to-br from-muted via-background to-muted md:min-h-0">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent" />
-        <SceneThemeProbes probesRef={probesRef} />
-        <div ref={stageRef} className="absolute inset-0" />
-        <div ref={labelRef} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true" />
-        {isUnsupported || !scene ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center">
-            <WarningCircleIcon weight="bold" className="h-6 w-6 text-muted-foreground" />
-            <p className="max-w-sm text-sm text-muted-foreground">
-              {scene
-                ? 'This device cannot draw 3D graphics, so the scene cannot be shown here.'
-                : `This scene cannot be shown: ${parsed.isValid ? '' : parsed.errors[0]}`}
-            </p>
-          </div>
-        ) : (
-          <>
-            <StageToolbar
-              isSpinning={isSpinning}
-              onSpin={() => setIsSpinning(!isSpinning)}
-              onReset={() => stage.current?.resetView()}
-              onDownloadImage={() => void downloadImage()}
-              onDownloadGif={() => void downloadGif()}
-              saving={saving}
-            />
-            {saving === 'gif' ? <GifProgress fraction={gifProgress} /> : <Readout point={hover} />}
-          </>
-        )}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="relative min-h-[55vh] flex-1 overflow-hidden border border-border bg-gradient-to-br from-muted via-background to-muted md:min-h-0">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent" />
+          <SceneThemeProbes probesRef={probesRef} />
+          <div ref={stageRef} className="absolute inset-0" />
+          <div ref={labelRef} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true" />
+          {isUnsupported || !scene ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center">
+              <WarningCircleIcon weight="bold" className="h-6 w-6 text-muted-foreground" />
+              <p className="max-w-sm text-sm text-muted-foreground">
+                {scene
+                  ? 'This device cannot draw 3D graphics, so the scene cannot be shown here.'
+                  : `This scene cannot be shown: ${parsed.isValid ? '' : parsed.errors[0]}`}
+              </p>
+            </div>
+          ) : (
+            <>
+              <StageToolbar
+                isSpinning={isSpinning}
+                onSpin={() => setIsSpinning(!isSpinning)}
+                onReset={() => stage.current?.resetView()}
+                onDownloadImage={() => void downloadImage()}
+                onDownloadGif={() => void downloadGif()}
+                saving={saving}
+              />
+              {saving === 'gif' ? <GifProgress fraction={gifProgress} /> : <Readout point={hover} />}
+            </>
+          )}
+        </div>
+        {scene && !isUnsupported && stepLabels.length > 1 ? (
+          <StepBar
+            labels={stepLabels}
+            index={steps.index}
+            onChange={steps.choose}
+            isPlaying={steps.isPlaying}
+            onTogglePlay={steps.togglePlay}
+            isDisabled={saving === 'gif'}
+          />
+        ) : null}
       </div>
 
       <aside className="flex w-full shrink-0 flex-col gap-5 overflow-y-auto md:w-72">

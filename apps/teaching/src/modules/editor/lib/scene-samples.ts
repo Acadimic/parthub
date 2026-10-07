@@ -13,6 +13,37 @@ const CONE = scene({
     { id: 'h', type: 'segment', from: [0, 0, 0], to: [0, 0, 'h'], label: 'h', dashed: true, colour: 'foreground' },
     { id: 'l', type: 'segment', from: [3, 0, 0], to: [0, 0, 'h'], label: 'l', colour: 'primary' },
   ],
+  steps: [
+    { label: 'The cone, its radius, height and slant height' },
+    { label: 'Cut halfway up: the section is a circle', hide: ['r', 'h', 'l'], action: { slice: 'cone', at: 'h/2' } },
+    { label: 'Open the curved surface into a sector', action: { unfold: 'cone' } },
+    { label: 'Fold it back into the cone', show: ['r', 'h', 'l'], action: { fold: 'cone' } },
+  ],
+});
+
+const CUBE_NET = scene({
+  version: 1,
+  title: 'The net of a cube',
+  objects: [{ id: 'cube', type: 'cube', size: 2, colour: 'chart-2', opacity: 0.9 }],
+  steps: [
+    { label: 'A cube of side 2' },
+    { label: 'Open it out into a net of six squares', action: { unfold: 'cube' } },
+    { label: 'Look straight down on the net', camera: { position: [0, -0.5, 16] } },
+    { label: 'Fold it back up', action: { fold: 'cube' }, camera: { position: [6, -7, 5] } },
+  ],
+});
+
+const CYLINDER_NET = scene({
+  version: 1,
+  title: 'The curved surface of a cylinder is a rectangle',
+  objects: [
+    { id: 'can', type: 'cylinder', radius: 1, height: 2.5, colour: 'chart-1', opacity: 0.9 },
+    { id: 'w', type: 'label', position: [0, -1.1, 1.25], text: '2πr wide, 2.5 high' },
+  ],
+  steps: [
+    { label: 'A cylinder of radius 1 and height 2.5' },
+    { label: 'Unroll it: the curved surface becomes a rectangle', show: ['w'], action: { unfold: 'can' } },
+  ],
 });
 
 const VECTORS = scene({
@@ -58,6 +89,11 @@ const BALLS = scene({
     { id: 'half', type: 'hemisphere', radius: 'r', position: [3.5, 0, 0], colour: 'chart-3', opacity: 0.8 },
     { id: 'rs', type: 'segment', from: [-3.5, 0, 0], to: ['r - 3.5', 0, 0], label: 'r' },
   ],
+  steps: [
+    { label: 'A sphere and a hemisphere' },
+    { label: 'Cut the sphere through its centre', hide: ['rs'], action: { slice: 'sphere', at: 'r' } },
+    { label: 'Each half is the hemisphere', action: { highlight: 'half' } },
+  ],
 });
 
 const SOLIDS = scene({
@@ -79,16 +115,28 @@ const SOLIDS = scene({
     { id: 'q', type: 'label', position: [0, 0, 4.1], text: 'square pyramid' },
     { id: 'f', type: 'label', position: [4.5, 0, 3.1], text: 'frustum of a cone' },
   ],
+  steps: [
+    { label: 'Three solids' },
+    { label: 'Open the pyramid: a square and four triangles', hide: ['q'], action: { unfold: 'pyramid' } },
+    { label: 'Fold the pyramid back up', show: ['q'], action: { fold: 'pyramid' } },
+    { label: 'Open the prism: two hexagons and six rectangles', hide: ['p'], action: { unfold: 'prism' } },
+    { label: 'Fold the prism back up', show: ['p'], action: { fold: 'prism' } },
+    { label: 'Cut the frustum across', action: { slice: 'frustum', at: 1.2 } },
+    { label: 'Tip the frustum over', hide: ['f'], action: { rotate: 'frustum', axis: 'y', angle: 90 } },
+  ],
 });
 
 /** 3D scenes, written as Markdown fences so the preset also exercises the import path. */
 export const SCENES_DOC: IRichTextDoc = richTextFromMarkdown(
   [
     '# 3D scenes',
-    'A scene opens from its card. Drag to turn it, scroll to zoom, and move the sliders.',
+    'A scene opens from its card. Drag to turn it, scroll to zoom, move the sliders, and follow its steps.',
     '## Mensuration',
     'A cone of radius 3: as the height grows, so does the slant height $l = \\sqrt{r^2 + h^2}$.',
     CONE,
+    'A cube opens into a net of six squares, and a cylinder unrolls into a rectangle and two circles.',
+    CUBE_NET,
+    CYLINDER_NET,
     'The volume of a hemisphere is half that of the sphere: $\\tfrac{2}{3}\\pi r^3$.',
     BALLS,
     SOLIDS,

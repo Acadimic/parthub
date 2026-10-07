@@ -1,11 +1,11 @@
 # Interactive 3D scenes in course content
 
-Written 2026-10-08. Status: **phases 1 (5f58493) and 2 (3f72120) committed; phase 3 built (2026-10-08),
-uncommitted;** phases 4–8 not started. Phase 3: the `scene3d` node (`editor/extensions/scene3d.ts`),
-`content/SceneCard.tsx` and `Viewer3DModal.tsx`, `graph/stage.ts` (what graphs and scenes share),
-`scene-builder.ts`, `scene-stage.ts`, `Scene3DViewer.tsx`, and `ScenePrintStill.tsx` under the print
-context. Not in phase 3: the `caption` attribute (the scene's own `title` serves), Edit in the node
-view (phase 7), and an arc for a line square to a plane. Decided (Manish, 2026-10-08): scenes go in study materials,
+Written 2026-10-08. Status: **phases 1–3 committed (5f58493, 3f72120, 17ab4cb); phase 4 built
+(2026-10-08), uncommitted;** phases 5–8 not started. Phase 4: `graph/scene-steps.ts` (each step's
+state per object, and the blend between two), `scene-solids.ts` (every solid whole, cut, or opening
+into its net: boxes, prisms and pyramids on hinges, the cylinder unrolling, the cone opening into its
+sector), `StepBar.tsx`, step animation and camera flights in `scene-stage.ts`/`stage.ts`, and a steps
+GIF. Frustum, sphere and hemisphere can be cut but not unfolded (they have no flat net). Decided (Manish, 2026-10-08): scenes go in study materials,
 questions and solutions, not answer options. Follows `GRAPH_3D.md`, whose viewer, popup,
 sliders, PNG/GIF export, lazy loading and AI pipeline this reuses.
 

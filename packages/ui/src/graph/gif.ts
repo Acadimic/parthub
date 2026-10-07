@@ -1,5 +1,5 @@
 import type { Encoder } from 'modern-gif';
-import type { Stage } from './stage';
+import type { IFrameRecording, Stage } from './stage';
 import { drawGraphFrame, type IGraphFrameOptions } from './snapshot';
 
 /** One full turn in 60 frames at 70 ms: about four seconds, smooth enough to read the shape. */
@@ -38,14 +38,21 @@ const fitFrame = (canvas: HTMLCanvasElement, width: number, height: number): HTM
   return fitted;
 };
 
+/** The content turning once round: how a graph, or a scene without steps, is recorded. */
+export const turnRecording = (stage: Stage): IFrameRecording => ({
+  count: FRAMES,
+  delay: () => FRAME_DELAY_MS,
+  capture: (onFrame) => stage.captureTurn(FRAMES, onFrame),
+});
+
 /**
- * Records the graph turning once round and encodes it as a looping GIF. `modern-gif` is loaded here,
- * on the first GIF download, never with the page. `onProgress` receives a fraction from 0 to 1.
- * Null when there is nothing to save, including when the graph is closed mid-recording: a part of a
- * turn is not offered as a download.
+ * Records `recording` and encodes it as a looping GIF. `modern-gif` is loaded here, on the first GIF
+ * download, never with the page. `onProgress` receives a fraction from 0 to 1. Null when there is
+ * nothing to save, including when the content is closed mid-recording: a part of a recording is not
+ * offered as a download.
  */
-export const recordGraphGif = async (
-  scene: Stage,
+export const recordGif = async (
+  recording: IFrameRecording,
   frame: IGraphFrameOptions,
   onProgress: (fraction: number) => void,
 ): Promise<Blob | null> => {
@@ -53,7 +60,7 @@ export const recordGraphGif = async (
   // Held in an object: the encoder is created inside the frame callback, which the compiler cannot
   // follow into, so a plain `let` would read as always null after it.
   const state: { encoder: Encoder | null; width: number; height: number } = { encoder: null, width: 0, height: 0 };
-  const isComplete = await scene.captureTurn(FRAMES, async (source, labels, index) => {
+  const isComplete = await recording.capture(async (source, labels, index) => {
     // Drawn before the first await, while the WebGL buffer still holds this frame.
     const drawn = drawGraphFrame(source, labels, frame);
     if (!drawn) return;
@@ -71,8 +78,8 @@ export const recordGraphGif = async (
       looped: true,
       loopCount: 0,
     });
-    await state.encoder.encode({ data: canvas, delay: FRAME_DELAY_MS });
-    onProgress(((index + 1) / FRAMES) * GIF_RECORDING_SHARE);
+    await state.encoder.encode({ data: canvas, delay: recording.delay(index) });
+    onProgress(((index + 1) / recording.count) * GIF_RECORDING_SHARE);
     await yieldToBrowser();
   });
   if (!state.encoder || !isComplete) return null;

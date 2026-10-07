@@ -111,6 +111,14 @@ export class SceneLabels implements IStageLabels {
   constructor(private readonly layer: HTMLElement) {}
 
   set(labels: ISceneLabel[]): void {
+    // An animation sets the same labels every frame; only their places change, so the spans stay.
+    const isSame =
+      labels.length === this.labels.length &&
+      labels.every((label, index) => label.text === this.labels[index].element.textContent);
+    if (isSame) {
+      labels.forEach((label, index) => this.labels[index].position.copy(label.position));
+      return;
+    }
     this.dispose();
     this.labels = labels.map(({ text, position }) => {
       const element = document.createElement('span');
