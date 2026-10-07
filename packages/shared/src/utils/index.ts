@@ -11,3 +11,4 @@ export * from './meet-occurrence.util';
 export * from './material-stats.util';
 export * from './discussion.util';
 export * from './graph-expression.util';
+export * from './graph-sample.util';

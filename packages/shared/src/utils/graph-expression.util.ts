@@ -1,4 +1,5 @@
 import type { RichTextAttrValue } from '../interfaces/rich-text.interface';
+import { sampleGraph } from './graph-sample.util';
 import { formatMarkdownAttrs, parseMarkdownAttrs } from './pronunciation.util';
 
 /**
@@ -10,7 +11,8 @@ import { formatMarkdownAttrs, parseMarkdownAttrs } from './pronunciation.util';
  * content cannot run code in a reader's browser. See `.claude/plans/GRAPH_3D.md`.
  */
 
-export type GraphKind = 'surface' | 'curve';
+/** `z = f(x, y)`, a curve `(x(t), y(t), z(t))`, or a parametric surface `(x(u,v), y(u,v), z(u,v))`. */
+export type GraphKind = 'surface' | 'curve' | 'parametric';
 export type GraphParam = 'a' | 'b' | 'c';
 export const GRAPH_PARAMS: readonly GraphParam[] = ['a', 'b', 'c'];
 
@@ -29,6 +31,8 @@ export interface IGraphView {
   x: IGraphRange;
   y: IGraphRange;
   t: IGraphRange;
+  u: IGraphRange;
+  v: IGraphRange;
   params: Record<GraphParam, IGraphParamSetting>;
 }
 
@@ -37,6 +41,8 @@ export interface IGraphScope {
   x: number;
   y: number;
   t: number;
+  u: number;
+  v: number;
   a: number;
   b: number;
   c: number;
@@ -46,7 +52,7 @@ type Evaluate = (scope: IGraphScope) => number;
 
 export interface ICompiledGraph {
   kind: GraphKind;
-  /** One function for a surface (`z`), three for a curve (`x`, `y`, `z` of `t`). */
+  /** One function for a surface (`z`), three for a curve or a parametric surface (`x`, `y`, `z`). */
   evaluate: Evaluate[];
   /** The slider parameters the expression actually uses, in `a b c` order. */
   params: GraphParam[];
@@ -73,15 +79,21 @@ const FUNCTIONS: Record<string, (value: number) => number> = {
 
 const CONSTANTS: Record<string, number> = { pi: Math.PI, e: Math.E };
 
-const VARIABLES: Record<GraphKind, (keyof IGraphScope)[]> = {
-  surface: ['x', 'y', 'a', 'b', 'c'],
-  curve: ['t', 'a', 'b', 'c'],
+/** The ranges each kind is drawn over, in the order they are described. */
+export const GRAPH_KIND_AXES: Record<GraphKind, ('x' | 'y' | 't' | 'u' | 'v')[]> = {
+  surface: ['x', 'y'],
+  curve: ['t'],
+  parametric: ['u', 'v'],
 };
 
-const HINTS: Record<GraphKind, string> = {
-  surface: 'A surface can use x, y and the sliders a, b, c.',
-  curve: 'A curve can use t and the sliders a, b, c.',
-};
+/** How each kind's equation begins: `z =`, `r(t) =` or `r(u, v) =`. */
+export const GRAPH_KIND_LEFT_SIDE: Record<GraphKind, string> = { surface: 'z', curve: 'r(t)', parametric: 'r(u, v)' };
+
+/** One part reads `x, y`; three parts read `t` (a curve) or `u, v` (a parametric surface). */
+const SURFACE_VARIABLES: (keyof IGraphScope)[] = ['x', 'y', 'a', 'b', 'c'];
+const TUPLE_VARIABLES: (keyof IGraphScope)[] = ['t', 'u', 'v', 'a', 'b', 'c'];
+const SURFACE_HINT = 'A surface can use x, y and the sliders a, b, c.';
+const TUPLE_HINT = 'A curve uses t and a parametric surface uses u and v; both can use the sliders a, b, c.';
 
 // ---------------------------------------------------------------------------
 // Parsing: a recursive-descent parser that compiles straight to closures.
@@ -274,12 +286,13 @@ const splitTopLevel = (source: string): string[] => {
   return parts;
 };
 
-/** Drops a leading `z =` or `r(t) =`, which a teacher often types out of habit. */
-const stripLeftSide = (source: string): string => source.trim().replace(/^(z|r\s*\(\s*t\s*\))\s*=/i, '');
+/** Drops a leading `z =`, `r(t) =` or `r(u, v) =`, which a teacher often types out of habit. */
+const stripLeftSide = (source: string): string => source.trim().replace(/^(z|r\s*\(\s*(t|u\s*,\s*v)\s*\))\s*=/i, '');
 
 /**
- * Compiles a graph expression. Three top-level parts, optionally bracketed, make a curve
- * `(x(t), y(t), z(t))`; one part makes a surface `z = f(x, y)`.
+ * Compiles a graph expression. One part makes a surface `z = f(x, y)`. Three top-level parts,
+ * optionally bracketed, make a curve `(x(t), y(t), z(t))` when they use `t`, or a parametric surface
+ * `(x(u,v), y(u,v), z(u,v))` when they use `u` and `v`.
  */
 export const compileGraph = (expression: string): GraphCompileResult => {
   const source = stripLeftSide(expression);
@@ -287,13 +300,24 @@ export const compileGraph = (expression: string): GraphCompileResult => {
   const unwrapped = source.trim().startsWith('(') && source.trim().endsWith(')') ? source.trim().slice(1, -1) : source;
   const tuple = splitTopLevel(unwrapped);
   const parts = tuple.length === 3 ? tuple : splitTopLevel(source);
-  const kind: GraphKind = parts.length === 3 ? 'curve' : 'surface';
   if (parts.length !== 1 && parts.length !== 3) {
-    return { isValid: false, message: 'A curve needs three parts, like (cos(t), sin(t), t/4).' };
+    return {
+      isValid: false,
+      message: 'A curve or a parametric surface needs three parts, like (cos(t), sin(t), t/4).',
+    };
   }
+  const isTuple = parts.length === 3;
   const used = new Set<string>();
   try {
-    const evaluate = parts.map((part) => parseExpression(part, VARIABLES[kind], HINTS[kind], used));
+    const evaluate = parts.map((part) =>
+      parseExpression(part, isTuple ? TUPLE_VARIABLES : SURFACE_VARIABLES, isTuple ? TUPLE_HINT : SURFACE_HINT, used),
+    );
+    const usesSurface = used.has('u') || used.has('v');
+    if (usesSurface && used.has('t')) {
+      return { isValid: false, message: 'Use t for a curve, or u and v for a surface — not both.' };
+    }
+    let kind: GraphKind = 'surface';
+    if (isTuple) kind = usesSurface ? 'parametric' : 'curve';
     return { isValid: true, graph: { kind, evaluate, params: GRAPH_PARAMS.filter((param) => used.has(param)) } };
   } catch (error) {
     return { isValid: false, message: error instanceof Error ? error.message : 'The expression could not be read.' };
@@ -303,7 +327,21 @@ export const compileGraph = (expression: string): GraphCompileResult => {
 /** A number written with constants and arithmetic only: `2pi`, `-3.5`, `pi/2`. */
 const parseConstant = (source: string): number | null => {
   try {
-    const value = parseExpression(source, [], 'Use a number.', new Set())({ x: 0, y: 0, t: 0, a: 0, b: 0, c: 0 });
+    const value = parseExpression(
+      source,
+      [],
+      'Use a number.',
+      new Set(),
+    )({
+      x: 0,
+      y: 0,
+      t: 0,
+      u: 0,
+      v: 0,
+      a: 0,
+      b: 0,
+      c: 0,
+    });
     return Number.isFinite(value) ? value : null;
   } catch {
     return null;
@@ -318,6 +356,8 @@ export const DEFAULT_GRAPH_VIEW: IGraphView = {
   x: { min: -4, max: 4 },
   y: { min: -4, max: 4 },
   t: { min: 0, max: 2 * Math.PI },
+  u: { min: 0, max: 2 * Math.PI },
+  v: { min: 0, max: 2 * Math.PI },
   params: {
     a: { value: 1, min: 0.1, max: 3 },
     b: { value: 1, min: 0.1, max: 3 },
@@ -327,7 +367,7 @@ export const DEFAULT_GRAPH_VIEW: IGraphView = {
 
 const RANGE = /^(.+?)\.\.(.+)$/;
 const PARAM = /^([^[]+)\[(.+?)\.\.(.+)\]$/;
-const RANGE_KEYS = ['x', 'y', 't'] as const;
+const RANGE_KEYS = ['x', 'y', 't', 'u', 'v'] as const;
 const VIEW_KEYS: string[] = [...RANGE_KEYS, ...GRAPH_PARAMS];
 
 const parseRange = (value: string, fallback: IGraphRange): IGraphRange => {
@@ -353,6 +393,8 @@ export const parseGraphView = (source: string | null): IGraphView => {
     x: attrs.x ? parseRange(attrs.x, DEFAULT_GRAPH_VIEW.x) : DEFAULT_GRAPH_VIEW.x,
     y: attrs.y ? parseRange(attrs.y, DEFAULT_GRAPH_VIEW.y) : DEFAULT_GRAPH_VIEW.y,
     t: attrs.t ? parseRange(attrs.t, DEFAULT_GRAPH_VIEW.t) : DEFAULT_GRAPH_VIEW.t,
+    u: attrs.u ? parseRange(attrs.u, DEFAULT_GRAPH_VIEW.u) : DEFAULT_GRAPH_VIEW.u,
+    v: attrs.v ? parseRange(attrs.v, DEFAULT_GRAPH_VIEW.v) : DEFAULT_GRAPH_VIEW.v,
     params: { ...DEFAULT_GRAPH_VIEW.params },
   };
   GRAPH_PARAMS.forEach((param) => {
@@ -502,98 +544,6 @@ export const graphExpressionFromLatex = (latex: string): string | null => {
   return compileGraph(source).isValid ? source : null;
 };
 
-// ---------------------------------------------------------------------------
-// Sampling, shared by the viewer and the validators.
-// ---------------------------------------------------------------------------
-
-export interface IGraphBounds {
-  x: IGraphRange;
-  y: IGraphRange;
-  z: IGraphRange;
-}
-
-export interface ISurfaceSample {
-  kind: 'surface';
-  /** Points per side: the grid is `size × size`, row-major in `y`. */
-  size: number;
-  xs: Float64Array;
-  ys: Float64Array;
-  /** NaN where the expression is undefined. */
-  z: Float64Array;
-  bounds: IGraphBounds;
-}
-
-export interface ICurveSample {
-  kind: 'curve';
-  /** `x, y, z` interleaved; a point with any NaN is undefined. */
-  points: Float64Array;
-  count: number;
-  bounds: IGraphBounds;
-}
-
-export type GraphSample = ISurfaceSample | ICurveSample;
-
-/** Beyond this a value is treated as undefined rather than stretching the axis to it. */
-const LIMIT = 1e6;
-
-const clean = (value: number): number => (Number.isFinite(value) && Math.abs(value) < LIMIT ? value : NaN);
-
-/**
- * The range a set of values is shown over. A spike — `1/x` near zero — would flatten everything
- * else, so when the extremes sit far outside the bulk of the values, the 2nd–98th percentile is used
- * and the viewer clips what lies beyond it.
- */
-export const graphValueRange = (values: ArrayLike<number>): IGraphRange => {
-  const finite = Array.from(values)
-    .filter((value) => Number.isFinite(value))
-    .sort((a, b) => a - b);
-  if (!finite.length) return { min: -1, max: 1 };
-  const low = finite[0];
-  const high = finite[finite.length - 1];
-  const p02 = finite[Math.floor(finite.length * 0.02)];
-  const p98 = finite[Math.ceil(finite.length * 0.98) - 1];
-  const range = high - low > (p98 - p02) * 4 && p98 > p02 ? { min: p02, max: p98 } : { min: low, max: high };
-  if (range.max - range.min < 1e-9) return { min: range.min - 1, max: range.max + 1 };
-  return range;
-};
-
-export const sampleGraph = (
-  graph: ICompiledGraph,
-  view: IGraphView,
-  values: Record<GraphParam, number>,
-  size: number,
-): GraphSample => {
-  const scope: IGraphScope = { x: 0, y: 0, t: 0, ...values };
-  if (graph.kind === 'surface') {
-    const [evaluate] = graph.evaluate;
-    const xs = new Float64Array(size);
-    const ys = new Float64Array(size);
-    const z = new Float64Array(size * size);
-    for (let i = 0; i < size; i += 1) {
-      xs[i] = view.x.min + ((view.x.max - view.x.min) * i) / (size - 1);
-      ys[i] = view.y.min + ((view.y.max - view.y.min) * i) / (size - 1);
-    }
-    for (let j = 0; j < size; j += 1) {
-      for (let i = 0; i < size; i += 1) {
-        scope.x = xs[i];
-        scope.y = ys[j];
-        z[j * size + i] = clean(evaluate(scope));
-      }
-    }
-    return { kind: 'surface', size, xs, ys, z, bounds: { x: view.x, y: view.y, z: graphValueRange(z) } };
-  }
-  const count = size * 6;
-  const points = new Float64Array(count * 3);
-  for (let i = 0; i < count; i += 1) {
-    scope.t = view.t.min + ((view.t.max - view.t.min) * i) / (count - 1);
-    graph.evaluate.forEach((evaluate, axis) => {
-      points[i * 3 + axis] = clean(evaluate(scope));
-    });
-  }
-  const axis = (offset: number) => graphValueRange(points.filter((_value, index) => index % 3 === offset));
-  return { kind: 'curve', points, count, bounds: { x: axis(0), y: axis(1), z: axis(2) } };
-};
-
 /** The starting value of every slider in a view. */
 export const graphParamValues = (view: IGraphView): Record<GraphParam, number> => ({
   a: view.params.a.value,
@@ -611,6 +561,7 @@ export const validateGraph = (expression: string, graphView: string | null): Gra
   const view = parseGraphView(graphView);
   const sample = sampleGraph(compiled.graph, view, graphParamValues(view), 24);
   const values = sample.kind === 'surface' ? sample.z : sample.points;
+  // A parametric surface's values are its points, like a curve's.
   if (!Array.from(values).some((value) => Number.isFinite(value))) {
     return { isValid: false, message: 'The graph has no points to draw in this range. Try a different range.' };
   }

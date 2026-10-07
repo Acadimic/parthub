@@ -136,8 +136,9 @@ Markdown is Pandoc's: `[Hola]{lang=es-ES ipa="ˈola"}` and `::: listening lang=e
 
 ### 3c. 3D graphs
 
-Either equation node may carry `graph`, a plain expression that is plotted (`a*(x^2 - y^2)`, or
-`(cos(t), sin(t), t/4)` for a curve), and `graphView`, the ranges and sliders that differ from the
+Either equation node may carry `graph`, a plain expression that is plotted (`a*(x^2 - y^2)`,
+`(cos(t), sin(t), t/4)` for a curve, or `(cos(u)*sin(v), sin(u)*sin(v), cos(v))` for a parametric
+surface such as a sphere, drawn true to scale), and `graphView`, the ranges and sliders that differ from the
 defaults (`x=-2..2 t=0..4pi a=1[0.1..5]`). Both are null on an ordinary equation. The language, its
 compiler (closures over a fixed list of functions, never `eval`), the view format and sampling live
 in `@repo/shared/utils` (`graph-expression.util.ts`).

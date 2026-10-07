@@ -1,4 +1,4 @@
-import type { GraphSample, ICurveSample, IGraphRange, ISurfaceSample } from '@repo/shared/utils';
+import type { GraphSample, ICurveSample, IGraphRange, IParametricSample, ISurfaceSample } from '@repo/shared/utils';
 import {
   AmbientLight,
   BoxGeometry,
@@ -28,6 +28,7 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GraphLabels } from './labels';
+import { gridTriangles, heightRange } from './mesh';
 import type { IGraphPalette } from './palettes';
 import { composeGraphImage, type IGraphImageColours, type IGraphImageFooter, type ILabelSnapshot } from './snapshot';
 
@@ -212,7 +213,7 @@ export class GraphScene {
 
   setSample(sample: GraphSample): void {
     this.sample = sample;
-    if (sample.kind === 'surface') this.drawSurface(sample);
+    if (sample.kind !== 'curve') this.drawSurface(sample);
     else this.drawCurve(sample);
     this.labels.setSample(sample);
     this.clearHover();
@@ -343,50 +344,41 @@ export class GraphScene {
     return { body, floor };
   }
 
-  private drawSurface(sample: ISurfaceSample): void {
-    const { size, xs, ys, z, bounds } = sample;
+  /**
+   * A grid of points as a coloured mesh: `z = f(x, y)` over its x–y grid, or a parametric surface
+   * over its u–v grid. Only the first has a floor map; a closed shape's shadow would only confuse.
+   */
+  private drawSurface(sample: ISurfaceSample | IParametricSample): void {
+    const { size, bounds } = sample;
     const geometries = this.ensureSurface(size);
+    const point = (i: number, j: number): [number, number, number] => {
+      if (sample.kind === 'surface') return [sample.xs[i], sample.ys[j], sample.z[j * size + i]];
+      const k = (j * size + i) * 3;
+      return [sample.points[k], sample.points[k + 1], sample.points[k + 2]];
+    };
+    if (this.floor) this.floor.visible = sample.kind === 'surface';
     // Created as plain BufferAttributes in `ensureSurface`; three types the getter more loosely.
     const position = geometries.body.getAttribute('position') as BufferAttribute;
     const floorPosition = geometries.floor.getAttribute('position') as BufferAttribute;
     const color = geometries.body.getAttribute('color') as BufferAttribute;
     const valid = new Uint8Array(size * size);
     const tint = new Color();
-    const span = bounds.z.max - bounds.z.min;
+    const heights = heightRange(sample);
+    const span = heights.max - heights.min;
     for (let j = 0; j < size; j += 1) {
       for (let i = 0; i < size; i += 1) {
         const k = j * size + i;
-        const value = z[k];
-        valid[k] = Number.isFinite(value) ? 1 : 0;
-        const x = toScene(xs[i], bounds.x);
-        const y = toScene(ys[j], bounds.y);
+        const [px, py, value] = point(i, j);
+        valid[k] = Number.isFinite(px) && Number.isFinite(py) && Number.isFinite(value) ? 1 : 0;
+        const x = valid[k] ? toScene(px, bounds.x) : 0;
+        const y = valid[k] ? toScene(py, bounds.y) : 0;
         position.setXYZ(k, x, y, valid[k] ? clampScene(toScene(value, bounds.z)) : -S);
         floorPosition.setXYZ(k, x, y, -S + 0.01);
-        this.colourAt(valid[k] ? (value - bounds.z.min) / span : 0, tint);
+        this.colourAt(valid[k] ? (value - heights.min) / span : 0, tint);
         color.setXYZ(k, tint.r, tint.g, tint.b);
       }
     }
-    // A triangle with an undefined corner is left out, so a hole stays a hole. A cell on the edge of
-    // one keeps whichever half is whole, which smooths the rim to a diagonal instead of a staircase.
-    const indices: number[] = [];
-    const triangle = (a: number, b: number, c: number) => {
-      if (valid[a] && valid[b] && valid[c]) indices.push(a, b, c);
-    };
-    for (let j = 0; j < size - 1; j += 1) {
-      for (let i = 0; i < size - 1; i += 1) {
-        const a = j * size + i;
-        const b = a + 1;
-        const c = a + size;
-        const d = c + 1;
-        if (valid[a] && valid[d]) {
-          triangle(a, b, d);
-          triangle(a, d, c);
-        } else {
-          triangle(a, b, c);
-          triangle(b, d, c);
-        }
-      }
-    }
+    const indices = gridTriangles(size, valid);
     const index = new BufferAttribute(new Uint32Array(indices), 1);
     geometries.body.setIndex(index);
     geometries.floor.setIndex(index);

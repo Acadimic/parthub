@@ -3,6 +3,8 @@ import {
   compileGraph,
   formatGraphNumber,
   formatGraphView,
+  GRAPH_KIND_AXES,
+  GRAPH_KIND_LEFT_SIDE,
   type GraphKind,
   type GraphParam,
   graphExpressionFromLatex,
@@ -25,14 +27,16 @@ export interface IGraphPanelProps {
   onChange: (graph: IGraphAttrs | null) => void;
 }
 
-type FieldKey = `${'x' | 'y' | 't'}.${'min' | 'max'}` | `${GraphParam}.${'value' | 'min' | 'max'}`;
+type RangeAxis = 'x' | 'y' | 't' | 'u' | 'v';
+type FieldKey = `${RangeAxis}.${'min' | 'max'}` | `${GraphParam}.${'value' | 'min' | 'max'}`;
+const RANGE_AXES: RangeAxis[] = ['x', 'y', 't', 'u', 'v'];
 type Fields = Partial<Record<FieldKey, string>>;
 
 const ICON = 'h-4 w-4';
 
 const fieldsFromView = (view: IGraphView): Fields => {
   const fields: Fields = {};
-  (['x', 'y', 't'] as const).forEach((axis) => {
+  RANGE_AXES.forEach((axis) => {
     fields[`${axis}.min`] = formatGraphNumber(view[axis].min);
     fields[`${axis}.max`] = formatGraphNumber(view[axis].max);
   });
@@ -51,7 +55,7 @@ const fieldsFromView = (view: IGraphView): Fields => {
 const viewFromFields = (fields: Fields): string | null => {
   const value = (key: FieldKey) => (fields[key] ?? '').replace(/\s+/g, '');
   const raw = [
-    ...(['x', 'y', 't'] as const).map((axis) => `${axis}=${value(`${axis}.min`)}..${value(`${axis}.max`)}`),
+    ...RANGE_AXES.map((axis) => `${axis}=${value(`${axis}.min`)}..${value(`${axis}.max`)}`),
     ...(['a', 'b', 'c'] as const).map(
       (param) => `${param}=${value(`${param}.value`)}[${value(`${param}.min`)}..${value(`${param}.max`)}]`,
     ),
@@ -60,7 +64,11 @@ const viewFromFields = (fields: Fields): string | null => {
 };
 
 const describe = (kind: GraphKind, params: GraphParam[]): string => {
-  const shape = kind === 'surface' ? 'A surface over x and y' : 'A curve along t';
+  const shape = {
+    surface: 'A surface over x and y',
+    curve: 'A curve along t',
+    parametric: 'A parametric surface over u and v',
+  }[kind];
   return params.length ? `${shape}, with sliders for ${params.join(', ')}.` : `${shape}.`;
 };
 
@@ -90,7 +98,7 @@ interface IViewFieldsProps {
 
 /** Ranges and slider limits, laid out as sentences: "x from −4 to 4", "a starts at 1, from 0.1 to 3". */
 const ViewFields = ({ kind, params, fields, onChange }: IViewFieldsProps) => {
-  const axes = kind === 'surface' ? (['x', 'y'] as const) : (['t'] as const);
+  const axes = GRAPH_KIND_AXES[kind];
   const cell = (key: FieldKey, label: string) => (
     <Field label={label} value={fields[key] ?? ''} onChange={(value) => onChange(key, value)} />
   );
@@ -175,12 +183,18 @@ export const GraphPanel = ({ latex, graph, onChange }: IGraphPanelProps) => {
         aria-label="Expression to plot"
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
-        placeholder={kind === 'curve' ? '(cos(t), sin(t), t/4)' : 'a*(x^2 - y^2)'}
+        placeholder={
+          {
+            surface: 'a*(x^2 - y^2)',
+            curve: '(cos(t), sin(t), t/4)',
+            parametric: '(cos(u)*sin(v), sin(u)*sin(v), cos(v))',
+          }[kind]
+        }
         inputClassName="font-mono text-xs"
         error={!result.isValid}
         leftSection={
           <span className="whitespace-nowrap pl-1 font-mono text-xs text-muted-foreground">
-            {kind === 'curve' ? 'r(t) =' : 'z ='}
+            {GRAPH_KIND_LEFT_SIDE[kind]} =
           </span>
         }
       />
@@ -208,7 +222,7 @@ export const GraphPanel = ({ latex, graph, onChange }: IGraphPanelProps) => {
           text="Adjust view"
         />
         <span className="ml-auto hidden text-xxs text-muted-foreground sm:block">
-          x, y or t · sliders a, b, c · sin, sqrt, exp, log, pi
+          x, y · t · u, v · sliders a, b, c · sin, sqrt, exp, pi
         </span>
       </div>
 

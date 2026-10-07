@@ -139,8 +139,10 @@ to compare, each option gets its own. The question must still be answerable with
   Examples: `$z = x^2 - y^2${graph=x^2-y^2 x=-2..2 y=-2..2}`,
   `$$\vec r(t) = (\cos t, \sin t, t/4)$${graph=(cos(t),sin(t),t/4) t=0..4*pi}`.
   The prompts' "3D graphs" section has the full rules.
-- **Only explicit surfaces and curves draw.** A sphere `x^2 + y^2 + z^2 = 9` cannot; graph its upper
-  half `z = sqrt(9 - x^2 - y^2)` when the shape matters.
+- **Solids are parametric surfaces.** A sphere, cone, cylinder, torus or orbital shape is written
+  as `(x(u,v),y(u,v),z(u,v))` in `u` and `v`, e.g. a sphere of radius 3:
+  `${graph=(3*cos(u)*sin(v),3*sin(u)*sin(v),3*cos(v)) v=0..pi}`. Its axes share one scale, so the
+  shape is true; an implicit equation such as `x^2 + y^2 + z^2 = 9` cannot be drawn as written.
 - **In a `.mjs` builder**, `${` inside a `String.raw` template starts an interpolation, so never type
   the block by hand there. Return it from a helper —
   `const G = (expr, view) => '{graph=' + expr + (view ? ' ' + view : '') + '}';` — and write

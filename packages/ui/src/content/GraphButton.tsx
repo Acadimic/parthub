@@ -1,5 +1,5 @@
 import { ArrowsInIcon, ArrowsOutIcon, CubeIcon } from '@phosphor-icons/react';
-import { compileGraph, formatGraphNumber, type IGraphAttrs, parseGraphView } from '@repo/shared/utils';
+import { compileGraph, formatGraphNumber, GRAPH_KIND_AXES, type IGraphAttrs, parseGraphView } from '@repo/shared/utils';
 import { lazy, Suspense, useState } from 'react';
 import { Button } from '../core/Button';
 import { Modal } from '../core/Modal';
@@ -26,11 +26,12 @@ const describeGraph = ({ graph, graphView }: IGraphAttrs): string => {
   const compiled = compileGraph(graph);
   if (!compiled.isValid) return '3D graph';
   const view = parseGraphView(graphView);
-  const range = (axis: 'x' | 'y' | 't') =>
-    `${axis} from ${formatGraphNumber(view[axis].min)} to ${formatGraphNumber(view[axis].max)}`;
-  return compiled.graph.kind === 'surface'
-    ? `3D surface over ${range('x')} and ${range('y')}`
-    : `3D curve for ${range('t')}`;
+  const { kind } = compiled.graph;
+  const ranges = GRAPH_KIND_AXES[kind]
+    .map((axis) => `${axis} from ${formatGraphNumber(view[axis].min)} to ${formatGraphNumber(view[axis].max)}`)
+    .join(' and ');
+  const shape = { surface: '3D surface over', curve: '3D curve for', parametric: '3D surface for' }[kind];
+  return `${shape} ${ranges}`;
 };
 
 export interface IGraphModalProps extends IGraphAttrs {

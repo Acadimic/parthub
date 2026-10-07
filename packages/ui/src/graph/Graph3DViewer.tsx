@@ -10,6 +10,8 @@ import {
 import {
   compileGraph,
   formatGraphNumber,
+  GRAPH_KIND_AXES,
+  GRAPH_KIND_LEFT_SIDE,
   type GraphKind,
   type GraphParam,
   graphParamValues,
@@ -53,16 +55,16 @@ const readColour = (element: HTMLElement | null): string =>
 
 /** The plotted expression as a caption line, `z = a*(x^2 - y^2)`, for when no typeset equation is available. */
 const imageExpression = (graph: string, kind: GraphKind): string =>
-  `${kind === 'surface' ? 'z' : 'r(t)'} = ${graph.trim().replace(/^(z|r\s*\(\s*t\s*\))\s*=\s*/i, '')}`;
+  `${GRAPH_KIND_LEFT_SIDE[kind]} = ${graph.trim().replace(/^(z|r\s*\(\s*(t|u\s*,\s*v)\s*\))\s*=\s*/i, '')}`;
 
 /** The ranges and the slider values a saved image was taken at: "x from -2 to 2, y from -2 to 2  ·  a = 1.5". */
 const imageDetails = (kind: GraphKind, view: IGraphView, values: Partial<Record<GraphParam, number>>): string => {
-  const range = (axis: 'x' | 'y' | 't') =>
+  const range = (axis: 'x' | 'y' | 't' | 'u' | 'v') =>
     `${axis} from ${formatGraphNumber(view[axis].min)} to ${formatGraphNumber(view[axis].max)}`;
   const sliders = Object.entries(values)
     .map(([param, value]) => `${param} = ${formatGraphNumber(value ?? 0)}`)
     .join(', ');
-  return [kind === 'surface' ? `${range('x')}, ${range('y')}` : range('t'), sliders].filter(Boolean).join('  ·  ');
+  return [GRAPH_KIND_AXES[kind].map(range).join(', '), sliders].filter(Boolean).join('  ·  ');
 };
 
 /** Which download is being made, if any; the other buttons wait for it. */
@@ -391,7 +393,7 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
           <PalettePicker value={palette} onChange={setPalette} />
         </section>
 
-        {compiled.isValid && compiled.graph.kind === 'surface' ? (
+        {compiled.isValid && compiled.graph.kind !== 'curve' ? (
           <section className="flex flex-col gap-2">
             <SectionTitle>Display</SectionTitle>
             <div className="flex flex-wrap gap-2">

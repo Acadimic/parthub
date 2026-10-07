@@ -48,7 +48,7 @@ export class GraphLabels {
       this.ticks[axis].forEach((element, index) => {
         const value = range.min + (span * index) / 2;
         // Rounding noise around zero (`-6.9e-7` on a unit circle) reads as zero.
-        element.textContent = formatGraphNumber(Math.abs(value) < span * 1e-4 ? 0 : value);
+        element.textContent = formatGraphNumber(Math.abs(value) < span * 1e-3 ? 0 : value);
       });
     });
   }
