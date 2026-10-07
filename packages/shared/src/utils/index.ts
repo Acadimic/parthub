@@ -12,3 +12,4 @@ export * from './material-stats.util';
 export * from './discussion.util';
 export * from './graph-expression.util';
 export * from './graph-sample.util';
+export * from './scene3d.util';

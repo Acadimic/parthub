@@ -48,7 +48,9 @@ export interface IGraphScope {
   c: number;
 }
 
-type Evaluate = (scope: IGraphScope) => number;
+/** A compiled expression, reading its variables from `scope`. */
+type ScopeFn<K extends string> = (scope: Readonly<Record<K, number>>) => number;
+type Evaluate = ScopeFn<keyof IGraphScope>;
 
 export interface ICompiledGraph {
   kind: GraphKind;
@@ -133,7 +135,7 @@ const tokenize = (source: string): IToken[] => {
 };
 
 /** Why an unknown name failed, phrased as the fix: `sinx` → "Write sin(x)", `xy` → "Write x*y". */
-const unknownNameMessage = (name: string, allowed: string[], hint: string): string => {
+const unknownNameMessage = (name: string, allowed: readonly string[], hint: string): string => {
   const fn = Object.keys(FUNCTIONS).find((key) => name.startsWith(key) && name.length > key.length);
   if (fn) return `Unknown name "${name}". Write ${fn}(${name.slice(fn.length)}).`;
   if ([...name].every((char) => allowed.includes(char))) {
@@ -142,7 +144,16 @@ const unknownNameMessage = (name: string, allowed: string[], hint: string): stri
   return `Unknown name "${name}". ${hint}`;
 };
 
-const parseExpression = (source: string, allowed: (keyof IGraphScope)[], hint: string, used: Set<string>): Evaluate => {
+/**
+ * Compiles `source` into a closure over the names in `allowed`. Generic over those names so the same
+ * parser serves a graph (`x`, `y`, `t`, `u`, `v`, `a`–`c`) and a 3D scene's slider names.
+ */
+const parseExpression = <K extends string>(
+  source: string,
+  allowed: readonly K[],
+  hint: string,
+  used: Set<string>,
+): ScopeFn<K> => {
   const tokens = tokenize(source);
   let position = 0;
   const peek = (): IToken | undefined => tokens[position];
@@ -162,7 +173,7 @@ const parseExpression = (source: string, allowed: (keyof IGraphScope)[], hint: s
     return token.text === '(';
   };
 
-  const sum = (): Evaluate => {
+  const sum = (): ScopeFn<K> => {
     let left = product();
     while (isSymbol('+') || isSymbol('-')) {
       const operator = tokens[position].text;
@@ -174,7 +185,7 @@ const parseExpression = (source: string, allowed: (keyof IGraphScope)[], hint: s
     return left;
   };
 
-  const product = (): Evaluate => {
+  const product = (): ScopeFn<K> => {
     let left = unary();
     for (;;) {
       if (isSymbol('*') || isSymbol('/')) {
@@ -193,7 +204,7 @@ const parseExpression = (source: string, allowed: (keyof IGraphScope)[], hint: s
     }
   };
 
-  const unary = (): Evaluate => {
+  const unary = (): ScopeFn<K> => {
     if (isSymbol('-')) {
       position += 1;
       const operand = unary();
@@ -206,7 +217,7 @@ const parseExpression = (source: string, allowed: (keyof IGraphScope)[], hint: s
     return power();
   };
 
-  const power = (): Evaluate => {
+  const power = (): ScopeFn<K> => {
     const base = atom();
     if (!isSymbol('^')) return base;
     position += 1;
@@ -215,7 +226,7 @@ const parseExpression = (source: string, allowed: (keyof IGraphScope)[], hint: s
   };
 
   /** `sin x`, `sin 2t`: without brackets a function takes the product of plain factors after it. */
-  const bareArgument = (): Evaluate => {
+  const bareArgument = (): ScopeFn<K> => {
     let argument = power();
     while (startsFactor(false)) {
       const right = power();
@@ -225,7 +236,7 @@ const parseExpression = (source: string, allowed: (keyof IGraphScope)[], hint: s
     return argument;
   };
 
-  const atom = (): Evaluate => {
+  const atom = (): ScopeFn<K> => {
     const token = peek();
     if (!token) throw new Error('The expression ends too early.');
     position += 1;
@@ -319,6 +330,26 @@ export const compileGraph = (expression: string): GraphCompileResult => {
     let kind: GraphKind = 'surface';
     if (isTuple) kind = usesSurface ? 'parametric' : 'curve';
     return { isValid: true, graph: { kind, evaluate, params: GRAPH_PARAMS.filter((param) => used.has(param)) } };
+  } catch (error) {
+    return { isValid: false, message: error instanceof Error ? error.message : 'The expression could not be read.' };
+  }
+};
+
+export type ExpressionCompileResult =
+  | { isValid: true; evaluate: (values: Readonly<Record<string, number>>) => number; names: string[] }
+  | { isValid: false; message: string };
+
+/**
+ * Compiles an arithmetic expression over the given names — the language of graphs, with any names —
+ * for a 3D scene, whose numbers may follow its sliders (`"height": "h"`, `"radius": "r/2"`). `names`
+ * in the result lists the ones the expression actually reads.
+ */
+export const compileExpression = (source: string, names: readonly string[]): ExpressionCompileResult => {
+  const used = new Set<string>();
+  const hint = names.length ? `It can use ${names.join(', ')} and numbers.` : 'Use a number.';
+  try {
+    const evaluate = parseExpression(source, names, hint, used);
+    return { isValid: true, evaluate, names: names.filter((name) => used.has(name)) };
   } catch (error) {
     return { isValid: false, message: error instanceof Error ? error.message : 'The expression could not be read.' };
   }

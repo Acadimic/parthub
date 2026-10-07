@@ -1,6 +1,8 @@
 # Interactive 3D scenes in course content
 
-Written 2026-10-08. Status: **phase 1 built (2026-10-08), uncommitted;** phases 2–8 not started. Decided (Manish, 2026-10-08): scenes go in study materials,
+Written 2026-10-08. Status: **phase 1 committed (5f58493); phase 2 built (2026-10-08), uncommitted;** phases 3–8 not
+started. Phase 2 lives in `packages/shared`: `interfaces/scene3d.interface.ts` (the format) and
+`utils/scene3d.util.ts` (`parseScene`, `sceneNumber`, `MOLECULE_SHAPES`, `SCENE_LIMITS`). Decided (Manish, 2026-10-08): scenes go in study materials,
 questions and solutions, not answer options. Follows `GRAPH_3D.md`, whose viewer, popup,
 sliders, PNG/GIF export, lazy loading and AI pipeline this reuses.
 
