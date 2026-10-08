@@ -1,9 +1,10 @@
 import { InfoIcon, WarningCircleIcon } from '@phosphor-icons/react';
-import type { SceneObjectType } from '@repo/shared/interfaces';
+import type { ISceneSlider, SceneObjectType } from '@repo/shared/interfaces';
 import { formatGraphNumber, parseScene, sceneSliderValues } from '@repo/shared/utils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../core/Button';
 import { Slider } from '../core/Slider';
+import { cn } from '../lib/cn';
 import { loadBrandMark } from './brand';
 import { gifFrameScale, recordGif, turnRecording } from './gif';
 import { SceneStage, STEP_MS } from './scene-stage';
@@ -19,6 +20,98 @@ export interface IScene3DViewerProps {
   /** Start playing the steps as soon as it opens: yes for a reader, no for a teacher's preview. */
   autoPlay: boolean;
 }
+
+interface ISceneSidebarProps {
+  sliders: ISceneSlider[];
+  values: Record<string, number>;
+  onValue: (name: string, value: number) => void;
+  onReset: () => void;
+  /** Object types this version cannot draw yet, as a reader names them. */
+  later: string[];
+  stepLabels: string[];
+  stepIndex: number;
+  onStep: (index: number) => void;
+}
+
+/**
+ * The panel beside the scene: its sliders, its steps to jump between, and a note on what a later
+ * update will draw. Nothing at all when the scene has none of these, so the scene takes the width.
+ */
+const SceneSidebar = ({
+  sliders,
+  values,
+  onValue,
+  onReset,
+  later,
+  stepLabels,
+  stepIndex,
+  onStep,
+}: ISceneSidebarProps) => {
+  const hasSteps = stepLabels.length > 1;
+  if (!sliders.length && !later.length && !hasSteps) return null;
+  return (
+    <aside className="flex w-full shrink-0 flex-col gap-5 overflow-y-auto md:w-72">
+      {sliders.length ? (
+        <section className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <SectionTitle>Change the scene</SectionTitle>
+            <Button isSubtle className="px-2 py-0.5 text-xs text-primary" onClick={onReset}>
+              Reset
+            </Button>
+          </div>
+          {sliders.map((slider) => (
+            <Slider
+              key={slider.name}
+              label={slider.label ?? <span className="font-serif text-sm italic">{slider.name}</span>}
+              value={values[slider.name] ?? slider.value}
+              min={slider.min}
+              max={slider.max}
+              step={slider.step ?? (slider.max - slider.min) / 200}
+              formatValue={formatGraphNumber}
+              onChange={(value) => onValue(slider.name, value)}
+            />
+          ))}
+        </section>
+      ) : null}
+      {hasSteps ? (
+        // On a phone the panel sits under the scene, where the step bar already does this job.
+        <section className="hidden flex-col gap-2 md:flex">
+          <SectionTitle>Steps</SectionTitle>
+          <ol className="flex flex-col gap-1">
+            {stepLabels.map((label, index) => (
+              <li key={`${index}-${label}`}>
+                <button
+                  type="button"
+                  onClick={() => onStep(index)}
+                  aria-current={index === stepIndex ? 'step' : undefined}
+                  className={cn(
+                    'flex w-full items-start gap-2 border px-2 py-1.5 text-left text-sm transition-colors',
+                    index === stepIndex
+                      ? 'border-primary bg-primary/10 font-medium text-foreground'
+                      : 'border-transparent text-muted-foreground hover:bg-accent hover:text-foreground',
+                  )}
+                >
+                  <span
+                    className={cn('w-5 shrink-0 font-mono text-xs leading-5', index === stepIndex && 'text-primary')}
+                  >
+                    {index + 1}
+                  </span>
+                  <span>{label}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
+      {later.length ? (
+        <p className="flex gap-2 border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+          <InfoIcon weight="bold" className="mt-0.5 h-4 w-4 shrink-0" />
+          This scene also has {later.join(', ')}, which a later update will draw.
+        </p>
+      ) : null}
+    </aside>
+  );
+};
 
 /** Object types as a reader would name them, for the "drawn in a later update" note. */
 const TYPE_NAMES: Partial<Record<SceneObjectType, string>> = {
@@ -188,40 +281,16 @@ const Scene3DViewer = ({ spec, autoPlay }: IScene3DViewerProps) => {
         ) : null}
       </div>
 
-      <aside className="flex w-full shrink-0 flex-col gap-5 overflow-y-auto md:w-72">
-        {sliders.length ? (
-          <section className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <SectionTitle>Change the scene</SectionTitle>
-              <Button
-                isSubtle
-                className="px-2 py-0.5 text-xs text-primary"
-                onClick={() => scene && setValues(sceneSliderValues(scene))}
-              >
-                Reset
-              </Button>
-            </div>
-            {sliders.map((slider) => (
-              <Slider
-                key={slider.name}
-                label={slider.label ?? <span className="font-serif text-sm italic">{slider.name}</span>}
-                value={values[slider.name] ?? slider.value}
-                min={slider.min}
-                max={slider.max}
-                step={slider.step ?? (slider.max - slider.min) / 200}
-                formatValue={formatGraphNumber}
-                onChange={(value) => setValues((current) => ({ ...current, [slider.name]: value }))}
-              />
-            ))}
-          </section>
-        ) : null}
-        {later.length ? (
-          <p className="flex gap-2 border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-            <InfoIcon weight="bold" className="mt-0.5 h-4 w-4 shrink-0" />
-            This scene also has {later.join(', ')}, which a later update will draw.
-          </p>
-        ) : null}
-      </aside>
+      <SceneSidebar
+        sliders={sliders}
+        values={values}
+        onValue={(name, value) => setValues((current) => ({ ...current, [name]: value }))}
+        onReset={() => scene && setValues(sceneSliderValues(scene))}
+        later={later}
+        stepLabels={stepLabels}
+        stepIndex={steps.index}
+        onStep={steps.choose}
+      />
     </div>
   );
 };
