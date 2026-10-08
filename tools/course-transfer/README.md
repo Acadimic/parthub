@@ -29,7 +29,7 @@ stamps its own organization and user and validates every document. The settings 
 `data/courses/target.env`, which is gitignored with the rest of `data/`. Create it yourself:
 
 ```
-COURSE_TRANSFER_BASE=https://test-gcp-950860815875.us-central1.run.app
+COURSE_TRANSFER_BASE=https://test-gcp-950860815875.asia-south1.run.app
 COURSE_TRANSFER_EMAIL=<teacher email>
 COURSE_TRANSFER_PASSWORD=<password>
 COURSE_TRANSFER_FIREBASE_KEY=<the production web API key, NEXT_PUBLIC_FIREBASE_API_KEY>
@@ -41,6 +41,10 @@ COURSE_TRANSFER_FIREBASE_KEY=<the production web API key, NEXT_PUBLIC_FIREBASE_A
   Pictures inside lesson and question content (image nodes whose `src` is a dev bucket address)
   are exported once each to `files/content/`, uploaded into the target organization's `content/`
   folder, and every image node is pointed at the new address before the rows are written.
+- **Speech files** (a pronunciation mark's or a listening block's `audio`, such as the generated
+  Sanskrit audio) are downloaded on export, uploaded under the same path (`audio/sa/<hash>.mp3`) in
+  the target organization's folder, and every `audio` attribute (and each address in a listening
+  block's `lineAudio`) is pointed at the new address.
 - **Sessions:** the exported meets are replaced by one weekly meet on `--session-days` (default
   `1,2,3,4,5`, where 0 is Sunday) from `--session-start`. The meet id, its start and the uploaded
   addresses are kept in the folder's `import-state.json`, so a rerun updates the same meet rather

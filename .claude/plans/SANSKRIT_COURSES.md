@@ -45,4 +45,4 @@ retake, and certificates. Each needs product work and is out of scope here.
 3. Per level: `course:prompt` → `course:import` → `course:prompts` → `days.json`. _Done 2026-10-06._
 4. Per level: writers per week (content + tests), checked, figures looked at, imported. _Done 2026-10-06; answer keys audited (Intermediate had 99 wrong keys in dev from a helper misuse, all corrected)._
 5. Per level: covers, `course:review` clean, publish in dev. _Done 2026-10-06: all three published in dev._
-6. Later: generated Sanskrit audio; production transfer after Manish's review.
+6. Generated Sanskrit audio (Indic Parler-TTS, `sanskrit/audio.mjs`) in dev and production. _Done 2026-10-08: every mark and listening block in all three courses._

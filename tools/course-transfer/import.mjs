@@ -172,11 +172,35 @@ for (const image of manifest.contentImages ?? []) {
   state.contentImages[image.src] = signed.url.split('?')[0];
   saveState();
 }
+// Speech files in lessons and questions: uploaded under the same path in this organization's folder,
+// then every mark or listening block pointing at the dev address is pointed at the uploaded one.
+state.contentAudio ??= {};
+for (const audio of manifest.contentAudio ?? []) {
+  if (state.contentAudio[audio.src]) continue;
+  if (dryRun) {
+    console.log(`  [dry run] upload ${audio.path} (${audio.bytes} bytes)`);
+    continue;
+  }
+  const [signed] = await api('common/presigned-PUT-urls', { files: [{ key: audio.key, contentType: audio.contentType }] });
+  const put = await fetch(signed.url, {
+    method: 'PUT',
+    headers: { 'Content-Type': audio.contentType },
+    body: readFileSync(join(from, audio.path)),
+  });
+  if (!put.ok) throw new Error(`upload of ${audio.path} failed: ${put.status}`);
+  state.contentAudio[audio.src] = signed.url.split('?')[0];
+  saveState();
+}
 const withContentImages = (value) => {
   if (Array.isArray(value)) return value.map(withContentImages);
   if (!value || typeof value !== 'object') return value;
   const next = Object.fromEntries(Object.entries(value).map(([k, v]) => [k, withContentImages(v)]));
   if (next.type === 'image' && state.contentImages[next.attrs?.src]) next.attrs = { ...next.attrs, src: state.contentImages[next.attrs.src] };
+  if (state.contentAudio[next.attrs?.audio]) next.attrs = { ...next.attrs, audio: state.contentAudio[next.attrs.audio] };
+  if (typeof next.attrs?.lineAudio === 'string' && next.attrs.lineAudio) {
+    const lines = next.attrs.lineAudio.split('\n').map((a) => state.contentAudio[a] ?? a);
+    next.attrs = { ...next.attrs, lineAudio: lines.join('\n') };
+  }
   return next;
 };
 

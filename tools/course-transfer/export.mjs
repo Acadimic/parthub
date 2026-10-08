@@ -200,8 +200,25 @@ try {
     }
     Object.values(value).forEach(walk);
   };
+  // Generated or recorded speech: a pronunciation mark or a listening block whose `audio` is an
+  // object in the dev bucket. Carried the same way, keeping its path inside the org's folder.
+  const audioSources = new Set();
+  const walkAudio = (value) => {
+    if (Array.isArray(value)) return value.forEach(walkAudio);
+    if (!value || typeof value !== 'object') return;
+    if (typeof value.attrs?.audio === 'string' && /\.s3\.[^/]*amazonaws\.com\//.test(value.attrs.audio)) {
+      audioSources.add(value.attrs.audio);
+    }
+    // A listening block's per-line files, one address per line.
+    if (typeof value.attrs?.lineAudio === 'string') {
+      value.attrs.lineAudio.split('\n').filter((a) => /\.s3\.[^/]*amazonaws\.com\//.test(a)).forEach((a) => audioSources.add(a));
+    }
+    Object.values(value).forEach(walkAudio);
+  };
   walk(materials.map((m) => m.content));
   walk(questions.map((q) => [q.body, q.options, q.solution]));
+  walkAudio(materials.map((m) => m.content));
+  walkAudio(questions.map((q) => [q.body, q.options, q.solution]));
   const contentImages = [];
   for (const src of imageSources) {
     const { hostname, pathname } = new URL(src);
@@ -212,6 +229,20 @@ try {
     mkdirSync(dirname(join(out, path)), { recursive: true });
     writeFileSync(join(out, path), body);
     contentImages.push({ src, path, name, contentType: response.ContentType ?? 'application/octet-stream', bytes: body.length });
+  }
+
+  const contentAudio = [];
+  for (const src of audioSources) {
+    const { hostname, pathname } = new URL(src);
+    const objectKey = decodeURIComponent(pathname.slice(1));
+    const response = await s3.send(new GetObjectCommand({ Bucket: hostname.split('.s3.')[0], Key: objectKey }));
+    const body = Buffer.from(await response.Body.transformToByteArray());
+    // The key below the organization's folder (`audio/sa/<hash>.mp3`), reused in the target org.
+    const key = objectKey.replace(/^.*?orgs\/[^/]+\//, '');
+    const path = join('files', key);
+    mkdirSync(dirname(join(out, path)), { recursive: true });
+    writeFileSync(join(out, path), body);
+    contentAudio.push({ src, path, key, contentType: response.ContentType ?? 'audio/mpeg', bytes: body.length });
   }
 
   // -------------------------------------------------------------------------------------------
@@ -247,6 +278,7 @@ try {
     chapters: chapters.length,
     files: files.length,
     contentImages: contentImages.length,
+    contentAudio: contentAudio.length,
   };
   write('manifest.json', {
     course: { _id: String(course._id), name: course.name },
@@ -255,6 +287,7 @@ try {
     counts,
     files,
     contentImages,
+    contentAudio,
   });
 
   console.log(`exported "${course.name}" → ${outArg}`);
