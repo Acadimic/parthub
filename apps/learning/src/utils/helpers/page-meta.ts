@@ -25,6 +25,12 @@ export const DEFAULT_PAGE_META: IPageMeta = {
 const REVALIDATE_SECONDS = 300;
 /** A miss or a failed call is retried sooner, so a just-published course or an API outage clears fast. */
 const RETRY_SECONDS = 60;
+/**
+ * `next dev` runs getStaticProps on every in-app click, so the API calls would hold up each one.
+ * The preview tags are checked against a production build (`next build && next start`) instead.
+ */
+const DEV_PAGE_PROPS = { props: { meta: DEFAULT_PAGE_META } };
+const IS_DEV = process.env.NODE_ENV === 'development';
 
 /** One line, as a preview shows it: a course description is written in paragraphs. */
 const toSummary = (text: string) => {
@@ -93,6 +99,7 @@ export const getCoursePagePaths: GetStaticPaths = async () => ({ paths: [], fall
  * unknown slug answers 404, so a search engine drops it rather than keeping an empty page.
  */
 export const getCourseSlugPageProps: GetStaticProps<{ meta: IPageMeta }> = async ({ params }) => {
+  if (IS_DEV) return DEV_PAGE_PROPS;
   const slug = typeof params?.course === 'string' ? params.course : '';
   const published = await fetchPublicApi<PublishedCourseResponse>(`course/published/slug/${encodeURIComponent(slug)}`);
   if (published.status === 'not-found') return { notFound: true, revalidate: RETRY_SECONDS };
@@ -105,6 +112,7 @@ export const getCourseSlugPageProps: GetStaticProps<{ meta: IPageMeta }> = async
  * so a search engine counts the two as one page and ranks that one.
  */
 export const getCourseIdPageProps: GetStaticProps<{ meta: IPageMeta }> = async ({ params }) => {
+  if (IS_DEV) return DEV_PAGE_PROPS;
   const courseId = typeof params?.course === 'string' ? params.course : '';
   const published = await fetchPublicApi<PublishedCourseResponse>(`course/published/${encodeURIComponent(courseId)}`);
   if (published.status !== 'ok') return { props: { meta: DEFAULT_PAGE_META }, revalidate: RETRY_SECONDS };
