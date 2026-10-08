@@ -31,6 +31,7 @@ import {
   BufferGeometry as LineGeometry,
 } from 'three';
 import type { ISceneLabel } from './labels';
+import { atomBall, bondSticks, chemistryShape, type IChemistryPaint } from './scene-chemistry';
 import { reasoningGroup } from './scene-reasoning';
 import { solidExtent, solidGroup } from './scene-solids';
 import type { IObjectState, SceneState } from './scene-steps';
@@ -58,6 +59,10 @@ export const DRAWN_SCENE_TYPES: readonly SceneObjectType[] = [
   'die',
   'cubeGrid',
   'net',
+  'molecule',
+  'atom',
+  'bond',
+  'lattice',
   'label',
 ];
 
@@ -167,6 +172,9 @@ const planeCorners = (plane: IScenePlane, values: Values): Vector3[] => {
     [1, 1],
   ].map(([x, y]) => new Vector3(x * half, y * half, 0).applyQuaternion(turn).add(point));
 };
+
+const REASONING_TYPES = new Set<SceneObjectType>(['die', 'cubeGrid', 'net']);
+const CHEMISTRY_TYPES = new Set<SceneObjectType>(['molecule', 'atom', 'bond', 'lattice']);
 
 /** The colour of the face a slice leaves, so the cut stands out from the solid. */
 const SECTION_COLOUR: SceneColour = 'chart-4';
@@ -288,6 +296,8 @@ export class SceneBuilder {
   }
 
   private draw(object: SceneObject, state: IObjectState): void {
+    if (REASONING_TYPES.has(object.type)) return this.reasoning(object, state);
+    if (CHEMISTRY_TYPES.has(object.type)) return this.chemistry(object);
     const values = this.values;
     switch (object.type) {
       case 'point': {
@@ -325,10 +335,6 @@ export class SceneBuilder {
         return this.angle(object.between, object.showValue === true, object.label, object);
       case 'label':
         return this.label(object.text, vec(object.position, values));
-      case 'die':
-      case 'cubeGrid':
-      case 'net':
-        return this.reasoning(object, state);
       default:
         return this.solid(object, state);
     }
@@ -400,6 +406,52 @@ export class SceneBuilder {
     const middle = points[12].clone().sub(at).multiplyScalar(1.5).add(at);
     const value = `${Number(degrees.toFixed(1))}°`;
     this.label(showValue ? `${label ?? 'θ'} = ${value}` : label, middle);
+  }
+
+  private chemistryPaint(object: SceneObject): IChemistryPaint {
+    return {
+      atom: (colour) => {
+        const material = this.surface(object, 'foreground', 1);
+        material.color.set(colour);
+        material.roughness = 0.3;
+        return material;
+      },
+      own: () => this.surface(object, 'chart-1', 1),
+      bond: () => this.surface({ ...object, colour: 'muted' }, 'muted', 1),
+      lonePair: () => this.surface({ ...object, colour: 'chart-5', opacity: 0.3 }, 'chart-5', 0.3),
+      edges: () => new LineBasicMaterial({ color: this.colours.foreground, transparent: true, opacity: 0.6 }),
+    };
+  }
+
+  /**
+   * A molecule or a lattice at `position`, an atom at its own position, or a bond between two atoms.
+   * A bond reads its atoms' positions from the scene, and goes when either of them is hidden.
+   */
+  private chemistry(object: SceneObject): void {
+    const paint = this.chemistryPaint(object);
+    if (object.type === 'atom') {
+      const at = vec(object.position, this.values);
+      this.layer.add(atomBall(object.element, at, paint));
+      return this.label(object.label ?? object.element, at);
+    }
+    if (object.type === 'bond') {
+      const atoms = [object.from, object.to].map((id) => this.scene.objects.find((item) => item.id === id));
+      const [from, to] = atoms.map((atom) => (atom?.type === 'atom' ? vec(atom.position, this.values) : null));
+      const isShown = [object.from, object.to].every((id) => (this.state[id]?.shown ?? 0) > 0.5);
+      if (from && to && isShown) bondSticks(from, to, object.order ?? 1, paint).forEach((mesh) => this.layer.add(mesh));
+      return undefined;
+    }
+    const shape = chemistryShape(object, paint);
+    if (!shape) return undefined;
+    const at = 'position' in object && object.position ? vec(object.position, this.values) : new Vector3();
+    shape.group.position.copy(at);
+    this.layer.add(shape.group);
+    shape.labels.forEach((label) => this.label(label.text, label.position.clone().add(at)));
+    if (object.label) {
+      const top = solidExtent(object, this.values)?.above ?? 0;
+      this.label(object.label, at.clone().add(new Vector3(0, 0, top + this.unit * 6)));
+    }
+    return undefined;
   }
 
   /** A die, a block of small cubes or a cube's net, standing at `position`, its label above it. */

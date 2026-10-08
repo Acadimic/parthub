@@ -1,6 +1,6 @@
 import type { IRichTextDoc, IRichTextNode } from '@repo/shared/interfaces';
 import { richTextFromMarkdown } from '@repo/shared/utils';
-import { APTITUDE_DOC, SCENES_DOC } from './scene-samples';
+import { APTITUDE_DOC, MOLECULES_DOC, SCENES_DOC } from './scene-samples';
 
 const paragraph = (content: IRichTextNode[]): IRichTextNode => ({ type: 'paragraph', content });
 const heading = (level: number, value: string): IRichTextNode => ({
@@ -324,6 +324,12 @@ export const PRESETS: IPreset[] = [
     label: 'Aptitude',
     description: 'Cube nets, dice and painted cubes: a picture with each question, and a solution that works it out.',
     doc: APTITUDE_DOC,
+  },
+  {
+    key: 'molecules',
+    label: 'Molecules',
+    description: 'VSEPR shapes, a molecule from atoms and bonds, and unit cells with their shares.',
+    doc: MOLECULES_DOC,
   },
   {
     key: 'stress',

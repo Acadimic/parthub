@@ -1,5 +1,11 @@
 import type { IRichTextDoc } from '@repo/shared/interfaces';
-import { cubeNetTemplate, diceTemplate, paintedCubeTemplate, richTextFromMarkdown } from '@repo/shared/utils';
+import {
+  cubeNetTemplate,
+  diceTemplate,
+  LATTICE_FACTS,
+  paintedCubeTemplate,
+  richTextFromMarkdown,
+} from '@repo/shared/utils';
 
 const scene = (value: object): string => `\`\`\`scene3d\n${JSON.stringify(value, null, 2)}\n\`\`\``;
 
@@ -187,4 +193,97 @@ export const APTITUDE_DOC: IRichTextDoc = richTextFromMarkdown(
   ]
     .filter(Boolean)
     .join('\n\n'),
+).doc;
+
+/** Twelve VSEPR shapes, one per step, each with the angles it fixes. */
+const VSEPR: [string, string, string, string | string[], number | undefined, string][] = [
+  ['co2', 'linear', 'C', 'O', 0, 'CO₂ — linear, 180°'],
+  ['h2o', 'bent', 'O', 'H', 2, 'H₂O — bent; two bonds and two lone pairs point to the corners of a tetrahedron'],
+  ['bf3', 'trigonal-planar', 'B', 'F', 0, 'BF₃ — trigonal planar, 120°'],
+  ['nh3', 'trigonal-pyramidal', 'N', 'H', 1, 'NH₃ — trigonal pyramidal; one lone pair on top'],
+  ['ch4', 'tetrahedral', 'C', 'H', 0, 'CH₄ — tetrahedral, 109.5°'],
+  ['pcl5', 'trigonal-bipyramidal', 'P', 'Cl', 0, 'PCl₅ — trigonal bipyramidal, 90° and 120°'],
+  ['sf4', 'see-saw', 'S', 'F', 1, 'SF₄ — see-saw; the lone pair takes an equatorial place'],
+  ['clf3', 't-shaped', 'Cl', 'F', 2, 'ClF₃ — T-shaped; two equatorial lone pairs'],
+  ['xef4', 'square-planar', 'Xe', 'F', 2, 'XeF₄ — square planar; lone pairs above and below'],
+  ['brf5', 'square-pyramidal', 'Br', 'F', 1, 'BrF₅ — square pyramidal'],
+  ['sf6', 'octahedral', 'S', 'F', 0, 'SF₆ — octahedral, 90°'],
+  ['xef2', 'linear', 'Xe', 'F', 3, 'XeF₂ — linear, with three lone pairs round the middle'],
+];
+
+const MOLECULES = scene({
+  version: 1,
+  title: 'VSEPR shapes',
+  objects: VSEPR.map(([id, shape, central, ligands, lonePairs]) => ({
+    id,
+    type: 'molecule',
+    shape,
+    central,
+    ligands,
+    ...(lonePairs ? { lonePairs } : {}),
+  })),
+  steps: VSEPR.map(([id, , , , , label], index) => ({
+    label,
+    show: [id],
+    ...(index ? { hide: [VSEPR[index - 1][0]] } : {}),
+  })),
+});
+
+const ETHENE = scene({
+  version: 1,
+  title: 'Ethene: a carbon–carbon double bond',
+  objects: [
+    { id: 'c1', type: 'atom', element: 'C', position: [-0.67, 0, 0] },
+    { id: 'c2', type: 'atom', element: 'C', position: [0.67, 0, 0] },
+    { id: 'h1', type: 'atom', element: 'H', position: [-1.23, 0.93, 0] },
+    { id: 'h2', type: 'atom', element: 'H', position: [-1.23, -0.93, 0] },
+    { id: 'h3', type: 'atom', element: 'H', position: [1.23, 0.93, 0] },
+    { id: 'h4', type: 'atom', element: 'H', position: [1.23, -0.93, 0] },
+    { id: 'cc', type: 'bond', from: 'c1', to: 'c2', order: 2 },
+    { id: 'b1', type: 'bond', from: 'c1', to: 'h1' },
+    { id: 'b2', type: 'bond', from: 'c1', to: 'h2' },
+    { id: 'b3', type: 'bond', from: 'c2', to: 'h3' },
+    { id: 'b4', type: 'bond', from: 'c2', to: 'h4' },
+  ],
+});
+
+const COUNTS: Record<string, string> = {
+  sc: '8 corners × 1/8 = 1 atom',
+  bcc: '8 × 1/8 + 1 in the middle = 2 atoms',
+  fcc: '8 × 1/8 + 6 faces × 1/2 = 4 atoms',
+  hcp: '12 × 1/6 + 2 × 1/2 + 3 inside = 6 atoms',
+};
+const CELLS = ['sc', 'bcc', 'fcc', 'hcp'] as const;
+
+const UNIT_CELLS = scene({
+  version: 1,
+  title: 'Atoms in a unit cell',
+  objects: CELLS.map((cell) => ({ id: cell, type: 'lattice', cell, showShares: true, colour: 'chart-1' })),
+  steps: CELLS.map((cell, index) => ({
+    label: `${LATTICE_FACTS[cell].name}: ${COUNTS[cell]}`,
+    show: [cell],
+    ...(index ? { hide: [CELLS[index - 1]] } : {}),
+  })),
+});
+
+const COPPER = scene({
+  version: 1,
+  title: 'Copper: 2 × 2 × 2 face-centred cubic cells',
+  objects: [{ id: 'cu', type: 'lattice', cell: 'fcc', cells: 2, element: 'Cu' }],
+});
+
+/** Molecules from their VSEPR shapes, a molecule built from atoms and bonds, and unit cells. */
+export const MOLECULES_DOC: IRichTextDoc = richTextFromMarkdown(
+  [
+    '# Molecules and crystals',
+    '## VSEPR shapes',
+    'Step through the twelve shapes, drawn at their ideal angles. Lone pairs are the faint lobes: they take corners of the shape too, which is why a molecule that has them is bent, pyramidal or T-shaped.',
+    MOLECULES,
+    '## Built from atoms and bonds',
+    ETHENE,
+    '## Unit cells',
+    'Each atom is cut to the part of it inside the cell, so the shares can be added up.',
+    UNIT_CELLS,
+    COPPER,
+  ].join('\n\n'),
 ).doc;

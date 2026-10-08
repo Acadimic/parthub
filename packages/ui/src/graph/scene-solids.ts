@@ -16,6 +16,7 @@ import {
   Vector2,
   Vector3,
 } from 'three';
+import { atomRadius, latticeReach, moleculeReach } from './scene-chemistry';
 
 type Values = Readonly<Record<string, number>>;
 
@@ -29,6 +30,40 @@ export interface ISolidPaint {
 
 /** A die's side when the scene gives none. */
 export const DIE_SIZE = 2;
+
+/** The extents of the models that are not solids: dice, cube blocks, nets, molecules, atoms, lattices. */
+const modelExtent = (object: SceneObject, values: Values): { radius: number; below: number; above: number } | null => {
+  const n = (value: SceneNumber) => sceneNumber(value, values);
+  switch (object.type) {
+    case 'die': {
+      const size = object.size === undefined ? DIE_SIZE : n(object.size);
+      return { radius: size / 2, below: 0, above: size };
+    }
+    case 'cubeGrid':
+      return { radius: (object.n * 1.06) / 2, below: 0, above: object.n * 1.06 };
+    case 'net': {
+      // Flat, it reaches out from its first square across rows and columns; folded, it hangs one
+      // square below the floor.
+      const [row, column] = object.cells[0];
+      const reach = Math.max(...object.cells.map(([r, c]) => Math.max(Math.abs(r - row), Math.abs(c - column))));
+      return { radius: reach + 0.5, below: -1, above: 0 };
+    }
+    case 'molecule': {
+      const reach = moleculeReach(object);
+      return { radius: reach, below: -reach, above: reach };
+    }
+    case 'atom': {
+      const radius = atomRadius(object.element);
+      return { radius, below: -radius, above: radius };
+    }
+    case 'lattice': {
+      const { radius, height } = latticeReach(object);
+      return { radius, below: 0, above: height };
+    }
+    default:
+      return null;
+  }
+};
 
 /** How far a solid reaches sideways and up and down from its `position`. */
 export const solidExtent = (
@@ -51,21 +86,8 @@ export const solidExtent = (
     case 'cone':
     case 'frustum':
       return { radius: n(object.radius), below: 0, above: n(object.height) };
-    case 'die': {
-      const size = object.size === undefined ? DIE_SIZE : n(object.size);
-      return { radius: size / 2, below: 0, above: size };
-    }
-    case 'cubeGrid':
-      return { radius: (object.n * 1.06) / 2, below: 0, above: object.n * 1.06 };
-    case 'net': {
-      // Flat, it reaches out from its first square across rows and columns; folded, it hangs one
-      // square below the floor.
-      const [row, column] = object.cells[0];
-      const reach = Math.max(...object.cells.map(([r, c]) => Math.max(Math.abs(r - row), Math.abs(c - column))));
-      return { radius: reach + 0.5, below: -1, above: 0 };
-    }
     default:
-      return null;
+      return modelExtent(object, values);
   }
 };
 

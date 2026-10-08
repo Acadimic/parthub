@@ -1,12 +1,13 @@
 # Interactive 3D scenes in course content
 
-Written 2026-10-08. Status: **phases 1–4 committed (5f58493, 3f72120, 17ab4cb, 06cc539); phase 5
-built (2026-10-08), uncommitted;** phases 6–8 not started. Phase 5: `die`, `cubeGrid` and `net` drawn
-by `graph/scene-reasoning.ts`; `foldCubeNet`/`oppositeNetSquares` in shared (`scene-net.util.ts`; the
-parser rejects a net that does not fold); three templates with their answers in
-`scene-templates.util.ts` (`cubeNetTemplate`, `diceTemplate`, `paintedCubeTemplate`,
-`paintedCubeCounts`), each a question scene and a solution scene; the Editor Lab "Aptitude" preset.
-`rotate` steps now compose in order (quaternions) and turn an object about its centre. Decided (Manish, 2026-10-08): scenes go in study materials,
+Written 2026-10-08. Status: **phases 1–5 committed (5f58493, 3f72120, 17ab4cb, 06cc539, d7bb495);
+phase 6 built (2026-10-08), uncommitted;** phases 7–8 not started. Phase 6: `molecule`, `atom`, `bond`
+and `lattice` drawn by `graph/scene-chemistry.ts`; the chemistry that needs no drawing is in shared
+`scene-chemistry.util.ts` — CPK colours and covalent radii (`ELEMENTS`, `elementOf`), VSEPR
+directions (`moleculeDirections`), unit-cell sites with their shares (`latticeSites`), and the answer
+key (`LATTICE_FACTS`: atoms per cell, coordination, packing); the Editor Lab "Molecules" preset. A
+bond follows its atoms' stored positions, so a step that turns one `atom` leaves its bonds behind;
+turn a whole `molecule` instead. Decided (Manish, 2026-10-08): scenes go in study materials,
 questions and solutions, not answer options. Follows `GRAPH_3D.md`, whose viewer, popup,
 sliders, PNG/GIF export, lazy loading and AI pipeline this reuses.
 

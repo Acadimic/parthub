@@ -15,3 +15,4 @@ export * from './graph-sample.util';
 export * from './scene3d.util';
 export * from './scene-net.util';
 export * from './scene-templates.util';
+export * from './scene-chemistry.util';
