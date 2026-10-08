@@ -59,8 +59,8 @@ const HiddenText = ({ isDialogue, onReveal }: { isDialogue: boolean; onReveal: (
 
 /**
  * A listening passage or a dialogue: one card, one Play control for the whole, and the line being
- * spoken highlighted so a learner can follow along. In a dialogue each line can also be replayed
- * on its own, which is how a learner drills the line they missed.
+ * spoken highlighted so a learner can follow along. Each line can also be replayed on its own,
+ * which is how a learner drills the line or the word they missed.
  */
 export const ListeningBlock = ({
   lang,
@@ -145,7 +145,6 @@ export const ListeningBlock = ({
           <ListeningLine
             key={index}
             isActive={isPlaying && all.segment === index}
-            isDialogue={isDialogue}
             canPlay={canPlay}
             text={segments[index]}
             lang={lang}
@@ -162,7 +161,6 @@ export const ListeningBlock = ({
 interface IListeningLineProps {
   children: ReactNode;
   isActive: boolean;
-  isDialogue: boolean;
   canPlay: boolean;
   text: string;
   lang: string;
@@ -170,8 +168,8 @@ interface IListeningLineProps {
   audio: string;
 }
 
-/** One paragraph of the block; a dialogue line carries its own replay button. */
-const ListeningLine = ({ children, isActive, isDialogue, canPlay, text, lang, audio }: IListeningLineProps) => {
+/** One paragraph of the block, with its own replay button. */
+const ListeningLine = ({ children, isActive, canPlay, text, lang, audio }: IListeningLineProps) => {
   const id = useId();
   const line = useSpeech(id);
   const isLinePlaying = line.status !== 'idle';
@@ -187,7 +185,7 @@ const ListeningLine = ({ children, isActive, isDialogue, canPlay, text, lang, au
       <div className="min-w-0 flex-1" lang={lang}>
         {children}
       </div>
-      {isDialogue && canPlay && text ? (
+      {canPlay && text ? (
         <button
           type="button"
           onClick={() =>
@@ -198,7 +196,7 @@ const ListeningLine = ({ children, isActive, isDialogue, canPlay, text, lang, au
             'mt-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors print:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             isLinePlaying
               ? 'bg-primary text-primary-foreground'
-              : 'bg-primary/10 text-primary hover:bg-primary/20 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100',
+              : 'bg-primary/10 text-primary hover:bg-primary/20 md:opacity-60 md:group-hover:opacity-100 md:focus-visible:opacity-100',
           )}
         >
           {isLinePlaying ? (
