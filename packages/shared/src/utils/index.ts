@@ -13,3 +13,5 @@ export * from './discussion.util';
 export * from './graph-expression.util';
 export * from './graph-sample.util';
 export * from './scene3d.util';
+export * from './scene-net.util';
+export * from './scene-templates.util';

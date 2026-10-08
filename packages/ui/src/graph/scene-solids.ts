@@ -27,6 +27,9 @@ export interface ISolidPaint {
   section(geometry: BufferGeometry): Mesh;
 }
 
+/** A die's side when the scene gives none. */
+export const DIE_SIZE = 2;
+
 /** How far a solid reaches sideways and up and down from its `position`. */
 export const solidExtent = (
   object: SceneObject,
@@ -48,6 +51,19 @@ export const solidExtent = (
     case 'cone':
     case 'frustum':
       return { radius: n(object.radius), below: 0, above: n(object.height) };
+    case 'die': {
+      const size = object.size === undefined ? DIE_SIZE : n(object.size);
+      return { radius: size / 2, below: 0, above: size };
+    }
+    case 'cubeGrid':
+      return { radius: (object.n * 1.06) / 2, below: 0, above: object.n * 1.06 };
+    case 'net': {
+      // Flat, it reaches out from its first square across rows and columns; folded, it hangs one
+      // square below the floor.
+      const [row, column] = object.cells[0];
+      const reach = Math.max(...object.cells.map(([r, c]) => Math.max(Math.abs(r - row), Math.abs(c - column))));
+      return { radius: reach + 0.5, below: -1, above: 0 };
+    }
     default:
       return null;
   }

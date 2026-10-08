@@ -14,7 +14,6 @@ import {
   CylinderGeometry,
   DoubleSide,
   EdgesGeometry,
-  Euler,
   Group,
   Line,
   LineBasicMaterial,
@@ -32,6 +31,7 @@ import {
   BufferGeometry as LineGeometry,
 } from 'three';
 import type { ISceneLabel } from './labels';
+import { reasoningGroup } from './scene-reasoning';
 import { solidExtent, solidGroup } from './scene-solids';
 import type { IObjectState, SceneState } from './scene-steps';
 
@@ -55,6 +55,9 @@ export const DRAWN_SCENE_TYPES: readonly SceneObjectType[] = [
   'frustum',
   'sphere',
   'hemisphere',
+  'die',
+  'cubeGrid',
+  'net',
   'label',
 ];
 
@@ -222,7 +225,10 @@ export class SceneBuilder {
     const firstLabel = this.labels.length;
     this.draw(object, state);
     const pivot = 'position' in object && object.position ? vec(object.position, this.values) : new Vector3();
-    const turn = new Quaternion().setFromEuler(new Euler(...state.turn, 'XYZ'));
+    // A solid turns about its centre, so tipping a die over keeps it standing where it was.
+    const extent = solidExtent(object, this.values);
+    if (extent) pivot.z += (extent.above + extent.below) / 2;
+    const turn = new Quaternion(...state.turn);
     const move = new Matrix4()
       .makeTranslation(pivot.x, pivot.y, pivot.z)
       .multiply(new Matrix4().makeRotationFromQuaternion(turn))
@@ -319,6 +325,10 @@ export class SceneBuilder {
         return this.angle(object.between, object.showValue === true, object.label, object);
       case 'label':
         return this.label(object.text, vec(object.position, values));
+      case 'die':
+      case 'cubeGrid':
+      case 'net':
+        return this.reasoning(object, state);
       default:
         return this.solid(object, state);
     }
@@ -390,6 +400,31 @@ export class SceneBuilder {
     const middle = points[12].clone().sub(at).multiplyScalar(1.5).add(at);
     const value = `${Number(degrees.toFixed(1))}°`;
     this.label(showValue ? `${label ?? 'θ'} = ${value}` : label, middle);
+  }
+
+  /** A die, a block of small cubes or a cube's net, standing at `position`, its label above it. */
+  private reasoning(object: SceneObject, state: IObjectState): void {
+    const at = 'position' in object && object.position ? vec(object.position, this.values) : new Vector3();
+    const group = reasoningGroup(object, this.values, state.open, {
+      own: (role) => this.surface(object, role, 1),
+      role: (role) => this.surface({ ...object, colour: role }, role, 1),
+      textured: (texture) => {
+        const material = this.surface({ ...object, colour: 'foreground' }, 'foreground', 1);
+        material.color.set('#ffffff');
+        material.map = texture;
+        return material;
+      },
+      colour: (role) => this.colour(object, role),
+      outline: (mesh) => this.outline(mesh),
+    });
+    const extent = solidExtent(object, this.values);
+    if (!group || !extent) return;
+    group.position.copy(at);
+    this.layer.add(group);
+    this.label(
+      'label' in object ? object.label : undefined,
+      at.clone().add(new Vector3(0, 0, extent.above + this.unit * 6)),
+    );
   }
 
   /** A solid as its step leaves it — whole, cut, or opening into its net — standing on its base at `position`. */

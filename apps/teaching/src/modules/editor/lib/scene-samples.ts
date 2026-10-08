@@ -1,5 +1,5 @@
 import type { IRichTextDoc } from '@repo/shared/interfaces';
-import { richTextFromMarkdown } from '@repo/shared/utils';
+import { cubeNetTemplate, diceTemplate, paintedCubeTemplate, richTextFromMarkdown } from '@repo/shared/utils';
 
 const scene = (value: object): string => `\`\`\`scene3d\n${JSON.stringify(value, null, 2)}\n\`\`\``;
 
@@ -145,4 +145,46 @@ export const SCENES_DOC: IRichTextDoc = richTextFromMarkdown(
     'Tilt the second plane and watch the angle between them change.',
     PLANES,
   ].join('\n\n'),
+).doc;
+
+const NET = cubeNetTemplate({
+  cells: [
+    [0, 1],
+    [1, 0],
+    [1, 1],
+    [1, 2],
+    [1, 3],
+    [2, 2],
+  ],
+  labels: ['A', 'B', 'C', 'D', 'E', 'F'],
+  asked: 2,
+});
+const DICE = diceTemplate({ faces: ['1', '6', '2', '5', '3', '4'] });
+const PAINTED = paintedCubeTemplate({ n: 4 });
+
+/** Three aptitude questions, each with its picture and a solution scene that works it out. */
+export const APTITUDE_DOC: IRichTextDoc = richTextFromMarkdown(
+  [
+    '# Aptitude: cubes and dice',
+    '## 1. Folding a net',
+    'The net below is folded into a cube. Which letter is on the face opposite **C**?',
+    NET ? scene(NET.question) : '',
+    '- A\n- B\n- E\n- F',
+    `**Solution.** Fold it with C on top and turn the cube over: the face underneath is **${NET?.answer.opposite ?? ''}**.`,
+    NET ? scene(NET.solution) : '',
+    '## 2. Two views of a die',
+    'Two positions of the same die are shown. Which number is on the face opposite **1**?',
+    scene(DICE.question),
+    '- 2\n- 3\n- 5\n- 6',
+    `**Solution.** 2, 3, 4 and 5 all touch 1 in one view or the other, so the face opposite it is **${DICE.answer.opposite}**.`,
+    scene(DICE.solution),
+    '## 3. A painted cube',
+    'A 4 cm cube is painted on all six faces and cut into 1 cm cubes. How many small cubes have exactly **two** painted faces?',
+    scene(PAINTED.question),
+    '- 8\n- 16\n- 24\n- 32',
+    `**Solution.** Two painted faces means an edge, but not a corner: 12 edges with 2 such cubes each, so **${PAINTED.answer.counts[2]}**.`,
+    scene(PAINTED.solution),
+  ]
+    .filter(Boolean)
+    .join('\n\n'),
 ).doc;

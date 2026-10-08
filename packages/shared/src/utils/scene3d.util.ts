@@ -9,6 +9,7 @@ import type {
 } from '../interfaces/scene3d.interface';
 import type { IRichTextNode } from '../interfaces/rich-text.interface';
 import { compileExpression } from './graph-expression.util';
+import { foldCubeNet } from './scene-net.util';
 
 /**
  * The 3D scene format's parser: reads the JSON of a ```` ```scene3d ```` block and either returns
@@ -371,6 +372,7 @@ const checkObjects = (checker: SceneChecker, objects: unknown): void => {
     }
     checkObjectFields(checker, path, object, OBJECT_FIELDS[type as SceneObjectType]);
     if (type === 'molecule') checkMolecule(checker, path, object);
+    checkReasoning(checker, path, object);
   });
 };
 
@@ -399,6 +401,23 @@ const checkObjectFields = (
     checker.add(`${path}.colour`, `must be one of ${SCENE_COLOURS.join(', ')}.`);
   }
   if (object.opacity !== undefined) checker.number(`${path}.opacity`, object.opacity, true);
+};
+
+/** A net must fold into a cube, and a hidden small cube must lie inside its block. */
+const checkReasoning = (checker: SceneChecker, path: string, object: Record<string, unknown>): void => {
+  if (object.type === 'net' && Array.isArray(object.cells) && object.cells.length === 6) {
+    const folded = foldCubeNet(object.cells as [number, number][]);
+    if (!folded.isValid) checker.add(`${path}.cells`, folded.error);
+  }
+  if (object.type !== 'cubeGrid' || !Array.isArray(object.hidden) || typeof object.n !== 'number') return;
+  const size = object.n;
+  const outside = object.hidden.some((cell) => Array.isArray(cell) && cell.some((part) => part >= size));
+  if (outside) {
+    checker.add(
+      `${path}.hidden`,
+      `each position must be from 0 to ${size - 1}, inside the ${size} × ${size} × ${size} block.`,
+    );
+  }
 };
 
 /** A VSEPR shape fixes how many ligands and lone pairs there are; the counts must match it. */

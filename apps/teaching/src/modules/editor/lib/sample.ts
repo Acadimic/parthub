@@ -1,6 +1,6 @@
 import type { IRichTextDoc, IRichTextNode } from '@repo/shared/interfaces';
 import { richTextFromMarkdown } from '@repo/shared/utils';
-import { SCENES_DOC } from './scene-samples';
+import { APTITUDE_DOC, SCENES_DOC } from './scene-samples';
 
 const paragraph = (content: IRichTextNode[]): IRichTextNode => ({ type: 'paragraph', content });
 const heading = (level: number, value: string): IRichTextNode => ({
@@ -318,6 +318,12 @@ export const PRESETS: IPreset[] = [
     label: '3D scenes',
     description: 'Solids, planes, vectors and angles that open in 3D, with sliders.',
     doc: SCENES_DOC,
+  },
+  {
+    key: 'aptitude',
+    label: 'Aptitude',
+    description: 'Cube nets, dice and painted cubes: a picture with each question, and a solution that works it out.',
+    doc: APTITUDE_DOC,
   },
   {
     key: 'stress',

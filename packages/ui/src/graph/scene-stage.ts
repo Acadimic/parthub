@@ -1,6 +1,16 @@
 import type { IScene, SceneObjectType } from '@repo/shared/interfaces';
 import { SCENE_COLOURS } from '@repo/shared/utils';
-import { Box3, BufferGeometry, type Group, Line, LineBasicMaterial, Mesh, type Object3D, Vector3 } from 'three';
+import {
+  Box3,
+  BufferGeometry,
+  type Group,
+  Line,
+  LineBasicMaterial,
+  Mesh,
+  type Object3D,
+  Texture,
+  Vector3,
+} from 'three';
 import { type ISceneLabel, SceneLabels } from './labels';
 import { SceneBuilder, type SceneColours, sceneReach } from './scene-builder';
 import {
@@ -39,7 +49,11 @@ const disposeTree = (root: Object3D): void => {
     // Line covers LineSegments, its subclass; these are the only kinds a scene builds.
     if (!(node instanceof Mesh || node instanceof Line)) return;
     node.geometry.dispose();
-    (Array.isArray(node.material) ? node.material : [node.material]).forEach((item) => item.dispose());
+    (Array.isArray(node.material) ? node.material : [node.material]).forEach((item) => {
+      // A die's or a net's faces carry a drawn texture, which disposing the material leaves behind.
+      if ('map' in item && item.map instanceof Texture) item.map.dispose();
+      item.dispose();
+    });
   });
 };
 

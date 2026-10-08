@@ -242,8 +242,9 @@ export interface ISceneSlider {
  * What a step does besides showing and hiding objects. One kind per step, and each lasts until a
  * later step changes it: `slice` cuts a solid across at height `at` above its base (a sphere's base
  * is its lowest point) and lifts the top part away; `unfold` opens a solid into its net and `fold`
- * closes it; `rotate` turns an object by `angle` degrees about its own position; `highlight` dims
- * everything else for that step only.
+ * closes it (a `net` starts flat, so `fold` folds it into a cube); `rotate` turns an object by
+ * `angle` degrees about the scene's x, y or z axis through the object's centre, after any turns
+ * before it; `highlight` dims everything else for that step only.
  */
 export type SceneAction =
   | { slice: string; at: SceneNumber }

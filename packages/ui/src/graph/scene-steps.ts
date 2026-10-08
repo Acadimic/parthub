@@ -1,5 +1,6 @@
 import type { IScene, ISceneStep, SceneVector } from '@repo/shared/interfaces';
 import { sceneNumber } from '@repo/shared/utils';
+import { Quaternion, Vector3 } from 'three';
 
 type Values = Readonly<Record<string, number>>;
 
@@ -11,8 +12,8 @@ export interface IObjectState {
   open: number;
   /** Where a slice cuts it, above its base, and how far apart the two parts have moved (0 to 1). */
   cut: { at: number; gap: number } | null;
-  /** Its turn about its own position, in radians about x, then y, then z. */
-  turn: [number, number, number];
+  /** Its turn about its centre, as a quaternion `[x, y, z, w]`; each `rotate` step adds to it in order. */
+  turn: [number, number, number, number];
   /** 1 while a step singles it out. */
   highlight: number;
 }
@@ -49,7 +50,10 @@ const applyStep = (before: SceneState, step: ISceneStep, values: Values): SceneS
   } else if ('fold' in action && state[action.fold]) {
     state[action.fold].open = 0;
   } else if ('rotate' in action && state[action.rotate]) {
-    state[action.rotate].turn[AXES[action.axis]] += (sceneNumber(action.angle, values) * Math.PI) / 180;
+    const axis = new Vector3().setComponent(AXES[action.axis], 1);
+    const by = new Quaternion().setFromAxisAngle(axis, (sceneNumber(action.angle, values) * Math.PI) / 180);
+    // Applied after the turns before it, about the scene's own axes, so "tip it, then turn it" reads as said.
+    state[action.rotate].turn = by.multiply(new Quaternion(...state[action.rotate].turn)).toArray();
   } else if ('highlight' in action && state[action.highlight]) {
     state[action.highlight].highlight = 1;
   }
@@ -66,7 +70,14 @@ export const sceneStepStates = (scene: IScene, values: Values): SceneState[] => 
   const start: SceneState = Object.fromEntries(
     scene.objects.map((object) => [
       object.id,
-      { shown: revealed.has(object.id) ? 0 : 1, open: 0, cut: null, turn: [0, 0, 0], highlight: 0 },
+      // A net starts flat, so its `open` starts at 1; a `fold` step folds it up.
+      {
+        shown: revealed.has(object.id) ? 0 : 1,
+        open: object.type === 'net' ? 1 : 0,
+        cut: null,
+        turn: [0, 0, 0, 1],
+        highlight: 0,
+      },
     ]),
   );
   if (!steps.length) return [start];
@@ -115,7 +126,7 @@ export const mixStates = (from: SceneState, to: SceneState, t: number): SceneSta
         shown: lerp(begin.shown, end.shown, t),
         open: lerp(begin.open, end.open, t),
         cut: mixCut(begin.cut, end.cut, t),
-        turn: [0, 1, 2].map((axis) => lerp(begin.turn[axis], end.turn[axis], t)) as [number, number, number],
+        turn: new Quaternion(...begin.turn).slerp(new Quaternion(...end.turn), t).toArray(),
         highlight: lerp(begin.highlight, end.highlight, t),
       };
       return [id, object];
