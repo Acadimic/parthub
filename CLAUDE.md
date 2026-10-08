@@ -167,6 +167,18 @@ pnpm --filter @repo/ui <script>
 
 Enums, DTOs, and pure interfaces consumed by the server and all apps. Compiled with `tsc` to CommonJS. **Rebuild after changes** (`pnpm build:shared`) before dependent packages can see updates.
 
+### 3D graphs, 3D scenes and drawn figures
+
+Authored content can show three kinds of computed picture: a **3D graph** on an equation (its
+`graph`/`graphView` attributes), a **3D scene** block (`scene3d`: solids, nets, dice, molecules,
+unit cells, with steps) and a **drawn figure** (an SVG `image` made from numbers). The map — which
+folder holds what, the four content paths, the AI rules and checks, and the stored names that must
+never be renamed without migrating content — is `packages/ui/src/three/README.md`. In short:
+`packages/ui/src/three/` is the shared three.js engine, `graph/` and `scene/` are the two features
+built on it (never importing each other), the formats, parsers, templates and answer keys live in
+`packages/shared/src/utils/graph/` and `utils/scene/`, and figure drawing is
+`tools/course-agent/svg.mjs`. Drawn (SVG) figures invert in dark mode; photos do not.
+
 ### UI (`packages/ui`)
 
 Shared React layer for the apps (see "Where shared code lives"). No build step; `pnpm typecheck:ui` typechecks it. Internal imports are relative (never app path aliases). `peerDependencies` pin the same React/Next versions the apps use so a single React instance is bundled.

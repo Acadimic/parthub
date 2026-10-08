@@ -1,7 +1,8 @@
 import { graphAttrsOfNode, type IGraphAttrs } from '@repo/shared/utils';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { useEffect, useId, useRef, useState } from 'react';
-import { GRAPH_MODAL_ID, GraphButton } from '../../content/GraphButton';
+import { GraphButton } from '../../content/GraphButton';
+import { VIEWER_3D_MODAL_ID } from '../../content/Viewer3DModal';
 import { MathRender } from '../../content/MathRender';
 import { cn } from '../../lib/cn';
 import { isBlankEquation } from '../equation/chemistry';
@@ -136,7 +137,7 @@ export const MathNodeView = ({ node, updateAttributes, deleteNode, editor, getPo
       if (!target || editorRef.current?.contains(target)) return;
       if (
         target.closest('[data-radix-popper-content-wrapper]') ||
-        target.closest(`#${GRAPH_MODAL_ID}`) ||
+        target.closest(`#${VIEWER_3D_MODAL_ID}`) ||
         target.closest('.ML__keyboard') ||
         target.closest('[data-virtual-keyboard-dismiss]')
       ) {

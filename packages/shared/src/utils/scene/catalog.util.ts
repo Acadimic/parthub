@@ -1,6 +1,6 @@
-import { type ISceneCatalogEntry } from './scene-catalog-fields.util';
-import { cubeNet, dice, molecule, paintedCube, unitCell } from './scene-catalog-models.util';
-import { cone, cylinder, planes, prism, sphere, vectors } from './scene-catalog-solids.util';
+import { type ISceneCatalogEntry } from './catalog-fields.util';
+import { cubeNet, dice, molecule, paintedCube, unitCell } from './catalog-models.util';
+import { cone, cylinder, planes, prism, sphere, vectors } from './catalog-solids.util';
 
 export {
   type ISceneCatalogEntry,
@@ -8,8 +8,8 @@ export {
   type SceneField,
   type SceneFieldValue,
   type SceneFieldValues,
-} from './scene-catalog-fields.util';
-export { CUBE_NETS, netSketch } from './scene-catalog-models.util';
+} from './catalog-fields.util';
+export { CUBE_NETS, netSketch } from './catalog-models.util';
 
 /**
  * The templates a teacher starts a 3D scene from, each with a short form for its key numbers. A

@@ -30,7 +30,7 @@ import {
   Vector3,
   BufferGeometry as LineGeometry,
 } from 'three';
-import type { ISceneLabel } from './labels';
+import type { ISceneLabel } from './scene-labels';
 import { atomBall, bondSticks, chemistryShape, type IChemistryPaint } from './scene-chemistry';
 import { reasoningGroup } from './scene-reasoning';
 import { solidExtent, solidGroup } from './scene-solids';

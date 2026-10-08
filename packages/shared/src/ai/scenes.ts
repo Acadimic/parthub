@@ -1,4 +1,4 @@
-import { parseScene, SCENE_LIMITS } from '../utils/scene3d.util';
+import { parseScene, SCENE_LIMITS } from '../utils/scene/format.util';
 import type { IAiIssue } from './common';
 
 /**

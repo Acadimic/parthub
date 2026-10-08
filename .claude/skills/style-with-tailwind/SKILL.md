@@ -38,7 +38,9 @@ works and how to change it.
 
 2. **No `dark:` variants for colour.** Every token already has a per-theme value, so `bg-background`
    is white in light mode and near-black in dark mode by itself. The repo has **zero** `dark:`
-   usages and should stay there. Writing `bg-white dark:bg-black` rebuilds by hand what the theme
+   colour classes and should stay there. The one `dark:` usage is a filter, not a colour:
+   `RichTextImage` inverts a drawn SVG figure (`dark:invert dark:hue-rotate-180`), because an image
+   cannot take theme tokens. Writing `bg-white dark:bg-black` rebuilds by hand what the theme
    does for you, and then drifts from it. A `dark:` variant that patches a hard-coded colour is two
    bugs, not one.
 
@@ -65,26 +67,26 @@ works and how to change it.
 
 Surfaces and text, which is what most code needs:
 
-| Token                                | Use for                                                     |
-| ------------------------------------ | ----------------------------------------------------------- |
-| `background` / `foreground`          | the base surface and its text                               |
-| `muted` / `muted-foreground`         | the page canvas; secondary and helper text                  |
-| `card` / `popover` (+ `-foreground`) | raised surfaces — cards, dropdowns, dialogs                 |
+| Token                                | Use for                                                                   |
+| ------------------------------------ | ------------------------------------------------------------------------- |
+| `background` / `foreground`          | the base surface and its text                                             |
+| `muted` / `muted-foreground`         | the page canvas; secondary and helper text                                |
+| `card` / `popover` (+ `-foreground`) | raised surfaces — cards, dropdowns, dialogs                               |
 | `panel` / `panel-foreground`         | a primary-tinted frame around content with its own surface (a group card) |
-| `accent` / `secondary`               | hover and active fills                                      |
-| `border` / `input` / `ring`          | dividers and outlines, field borders, focus rings           |
+| `accent` / `secondary`               | hover and active fills                                                    |
+| `border` / `input` / `ring`          | dividers and outlines, field borders, focus rings                         |
 
 Roles that carry meaning. Each has a `-foreground` partner:
 
-| Token                          | Use for                                                       |
-| ------------------------------ | -------------------------------------------------------------- |
+| Token                          | Use for                                                         |
+| ------------------------------ | --------------------------------------------------------------- |
 | `primary`                      | the one interactive hue — buttons, links, active nav, selection |
-| `destructive`                  | errors and destructive actions                                 |
-| `success` / `warning` / `info` | status only                                                    |
-| `brand`                        | product identity (the logo mark). Never on anything clickable  |
-| `chart-1` … `chart-5`          | categorical data — series, tags. Never a state                 |
+| `destructive`                  | errors and destructive actions                                  |
+| `success` / `warning` / `info` | status only                                                     |
+| `brand`                        | product identity (the logo mark). Never on anything clickable   |
+| `chart-1` … `chart-5`          | categorical data — series, tags. Never a state                  |
 
-Two rules of thumb the palette depends on. `primary` is the *only* interactive colour, so
+Two rules of thumb the palette depends on. `primary` is the _only_ interactive colour, so
 `text-primary` means "you can click this" — emphasis text is `text-foreground`. And a status colour
 earns its keep by being rare: the chrome is deliberately neutral so that anything coloured means
 something.
@@ -93,20 +95,20 @@ something.
 That is what soft status pills are built from; see the `Badge` core component for the pattern.
 
 **Only steps of five exist.** Tailwind's opacity scale is `0 5 10 15 … 100`, so `bg-success/12`
-compiles to *nothing at all* — no class, no warning, and a pill with a transparent fill that looks
+compiles to _nothing at all_ — no class, no warning, and a pill with a transparent fill that looks
 almost right. Round to a step on the scale, or write an arbitrary value (`bg-success/[0.12]`) if you
 genuinely need one.
 
 ## The other scales
 
 - **Radius: the interface is square.** `--radius` is `0rem`, and every step (`rounded`,
-  `rounded-sm` … `rounded-3xl`) is a *multiple* of it, so they all compute to 0. Do not write
+  `rounded-sm` … `rounded-3xl`) is a _multiple_ of it, so they all compute to 0. Do not write
   `rounded-none` to get a sharp corner — you already have one; and do not reach for an arbitrary
   `rounded-[6px]` to escape it, which just reintroduces the thing the knob exists to control.
   To round the product later, change `--radius` in `preset.ts` alone: `0.5rem` gives back a
   4/6/8/12px ladder with its size hierarchy intact.
 
-  `rounded-full` and `rounded-none` are deliberately *not* derived — an avatar, a spinner or a pill
+  `rounded-full` and `rounded-none` are deliberately _not_ derived — an avatar, a spinner or a pill
   stays circular whatever the knob says.
 
   The steps are multiples rather than offsets for a specific reason: with `calc(var(--radius) - 4px)`
@@ -115,6 +117,7 @@ genuinely need one.
 
   Stylesheet rules that Tailwind cannot reach — the scrollbar thumb, FullCalendar's popovers — use
   `border-radius: var(--radius)` directly so they follow the same knob.
+
 - **Type** is Tailwind's own scale, left intact on purpose — a parallel set of names alongside it is
   how `text-sm` and `text-body` end up meaning the same thing. Two additions: `text-xxs` (10px) and
   `tracking-caps`, for the uppercase micro-labels above a list or in a table header.

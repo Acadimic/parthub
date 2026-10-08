@@ -6,10 +6,10 @@ import type {
   SceneColour,
   SceneNumber,
   SceneObjectType,
-} from '../interfaces/scene3d.interface';
-import type { IRichTextNode } from '../interfaces/rich-text.interface';
-import { compileExpression } from './graph-expression.util';
-import { foldCubeNet } from './scene-net.util';
+} from '../../interfaces/scene3d.interface';
+import type { IRichTextNode } from '../../interfaces/rich-text.interface';
+import { compileExpression } from '../graph/expression.util';
+import { foldCubeNet } from './net.util';
 
 /**
  * The 3D scene format's parser: reads the JSON of a ```` ```scene3d ```` block and either returns

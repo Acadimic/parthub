@@ -1,5 +1,5 @@
-import type { IRichTextNode, RichTextAttrValue } from '../interfaces/rich-text.interface';
-import { graphAttrsFromMarkdown, type IGraphAttrs } from './graph-expression.util';
+import type { IRichTextNode, RichTextAttrValue } from '../../interfaces/rich-text.interface';
+import { graphAttrsFromMarkdown, type IGraphAttrs } from './expression.util';
 
 /**
  * The Markdown reader's handling of 3D graphs: the `{graph=…}` block after an equation.

@@ -1,6 +1,6 @@
 import type { Encoder } from 'modern-gif';
 import type { IFrameRecording, Stage } from './stage';
-import { drawGraphFrame, type IGraphFrameOptions } from './snapshot';
+import { drawFrame, type IFrameOptions } from './snapshot';
 
 /** One full turn in 60 frames at 70 ms: about four seconds, smooth enough to read the shape. */
 const FRAMES = 60;
@@ -12,8 +12,8 @@ const MIN_TEXT_SCALE = 0.9;
 /** The share of the progress bar given to recording frames; encoding the file takes the rest. */
 export const GIF_RECORDING_SHARE = 0.9;
 
-/** The scale a GIF of a graph `cssWidth` pixels wide is drawn at, and the text scale beside it. */
-export const gifFrameScale = (cssWidth: number): Pick<IGraphFrameOptions, 'scale' | 'textScale'> => {
+/** The scale a GIF of a view `cssWidth` pixels wide is drawn at, and the text scale beside it. */
+export const gifFrameScale = (cssWidth: number): Pick<IFrameOptions, 'scale' | 'textScale'> => {
   const scale = Math.min(1, GIF_WIDTH / Math.max(cssWidth, 1));
   return { scale, textScale: Math.max(scale, MIN_TEXT_SCALE) };
 };
@@ -53,7 +53,7 @@ export const turnRecording = (stage: Stage): IFrameRecording => ({
  */
 export const recordGif = async (
   recording: IFrameRecording,
-  frame: IGraphFrameOptions,
+  frame: IFrameOptions,
   onProgress: (fraction: number) => void,
 ): Promise<Blob | null> => {
   const { Encoder: GifEncoder } = await import('modern-gif');
@@ -62,7 +62,7 @@ export const recordGif = async (
   const state: { encoder: Encoder | null; width: number; height: number } = { encoder: null, width: 0, height: 0 };
   const isComplete = await recording.capture(async (source, labels, index) => {
     // Drawn before the first await, while the WebGL buffer still holds this frame.
-    const drawn = drawGraphFrame(source, labels, frame);
+    const drawn = drawFrame(source, labels, frame);
     if (!drawn) return;
     if (!state.encoder) {
       state.width = drawn.width;

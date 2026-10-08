@@ -3,7 +3,7 @@ import { SCENE_COLOURS } from '@repo/shared/utils';
 import type { RefObject } from 'react';
 import type { SceneColours } from './scene-builder';
 import type { ISceneTheme } from './scene-stage';
-import { readColour } from './viewer-parts';
+import { readColour } from '../three/viewer-parts';
 
 /** The text colour class that carries each scene colour role, read off the page for the drawing. */
 const ROLE_CLASSES: Record<SceneColour, string> = {

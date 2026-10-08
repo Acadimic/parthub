@@ -1,4 +1,4 @@
-import type { CubeFace } from '../interfaces/scene3d.interface';
+import type { CubeFace } from '../../interfaces/scene3d.interface';
 
 /** Which way a square lies from the one it hangs from, in the flat net: `[row step, column step]`. */
 export type NetDirection = 'north' | 'south' | 'east' | 'west';

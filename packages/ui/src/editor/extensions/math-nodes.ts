@@ -51,7 +51,7 @@ const optionalAttribute = (key: string, name: string) => ({
 
 /**
  * `graph` and `graphView` make an equation plottable in 3D: the expression and any view settings
- * that differ from the defaults (`@repo/shared/utils` graph-expression). Null on most equations.
+ * that differ from the defaults (`@repo/shared/utils`, `utils/graph/expression.util.ts`). Null on most equations.
  */
 const mathAttributes = {
   latex: {

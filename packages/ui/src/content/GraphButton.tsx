@@ -16,8 +16,6 @@ export const preloadGraphViewer = (): void => {
   void loadViewer();
 };
 
-export { GRAPH_MODAL_ID } from './Viewer3DModal';
-
 /** "Surface over x from −4 to 4 and y from −4 to 4", the line under the equation. */
 const describeGraph = ({ graph, graphView }: IGraphAttrs): string => {
   const compiled = compileGraph(graph);

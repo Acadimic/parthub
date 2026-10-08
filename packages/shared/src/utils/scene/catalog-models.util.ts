@@ -1,4 +1,4 @@
-import type { CubeFace, MoleculeShape } from '../interfaces/scene3d.interface';
+import type { CubeFace, MoleculeShape } from '../../interfaces/scene3d.interface';
 import {
   flagOf,
   isSolution,
@@ -9,9 +9,9 @@ import {
   textOf,
   textsOf,
   toggle,
-} from './scene-catalog-fields.util';
-import { LATTICE_FACTS } from './scene-chemistry.util';
-import { cubeNetTemplate, diceTemplate, paintedCubeTemplate } from './scene-templates.util';
+} from './catalog-fields.util';
+import { LATTICE_FACTS } from './chemistry.util';
+import { cubeNetTemplate, diceTemplate, paintedCubeTemplate } from './aptitude.util';
 
 /** The aptitude and chemistry templates. */
 // ---------------------------------------------------------------------------

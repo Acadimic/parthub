@@ -1,5 +1,5 @@
 /**
- * The Acadimic mark stamped on a downloaded graph. Every app serves both versions from
+ * The Acadimic mark stamped on a downloaded graph or scene. Every app serves both versions from
  * `public/images`, as the shared `Logo` does: the dark mark for a light background, the light mark
  * for a dark one.
  */

@@ -1,8 +1,8 @@
-import type { GraphParam, ICompiledGraph, IGraphRange, IGraphScope, IGraphView } from './graph-expression.util';
+import type { GraphParam, ICompiledGraph, IGraphRange, IGraphScope, IGraphView } from './expression.util';
 
 /**
  * Sampling a compiled graph into points, shared by the 3D viewer and the validators. Split from
- * `graph-expression.util.ts`, which keeps the language, the view format and the Markdown form.
+ * `expression.util.ts`, which keeps the language, the view format and the Markdown form.
  */
 
 export interface IGraphBounds {

@@ -1,6 +1,6 @@
-import type { CubeFace, IScene, ISceneStep } from '../interfaces/scene3d.interface';
+import type { CubeFace, IScene, ISceneStep } from '../../interfaces/scene3d.interface';
 
-/** The parts a scene template is made of: its form's fields, and readers for their values. See `scene-catalog.util.ts`. */
+/** The parts a scene template is made of: its form's fields, and readers for their values. See `catalog.util.ts`. */
 export interface IFieldBase {
   name: string;
   label: string;

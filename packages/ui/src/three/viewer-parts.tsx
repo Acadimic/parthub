@@ -12,7 +12,7 @@ import { Spinner } from '../core/Spinner';
 import { Tooltip } from '../core/Tooltip';
 import { cn } from '../lib/cn';
 import { GIF_RECORDING_SHARE } from './gif';
-import type { IGraphPoint } from './stage';
+import type { IStagePoint } from './stage';
 
 /** The pieces the graph viewer and the 3D scene viewer share: toolbar, read-out, progress, titles. */
 
@@ -108,7 +108,7 @@ export const StageToolbar = ({
   </div>
 );
 
-/** Shown over the graph while a GIF records: the graph turns underneath, so input is held off. */
+/** Shown over the view while a GIF records: it turns or steps underneath, so input is held off. */
 export const GifProgress = ({ fraction }: { fraction: number }) => (
   <div className="absolute inset-0 flex items-end justify-center p-4" aria-live="polite">
     <div className="flex w-64 max-w-full flex-col gap-2 border border-border bg-card/95 px-3 py-2.5 text-xs shadow-sm">
@@ -120,7 +120,7 @@ export const GifProgress = ({ fraction }: { fraction: number }) => (
   </div>
 );
 
-export const Readout = ({ point }: { point: IGraphPoint | null }) => (
+export const Readout = ({ point }: { point: IStagePoint | null }) => (
   <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 border border-border bg-card/90 px-2.5 py-1.5 text-xs shadow-sm">
     {point ? (
       <>

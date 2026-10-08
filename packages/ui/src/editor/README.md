@@ -51,10 +51,11 @@ editor/
 
 Shared, in `packages/shared/src/utils/`:
 
-| File                   | What                                                                                                                                     |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `rich-text.util.ts`    | `createEmptyRichText`, `docToPlainText`, `isRichTextEmpty`, `richTextFromMarkdown`, `splitInlineMath`, `repairRichText`                  |
-| `latex-repair.util.ts` | `repairJsonEscapes`, `repairLatexControlEscapes`, `repairLeadingLostEscape`, `escapeLatexPercent`, `escapeLatexDollar`, `normaliseLatex` |
+| File                     | What                                                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `rich-text.util.ts`      | `createEmptyRichText`, `docToPlainText`, `isRichTextEmpty`, `richTextFromMarkdown`, `repairRichText`                                     |
+| `rich-text-math.util.ts` | `splitInlineMath` — prose and equations in a line; internal to the importer                                                              |
+| `latex-repair.util.ts`   | `repairJsonEscapes`, `repairLatexControlEscapes`, `repairLeadingLostEscape`, `escapeLatexPercent`, `escapeLatexDollar`, `normaliseLatex` |
 
 ## 3. What a document can contain
 
@@ -63,20 +64,20 @@ exported to Markdown and imported from Markdown — all four, or it would be los
 
 ### Blocks
 
-| Node                                            | Notes                                                                                                                  |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `paragraph`                                     |                                                                                                                        |
-| `heading`                                       | levels **1–3 only**; deeper headings are not admitted                                                                  |
-| `bulletList`, `orderedList`, `listItem`         | list items hold paragraphs                                                                                             |
-| `blockquote`                                    |                                                                                                                        |
-| `codeBlock`                                     | fenced; contents are literal                                                                                           |
-| `horizontalRule`                                |                                                                                                                        |
-| `hardBreak`                                     | Shift+Enter                                                                                                            |
-| `table`, `tableRow`, `tableHeader`, `tableCell` | `bordered` flag on the table; cells hold **inline content only** (no blocks in cells); optional header row             |
-| `blockMath`                                     | a display equation; `attrs.latex`, optional 3D graph `graph`/`graphView` (§3c)                                         |
-| `image`                                         | a picture block; `attrs.src`, `alt`, `caption`, `width` (`small`, `medium`, `full`). See §3a                           |
-| `listening`                                     | a listening passage or dialogue; `attrs.lang`, `mode` (`passage`, `dialogue`), `audio`; paragraphs only. §3b           |
-| `scene3d`                                       | an interactive 3D scene; `attrs.spec` is the scene's JSON (`IScene`, `.claude/plans/3D_SCENES.md`); printed as a still |
+| Node                                            | Notes                                                                                                                                |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `paragraph`                                     |                                                                                                                                      |
+| `heading`                                       | levels **1–3 only**; deeper headings are not admitted                                                                                |
+| `bulletList`, `orderedList`, `listItem`         | list items hold paragraphs                                                                                                           |
+| `blockquote`                                    |                                                                                                                                      |
+| `codeBlock`                                     | fenced; contents are literal                                                                                                         |
+| `horizontalRule`                                |                                                                                                                                      |
+| `hardBreak`                                     | Shift+Enter                                                                                                                          |
+| `table`, `tableRow`, `tableHeader`, `tableCell` | `bordered` flag on the table; cells hold **inline content only** (no blocks in cells); optional header row                           |
+| `blockMath`                                     | a display equation; `attrs.latex`, optional 3D graph `graph`/`graphView` (§3c)                                                       |
+| `image`                                         | a picture block; `attrs.src`, `alt`, `caption`, `width` (`small`, `medium`, `full`). See §3a                                         |
+| `listening`                                     | a listening passage or dialogue; `attrs.lang`, `mode` (`passage`, `dialogue`), `audio`; paragraphs only. §3b                         |
+| `scene3d`                                       | an interactive 3D scene; `attrs.spec` is its JSON (`IScene`), `attrs.template` the editor form it came from; printed as a still. §3d |
 
 ### Inline
 
@@ -139,20 +140,48 @@ Markdown is Pandoc's: `[Hola]{lang=es-ES ipa="ˈola"}` and `::: listening lang=e
 
 Either equation node may carry `graph`, a plain expression that is plotted (`a*(x^2 - y^2)`,
 `(cos(t), sin(t), t/4)` for a curve, or `(cos(u)*sin(v), sin(u)*sin(v), cos(v))` for a parametric
-surface such as a sphere, drawn true to scale), and `graphView`, the ranges and sliders that differ from the
-defaults (`x=-2..2 t=0..4pi a=1[0.1..5]`). Both are null on an ordinary equation. The language, its
+surface such as a sphere, drawn true to scale), and `graphView`, the ranges and sliders that differ
+from the defaults (`x=-2..2 t=0..4pi a=1[0.1..5]`). Both are null on an ordinary equation. The language, its
 compiler (closures over a fixed list of functions, never `eval`), the view format and sampling live
-in `@repo/shared/utils` (`graph-expression.util.ts`).
+in `@repo/shared/utils` (`utils/graph/expression.util.ts`, `sample.util.ts`).
 
 - **Reading view**: an equation with a graph shows a cube (`content/GraphButton.tsx`) that opens
-  `GraphModal`. The viewer (`src/graph/`, three.js) is a lazy chunk, fetched on first open; the cube
-  stops click and key events so it never selects an answer option, and is hidden in print.
+  `GraphModal`. The viewer (`src/graph/` on the shared engine in `src/three/`, three.js) is a lazy
+  chunk, fetched on first open; the cube stops click and key events so it never selects an answer option, and is hidden in print.
 - **Editor**: the cube in the equation panel's header opens `equation/GraphPanel.tsx`, pre-filled by
   `graphExpressionFromLatex`. Only an expression that compiles and draws is written to the node.
 - **Markdown**: `$z = x^2${graph="x^2" x=-2..2}` and `$$ … $${graph="…"}`, read before the marks
   pass so an expression's `*` is never taken for italic.
 
-The plan and its reasoning: `.claude/plans/GRAPH_3D.md`.
+The map of graphs, scenes and figures: `src/three/README.md`. The decisions behind graphs:
+`.claude/plans/GRAPH_3D.md`.
+
+### 3d. 3D scenes
+
+A `scene3d` block holds one scene: `spec` is its JSON (`IScene`, checked by `parseScene` in
+`@repo/shared/utils`), `template` the editor template and form values it came from (`''` for a
+scene written by hand or imported). Both are strings, as node attributes must be.
+
+- **Reading view**: `content/SceneCard.tsx` — a card with the scene's title and what it offers, and
+  "Open in 3D", which opens the shared 3D popup and plays the scene's steps. In print the card holds
+  a still of the first step (`scene/ScenePrintStill.tsx`).
+- **Editor**: "3D scene" in the toolbar opens `scene/SceneDialog.tsx` — the template gallery, a form
+  beside a live preview, the JSON behind "Advanced"; Edit on a scene's card reopens it. Only a scene
+  the parser accepts is saved. Every editor offers it, answer options included.
+- **Markdown**: a ` ```scene3d ` fence holding the JSON. On import a fence the parser refuses
+  stays a code block, so nothing broken reaches a learner; `checkMarkdownScenes` names why.
+
+The decisions behind scenes: `.claude/plans/3D_SCENES.md`.
+
+### 3e. Drawn figures
+
+A figure drawn from numbers — a chart, a triangle, a net, die views — is an ordinary `image` (§3a)
+whose file is an SVG: an AI reply carries it in `figures` and places it as `figure:<ref>`, and the
+import uploads it. Drawn figures are made with `tools/course-agent/svg.mjs`, still on a white
+ground (`transparent()` drops it, for the planned redraw). `RichTextImage` inverts every SVG image in
+dark mode (hues turned back), so a white figure shows as a dark card with light ink; photos are left
+alone and print stays light. A teacher-side figure gallery is planned:
+`.claude/plans/FIGURES_2D.md`.
 
 ### Not supported, deliberately
 

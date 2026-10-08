@@ -1,4 +1,4 @@
-import type { LatticeCell, MoleculeShape } from '../interfaces/scene3d.interface';
+import type { LatticeCell, MoleculeShape } from '../../interfaces/scene3d.interface';
 
 type Point = [number, number, number];
 

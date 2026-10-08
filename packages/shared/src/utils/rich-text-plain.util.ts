@@ -1,5 +1,5 @@
 import { RichTextFormat } from '../enums/rich-text.enum';
-import { SCENE3D_NODE, sceneTitleOf } from './scene3d.util';
+import { SCENE3D_NODE, sceneTitleOf } from './scene/format.util';
 import type { IRichText, IRichTextNode } from '../interfaces/rich-text.interface';
 import { IMAGE_NODE } from './rich-text-image.util';
 

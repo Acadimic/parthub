@@ -14,7 +14,7 @@ import {
   WebGLRenderer,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { composeGraphImage, type IGraphImageColours, type IGraphImageFooter, type ILabelSnapshot } from './snapshot';
+import { composeImage, type IImageColours, type IImageFooter, type ILabelSnapshot } from './snapshot';
 
 /** Half the side of the cube a graph or a scene is scaled into, so each axis spans `-S..S`. */
 export const S = 3;
@@ -35,7 +35,7 @@ export interface IFrameRecording {
   capture: (onFrame: FrameCallback) => Promise<boolean>;
 }
 
-export interface IGraphPoint {
+export interface IStagePoint {
   x: number;
   y: number;
   z: number;
@@ -82,7 +82,7 @@ export abstract class Stage {
 
   constructor(
     protected readonly host: HTMLElement,
-    private readonly onHover: (point: IGraphPoint | null) => void,
+    private readonly onHover: (point: IStagePoint | null) => void,
     description: string,
   ) {
     // Throws where WebGL is unavailable; the component shows its fallback.
@@ -129,7 +129,7 @@ export abstract class Stage {
   /** What a pointer can land on, or null when there is nothing to read. */
   protected abstract pickTarget(): Object3D | null;
   /** A point in the cube, in the content's own units. */
-  protected abstract readPoint(point: Vector3): IGraphPoint;
+  protected abstract readPoint(point: Vector3): IStagePoint;
 
   /** Call at the end of a subclass constructor, once its labels exist: frames the view at its real size. */
   protected start(): void {
@@ -196,12 +196,12 @@ export abstract class Stage {
   }
 
   /** The content as it is on screen, with its labels and `footer` under it, as a PNG. */
-  snapshot(footer: IGraphImageFooter, colours: IGraphImageColours): Promise<Blob | null> {
+  snapshot(footer: IImageFooter, colours: IImageColours): Promise<Blob | null> {
     const isMarked = this.marker.visible;
     this.marker.visible = false;
     this.renderer.render(this.scene, this.camera);
     const labels = this.labels.snapshot(this.camera, this.host.clientWidth, this.host.clientHeight);
-    const image = composeGraphImage(this.renderer.domElement, labels, footer, colours);
+    const image = composeImage(this.renderer.domElement, labels, footer, colours);
     this.marker.visible = isMarked;
     this.requestRender();
     return image;
@@ -227,7 +227,7 @@ export abstract class Stage {
 
   /**
    * Renders `count` frames, each set up by `prepare`, and hands each to `onFrame`, which must copy
-   * the canvas before its first `await` (see `drawGraphFrame`). The view, the spin and the controls
+   * the canvas before its first `await` (see `drawFrame`). The view, the spin and the controls
    * are put back afterwards. Resolves false when the content was closed before the last frame.
    */
   protected async captureFrames(

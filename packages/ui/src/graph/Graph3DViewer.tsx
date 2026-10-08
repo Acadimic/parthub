@@ -16,13 +16,13 @@ import { Button } from '../core/Button';
 import { Chip } from '../core/Chip';
 import { Slider } from '../core/Slider';
 import { cn } from '../lib/cn';
-import { GifProgress, Readout, readColour, type Saving, SectionTitle, StageToolbar } from './viewer-parts';
+import { GifProgress, Readout, readColour, type Saving, SectionTitle, StageToolbar } from '../three/viewer-parts';
 import { DEFAULT_GRAPH_PALETTE, GRAPH_PALETTES, type IGraphPalette, paletteGradient } from './palettes';
-import { GraphScene, type IGraphPoint } from './scene';
-import { loadBrandMark } from './brand';
+import { GraphStage, type IStagePoint } from './graph-stage';
+import { loadBrandMark } from '../three/brand';
 import { renderEquationImage } from './equation-image';
-import { gifFrameScale, recordGif, turnRecording } from './gif';
-import { type IGraphImageColours, type IGraphImageFooter, saveBlob } from './snapshot';
+import { gifFrameScale, recordGif, turnRecording } from '../three/gif';
+import { type IImageColours, type IImageFooter, saveBlob } from '../three/snapshot';
 
 export interface IGraph3DViewerProps {
   /** The equation as written, typeset into a downloaded image. */
@@ -84,7 +84,7 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
   const [palette, setPalette] = useState(DEFAULT_GRAPH_PALETTE);
   const [isSpinning, setIsSpinning] = useState(false);
   const [showWire, setShowWire] = useState(true);
-  const [hover, setHover] = useState<IGraphPoint | null>(null);
+  const [hover, setHover] = useState<IStagePoint | null>(null);
   const [isUnsupported, setIsUnsupported] = useState(false);
   const [saving, setSaving] = useState<Saving>(null);
   const [gifProgress, setGifProgress] = useState(0);
@@ -94,7 +94,7 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
   const accentProbe = useRef<HTMLSpanElement>(null);
   const backgroundProbe = useRef<HTMLSpanElement>(null);
   const foregroundProbe = useRef<HTMLSpanElement>(null);
-  const sceneRef = useRef<GraphScene | null>(null);
+  const sceneRef = useRef<GraphStage | null>(null);
 
   // A teacher editing the view in the preview sees the sliders move back to the new defaults.
   useEffect(() => setValues(graphParamValues(view)), [view]);
@@ -108,9 +108,9 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
     const stage = stageRef.current;
     const labels = labelRef.current;
     if (!stage || !labels) return undefined;
-    let scene: GraphScene;
+    let scene: GraphStage;
     try {
-      scene = new GraphScene(stage, labels, setHover);
+      scene = new GraphStage(stage, labels, setHover);
     } catch {
       setIsUnsupported(true);
       return undefined;
@@ -143,7 +143,7 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
   /** The colours and the line under the graph a download is drawn with, at `pixelRatio`. */
   const prepareDownload = async (
     pixelRatio: number,
-  ): Promise<{ colours: IGraphImageColours; footer: IGraphImageFooter } | null> => {
+  ): Promise<{ colours: IImageColours; footer: IImageFooter } | null> => {
     if (!compiled.isValid) return null;
     const { kind } = compiled.graph;
     const used = Object.fromEntries(params.map((param) => [param, values[param]]));

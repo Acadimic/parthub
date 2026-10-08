@@ -8,9 +8,9 @@ import { cn } from '../lib/cn';
 import { Viewer3DModal } from './Viewer3DModal';
 
 /** Three.js and the scene viewer arrive as their own chunk, fetched the first time a scene is opened. */
-const loadSceneViewer = () => import('../graph/Scene3DViewer');
+const loadSceneViewer = () => import('../scene/Scene3DViewer');
 const Scene3DViewer = lazy(loadSceneViewer);
-const ScenePrintStill = lazy(() => import('../graph/ScenePrintStill'));
+const ScenePrintStill = lazy(() => import('../scene/ScenePrintStill'));
 
 /** Starts the download early — on hover or focus — so the scene is usually ready by the click. */
 export const preloadSceneViewer = (): void => {

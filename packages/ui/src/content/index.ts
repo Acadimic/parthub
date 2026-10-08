@@ -1,13 +1,10 @@
 // The read-only half of authored content: what a student downloads. KaTeX only — no ProseMirror,
-// no MathLive; three.js arrives as its own chunk when a 3D graph is opened. The authoring half is `@repo/ui/editor`, which imports from here and never the
-// reverse.
+// no MathLive; three.js arrives as its own chunk when a 3D graph or scene is opened. The authoring
+// half is `@repo/ui/editor`, which imports from here and never the reverse. 3D graphs and scenes
+// are drawn by `RichTextView` itself, so their components are not exported (see ../three/README.md).
 export { MathRender, renderLatex } from './MathRender';
 export type { IMathRenderProps } from './MathRender';
 export { RichTextView } from './RichTextView';
-export { GraphButton, GraphModal, GRAPH_MODAL_ID, preloadGraphViewer } from './GraphButton';
-export type { IGraphButtonProps, IGraphModalProps } from './GraphButton';
-export { SceneCard, preloadSceneViewer } from './SceneCard';
-export type { ISceneCardProps } from './SceneCard';
 export type { IRichTextViewProps } from './RichTextView';
 export { RichTextImage, useResolvedImageUrl, IMAGE_WIDTH_CLASSES } from './RichTextImage';
 export type { IRichTextImageProps } from './RichTextImage';

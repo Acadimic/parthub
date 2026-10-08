@@ -16,7 +16,7 @@ import { useCloseOnBack } from '../../hooks/use-close-on-back.hook';
 import { SceneForm } from './SceneForm';
 import { SceneGallery } from './SceneGallery';
 
-const Scene3DViewer = lazy(() => import('../../graph/Scene3DViewer'));
+const Scene3DViewer = lazy(() => import('../../scene/Scene3DViewer'));
 
 /** Where a scene came from: a template and the values in its form, or JSON written by hand. */
 export type SceneOrigin = { kind: 'template'; key: string; values: SceneFieldValues } | { kind: 'custom' };

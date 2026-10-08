@@ -18,12 +18,12 @@ import {
   TubeGeometry,
   Vector3,
 } from 'three';
-import { GraphLabels } from './labels';
+import { GraphLabels } from './graph-labels';
 import { gridTriangles, heightRange } from './mesh';
 import type { IGraphPalette } from './palettes';
-import { type IGraphPoint, S, Stage } from './stage';
+import { type IStagePoint, S, Stage } from '../three/stage';
 
-export type { IGraphPoint } from './stage';
+export type { IStagePoint } from '../three/stage';
 
 /** Grid lines drawn over a surface, per side. */
 const WIRE_LINES = 12;
@@ -47,7 +47,7 @@ const clampScene = (value: number): number => Math.max(-S, Math.min(S, value));
  * One 3D graph: a surface or a curve inside a framed cube, with axis ticks as HTML over the canvas.
  * Everything a graph shares with a 3D scene — rendering, controls, read-out, export — is `Stage`.
  */
-export class GraphScene extends Stage {
+export class GraphStage extends Stage {
   private readonly frameMaterial = new LineBasicMaterial({ transparent: true, opacity: 0.35 });
   private readonly frame = new LineSegments(
     new EdgesGeometry(new BoxGeometry(2 * S, 2 * S, 2 * S)),
@@ -81,7 +81,7 @@ export class GraphScene extends Stage {
   private showWire = true;
   protected readonly labels: GraphLabels;
 
-  constructor(host: HTMLElement, labelLayer: HTMLElement, onHover: (point: IGraphPoint | null) => void) {
+  constructor(host: HTMLElement, labelLayer: HTMLElement, onHover: (point: IStagePoint | null) => void) {
     super(host, onHover, 'Interactive 3D graph.');
     this.scene.add(this.frame);
     this.labels = new GraphLabels(labelLayer, S);
@@ -92,7 +92,7 @@ export class GraphScene extends Stage {
     return this.sample ? this.body : null;
   }
 
-  protected readPoint(point: Vector3): IGraphPoint {
+  protected readPoint(point: Vector3): IStagePoint {
     const bounds = this.sample?.bounds;
     if (!bounds) return { x: 0, y: 0, z: 0 };
     return { x: fromScene(point.x, bounds.x), y: fromScene(point.y, bounds.y), z: fromScene(point.z, bounds.z) };

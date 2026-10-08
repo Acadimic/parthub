@@ -66,10 +66,9 @@ phase.
    WebFetch), write the ten-section lesson the prompt specifies, 900–1600 words, LaTeX for every
    formula, `20\%` inside maths, `\$` for money, figures wherever a picture helps (see "Figures"),
    3D graphs on every equation whose shape is the point (see "3D graphs"), 3D scenes for solids,
-   nets, dice, molecules and unit cells (see "3D scenes"),
-   and **cite only resources you have opened with
-   WebFetch** — a real YouTube watch page, a real article, a real PDF; never a URL you have not
-   seen. Every backslash inside a JSON string is doubled. For quizzes: original questions with
+   nets, dice, molecules and unit cells (see "3D scenes"), and **cite only resources you have
+   opened with WebFetch** — a real YouTube watch page, a real article, a real PDF; never a URL you
+   have not seen. Every backslash inside a JSON string is doubled. For quizzes: original questions with
    airtight keys and worked solutions, the counts the prompt gives, a 3D graph on any question
    or option whose equation is a surface or a space curve, and a 3D scene where a solid, a net, a
    die or a molecule is the puzzle — the puzzle in the question, the working in the solution.
@@ -96,17 +95,15 @@ distances, clock faces, motion along a track (meeting, overtaking, trains, boats
 flows of steps, a tank with pipes, a circuit, a ray diagram, a labelled apparatus or process. A
 lesson typically has one to four; a quiz question gets one only when its layout is the hard part.
 
-- **How.** A reply lists its pictures in `figures: [{ ref, alt, caption, svg }]` and places each
-  one in the Markdown on its own line as `![alt text](figure:F1 "Caption")`. `course:content`
-  checks them, uploads each SVG to the organization's `content/` folder after the reply passes,
-  and points the image at the stored file. The prompts' "Figures" section states the rules.
+- **How.** A reply lists its pictures in `figures` and places each as `![alt](figure:F1 "Caption")`;
+  `course:content` uploads each SVG to the organization's `content/` folder. The format and the
+  SVG rules are `FIGURE_RULES` in `packages/shared/src/ai/figures.ts`; read it, do not guess.
 - **Draw from numbers, never by eye.** Write replies as `.mjs` builders (the same `String.raw`
-  pattern as the text) and build each SVG with `tools/course-agent/svg.mjs`: `bar`,
-  `groupedBar`, `stackedBar`, `pie`, `line`, `tableFigure`, `elevation`, `depression`,
-  `rightTriangle`, `triangleSides`, `rectangle`, `circle`, `solid`, `clock`, `track`, `venn`,
-  `flow`, `alligation`, `roundTable`, `grid`, `timeline`, `tank`, `cubeNet`, `dieViews`, and `figure(ref, alt, svg,
-caption)` for the entry. Pass the same data object the text uses, so the picture cannot drift
-  from the numbers. Hand-write SVG only when no helper fits, keeping to the prompt's SVG rules.
+  pattern as the text) and build each SVG with a helper from `tools/course-agent/svg.mjs` —
+  charts, geometry and mensuration, clocks, tracks, Venn, flows, tanks, cube nets, die views,
+  level curves (its exports are the list) — and `figure(ref, alt, svg, caption)` for the entry.
+  Pass the same data object the text uses, so the picture cannot drift from the numbers.
+  Hand-write SVG only when no helper fits, keeping to the SVG rules.
 - **Honest questions.** A figure in a question labels only what the question gives; the unknown is
   `h`, `x` or `?`. Keep the numbers in the text or a table as well, so the question can be answered
   without the image. A solution may carry its own figure of the worked answer.
@@ -134,17 +131,12 @@ identity, or a subject where nothing has a shape. One graph per idea; never two 
 In a quiz, a question about a shape gets a graph on its equation, and when the options are shapes
 to compare, each option gets its own. The question must still be answerable without opening one.
 
-- **How.** Straight after the closing `$` or `$$`, with no space, write `{graph=EXPR}` in calculator
-  syntax: `*` for every product, no spaces, no quotes; a surface uses `x, y`, a curve
-  `(x(t),y(t),z(t))` uses `t`; up to three sliders `a, b, c`, each one a quantity the text names.
-  Settings follow only when a default is wrong: `x=-2..2 y=-2..2`, `t=0..4*pi`, `a=1[0.1..5]`.
-  Examples: `$z = x^2 - y^2${graph=x^2-y^2 x=-2..2 y=-2..2}`,
-  `$$\vec r(t) = (\cos t, \sin t, t/4)$${graph=(cos(t),sin(t),t/4) t=0..4*pi}`.
-  The prompts' "3D graphs" section has the full rules.
-- **Solids are parametric surfaces.** A sphere, cone, cylinder, torus or orbital shape is written
-  as `(x(u,v),y(u,v),z(u,v))` in `u` and `v`, e.g. a sphere of radius 3:
-  `${graph=(3*cos(u)*sin(v),3*sin(u)*sin(v),3*cos(v)) v=0..pi}`. Its axes share one scale, so the
-  shape is true; an implicit equation such as `x^2 + y^2 + z^2 = 9` cannot be drawn as written.
+- **How.** Straight after the closing `$` or `$$`, with no space, write `{graph=EXPR}`, e.g.
+  `$z = x^2 - y^2${graph=x^2-y^2 x=-2..2 y=-2..2}`. The syntax (curves in `t`, parametric surfaces
+  in `u, v`, sliders `a, b, c`, ranges) is `GRAPH_RULES` in `packages/shared/src/ai/graphs.ts`;
+  read it, do not guess.
+- **Solids are parametric surfaces** at true scale; an implicit equation such as
+  `x^2 + y^2 + z^2 = 9` cannot be drawn as written.
 - **In a `.mjs` builder**, `${` inside a `String.raw` template starts an interpolation, so never type
   the block by hand there. Return it from a helper —
   `const G = (expr, view) => '{graph=' + expr + (view ? ' ' + view : '') + '}';` — and write
@@ -163,14 +155,15 @@ planes, vectors and angles, dice, cube nets and painted cubes, molecules and uni
 cube-and-dice reasoning, VSEPR shapes, multiple bonds, crystal structures.
 
 - **How.** A fenced block with the language `scene3d` holding one JSON object, on its own lines.
-  The prompts' "3D scenes" section has the format; the parser is `parseScene` in
-  `packages/shared/dist/utils`, and a scene it refuses is imported as a code block.
+  The format is `SCENE_RULES` in `packages/shared/src/ai/scenes.ts`; the parser is `parseScene`
+  (`@repo/shared/utils`), and a scene it refuses is imported as a code block.
 - **Start from a template.** `SCENE_CATALOG` (same package) has eleven: cone, cylinder, sphere,
   prism or pyramid, two planes, adding vectors, folding a net, two views of a die, a painted cube,
   a molecule's shape, a unit cell. Build one with
   `entry.build({ ...sceneCatalogDefaults(entry), radius: 3 })` rather than writing coordinates. The
-  aptitude ones come from `cubeNetTemplate`, `diceTemplate` and `paintedCubeTemplate`, which return
-  a question scene, a solution scene and the **answer** — use that answer as the key.
+  aptitude ones come from `cubeNetTemplate`, `diceTemplate` and `paintedCubeTemplate`
+  (`utils/scene/aptitude.util.ts`), which return a question scene, a solution scene and the
+  **answer** — use that answer as the key.
 - **A puzzle in a scene is also a flat figure.** A scene opens behind a click, so a question whose
   puzzle is a net, a die or a solid also shows it as a figure in the text — `cubeNet` with the
   scene's cells and labels, `dieViews` with the faces each view shows, `solid` or `rightTriangle`

@@ -1,4 +1,4 @@
-import { validateGraph } from '../utils/graph-expression.util';
+import { validateGraph } from '../utils/graph/expression.util';
 import { parseMarkdownAttrs } from '../utils/pronunciation.util';
 import type { IAiIssue } from './common';
 

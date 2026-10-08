@@ -11,7 +11,7 @@ import {
   Texture,
   Vector3,
 } from 'three';
-import { type ISceneLabel, SceneLabels } from './labels';
+import { type ISceneLabel, SceneLabels } from './scene-labels';
 import { SceneBuilder, type SceneColours, sceneReach } from './scene-builder';
 import {
   easeInOut,
@@ -21,7 +21,7 @@ import {
   sceneStepStates,
   type SceneState,
 } from './scene-steps';
-import { type IFrameRecording, type IGraphPoint, S, Stage } from './stage';
+import { type IFrameRecording, type IStagePoint, S, Stage } from '../three/stage';
 
 export interface ISceneTheme {
   /** Axes and frame lines. */
@@ -79,7 +79,7 @@ export class SceneStage extends Stage {
   private shown: SceneState = {};
   private transition: { from: SceneState; to: SceneState; startedAt: number } | null = null;
 
-  constructor(host: HTMLElement, labelLayer: HTMLElement, onHover: (point: IGraphPoint | null) => void) {
+  constructor(host: HTMLElement, labelLayer: HTMLElement, onHover: (point: IStagePoint | null) => void) {
     super(host, onHover, 'Interactive 3D scene.');
     this.labels = new SceneLabels(labelLayer);
     this.start();
@@ -176,7 +176,7 @@ export class SceneStage extends Stage {
     return this.content;
   }
 
-  protected readPoint(point: Vector3): IGraphPoint {
+  protected readPoint(point: Vector3): IStagePoint {
     const real = point.clone().divideScalar(this.scale).add(this.centre);
     return { x: real.x, y: real.y, z: real.z };
   }

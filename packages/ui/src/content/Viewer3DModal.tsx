@@ -8,7 +8,7 @@ import { useCloseOnBack } from '../hooks/use-close-on-back.hook';
 import { cn } from '../lib/cn';
 
 /** The id the equation editor checks so a click inside the popup does not close it. */
-export const GRAPH_MODAL_ID = 'graph-3d-modal';
+export const VIEWER_3D_MODAL_ID = 'viewer-3d-modal';
 
 export interface IViewer3DModalProps {
   title: string;
@@ -38,7 +38,7 @@ export const Viewer3DModal = ({ title, isOpen, onClose, summary, loadingText, ch
   const toggleLabel = isFullScreen ? 'Exit full screen' : 'Full screen';
   return (
     <Modal
-      id={GRAPH_MODAL_ID}
+      id={VIEWER_3D_MODAL_ID}
       position="center"
       isOpen={isOpen}
       onClose={onClose}

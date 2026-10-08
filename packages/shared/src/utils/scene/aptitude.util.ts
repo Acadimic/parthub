@@ -1,5 +1,5 @@
-import type { CubeFace, IScene, ISceneStep, SceneObject } from '../interfaces/scene3d.interface';
-import { oppositeNetSquares } from './scene-net.util';
+import type { CubeFace, IScene, ISceneStep, SceneObject } from '../../interfaces/scene3d.interface';
+import { oppositeNetSquares } from './net.util';
 
 /**
  * Ready-made scenes for the aptitude questions a picture helps most with. Each gives two scenes: the

@@ -1,6 +1,6 @@
-import type { RichTextAttrValue } from '../interfaces/rich-text.interface';
-import { sampleGraph } from './graph-sample.util';
-import { formatMarkdownAttrs, parseMarkdownAttrs } from './pronunciation.util';
+import type { RichTextAttrValue } from '../../interfaces/rich-text.interface';
+import { sampleGraph } from './sample.util';
+import { formatMarkdownAttrs, parseMarkdownAttrs } from '../pronunciation.util';
 
 /**
  * 3D graphs of equations: the expression language, its compiler, the view settings and sampling.

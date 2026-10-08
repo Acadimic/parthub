@@ -1,5 +1,5 @@
-import { flagOf, type ISceneCatalogEntry, number, numberOf, steps, toggle } from './scene-catalog-fields.util';
-import type { SceneObject } from '../interfaces/scene3d.interface';
+import { flagOf, type ISceneCatalogEntry, number, numberOf, steps, toggle } from './catalog-fields.util';
+import type { SceneObject } from '../../interfaces/scene3d.interface';
 
 /** The mensuration and 3D geometry templates. */
 // ---------------------------------------------------------------------------

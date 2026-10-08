@@ -5,14 +5,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../core/Button';
 import { Slider } from '../core/Slider';
 import { cn } from '../lib/cn';
-import { loadBrandMark } from './brand';
-import { gifFrameScale, recordGif, turnRecording } from './gif';
+import { loadBrandMark } from '../three/brand';
+import { gifFrameScale, recordGif, turnRecording } from '../three/gif';
 import { SceneStage, STEP_MS } from './scene-stage';
 import { readSceneTheme, SceneThemeProbes } from './scene-theme';
-import { type IGraphImageColours, type IGraphImageFooter, saveBlob } from './snapshot';
-import type { IGraphPoint } from './stage';
+import { type IImageColours, type IImageFooter, saveBlob } from '../three/snapshot';
+import type { IStagePoint } from '../three/stage';
 import { StepBar, useSteps } from './StepBar';
-import { GifProgress, Readout, type Saving, SectionTitle, StageToolbar } from './viewer-parts';
+import { GifProgress, Readout, type Saving, SectionTitle, StageToolbar } from '../three/viewer-parts';
 
 export interface IScene3DViewerProps {
   /** The scene's JSON, as stored on the content node. */
@@ -136,7 +136,7 @@ const Scene3DViewer = ({ spec, autoPlay }: IScene3DViewerProps) => {
   const scene = parsed.isValid ? parsed.scene : null;
   const [values, setValues] = useState<Record<string, number>>(() => (scene ? sceneSliderValues(scene) : {}));
   const [isSpinning, setIsSpinning] = useState(false);
-  const [hover, setHover] = useState<IGraphPoint | null>(null);
+  const [hover, setHover] = useState<IStagePoint | null>(null);
   const [isUnsupported, setIsUnsupported] = useState(false);
   const [skipped, setSkipped] = useState<SceneObjectType[]>([]);
   const [saving, setSaving] = useState<Saving>(null);
@@ -196,7 +196,7 @@ const Scene3DViewer = ({ spec, autoPlay }: IScene3DViewerProps) => {
   /** The step a picture shows; a GIF of the steps shows them all, so its caption names none. */
   const stepCaption = stepLabels.length > 1 ? `Step ${steps.index + 1}: ${stepLabels[steps.index]}` : '';
 
-  const prepareDownload = async (step: string): Promise<{ colours: IGraphImageColours; footer: IGraphImageFooter }> => {
+  const prepareDownload = async (step: string): Promise<{ colours: IImageColours; footer: IImageFooter }> => {
     const theme = readTheme();
     const colours = { background: theme.background, foreground: theme.colours.foreground, muted: theme.line };
     const mark = await loadBrandMark(colours.background);

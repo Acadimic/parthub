@@ -18,7 +18,7 @@ import {
   SphereGeometry,
   Vector3,
 } from 'three';
-import type { ISceneLabel } from './labels';
+import type { ISceneLabel } from './scene-labels';
 
 /** How the builder colours chemistry; this file owns the shapes and the sizes. */
 export interface IChemistryPaint {
