@@ -14,6 +14,7 @@ import { MathExtensions } from './extensions/math-nodes';
 import { Pronunciation } from './extensions/pronunciation';
 import { Scene3DBlock } from './extensions/scene3d';
 import { TableExtensions } from './extensions/table';
+import { originToAttr, SceneDialog } from './scene/SceneDialog';
 import { EditorToolbar } from './toolbar/EditorToolbar';
 
 export interface IRichTextEditorProps {
@@ -98,6 +99,7 @@ export const RichTextEditor = ({
   editorClassName,
   defaultLanguage = '',
 }: IRichTextEditorProps) => {
+  const [isSceneOpen, setIsSceneOpen] = useState(false);
   const { uploadImage } = useRichTextMedia();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -175,7 +177,12 @@ export const RichTextEditor = ({
         )}
       >
         <div className="shrink-0">
-          <EditorToolbar editor={editor} onPickImage={pickImage} isUploadingImage={isUploadingImage} />
+          <EditorToolbar
+            editor={editor}
+            onPickImage={pickImage}
+            isUploadingImage={isUploadingImage}
+            onInsertScene={() => setIsSceneOpen(true)}
+          />
           {uploadImage ? (
             <input
               ref={fileInputRef}
@@ -190,6 +197,21 @@ export const RichTextEditor = ({
           <EditorContent editor={editor} />
         </div>
       </div>
+      {isSceneOpen ? (
+        <SceneDialog
+          isOpen
+          start={{ kind: 'new' }}
+          onClose={() => setIsSceneOpen(false)}
+          onSave={(spec, origin) => {
+            editor
+              ?.chain()
+              .focus()
+              .insertScene({ spec, template: originToAttr(origin) })
+              .run();
+            setIsSceneOpen(false);
+          }}
+        />
+      ) : null}
       {uploadError ? <p className="mt-1 text-xs text-destructive">{uploadError}</p> : null}
       {helperText ? (
         <p className={cn('mt-1 text-xs', error ? 'text-destructive' : 'text-muted-foreground')}>{helperText}</p>

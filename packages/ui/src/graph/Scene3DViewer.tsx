@@ -16,6 +16,8 @@ import { GifProgress, Readout, type Saving, SectionTitle, StageToolbar } from '.
 export interface IScene3DViewerProps {
   /** The scene's JSON, as stored on the content node. */
   spec: string;
+  /** Start playing the steps as soon as it opens: yes for a reader, no for a teacher's preview. */
+  autoPlay: boolean;
 }
 
 /** Object types as a reader would name them, for the "drawn in a later update" note. */
@@ -33,9 +35,10 @@ const TYPE_NAMES: Partial<Record<SceneObjectType, string>> = {
  * The interactive view of one 3D scene: the objects on a canvas, sliders for the scene's numbers, a
  * read-out of the point under the pointer, and PNG and GIF downloads.
  *
- * Loaded on demand (see `SceneModal`), so three.js reaches a reader only when they open a scene.
+ * Loaded on demand (see `SceneCard` and `SceneDialog`), so three.js reaches a reader only when they
+ * open a scene.
  */
-const Scene3DViewer = ({ spec }: IScene3DViewerProps) => {
+const Scene3DViewer = ({ spec, autoPlay }: IScene3DViewerProps) => {
   const parsed = useMemo(() => parseScene(spec), [spec]);
   const scene = parsed.isValid ? parsed.scene : null;
   const [values, setValues] = useState<Record<string, number>>(() => (scene ? sceneSliderValues(scene) : {}));
@@ -53,7 +56,7 @@ const Scene3DViewer = ({ spec }: IScene3DViewerProps) => {
   const readTheme = () => readSceneTheme(probesRef.current);
   const stepLabels = useMemo(() => (scene?.steps ?? []).map((step) => step.label), [scene]);
   const goToStep = useCallback((index: number) => stage.current?.setStep(index), []);
-  const steps = useSteps(stepLabels.length, STEP_MS, goToStep);
+  const steps = useSteps(stepLabels.length, STEP_MS, goToStep, autoPlay);
 
   useEffect(() => {
     const host = stageRef.current;

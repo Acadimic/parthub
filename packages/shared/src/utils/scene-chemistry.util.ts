@@ -68,7 +68,12 @@ const around = (polar: number, azimuth: number): Point => [
   Math.sin(polar) * Math.sin(azimuth),
   Math.cos(polar),
 ];
-const third = (index: number) => (2 * Math.PI * index) / 3;
+/**
+ * A third of a turn round the vertical, starting 20° short of the x axis. The default camera looks
+ * from about −50°, so this keeps every one of the three bonds at least 30° off its line of sight:
+ * none hides behind the central atom or covers it.
+ */
+const third = (index: number) => (2 * Math.PI * index) / 3 - Math.PI / 9;
 
 /** The electron domains of each arrangement, as unit directions, z up. */
 const DOMAINS = {

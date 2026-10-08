@@ -61,12 +61,25 @@ const applyStep = (before: SceneState, step: ISceneStep, values: Values): SceneS
 };
 
 /**
+ * The objects that wait for a step to show them: those whose first mention in the steps is a `show`.
+ * One hidden first and shown again later is there from the start, as its author meant.
+ */
+const revealedLater = (steps: ISceneStep[]): Set<string> => {
+  const first = new Map<string, 'show' | 'hide'>();
+  steps.forEach((step) => {
+    step.hide?.forEach((id) => first.has(id) || first.set(id, 'hide'));
+    step.show?.forEach((id) => first.has(id) || first.set(id, 'show'));
+  });
+  return new Set([...first].filter(([, kind]) => kind === 'show').map(([id]) => id));
+};
+
+/**
  * The state at each step, in order; one state, with everything shown, for a scene without steps.
- * An object a step `show`s starts hidden, so it can appear when that step comes.
+ * An object whose first mention is a step's `show` starts hidden, so it can appear when that step comes.
  */
 export const sceneStepStates = (scene: IScene, values: Values): SceneState[] => {
   const steps = scene.steps ?? [];
-  const revealed = new Set(steps.flatMap((step) => step.show ?? []));
+  const revealed = revealedLater(steps);
   const start: SceneState = Object.fromEntries(
     scene.objects.map((object) => [
       object.id,

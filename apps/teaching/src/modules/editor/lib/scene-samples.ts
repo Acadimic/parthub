@@ -182,7 +182,7 @@ export const APTITUDE_DOC: IRichTextDoc = richTextFromMarkdown(
     'Two positions of the same die are shown. Which number is on the face opposite **1**?',
     scene(DICE.question),
     '- 2\n- 3\n- 5\n- 6',
-    `**Solution.** 2, 3, 4 and 5 all touch 1 in one view or the other, so the face opposite it is **${DICE.answer.opposite}**.`,
+    `**Solution.** Both views show 4. Read the faces round it clockwise: in the first view 2 comes just before 1, and in the second 5 comes just before 6. So the ring round 4 is 2, 1, 5, 6, and faces two apart in a ring are opposite: 1 is opposite **${DICE.answer.opposite}**.`,
     scene(DICE.solution),
     '## 3. A painted cube',
     'A 4 cm cube is painted on all six faces and cut into 1 cm cubes. How many small cubes have exactly **two** painted faces?',

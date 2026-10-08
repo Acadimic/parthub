@@ -5,6 +5,7 @@ import {
   ChatsCircleIcon,
   CodeBlockIcon,
   CodeIcon,
+  CubeIcon,
   FlaskIcon,
   FunctionIcon,
   HeadphonesIcon,
@@ -40,6 +41,8 @@ interface IProps {
   /** Opens the file picker; absent where the host cannot upload, which hides the button. */
   onPickImage?: () => void;
   isUploadingImage?: boolean;
+  /** Opens the 3D scene gallery. */
+  onInsertScene: () => void;
 }
 
 const ICON = 'h-4 w-4';
@@ -266,7 +269,7 @@ const useIsCompact = () => {
  * re-renders the owner on every transaction, so a toolbar that read `editor.isActive` directly
  * showed the state of the *previous* selection.
  */
-export const EditorToolbar = ({ editor, onPickImage, isUploadingImage = false }: IProps) => {
+export const EditorToolbar = ({ editor, onPickImage, isUploadingImage = false, onInsertScene }: IProps) => {
   const { ref, isCompact } = useIsCompact();
   const state =
     useEditorState({
@@ -408,6 +411,11 @@ export const EditorToolbar = ({ editor, onPickImage, isUploadingImage = false }:
               onClick={onPickImage}
             />
           ) : null}
+          <ToolbarButton
+            label="3D scene — a solid, net, die, molecule or unit cell to turn and explore"
+            icon={<CubeIcon className={ICON} />}
+            onClick={onInsertScene}
+          />
           {!isCompact && (
             <ToolbarButton
               label="Divider"

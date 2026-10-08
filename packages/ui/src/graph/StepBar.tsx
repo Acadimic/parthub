@@ -5,14 +5,19 @@ import { Button } from '../core/Button';
 /** How long Play rests on a step once it has finished changing, before moving to the next. */
 const PLAY_REST_MS = 1300;
 
+/** True when the reader's device asks for less motion, so nothing starts moving on its own. */
+const prefersReducedMotion = (): boolean =>
+  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+
 /**
  * Which step is showing and whether Play is running. Play moves on at once, then every `stepMs`
  * plus a rest, and stops at the last step; pressing it there starts again from the first. Choosing
- * a step by hand stops it.
+ * a step by hand stops it. With `autoPlay`, it is already playing when the scene opens: the first
+ * step shows for a while before the second comes.
  */
-export const useSteps = (count: number, stepMs: number, onStep: (index: number) => void) => {
+export const useSteps = (count: number, stepMs: number, onStep: (index: number) => void, autoPlay: boolean) => {
   const [index, setIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(() => autoPlay && count > 1 && !prefersReducedMotion());
 
   useEffect(() => onStep(index), [index, onStep]);
 

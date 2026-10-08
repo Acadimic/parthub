@@ -16,3 +16,4 @@ export * from './scene3d.util';
 export * from './scene-net.util';
 export * from './scene-templates.util';
 export * from './scene-chemistry.util';
+export * from './scene-catalog.util';

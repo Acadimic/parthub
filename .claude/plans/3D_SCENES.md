@@ -1,14 +1,18 @@
 # Interactive 3D scenes in course content
 
-Written 2026-10-08. Status: **phases 1–5 committed (5f58493, 3f72120, 17ab4cb, 06cc539, d7bb495);
-phase 6 built (2026-10-08), uncommitted;** phases 7–8 not started. Phase 6: `molecule`, `atom`, `bond`
-and `lattice` drawn by `graph/scene-chemistry.ts`; the chemistry that needs no drawing is in shared
-`scene-chemistry.util.ts` — CPK colours and covalent radii (`ELEMENTS`, `elementOf`), VSEPR
-directions (`moleculeDirections`), unit-cell sites with their shares (`latticeSites`), and the answer
-key (`LATTICE_FACTS`: atoms per cell, coordination, packing); the Editor Lab "Molecules" preset. A
-bond follows its atoms' stored positions, so a step that turns one `atom` leaves its bonds behind;
-turn a whole `molecule` instead. Decided (Manish, 2026-10-08): scenes go in study materials,
-questions and solutions, not answer options. Follows `GRAPH_3D.md`, whose viewer, popup,
+Written 2026-10-08. Status: **phases 1–6 committed (…, d7bb495, 12a01ec); phase 7 built (2026-10-08),
+uncommitted;** phase 8 not started. Phase 7: "3D scene" in every editor's toolbar opens
+`editor/scene/SceneDialog.tsx` — the template gallery, a form per template (`SceneForm.tsx`) beside a
+live preview, the JSON behind "Advanced" with the parser's errors, and Edit on a scene's card; the
+node's `template` attribute remembers the template and its values. Eleven templates live in shared
+`scene-catalog*.util.ts` (`SCENE_CATALOG`, `CUBE_NETS`). An object now starts hidden only when its
+first mention in the steps is a `show`. A scene opened from its card plays its steps at once (not in
+the teacher's preview, nor with reduced motion). The demo course "Seeing Functions in 3D" (dev) has a scenes
+lesson on day 3 and three quiz questions with scenes in the question, the options and the solution
+(`.course-agent/work/graph-demo/scenes.mjs`, `add-scenes.mjs`). A chemistry demo course, "Shapes of
+Molecules and Crystals" (dev, draft, 6ac74bacb374a6bb603a6e92), has three lessons and an 8-question quiz
+with scenes throughout (`.course-agent/work/chem-demo/build.mjs`). Decided (Manish, 2026-10-08): scenes go in study materials,
+questions and solutions; widened the same day to answer options too, so every editor offers them. Follows `GRAPH_3D.md`, whose viewer, popup,
 sliders, PNG/GIF export, lazy loading and AI pipeline this reuses.
 
 Equations can already open as 3D graphs. This plan adds the rest of what a course wants to show in
@@ -216,8 +220,8 @@ Asked 2026-10-08.
    height, slider range, painted faces) with a live preview; the raw JSON behind an "Advanced" link
    for staff; a drag-and-drop builder only if teachers ask. About a day more than JSON alone, and
    usable by any teacher. **Decided (Manish, 2026-10-08).** Reflected in §1, §7 and phase 7.
-3. **Where scenes appear** — **decided (Manish): study materials, questions and solutions; not
-   answer options.**
+3. **Where scenes appear** — **decided (Manish): study materials, questions and solutions; then
+   widened (2026-10-08) to answer options as well — every editor offers "3D scene".**
 4. **Print** — recommended: **a still picture of each scene at its first step**, drawn by the print
    page before it opens the print dialog, built with phase 3 so printed mensuration papers keep their
    figure. The same mechanism can later give 3D graphs a picture in print. _Awaiting

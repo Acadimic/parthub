@@ -1,7 +1,7 @@
 import { CubeIcon } from '@phosphor-icons/react';
 import type { IScene } from '@repo/shared/interfaces';
 import { parseScene } from '@repo/shared/utils';
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, type ReactNode, Suspense, useMemo, useState } from 'react';
 import { useIsPrint } from '../contexts/print-context';
 import { Button } from '../core/Button';
 import { cn } from '../lib/cn';
@@ -61,13 +61,15 @@ export interface ISceneCardProps {
   /** The scene's JSON, as stored on the `scene3d` node. */
   spec: string;
   className?: string;
+  /** More buttons beside "Open in 3D": the editor adds Edit. */
+  actions?: ReactNode;
 }
 
 /**
  * A 3D scene in the flow of a lesson, question or solution: a card with its title and what the
  * reader can do, and a button that opens it in the 3D popup. Nothing three.js loads until then.
  */
-export const SceneCard = ({ spec, className }: ISceneCardProps) => {
+export const SceneCard = ({ spec, className, actions }: ISceneCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const isPrint = useIsPrint();
   const parsed = useMemo(() => parseScene(spec), [spec]);
@@ -100,6 +102,7 @@ export const SceneCard = ({ spec, className }: ISceneCardProps) => {
           text="Open in 3D"
         />
       ) : null}
+      {actions}
       <Viewer3DModal
         title="3D scene"
         isOpen={isOpen}
@@ -112,7 +115,7 @@ export const SceneCard = ({ spec, className }: ISceneCardProps) => {
           </>
         }
       >
-        <Scene3DViewer spec={spec} />
+        <Scene3DViewer spec={spec} autoPlay />
       </Viewer3DModal>
     </div>
   );
