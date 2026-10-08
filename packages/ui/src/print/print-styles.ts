@@ -49,6 +49,8 @@ export const buildPrintCss = ({ footer }: IPageText): string => `
   @bottom-right { content: none; }
 }
 .print-watermark { display: none; }
+/* The app's dark root is still an ancestor, so a figure's \`dark:invert\` matches; outranks it. */
+[data-theme='light'] .print-exact img { filter: none !important; }
 @media print {
   html, body { background: #fff; }
   .print-cover { page: cover; }
