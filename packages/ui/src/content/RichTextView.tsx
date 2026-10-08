@@ -187,6 +187,7 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
       lang={stringAttr(node.attrs, 'lang')}
       mode={(node.attrs?.mode === 'dialogue' ? 'dialogue' : 'passage') satisfies ListeningMode}
       audio={stringAttr(node.attrs, 'audio')}
+      lineAudio={stringAttr(node.attrs, 'lineAudio')}
       isTranscriptHidden={node.attrs?.transcript === 'hidden'}
       lines={node.content ?? []}
     >

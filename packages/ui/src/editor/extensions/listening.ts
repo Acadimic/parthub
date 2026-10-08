@@ -45,6 +45,7 @@ export const ListeningNode = Node.create<IListeningOptions>({
     mode: stringAttribute('mode', 'passage'),
     transcript: stringAttribute('transcript', 'shown'),
     audio: stringAttribute('audio', ''),
+    lineAudio: stringAttribute('lineAudio', ''),
   }),
 
   parseHTML: () => [{ tag: 'section[data-listening]' }],
@@ -62,6 +63,7 @@ export const ListeningNode = Node.create<IListeningOptions>({
             mode: 'passage',
             transcript: 'shown',
             audio: '',
+            lineAudio: '',
             ...attrs,
             lang: attrs.lang || this.options.defaultLanguage || lastLanguage.get(),
           }),

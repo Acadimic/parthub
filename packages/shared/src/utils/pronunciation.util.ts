@@ -26,7 +26,14 @@ export interface IListeningAttrs {
   lang: string;
   mode: ListeningMode;
   transcript: ListeningTranscript;
+  /** The whole block as one stored file, or `''` for the device voice. */
   audio: string;
+  /**
+   * One stored address per line, newline-separated and in line order, for replaying a single line;
+   * `''` when there are none. Used only while it has one entry per line, so a line added or removed
+   * after the files were made falls back to the device voice rather than play the wrong line.
+   */
+  lineAudio: string;
 }
 
 export interface ISpeechLanguage {

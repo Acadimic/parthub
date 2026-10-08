@@ -1,6 +1,14 @@
 import { RichTextFormat } from '../enums/rich-text.enum';
 import type { IRichText, IRichTextDoc, IRichTextMark, IRichTextNode } from '../interfaces/rich-text.interface';
 import { normaliseLatex, repairLatexControlEscapes } from './latex-repair.util';
+import {
+  LISTENING_MODES,
+  LISTENING_NODE,
+  type ListeningMode,
+  parseMarkdownAttrs,
+  PRONUNCIATION_MARK,
+  pronunciationMarkFrom,
+} from './pronunciation.util';
 import { repairQuoteLists } from './quote-list.util';
 import {
   attachGraphSlot,
@@ -10,16 +18,8 @@ import {
   restoreGraphSlots,
 } from './rich-text-graph.util';
 import { imageNode } from './rich-text-image.util';
-import { sceneFenceNode } from './scene3d.util';
 import { createEmptyRichText, docToPlainText, INLINE_CONTAINERS } from './rich-text-plain.util';
-import {
-  LISTENING_MODES,
-  LISTENING_NODE,
-  type ListeningMode,
-  parseMarkdownAttrs,
-  PRONUNCIATION_MARK,
-  pronunciationMarkFrom,
-} from './pronunciation.util';
+import { sceneFenceNode } from './scene3d.util';
 
 export { createEmptyRichText, docToPlainText, isRichTextEmpty } from './rich-text-plain.util';
 
@@ -399,7 +399,11 @@ const readListening: BlockReader = (lines, index) => {
   const mode: ListeningMode = LISTENING_MODES.find((item) => item === attrs.mode) ?? 'passage';
   const transcript = attrs.transcript === 'hidden' ? 'hidden' : 'shown';
   return {
-    node: { type: LISTENING_NODE, attrs: { lang: attrs.lang ?? '', mode, transcript, audio: '' }, content: paragraphs },
+    node: {
+      type: LISTENING_NODE,
+      attrs: { lang: attrs.lang ?? '', mode, transcript, audio: '', lineAudio: '' },
+      content: paragraphs,
+    },
     next: close + 1,
   };
 };

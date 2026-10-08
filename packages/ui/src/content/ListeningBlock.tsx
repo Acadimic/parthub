@@ -10,6 +10,8 @@ export interface IListeningBlockProps {
   lang: string;
   mode: ListeningMode;
   audio: string;
+  /** One stored address per line, newline-separated, or `''`; see `IListeningAttrs.lineAudio`. */
+  lineAudio: string;
   /** A listening task: the text stays folded away until the learner chooses to check it. */
   isTranscriptHidden?: boolean;
   /** The block's paragraphs as stored, to know what to speak. */
@@ -60,13 +62,24 @@ const HiddenText = ({ isDialogue, onReveal }: { isDialogue: boolean; onReveal: (
  * spoken highlighted so a learner can follow along. In a dialogue each line can also be replayed
  * on its own, which is how a learner drills the line they missed.
  */
-export const ListeningBlock = ({ lang, mode, audio, isTranscriptHidden, lines, children }: IListeningBlockProps) => {
+export const ListeningBlock = ({
+  lang,
+  mode,
+  audio,
+  lineAudio,
+  isTranscriptHidden,
+  lines,
+  children,
+}: IListeningBlockProps) => {
   const id = useId();
   const [isRevealed, setIsRevealed] = useState(false);
   const isTextHidden = !!isTranscriptHidden && !isRevealed;
   const all = useSpeech(`${id}:all`);
   const availability = useVoiceAvailability(lang, !!audio);
   const segments = lines.map((line) => spokenText(line, mode));
+  // Only while there is one file per line: after a line is added or removed they no longer match.
+  const lineFiles = lineAudio ? lineAudio.split('\n') : [];
+  const lineAudios = lineFiles.length === lines.length ? lineFiles : [];
   const canPlay = availability !== 'unavailable';
   const isDialogue = mode === 'dialogue';
   const language = speechLanguageName(lang);
@@ -136,6 +149,7 @@ export const ListeningBlock = ({ lang, mode, audio, isTranscriptHidden, lines, c
             canPlay={canPlay}
             text={segments[index]}
             lang={lang}
+            audio={lineAudios[index] ?? ''}
           >
             {child}
           </ListeningLine>
@@ -152,10 +166,12 @@ interface IListeningLineProps {
   canPlay: boolean;
   text: string;
   lang: string;
+  /** This line's own stored file, or `''` for the device voice. */
+  audio: string;
 }
 
 /** One paragraph of the block; a dialogue line carries its own replay button. */
-const ListeningLine = ({ children, isActive, isDialogue, canPlay, text, lang }: IListeningLineProps) => {
+const ListeningLine = ({ children, isActive, isDialogue, canPlay, text, lang, audio }: IListeningLineProps) => {
   const id = useId();
   const line = useSpeech(id);
   const isLinePlaying = line.status !== 'idle';
@@ -175,7 +191,7 @@ const ListeningLine = ({ children, isActive, isDialogue, canPlay, text, lang }: 
         <button
           type="button"
           onClick={() =>
-            isLinePlaying ? line.stop() : line.play({ segments: [text], lang, audio: '', rate: SPEECH_RATES.normal })
+            isLinePlaying ? line.stop() : line.play({ segments: [text], lang, audio, rate: SPEECH_RATES.normal })
           }
           aria-label={isLinePlaying ? 'Stop this line' : `Play line: ${text}`}
           className={cn(
