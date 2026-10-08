@@ -18,6 +18,9 @@ export const IMAGE_WIDTH_CLASSES: Record<string, string> = {
   full: 'max-w-full',
 };
 
+/** A figure drawn as SVG — by the course agent, an AI reply or the editor — rather than a photo. */
+const isDrawnFigure = (src: string): boolean => /\.svg(\?|#|$)/i.test(src);
+
 /** Resolves a stored `src` to a loadable URL through the app's media provider. */
 export const useResolvedImageUrl = (src: string): { url: string; isLoading: boolean } => {
   const { resolveMediaUrl } = useRichTextMedia();
@@ -71,7 +74,13 @@ export const RichTextImage = ({ src, alt, caption, width, className }: IRichText
         onError={() => setHasFailed(true)}
         // Natural size, capped by the column: a photo never blurs and a figure drawn as a small
         // tile (an answer option) stays a tile. Generated SVGs carry their width for this reason.
-        className={cn(frame, 'block h-auto w-auto rounded')}
+        className={cn(
+          frame,
+          'block h-auto w-auto rounded',
+          // A drawn figure (SVG) is dark ink an image cannot recolour from the theme, so in dark
+          // mode it is inverted, hues turned back; a photo is left as it is. Print is always light.
+          isDrawnFigure(src) && 'dark:hue-rotate-180 dark:invert',
+        )}
       />
     );
   }

@@ -104,7 +104,7 @@ lesson typically has one to four; a quiz question gets one only when its layout 
   pattern as the text) and build each SVG with `tools/course-agent/svg.mjs`: `bar`,
   `groupedBar`, `stackedBar`, `pie`, `line`, `tableFigure`, `elevation`, `depression`,
   `rightTriangle`, `triangleSides`, `rectangle`, `circle`, `solid`, `clock`, `track`, `venn`,
-  `flow`, `alligation`, `roundTable`, `grid`, `timeline`, `tank`, and `figure(ref, alt, svg,
+  `flow`, `alligation`, `roundTable`, `grid`, `timeline`, `tank`, `cubeNet`, `dieViews`, and `figure(ref, alt, svg,
 caption)` for the entry. Pass the same data object the text uses, so the picture cannot drift
   from the numbers. Hand-write SVG only when no helper fits, keeping to the prompt's SVG rules.
 - **Honest questions.** A figure in a question labels only what the question gives; the unknown is
@@ -171,6 +171,10 @@ cube-and-dice reasoning, VSEPR shapes, multiple bonds, crystal structures.
   `entry.build({ ...sceneCatalogDefaults(entry), radius: 3 })` rather than writing coordinates. The
   aptitude ones come from `cubeNetTemplate`, `diceTemplate` and `paintedCubeTemplate`, which return
   a question scene, a solution scene and the **answer** — use that answer as the key.
+- **A puzzle in a scene is also a flat figure.** A scene opens behind a click, so a question whose
+  puzzle is a net, a die or a solid also shows it as a figure in the text — `cubeNet` with the
+  scene's cells and labels, `dieViews` with the faces each view shows, `solid` or `rightTriangle`
+  with the given lengths and the unknown as `?`. The text and figure must be enough to answer.
 - **The key and the picture agree.** The numbers in a scene are the numbers in the text, and a
   question's scene must not give the answer away: show the puzzle in the question, and put the
   steps that solve it (fold, turn, slice, highlight) in the solution's scene. A question must be
