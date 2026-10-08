@@ -1,6 +1,6 @@
 import { Layout } from '@enums';
 import { CourseBySlug } from '@modules/courses';
-import { getCourseSlugPageProps } from '@utils/helpers';
+import { getCoursePagePaths, getCourseSlugPageProps } from '@utils/helpers';
 import { useRouter } from 'next/router';
 
 const CoursePage = () => {
@@ -13,5 +13,6 @@ CoursePage.layout = Layout.PUBLIC;
 
 export default CoursePage;
 
-// Server-rendered for the link preview, the canonical address and the course's structured data.
-export const getServerSideProps = getCourseSlugPageProps;
+// Built per course and cached, for the link preview, the canonical address and the structured data.
+export const getStaticProps = getCourseSlugPageProps;
+export const getStaticPaths = getCoursePagePaths;

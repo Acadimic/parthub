@@ -1,4 +1,4 @@
-import { ErrorBoundaryFallback, FullScreenLoader, InternetStatus } from '@repo/ui/app';
+import { ErrorBoundaryFallback, FullScreenLoader, InternetStatus, RouteProgress } from '@repo/ui/app';
 import { useRequest } from '@repo/ui/hooks';
 import { ColorModeContext, RichTextMediaContext } from '@repo/ui/contexts';
 import { useRichTextMediaValue } from '@hooks/rich-text-media.hook';
@@ -203,6 +203,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
             <FullScreenLoader loading={true} />
           ) : (
             <>
+              <RouteProgress />
               <InternetStatus />
               <div data-theme={mode} className="bg-background text-foreground">
                 {getLayout()}

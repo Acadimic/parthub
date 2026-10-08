@@ -8,6 +8,9 @@ const nextConfig = {
   // `next dev` writes AGENTS.md and CLAUDE.md into this workspace on every boot; the repo keeps its
   // agent instructions at the root, so the generated pair is noise in `git status`.
   agentRules: false,
+  // A cached course page is served stale for at most an hour before it is rebuilt in the request,
+  // so a course nobody visited for two days never hands a crawler an expired signed cover URL.
+  expireTime: 3600,
   async redirects() {
     return [
       // `/profile` was an unreferenced stub next to the real page under account settings.

@@ -1,7 +1,7 @@
 import { type PlanDto, type PublishedCourseResponse } from '@repo/shared/contracts';
 import { type IPageMeta } from '@interfaces';
 import { COMPANY } from '@utils/constants';
-import { type GetServerSideProps } from 'next';
+import { type GetStaticPaths, type GetStaticProps } from 'next';
 import { getCoursePath } from './course-path';
 import { fetchPublicApi } from './server-api';
 
@@ -21,10 +21,10 @@ export const DEFAULT_PAGE_META: IPageMeta = {
   jsonLd: null,
 };
 
-const NOT_FOUND_PAGE_META: IPageMeta = { ...DEFAULT_PAGE_META, title: 'Course not found | Acadimic' };
-
-/** Shared by every visitor, so a CDN may hold it briefly; well inside the cover URL's 48 hours. */
-const CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalidate=3600';
+/** How often a course page is rebuilt; well inside the cover URL's 48 hours. */
+const REVALIDATE_SECONDS = 300;
+/** A miss or a failed call is retried sooner, so a just-published course or an API outage clears fast. */
+const RETRY_SECONDS = 60;
 
 /** One line, as a preview shows it: a course description is written in paragraphs. */
 const toSummary = (text: string) => {
@@ -81,36 +81,32 @@ const getCoursePageMeta = async (published: PublishedCourseResponse): Promise<IP
   };
 };
 
-/** In-app navigation asks for a page's props too; no crawler reads them, so the API is skipped. */
-const isClientNavigation = (url: string | undefined) => !!url?.startsWith('/_next/data/');
+/**
+ * No course is built ahead of time: each is built on its first request and then served from the
+ * cache, which also lets a `<Link>` prefetch its data so a click opens it without a server call.
+ */
+export const getCoursePagePaths: GetStaticPaths = async () => ({ paths: [], fallback: 'blocking' });
 
 /**
  * `/courses/<slug>`. Crawlers run no JavaScript, so the course's name, description, cover and
  * structured data reach them only through this; the page itself loads its data in the browser. An
  * unknown slug answers 404, so a search engine drops it rather than keeping an empty page.
  */
-export const getCourseSlugPageProps: GetServerSideProps<{ meta: IPageMeta }> = async ({ params, req, res }) => {
+export const getCourseSlugPageProps: GetStaticProps<{ meta: IPageMeta }> = async ({ params }) => {
   const slug = typeof params?.course === 'string' ? params.course : '';
-  if (isClientNavigation(req.url)) return { props: { meta: DEFAULT_PAGE_META } };
   const published = await fetchPublicApi<PublishedCourseResponse>(`course/published/slug/${encodeURIComponent(slug)}`);
-  res.setHeader('Cache-Control', CACHE_CONTROL);
-  if (published.status === 'not-found') {
-    res.statusCode = 404;
-    return { props: { meta: NOT_FOUND_PAGE_META } };
-  }
-  if (published.status === 'failed') return { props: { meta: DEFAULT_PAGE_META } };
-  return { props: { meta: await getCoursePageMeta(published.data) } };
+  if (published.status === 'not-found') return { notFound: true, revalidate: RETRY_SECONDS };
+  if (published.status === 'failed') return { props: { meta: DEFAULT_PAGE_META }, revalidate: RETRY_SECONDS };
+  return { props: { meta: await getCoursePageMeta(published.data) }, revalidate: REVALIDATE_SECONDS };
 };
 
 /**
  * `/courses/<id>/preview`, kept beside the slug address. Its canonical link names the slug address,
  * so a search engine counts the two as one page and ranks that one.
  */
-export const getCourseIdPageProps: GetServerSideProps<{ meta: IPageMeta }> = async ({ params, req, res }) => {
+export const getCourseIdPageProps: GetStaticProps<{ meta: IPageMeta }> = async ({ params }) => {
   const courseId = typeof params?.course === 'string' ? params.course : '';
-  if (isClientNavigation(req.url)) return { props: { meta: DEFAULT_PAGE_META } };
   const published = await fetchPublicApi<PublishedCourseResponse>(`course/published/${encodeURIComponent(courseId)}`);
-  if (published.status !== 'ok') return { props: { meta: DEFAULT_PAGE_META } };
-  res.setHeader('Cache-Control', CACHE_CONTROL);
-  return { props: { meta: await getCoursePageMeta(published.data) } };
+  if (published.status !== 'ok') return { props: { meta: DEFAULT_PAGE_META }, revalidate: RETRY_SECONDS };
+  return { props: { meta: await getCoursePageMeta(published.data) }, revalidate: REVALIDATE_SECONDS };
 };
