@@ -68,19 +68,62 @@ def main() -> None:
         )
         return np.atleast_1d(generation.cpu().numpy().squeeze())
 
-    def speak_line(text: str, voice: str) -> np.ndarray | None:
-        # The model now and then returns no audio for a very short input; another seed usually works.
-        for seed in (0, 1, 2):
+    def voiced_runs(samples: np.ndarray) -> list[tuple[int, int]]:
+        # Stretches of speech, in 50 ms frames, louder than a tenth of the loudest frame.
+        frame = int(rate * 0.05)
+        energy = np.array([np.abs(samples[i : i + frame]).mean() for i in range(0, len(samples), frame)])
+        voiced = energy > energy.max() * 0.1
+        runs, start = [], None
+        for index, is_voiced in enumerate(voiced):
+            if is_voiced and start is None:
+                start = index
+            if not is_voiced and start is not None:
+                runs.append((start, index))
+                start = None
+        if start is not None:
+            runs.append((start, len(voiced)))
+        return runs
+
+    def is_clean(text: str, samples: np.ndarray) -> bool:
+        # The model sometimes repeats or rambles on a very short input ("कर्म" said twice, "क" for
+        # five seconds). A take is kept when a word or two is one stretch of speech and no text runs
+        # far longer than its letters need.
+        runs = voiced_runs(samples)
+        speech = sum(end - start for start, end in runs) * 0.05
+        letters = len(text.replace(" ", ""))
+        if len(text.split()) <= 2 and any(runs[i + 1][0] - runs[i][1] >= 10 for i in range(len(runs) - 1)):
+            return False
+        return speech <= max(1.0, letters * 0.22) * 2
+
+    def trimmed(samples: np.ndarray) -> np.ndarray:
+        runs = voiced_runs(samples)
+        if not runs:
+            return samples
+        frame = int(rate * 0.05)
+        start = max(0, runs[0][0] * frame - int(rate * 0.1))
+        end = min(len(samples), runs[-1][1] * frame + int(rate * 0.15))
+        return samples[start:end]
+
+    def speak_line(text: str, voice: str, seeds: range = range(8)) -> np.ndarray | None:
+        # Seeds in a fixed order, so a re-run picks the same take; the first clean one wins.
+        best = None
+        for seed in seeds:
             samples = speak(text, voice, seed)
-            if len(samples) >= rate * 0.25:
-                return samples
-        return None
+            if len(samples) < rate * 0.25:
+                continue
+            if is_clean(text, samples):
+                return trimmed(samples)
+            if best is None or len(samples) < len(best):
+                best = samples
+        return None if best is None else trimmed(best)
 
     pause = np.zeros(int(rate * 0.7), dtype=np.float32)
     failed = []
     for index, item in enumerate(todo, 1):
         lines = item.get("segments") or [item["text"]]
-        spoken = [speak_line(line, item["description"]) for line in lines]
+        # A stubborn item can ask for a wider search: {"seedStart": 8, "tries": 24}.
+        seeds = range(item.get("seedStart", 0), item.get("seedStart", 0) + item.get("tries", 8))
+        spoken = [speak_line(line, item["description"], seeds) for line in lines]
         if any(part is None for part in spoken):
             failed.append(item["key"])
             print(f"{index}/{len(todo)} {item['key'][:12]} FAILED (no audio): {lines[0][:40]}", file=sys.stderr, flush=True)
