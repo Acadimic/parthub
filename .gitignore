@@ -38,3 +38,7 @@ data
 
 # The terminal course agent's session and run state
 .course-agent/
+
+# Python bytecode from tools/course-agent/tts
+__pycache__/
+*.pyc
