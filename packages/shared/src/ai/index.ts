@@ -5,6 +5,7 @@
 export * from './common';
 export * from './figures';
 export * from './graphs';
+export * from './scenes';
 export * from './pronunciation';
 export * from './defaults';
 export * from './test-paper-generator';

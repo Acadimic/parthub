@@ -2,6 +2,7 @@ import { AI_STUDY_MATERIAL_FORMAT, type AiResourceKind } from '../interfaces';
 import { LevelType } from '../enums';
 import { MARKDOWN_RULES } from './common';
 import { GRAPH_RULES } from './graphs';
+import { SCENE_RULES } from './scenes';
 import { FIGURE_RULES } from './figures';
 import { pronunciationRules } from './pronunciation';
 import {
@@ -201,7 +202,10 @@ Markdown, restricted to:${MARKDOWN_RULES}
 ${FIGURE_RULES}
 
 # 3D graphs
-${GRAPH_RULES}${pronunciationRules(context.standard.locale)}
+${GRAPH_RULES}
+
+# 3D scenes
+${SCENE_RULES}${pronunciationRules(context.standard.locale)}
 
 # Output
 

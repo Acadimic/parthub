@@ -1,7 +1,6 @@
 # Interactive 3D scenes in course content
 
-Written 2026-10-08. Status: **phases 1–6 committed (…, d7bb495, 12a01ec); phase 7 built (2026-10-08),
-uncommitted;** phase 8 not started. Phase 7: "3D scene" in every editor's toolbar opens
+Written 2026-10-08. Status: **phases 1–6 committed (…, d7bb495, 12a01ec); phase 7 committed (30c7b9c); phase 8 built (2026-10-08), uncommitted, its import waiting on the dev API.** Phase 7: "3D scene" in every editor's toolbar opens
 `editor/scene/SceneDialog.tsx` — the template gallery, a form per template (`SceneForm.tsx`) beside a
 live preview, the JSON behind "Advanced" with the parser's errors, and Edit on a scene's card; the
 node's `template` attribute remembers the template and its values. Eleven templates live in shared
@@ -11,7 +10,11 @@ the teacher's preview, nor with reduced motion). The demo course "Seeing Functio
 lesson on day 3 and three quiz questions with scenes in the question, the options and the solution
 (`.course-agent/work/graph-demo/scenes.mjs`, `add-scenes.mjs`). A chemistry demo course, "Shapes of
 Molecules and Crystals" (dev, draft, 6ac74bacb374a6bb603a6e92), has three lessons and an 8-question quiz
-with scenes throughout (`.course-agent/work/chem-demo/build.mjs`). Decided (Manish, 2026-10-08): scenes go in study materials,
+with scenes throughout (`.course-agent/work/chem-demo/build.mjs`). Phase 8: `SCENE_RULES` and `checkMarkdownScenes` in `packages/shared/src/ai/scenes.ts`, in
+both prompts and in `checkMarkdownMath`; a "3D scenes" section in the course-builder agent;
+`checkMarkdownMath` now finds a stray `$` by importing the field rather than by a currency
+pattern; the size limit counts compact JSON, so a pretty-printed scene round-trips. The lesson and
+quiz for the aptitude courses are in `.course-agent/work/phase8/`. Decided (Manish, 2026-10-08): scenes go in study materials,
 questions and solutions; widened the same day to answer options too, so every editor offers them. Follows `GRAPH_3D.md`, whose viewer, popup,
 sliders, PNG/GIF export, lazy loading and AI pipeline this reuses.
 

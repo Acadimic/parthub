@@ -1,5 +1,8 @@
+import type { IRichTextNode } from '../interfaces/rich-text.interface';
 import { repairJsonEscapes } from '../utils';
+import { richTextFromMarkdown } from '../utils/rich-text.util';
 import { checkMarkdownGraphs } from './graphs';
+import { checkMarkdownScenes } from './scenes';
 
 /** One thing wrong with a model's reply, pointed at with the file's own refs so a teacher can find it. */
 export interface IAiIssue {
@@ -81,13 +84,26 @@ export const repairIssue = (repairs: number): IAiIssue[] =>
       ]
     : [];
 
-/** A price written as `$5000` in prose: it reads as an equation delimiter unless escaped. */
-const CURRENCY = /(^|[^\\$])\$\d[\d,]*(\.\d+)?(?=\s|$|[.,;:)])/m;
+/**
+ * Every `$` a reader would still see once the field is imported — an equation the importer could not
+ * close, or a price — as a few words round it. Escaped `\$` is meant as money and is set aside first;
+ * code blocks keep their text as written.
+ */
+const strayDollars = (markdown: string): string[] => {
+  const found: string[] = [];
+  const walk = (node: IRichTextNode) => {
+    if (node.type === 'codeBlock') return;
+    if (node.type === 'text' && node.text?.includes('$')) found.push(node.text.trim().slice(0, 40));
+    node.content?.forEach(walk);
+  };
+  walk(richTextFromMarkdown(markdown.replace(/\\\$/g, '¤')).doc);
+  return found;
+};
 
 /**
  * The equation problems a validator can see in Markdown: control characters where a command was,
- * a bare `$` price, an odd number of `$` delimiters, the wrong delimiters. Warnings, because the
- * parser repairs what it can; they tell the teacher where to look.
+ * a `$` the importer could not pair, the wrong delimiters. Warnings, because the parser repairs what
+ * it can; they tell the teacher where to look.
  */
 export const checkMarkdownMath = (markdown: string, path: string, issues: IAiIssue[]) => {
   const text = markdown ?? '';
@@ -98,20 +114,12 @@ export const checkMarkdownMath = (markdown: string, path: string, issues: IAiIss
       message: 'Contains control characters where LaTeX commands were expected; repaired where the command is known.',
     });
   }
-  const hasCurrency = CURRENCY.test(text);
-  if (hasCurrency) {
+  const stray = strayDollars(text);
+  if (stray.length) {
     issues.push({
       level: 'warning',
       path,
-      message: 'Uses $ as a currency sign; kept as text, but write \\$ to be safe.',
-    });
-  }
-  const dollars = (text.replace(/\\\$/g, '').replace(/\$\$/g, '').match(/\$/g) ?? []).length;
-  if (dollars % 2 === 1 && !hasCurrency) {
-    issues.push({
-      level: 'warning',
-      path,
-      message: 'An odd number of $ signs; an equation may be missing its closing $.',
+      message: `A $ shows as text in "${stray[0]}": close the equation with $ and no space before it, or write \\$ for money.`,
     });
   }
   if (/\\\(|\\\[/.test(text)) {
@@ -122,6 +130,7 @@ export const checkMarkdownMath = (markdown: string, path: string, issues: IAiIss
     });
   }
   checkMarkdownGraphs(text, path, issues);
+  checkMarkdownScenes(text, path, issues);
 };
 
 /** The Markdown subset the editor stores, stated for the model. Shared by every AI prompt. */

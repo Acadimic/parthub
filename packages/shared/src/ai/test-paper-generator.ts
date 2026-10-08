@@ -13,6 +13,7 @@ import { createObjectId } from '../utils/object-id.util';
 import { checkMarkdownMath, type IAiIssue, MARKDOWN_RULES, parseJsonObject, repairIssue } from './common';
 import { checkFigures, FIGURE_RULES } from './figures';
 import { GRAPH_RULES } from './graphs';
+import { SCENE_RULES } from './scenes';
 import { checkPronunciation, pronunciationRules } from './pronunciation';
 
 /** How many of each type a section should get. */
@@ -214,7 +215,10 @@ Markdown, restricted to:${MARKDOWN_RULES}
 ${FIGURE_RULES}
 
 # 3D graphs
-${GRAPH_RULES}${pronunciationRules(context.standards.find((standard) => standard.locale)?.locale)}
+${GRAPH_RULES}
+
+# 3D scenes
+${SCENE_RULES}${pronunciationRules(context.standards.find((standard) => standard.locale)?.locale)}
 
 # Output
 

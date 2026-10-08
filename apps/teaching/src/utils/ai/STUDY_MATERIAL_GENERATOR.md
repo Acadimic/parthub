@@ -114,6 +114,16 @@ per option when a question's options are shapes to compare. `checkMarkdownGraphs
 that does not follow an equation and on an expression that cannot be drawn; the importer drops such
 a graph and keeps the equation. See `packages/ui/src/editor/README.md` §3c.
 
+## 3D scenes
+
+A ```` ```scene3d ```` fence holding one JSON object becomes an interactive 3D scene: solids and their
+sections and nets, planes and vectors, dice, cube nets, painted cubes, molecules and unit cells. The
+prompt's "3D scenes" section (`SCENE_RULES` in `packages/shared/src/ai/scenes.ts`) gives the format,
+when to add one, and that the numbers in a scene are the numbers in the text. `checkMarkdownScenes`
+(run inside `checkMarkdownMath`) warns on a scene the parser refuses; the importer keeps it as a
+code block. The format is `IScene` in `packages/shared/src/interfaces/scene3d.interface.ts`, and the
+plan is `.claude/plans/3D_SCENES.md`.
+
 ## Pronunciation
 
 When the course's standard has a spoken language (`locale`, set on a language standard in the

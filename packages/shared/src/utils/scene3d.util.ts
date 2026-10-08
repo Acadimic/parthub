@@ -496,10 +496,14 @@ const checkSteps = (checker: SceneChecker, steps: unknown): void => {
 /** Reads a scene from its JSON text, or from already-parsed JSON. */
 export const parseScene = (input: string | unknown): SceneParseResult => {
   let raw: unknown = input;
+  const tooBig = {
+    isValid: false as const,
+    errors: [`scene: is over ${SCENE_LIMITS.bytes / 1000} KB; keep it smaller.`],
+  };
   if (typeof input === 'string') {
-    if (input.length > SCENE_LIMITS.bytes) {
-      return { isValid: false, errors: [`scene: is over ${SCENE_LIMITS.bytes / 1000} KB; keep it smaller.`] };
-    }
+    // Indentation is not the scene: the limit is checked on the compact JSON below. This cap only
+    // keeps a runaway string from being parsed at all.
+    if (input.length > SCENE_LIMITS.bytes * 10) return tooBig;
     try {
       raw = JSON.parse(input);
     } catch (error) {
@@ -510,6 +514,7 @@ export const parseScene = (input: string | unknown): SceneParseResult => {
     }
   }
   if (!isRecord(raw)) return { isValid: false, errors: ['scene: must be one JSON object.'] };
+  if (JSON.stringify(raw).length > SCENE_LIMITS.bytes) return tooBig;
   const checker = new SceneChecker();
   if (raw.version !== 1) checker.add('version', 'must be 1.');
   if (raw.title !== undefined && typeof raw.title !== 'string') checker.add('title', 'must be text.');

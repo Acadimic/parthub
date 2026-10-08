@@ -65,12 +65,14 @@ phase.
 2. Answer each prompt yourself, one file per reply. For lessons: research the topic (WebSearch,
    WebFetch), write the ten-section lesson the prompt specifies, 900–1600 words, LaTeX for every
    formula, `20\%` inside maths, `\$` for money, figures wherever a picture helps (see "Figures"),
-   3D graphs on every equation whose shape is the point (see "3D graphs"),
+   3D graphs on every equation whose shape is the point (see "3D graphs"), 3D scenes for solids,
+   nets, dice, molecules and unit cells (see "3D scenes"),
    and **cite only resources you have opened with
    WebFetch** — a real YouTube watch page, a real article, a real PDF; never a URL you have not
    seen. Every backslash inside a JSON string is doubled. For quizzes: original questions with
-   airtight keys and worked solutions, the counts the prompt gives, and a 3D graph on any question
-   or option whose equation is a surface or a space curve.
+   airtight keys and worked solutions, the counts the prompt gives, a 3D graph on any question
+   or option whose equation is a surface or a space curve, and a 3D scene where a solid, a net, a
+   die or a molecule is the puzzle — the puzzle in the question, the working in the solution.
 3. `cli.mjs course:content --course <id> --reply <file...>` imports and links them, checking
    every reference. Work through the manifest until `cli.mjs course:status --course <id>` shows
    nothing left to write. Checkpoint after each week's worth, not after each file.
@@ -152,6 +154,36 @@ to compare, each option gets its own. The question must still be answerable with
   that does not follow its equation) and fix every graph warning — the importer drops a graph it
   cannot draw. The expression must plot exactly the function the LaTeX shows, over a range that
   shows its interesting part: open one or two in the teaching app's preview when unsure.
+
+# 3D scenes
+
+A 3D scene is a model the student turns and steps through: solids and their nets and sections,
+planes, vectors and angles, dice, cube nets and painted cubes, molecules and unit cells. Add one
+**wherever the idea is a 3D shape** that a flat figure shows badly — mensuration, 3D geometry,
+cube-and-dice reasoning, VSEPR shapes, multiple bonds, crystal structures.
+
+- **How.** A fenced block with the language `scene3d` holding one JSON object, on its own lines.
+  The prompts' "3D scenes" section has the format; the parser is `parseScene` in
+  `packages/shared/dist/utils`, and a scene it refuses is imported as a code block.
+- **Start from a template.** `SCENE_CATALOG` (same package) has eleven: cone, cylinder, sphere,
+  prism or pyramid, two planes, adding vectors, folding a net, two views of a die, a painted cube,
+  a molecule's shape, a unit cell. Build one with
+  `entry.build({ ...sceneCatalogDefaults(entry), radius: 3 })` rather than writing coordinates. The
+  aptitude ones come from `cubeNetTemplate`, `diceTemplate` and `paintedCubeTemplate`, which return
+  a question scene, a solution scene and the **answer** — use that answer as the key.
+- **The key and the picture agree.** The numbers in a scene are the numbers in the text, and a
+  question's scene must not give the answer away: show the puzzle in the question, and put the
+  steps that solve it (fold, turn, slice, highlight) in the solution's scene. A question must be
+  answerable from its text alone.
+- **Facts come from the shared code, not from memory.** `foldCubeNet` and `oppositeNetSquares`
+  for nets, `paintedCubeCounts` for painted cubes, `LATTICE_FACTS` and `latticeSites` for unit
+  cells, `moleculeDirections` for VSEPR. Molecules from atoms and bonds use measured lengths in
+  ångström; an `angle` between two `segment`s laid along the bonds shows the angle the coordinates
+  actually make, so the label cannot disagree with the text.
+- **Check before importing.** Every Markdown field through `checkMarkdownMath` from
+  `packages/shared/dist/ai`: it warns on a scene that will not parse and on any `$` that would show
+  as text. Fix every warning of either kind. A space before a closing `$` (`$x = $ **4**`) is the
+  usual cause of the second.
 
 # Quality bar for what you write
 
