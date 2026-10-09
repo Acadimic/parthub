@@ -237,7 +237,8 @@ export class GraphStage extends Stage {
       shape.geometry.dispose();
     });
     this.extras = this.showWire ? [this.surfaceWire(size, position, valid)] : [];
-    this.scene.add(...this.extras);
+    // `add()` with no arguments logs "object not an instance of THREE.Object3D".
+    if (this.extras.length) this.scene.add(...this.extras);
     this.requestRender();
   }
 
