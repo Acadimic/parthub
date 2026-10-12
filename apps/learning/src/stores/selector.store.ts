@@ -37,6 +37,10 @@ export interface ISelectorState {
   selectedCourseOutlineTab: CourseOutlineTab;
   selectedUpsertQuestionStep: number;
   isCourseMenuOpen: boolean;
+  /** The outline pane folded away from `lg` up, from the toggle at the end of the learning view's top bar. */
+  isCourseOutlineHidden: boolean;
+  /** The course page's Reviews accordion; opened by its header, the hero's stars and a `#reviews` hash. */
+  isCourseReviewsOpen: boolean;
   /** The Explore sheet on a small screen; opened from the tab bar and the header's search icon. */
   isExploreOpen: boolean;
   selectedContent: IRichText | null;
@@ -61,6 +65,8 @@ export interface ISelectorState {
   setSelectedCourseOutlineTab: (value: CourseOutlineTab) => void;
   setSelectedUpsertQuestionStep: (value: number) => void;
   setIsCourseMenuOpen: (value: boolean) => void;
+  setIsCourseOutlineHidden: (value: boolean) => void;
+  setIsCourseReviewsOpen: (value: boolean) => void;
   setIsExploreOpen: (value: boolean) => void;
   setSelectedContent: (value: IRichText | null) => void;
   setSelectedAttachment: (value: AttachmentDto | null) => void;
@@ -103,6 +109,8 @@ const INITIAL = {
   selectedCourseOutlineTab: CourseOutlineTab.CONTENTS,
   selectedUpsertQuestionStep: 0,
   isCourseMenuOpen: false,
+  isCourseOutlineHidden: false,
+  isCourseReviewsOpen: false,
   isExploreOpen: false,
   selectedContent: null,
   selectedAttachment: null,
@@ -167,6 +175,12 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
   },
   setIsCourseMenuOpen: (value) => {
     set({ isCourseMenuOpen: value });
+  },
+  setIsCourseOutlineHidden: (value) => {
+    set({ isCourseOutlineHidden: value });
+  },
+  setIsCourseReviewsOpen: (value) => {
+    set({ isCourseReviewsOpen: value });
   },
   setIsExploreOpen: (value) => {
     set({ isExploreOpen: value });

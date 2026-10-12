@@ -12,8 +12,7 @@ import {
   HouseIcon,
   ListBulletsIcon,
 } from '@phosphor-icons/react';
-import { type ICourse, useSelectedCourse } from '@stores';
-import { useState } from 'react';
+import { type ICourse, useSelectedCourse, useSelectorLookups } from '@stores';
 import { getCoursePath } from '@utils/helpers';
 import { CourseCompleteBanner, CourseModuleContent } from './course-modules';
 import { CourseOutline } from './CourseOutline';
@@ -63,7 +62,7 @@ const OutlineHeader = ({ course }: { course: ICourse }) => {
 export const CourseModules = () => {
   const selectedCourse = useSelectedCourse();
   const { selectItem, isCourseMenuOpen, handleCourseMenuClick, getCourseProgress } = useCourse();
-  const [isOutlineHidden, setIsOutlineHidden] = useState(false);
+  const { isCourseOutlineHidden: isOutlineHidden, setIsCourseOutlineHidden: setIsOutlineHidden } = useSelectorLookups();
 
   if (!selectedCourse) return null;
 

@@ -25,6 +25,10 @@ interface IProps {
   notFoundComponent?: React.ReactNode;
   noSort?: boolean;
   className?: string;
+  /** Leaves the search row out: for a short, fixed list, where it is noise. */
+  noSearch?: boolean;
+  /** Classes for the open panel, which is portaled and so outside `className`'s reach. */
+  panelClassName?: string;
 }
 
 /** How many chips a multi-select shows before collapsing the rest into a "+N" count. */
@@ -245,6 +249,8 @@ interface IPanelProps {
   notFoundComponent?: React.ReactNode;
   selectedCount: number;
   onClear: () => void;
+  noSearch?: boolean;
+  panelClassName?: string;
 }
 
 /** The open list: search row, options (grouped or flat), and a clear-all footer for multi-selects. */
@@ -264,69 +270,83 @@ const SelectPanel = ({
   notFoundComponent,
   selectedCount,
   onClear,
-}: IPanelProps) => (
-  <div
-    ref={panelRef}
-    style={style}
-    className="z-[1400] flex flex-col overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-xl animate-fade-in"
-    onKeyDown={onKeyDown}
-  >
-    {title ? (
-      <div className="border-b border-border px-3 py-2 text-xs font-semibold text-muted-foreground">{title}</div>
-    ) : null}
-    <div className="flex items-center gap-2 border-b border-border px-3 py-2">
-      <MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-      <input
-        type="text"
-        placeholder={label ? `Search ${label.toLowerCase()}` : 'Search'}
-        className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-        value={searchTerm}
-        onChange={(event) => onSearchChange(event.target.value)}
-        autoFocus
-      />
-      {searchTerm ? (
-        <button
-          type="button"
-          aria-label="Clear search"
-          className="rounded-sm p-0.5 text-muted-foreground hover:text-foreground"
-          onClick={() => onSearchChange('')}
-        >
-          <XIcon weight="bold" className="h-3.5 w-3.5" />
-        </button>
+  noSearch,
+  panelClassName,
+}: IPanelProps) => {
+  // With no search input to take it, the panel itself holds focus so arrows, Enter and Escape land here.
+  React.useEffect(() => {
+    if (noSearch) panelRef.current?.focus({ preventScroll: true });
+  }, [noSearch]);
+  return (
+    <div
+      ref={panelRef}
+      style={style}
+      tabIndex={noSearch ? -1 : undefined}
+      className={cn(
+        'z-[1400] flex flex-col overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-xl animate-fade-in focus-visible:outline-none',
+        panelClassName,
+      )}
+      onKeyDown={onKeyDown}
+    >
+      {title ? (
+        <div className="border-b border-border px-3 py-2 text-xs font-semibold text-muted-foreground">{title}</div>
       ) : null}
-    </div>
-    <div id={listboxId} role="listbox" aria-multiselectable={!isSingleSelect} className="overflow-y-auto p-1">
-      {visibleItems.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-3">
-          <BlankState
-            label={searchTerm ? 'No matches' : 'Nothing to choose from'}
-            iconSize="h-5 w-5"
-            className="py-2"
+      {noSearch ? null : (
+        <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+          <MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder={label ? `Search ${label.toLowerCase()}` : 'Search'}
+            className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            value={searchTerm}
+            onChange={(event) => onSearchChange(event.target.value)}
+            autoFocus
           />
-          {notFoundComponent}
+          {searchTerm ? (
+            <button
+              type="button"
+              aria-label="Clear search"
+              className="rounded-sm p-0.5 text-muted-foreground hover:text-foreground"
+              onClick={() => onSearchChange('')}
+            >
+              <XIcon weight="bold" className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
+        </div>
+      )}
+      <div id={listboxId} role="listbox" aria-multiselectable={!isSingleSelect} className="overflow-y-auto p-1">
+        {visibleItems.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-3">
+            <BlankState
+              label={searchTerm ? 'No matches' : 'Nothing to choose from'}
+              iconSize="h-5 w-5"
+              className="py-2"
+            />
+            {notFoundComponent}
+          </div>
+        ) : null}
+        {groupedItems
+          ? [...groupedItems.entries()].map(([group, items]) => (
+              <div key={group}>
+                <div className="px-2.5 pb-1 pt-2 text-xxs font-semibold uppercase tracking-caps text-muted-foreground">
+                  {group}
+                </div>
+                {items.map(renderOption)}
+              </div>
+            ))
+          : visibleItems.map(renderOption)}
+      </div>
+      {!isSingleSelect && selectedCount > 0 ? (
+        <div className="flex items-center justify-between border-t border-border px-3 py-1.5 text-xs text-muted-foreground">
+          <span>{selectedCount} selected</span>
+          <button type="button" className="font-medium text-primary hover:underline" onClick={onClear}>
+            Clear
+          </button>
         </div>
       ) : null}
-      {groupedItems
-        ? [...groupedItems.entries()].map(([group, items]) => (
-            <div key={group}>
-              <div className="px-2.5 pb-1 pt-2 text-xxs font-semibold uppercase tracking-caps text-muted-foreground">
-                {group}
-              </div>
-              {items.map(renderOption)}
-            </div>
-          ))
-        : visibleItems.map(renderOption)}
     </div>
-    {!isSingleSelect && selectedCount > 0 ? (
-      <div className="flex items-center justify-between border-t border-border px-3 py-1.5 text-xs text-muted-foreground">
-        <span>{selectedCount} selected</span>
-        <button type="button" className="font-medium text-primary hover:underline" onClick={onClear}>
-          Clear
-        </button>
-      </div>
-    ) : null}
-  </div>
-);
+  );
+};
 
 /**
  * A single- or multi-select with search, grouping and keyboard navigation.
@@ -356,6 +376,8 @@ export const Select = ({
   notFoundComponent,
   noSort,
   className,
+  noSearch,
+  panelClassName,
 }: IProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -518,6 +540,8 @@ export const Select = ({
             notFoundComponent={notFoundComponent}
             selectedCount={selectedItems.length}
             onClear={() => onChange([])}
+            noSearch={noSearch}
+            panelClassName={panelClassName}
           />,
           document.body,
         )}

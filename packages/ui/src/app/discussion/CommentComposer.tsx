@@ -129,7 +129,7 @@ export const CommentComposer = ({
           onKeyDown={(event) => {
             if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) post();
           }}
-          className="resize-none border-0 bg-transparent px-3 pt-2.5 shadow-none focus-visible:ring-0"
+          className="resize-none border-0 bg-transparent px-3 pt-2.5 shadow-none placeholder:text-xs placeholder:font-normal focus-visible:ring-0"
         />
         {files.length ? (
           <div className="flex flex-wrap gap-2 px-3 pb-2 pt-1">

@@ -290,7 +290,7 @@ export const CourseModuleContent = () => {
           actions={
             <>
               <MarkCompleteButton testPaper={selectedTestPaper} material={selectedMaterial} />
-              <AskDoubtButton {...lessonProps} />
+              <AskDoubtButton />
               <div className="flex items-center gap-0.5 rounded-full bg-muted/60 p-1">
                 <LikeCourse collectionItem={item} collectionRef={collectionRef} />
                 <BookmarkCourse collectionItem={item._id} collectionRef={collectionRef} />

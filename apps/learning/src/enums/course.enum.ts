@@ -20,4 +20,5 @@ export enum CourseOutlineTab {
   TESTS = 'tests',
   LIVE_CLASSES = 'liveClasses',
   DISCUSSION = 'discussion',
+  DOUBTS = 'doubts',
 }

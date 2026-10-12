@@ -102,6 +102,7 @@ const Replies = ({
         <CommentComposer
           courseId={comment.course}
           parentId={comment._id}
+          source={null}
           placeholder={`Reply to ${authorName}…`}
           isAutoFocus
           onPosted={() => {
@@ -155,7 +156,7 @@ export const CommentItem = ({ comment, isReply }: IProps) => {
         trailing={isMine && !isEditing ? <Menu menuItems={menuItems} /> : null}
       />
       <div className="flex flex-col pl-[42px]">
-        <CommentSource comment={comment} />
+        {isReply ? null : <CommentSource comment={comment} />}
         <CommentBody
           key={String(isEditing)}
           comment={comment}

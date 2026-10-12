@@ -1,14 +1,13 @@
 import { BlankState } from '@components/others';
-import { ChatsCircleIcon, StarIcon } from '@phosphor-icons/react';
 import { Button } from '@repo/ui/app';
 import { Skeleton } from '@repo/ui/core';
 import { useRequest } from '@repo/ui/hooks';
-import { cn } from '@repo/ui/lib';
 import { useDiscussionLookups, useDiscussionStore } from '@stores';
-import { type ReactNode, useEffect, useState } from 'react';
-import { CourseReviews } from './CourseReviews';
-import { CommentComposer } from './CommentComposer';
+import { useEffect } from 'react';
+import { type CommentSourceIds, CommentComposer } from './CommentComposer';
 import { CommentItem } from './CommentItem';
+import { CourseRatingRow } from './CourseReviews';
+import { useOpenItem } from './useOpenItem';
 
 const CommentSkeleton = () => (
   <div className="flex gap-2.5">
@@ -65,89 +64,51 @@ const CommentList = ({ courseId }: { courseId: string }) => {
   return <BlankState label="No comments yet" description="Be the first to start a conversation about this course." />;
 };
 
-type DiscussionView = 'comments' | 'reviews';
-
-/** Comments and reviews side by side in one tab, switched by a pair of buttons under the title. */
-const ViewSwitch = ({ view, onChange }: { view: DiscussionView; onChange: (view: DiscussionView) => void }) => {
-  const { rating } = useDiscussionLookups();
-  const views: { key: DiscussionView; label: string; icon: ReactNode }[] = [
-    { key: 'comments', label: 'Comments', icon: <ChatsCircleIcon weight="bold" className="h-3.5 w-3.5" /> },
-    {
-      key: 'reviews',
-      label: rating?.count ? `Reviews · ${rating.average.toFixed(1)}` : 'Reviews',
-      icon: <StarIcon weight="fill" className={cn('h-3.5 w-3.5', view !== 'reviews' && 'text-warning')} />,
-    },
-  ];
-  return (
-    <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1" role="tablist" aria-label="Discussion view">
-      {views.map((item) => (
-        <Button
-          key={item.key}
-          role="tab"
-          aria-selected={view === item.key}
-          isSubtle={view !== item.key}
-          className={cn(
-            'justify-center rounded-md px-3 py-1.5 text-xs',
-            view === item.key ? 'shadow-sm' : 'text-muted-foreground hover:text-foreground',
-          )}
-          leftsection={item.icon}
-          text={item.label}
-          onClick={() => onChange(item.key)}
-        />
-      ))}
-    </div>
-  );
-};
-
-/** The course's discussion: comments with their replies, and the course's ratings and reviews. */
+/**
+ * The course's public discussion in the outline pane: its rating in one line, then every thread on
+ * the course. A new thread is recorded against the lesson in the frame, which its chip then names.
+ * A private question for the course team is the Doubts tab beside this one.
+ */
 export const CourseDiscussion = ({ courseId }: { courseId: string }) => {
   const { hasMoreComments } = useDiscussionLookups();
   const { isLoading: isLoadingMore } = useRequest(useDiscussionStore, 'moreComments');
-  const [view, setView] = useState<DiscussionView>('comments');
+  const open = useOpenItem(courseId);
+  const source: CommentSourceIds = open
+    ? { courseModule: open.courseModule, material: open.material, testPaper: open.testPaper }
+    : null;
 
-  // The rating loads with the comments so the Reviews switch can show it before it is opened.
   useEffect(() => {
-    const store = useDiscussionStore.getState();
-    store.loadComments(courseId);
-    store.loadReviews(courseId);
+    useDiscussionStore.getState().loadComments(courseId);
   }, [courseId]);
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <div className="flex items-center gap-2.5">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <ChatsCircleIcon weight="fill" className="h-5 w-5" />
-        </span>
+    <div className="flex flex-col gap-3 p-4">
+      <CourseRatingRow courseId={courseId} />
+      <div className="flex flex-col gap-1.5">
         <div>
-          <div className="text-sm font-semibold">Discussion</div>
-          <div className="text-xs text-muted-foreground">Ask a question, share what helped, or rate the course.</div>
+          <div className="text-xs font-semibold">Start a discussion</div>
+          <div className="text-xxs text-muted-foreground">Everyone on the course can read and reply.</div>
         </div>
+        <CommentComposer
+          courseId={courseId}
+          parentId={null}
+          source={source}
+          placeholder="Ask a question or share what helped you…"
+          isAutoFocus={false}
+          onPosted={() => undefined}
+          onCancel={null}
+        />
       </div>
-      <ViewSwitch view={view} onChange={setView} />
-      {view === 'reviews' ? (
-        <CourseReviews courseId={courseId} />
-      ) : (
-        <>
-          <CommentComposer
-            courseId={courseId}
-            parentId={null}
-            placeholder="Start a discussion…"
-            isAutoFocus={false}
-            onPosted={() => undefined}
-            onCancel={null}
-          />
-          <CommentList courseId={courseId} />
-          {hasMoreComments ? (
-            <Button
-              isSecondary
-              className="self-center px-4 py-1.5 text-xs"
-              text="Load older comments"
-              isLoading={isLoadingMore}
-              onClick={() => useDiscussionStore.getState().loadMoreComments()}
-            />
-          ) : null}
-        </>
-      )}
+      <CommentList courseId={courseId} />
+      {hasMoreComments ? (
+        <Button
+          isSecondary
+          className="self-center px-4 py-1.5 text-xs"
+          text="Load older comments"
+          isLoading={isLoadingMore}
+          onClick={() => useDiscussionStore.getState().loadMoreComments()}
+        />
+      ) : null}
     </div>
   );
 };

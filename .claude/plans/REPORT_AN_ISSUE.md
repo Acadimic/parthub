@@ -255,10 +255,16 @@ Where the code differs from the plan above:
 - **Email (phase 5)** is plain text through `sendTextEmail`, from `TicketMailService`, and sends
   nothing when `SENDGRID_API_KEY` or `PRIVATE_API_EMAIL` is unset.
 - **Not built:** phase 6 (Razorpay refund API + webhook, report-count chip in the question editor).
-- **Doubts (added 2026-10-10, Manish).** `TicketCategory.DOUBT`: a private question to the course
-  team about a lesson, a test or one question (reasons: idea unclear, solution unclear, another
-  example, other). It routes like a content or question ticket (`COURSE_TICKET_CATEGORIES`), counts
-  in the teacher's open total, and never folds into another open ticket. Learners get a speech-bubble
-  button beside the flag in the lesson toolbar and on a question, the latter only on practice papers
-  and in result review so nobody is helped mid-exam. The teaching page is now "Doubts & Reports".
+- **Doubts (added 2026-10-10, Manish; reshaped 2026-10-12).** `TicketCategory.DOUBT`: a private
+  question to the course team about a lesson or test (reasons: idea unclear, solution unclear,
+  another example, other). It routes like a content or question ticket (`COURSE_TICKET_CATEGORIES`),
+  counts in the teacher's open total, and never folds into another open ticket. Since 2026-10-12 the
+  learning view's outline pane has a **Doubts** tab (first after Live, before Discussion) with an
+  inline box, a reason select with "I do not understand the idea" preselected, text and files, that raises a doubt
+  about the lesson in the frame, plus the learner's doubts on the course with status and unread
+  marks, each opening its thread under My Reports. The lesson toolbar's "Ask a doubt" button and the
+  phone menu entry open that tab rather than a dialog; the question-level doubt on practice papers
+  still uses the report dialog. The public **Discussion** tab (course comments) is a separate feature
+  and stays, decided the same day after a short-lived merge was reverted. The teaching page is
+  "Doubts & Reports".
   Course Discussions stay as the public place for doubts.

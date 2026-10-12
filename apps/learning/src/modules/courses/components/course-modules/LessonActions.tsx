@@ -1,9 +1,9 @@
 import { type ReportTarget, ReportDialog } from '@components/app/report';
-import { TicketCategory } from '@enums';
+import { CourseOutlineTab, TicketCategory } from '@enums';
 import { ChatCircleDotsIcon, DotsThreeIcon, FlagIcon, ShareFatIcon } from '@phosphor-icons/react';
 import { Button, Menu, Tooltip } from '@repo/ui/app';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
-import { type IMaterial, type ITestPaper } from '@stores';
+import { type IMaterial, type ITestPaper, useSelectorLookups } from '@stores';
 import { useState } from 'react';
 import { getPrintMenuItems } from './PrintCourse';
 import { shareCourse } from './ShareCourse';
@@ -15,7 +15,7 @@ interface IProps {
   testPaper: ITestPaper | undefined;
 }
 
-/** Where a doubt or report from the lesson view points: the lesson in the frame, else its test. */
+/** Where a report from the lesson view points: the lesson in the frame, else its test. */
 const getWhere = ({ courseId, courseModuleId, material, testPaper }: IProps): Omit<ReportTarget, 'category'> => ({
   course: courseId,
   courseModule: courseModuleId || null,
@@ -23,70 +23,58 @@ const getWhere = ({ courseId, courseModuleId, material, testPaper }: IProps): Om
   testPaper: material ? null : (testPaper?._id ?? null),
 });
 
-/** What each dialog from the lesson view says. */
-const DIALOGS = {
-  [TicketCategory.DOUBT]: {
-    title: (thing: string) => `Ask a doubt about this ${thing}`,
-    description: 'Only you and the course team see it. The reply shows under My Reports.',
-  },
-  [TicketCategory.CONTENT]: {
-    title: (thing: string) => `Report a problem with this ${thing}`,
-    description: 'Your teacher sees the report and can fix the content. You can follow it under My Reports.',
-  },
-};
+/** The report dialog for the lesson in the frame. */
+const ReportLessonDialog = ({ isOpen, onClose, ...props }: IProps & { isOpen: boolean; onClose: () => void }) => (
+  <ReportDialog
+    isOpen={isOpen}
+    onClose={onClose}
+    target={{ ...getWhere(props), category: TicketCategory.CONTENT }}
+    title={`Report a problem with this ${props.material ? 'lesson' : 'test'}`}
+    description="Your teacher sees the report and can fix the content. You can follow it under My Reports."
+  />
+);
 
-type LessonDialog = keyof typeof DIALOGS;
-
-/** The doubt or report dialog for the lesson in the frame, or nothing while `kind` is null. */
-const LessonDialogs = ({ kind, onClose, ...props }: IProps & { kind: LessonDialog | null; onClose: () => void }) => {
-  const thing = props.material ? 'lesson' : 'test';
-  const copy = DIALOGS[kind ?? TicketCategory.CONTENT];
-  return (
-    <ReportDialog
-      isOpen={Boolean(kind)}
-      onClose={onClose}
-      target={{ ...getWhere(props), category: kind ?? TicketCategory.CONTENT }}
-      title={copy.title(thing)}
-      description={copy.description}
-    />
-  );
+/**
+ * Opens the outline pane on its Doubts tab, where the doubt is written: unfolds the pane where it
+ * is inline, opens the contents drawer where it is not. The split is the `lg` breakpoint the
+ * learning view lays the pane out on, not the toolbar's own small-screen cutoff.
+ */
+const useOpenDoubts = () => {
+  const { setSelectedCourseOutlineTab, setIsCourseOutlineHidden, setIsCourseMenuOpen } = useSelectorLookups();
+  return () => {
+    setSelectedCourseOutlineTab(CourseOutlineTab.DOUBTS);
+    if (window.matchMedia('(min-width: 1024px)').matches) setIsCourseOutlineHidden(false);
+    else setIsCourseMenuOpen(true);
+  };
 };
 
 /**
  * A labelled button, because a learner looking for help should not have to hunt an icon. A phone has
  * no room for it beside the other actions, so there it is an entry in the ⋯ menu instead.
  */
-export const AskDoubtButton = (props: IProps) => {
+export const AskDoubtButton = () => {
   const { isSmallScreen } = useWindowDimensions();
-  const [kind, setKind] = useState<LessonDialog | null>(null);
+  const openDoubts = useOpenDoubts();
   if (isSmallScreen) return null;
   return (
-    <>
-      <Button
-        isSecondary
-        text="Ask a doubt"
-        className="h-9 rounded-full px-3 text-sm"
-        leftsection={<ChatCircleDotsIcon weight="bold" className="h-4 w-4" />}
-        onClick={() => setKind(TicketCategory.DOUBT)}
-      />
-      <LessonDialogs {...props} kind={kind} onClose={() => setKind(null)} />
-    </>
+    <Button
+      isSecondary
+      text="Ask a doubt"
+      className="h-9 rounded-full px-3 text-sm"
+      leftsection={<ChatCircleDotsIcon weight="bold" className="h-4 w-4" />}
+      onClick={openDoubts}
+    />
   );
 };
 
 /** The less frequent lesson actions behind one ⋯ button: share, print and report, plus the doubt on a phone. */
 export const LessonMoreMenu = (props: IProps) => {
   const { isSmallScreen } = useWindowDimensions();
-  const [kind, setKind] = useState<LessonDialog | null>(null);
+  const openDoubts = useOpenDoubts();
+  const [isReporting, setIsReporting] = useState(false);
   const menuItems = [
     ...(isSmallScreen
-      ? [
-          {
-            label: 'Ask a doubt',
-            onClick: () => setKind(TicketCategory.DOUBT),
-            icon: <ChatCircleDotsIcon weight="bold" className="h-4 w-4" />,
-          },
-        ]
+      ? [{ label: 'Ask a doubt', onClick: openDoubts, icon: <ChatCircleDotsIcon weight="bold" className="h-4 w-4" /> }]
       : []),
     {
       label: 'Share course',
@@ -96,7 +84,7 @@ export const LessonMoreMenu = (props: IProps) => {
     ...getPrintMenuItems(props.courseId, props.courseModuleId, props.testPaper?._id ?? null),
     {
       label: 'Report a problem',
-      onClick: () => setKind(TicketCategory.CONTENT),
+      onClick: () => setIsReporting(true),
       icon: <FlagIcon weight="bold" className="h-4 w-4" />,
     },
   ];
@@ -117,7 +105,7 @@ export const LessonMoreMenu = (props: IProps) => {
           }
         />
       </Tooltip>
-      <LessonDialogs {...props} kind={kind} onClose={() => setKind(null)} />
+      <ReportLessonDialog {...props} isOpen={isReporting} onClose={() => setIsReporting(false)} />
     </>
   );
 };

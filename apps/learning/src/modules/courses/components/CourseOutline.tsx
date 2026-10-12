@@ -14,6 +14,7 @@ import { CourseOutlineTab, ModuleContentType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
 import { type ICourseModuleItem } from '@interfaces';
 import {
+  ChatCircleDotsIcon,
   ChatsCircleIcon,
   CheckIcon,
   ClipboardTextIcon,
@@ -33,7 +34,7 @@ import {
 } from '@stores';
 import { getPlural } from '@utils/helpers';
 import { useEffect, useRef } from 'react';
-import { CourseDiscussion } from './course-discussion';
+import { CourseDiscussion, CourseDoubts } from './course-discussion';
 
 interface IProps {
   courseId: string;
@@ -350,6 +351,9 @@ const TestList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem }
   );
 };
 
+/** The tabs only the learning view has. */
+const LEARNING_ONLY_TABS = [CourseOutlineTab.DOUBTS, CourseOutlineTab.DISCUSSION];
+
 export const CourseOutline = (props: IProps) => {
   const { courseId, isPreview } = props;
   const { getCourseModules } = useCourse();
@@ -357,6 +361,13 @@ export const CourseOutline = (props: IProps) => {
   const { getMeetsByIds } = useMeetLookups();
   const { selectedCourseOutlineTab, setSelectedCourseOutlineTab } = useSelectorLookups();
   const courseModules = getCourseModules(courseId);
+
+  // The preview has no Doubts or Discussion tab. A choice made in the learning view is dropped here
+  // rather than carried back in, so returning from the preview lands on Contents or Tests.
+  const isStaleTab = isPreview && LEARNING_ONLY_TABS.includes(selectedCourseOutlineTab);
+  useEffect(() => {
+    if (isStaleTab) setSelectedCourseOutlineTab(CourseOutlineTab.CONTENTS);
+  }, [isStaleTab]);
 
   if (!courseModules.length) {
     if (isLoading('courseModules')) return null;
@@ -384,21 +395,30 @@ export const CourseOutline = (props: IProps) => {
     },
   ];
   const meets = getMeetsByIds(getCourseById(courseId)?.meets ?? []);
+  // Five tabs share the learning pane, so the label is the short one there.
   tabs.push({
     key: CourseOutlineTab.LIVE_CLASSES,
-    label: 'Live classes',
+    label: isPreview ? 'Live classes' : 'Live',
     icon: hasLiveSession(meets) ? <LivePulse /> : <VideoCameraIcon weight="bold" className="h-3.5 w-3.5" />,
     component: <LiveClassesPanel meets={meets} isSticky={!isPreview} />,
   });
-  // Comments and reviews belong to the learning view, where the learner is enrolled; the preview
-  // page shows reviews in a section of its own.
+  // The discussion and the doubts belong to the learning view, where the learner is enrolled; the
+  // preview page shows reviews in a section of its own.
   if (!isPreview) {
-    tabs.push({
-      key: CourseOutlineTab.DISCUSSION,
-      label: 'Discussion',
-      icon: <ChatsCircleIcon weight="bold" className="h-3.5 w-3.5" />,
-      component: <CourseDiscussion courseId={courseId} />,
-    });
+    tabs.push(
+      {
+        key: CourseOutlineTab.DOUBTS,
+        label: 'Doubts',
+        icon: <ChatCircleDotsIcon weight="bold" className="h-3.5 w-3.5" />,
+        component: <CourseDoubts courseId={courseId} />,
+      },
+      {
+        key: CourseOutlineTab.DISCUSSION,
+        label: 'Discussion',
+        icon: <ChatsCircleIcon weight="bold" className="h-3.5 w-3.5" />,
+        component: <CourseDiscussion courseId={courseId} />,
+      },
+    );
   }
   const selectedIndex = tabs.findIndex((tab) => tab.key === selectedCourseOutlineTab);
 
@@ -408,7 +428,8 @@ export const CourseOutline = (props: IProps) => {
       onChange={(index) => setSelectedCourseOutlineTab(tabs[index]?.key ?? CourseOutlineTab.CONTENTS)}
       className={cn(!isPreview && 'flex min-h-0 flex-1 flex-col')}
       contentClassName={cn('mt-0', !isPreview && 'min-h-0 flex-1 overflow-y-auto')}
-      triggerClassName="px-3 py-1.5 text-xs"
+      // Five tabs share the learning pane: tighter, and without icons until the pane is at its widest.
+      triggerClassName={cn('py-1.5 text-xs', isPreview ? 'px-3' : 'px-2 [&_svg]:hidden xl:[&_svg]:block')}
       tabs={tabs}
     />
   );
