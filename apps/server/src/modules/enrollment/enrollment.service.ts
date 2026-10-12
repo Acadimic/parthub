@@ -51,7 +51,46 @@ export class EnrollmentService {
       endsAt: row.endsAt.toISOString(),
       razorpayOrderId: row.razorpayOrderId,
       razorpayPaymentId: row.razorpayPaymentId,
+      order: row.order ? String(row.order) : undefined,
+      refundedAt: row.refundedAt?.toISOString(),
+      razorpayRefundId: row.razorpayRefundId,
+      refundAmount: row.refundAmount,
     };
+  }
+
+  /** One seat the learner holds or held, or null: a learner reports a problem only on their own. */
+  async findForLearner(userId: Types.ObjectId, id: string): Promise<EnrollmentDocument | null> {
+    return this.enrollmentModel
+      .findOne({ _id: id, createdBy: userId, _deleted: { $ne: true } })
+      .lean<EnrollmentDocument>();
+  }
+
+  /** Platform staff read any seat a payment ticket names. */
+  async findById(id: string): Promise<EnrollmentDocument | null> {
+    return this.enrollmentModel.findOne({ _id: id, _deleted: { $ne: true } }).lean<EnrollmentDocument>();
+  }
+
+  /**
+   * Ends the seats a refunded payment bought: one seat bought on the course page, or every seat a
+   * shareable order granted. A refunded seat holds no access, because `getActive` reads only active
+   * ones. The rows are the learner's, so the write goes by id or order after staff were checked.
+   */
+  async recordRefund(
+    match: { _id: string } | { order: string },
+    refund: { razorpayRefundId: string; amount: number; refundedAt: Date },
+  ): Promise<number> {
+    const result = await this.enrollmentModel.updateMany(
+      { ...match, status: { $in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.EXPIRED] }, _deleted: { $ne: true } },
+      {
+        $set: {
+          status: EnrollmentStatus.REFUNDED,
+          refundedAt: refund.refundedAt,
+          razorpayRefundId: refund.razorpayRefundId,
+          refundAmount: refund.amount,
+        },
+      },
+    );
+    return result.modifiedCount;
   }
 
   /** Every seat the learner has held, newest first, so the client can show history as well as access. */

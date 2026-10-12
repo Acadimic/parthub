@@ -4,6 +4,7 @@ import {
   ChalkboardTeacherIcon,
   ColumnsIcon,
   FileTextIcon,
+  FlagIcon,
   FlaskIcon,
   FolderIcon,
   GridFourIcon,
@@ -86,6 +87,11 @@ const APP_ROUTES: ISidebarRoute[] = [
         name: 'Discussions',
         route: '/discussions',
         icon: ChatsCircleIcon,
+      },
+      {
+        name: 'Doubts & Reports',
+        route: '/reports',
+        icon: FlagIcon,
       },
       {
         name: 'Orders',

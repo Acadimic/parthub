@@ -36,8 +36,7 @@ import { BookmarkCourse } from './BookmarkCourse';
 import { Content } from './content';
 import { LikeCourse } from './LikeCourse';
 import { MarkCompleteButton } from './MarkCompleteButton';
-import { PrintCourse } from './PrintCourse';
-import { ShareCourse } from './ShareCourse';
+import { AskDoubtButton, LessonMoreMenu } from './LessonActions';
 import { NextSessionBanner } from '@modules/sessions';
 
 /** An item is a material or a test paper; both carry a duration, and only one is ever set. */
@@ -240,6 +239,13 @@ export const CourseModuleContent = () => {
   const courseModule = getCourseModuleById(selectedCourseModuleId);
   const meets = getMeetsByIds(selectedCourse.meets ?? []);
 
+  const lessonProps = {
+    courseId: selectedCourseId,
+    courseModuleId: selectedCourseModuleId,
+    material: selectedMaterial,
+    testPaper: selectedTestPaper,
+  };
+
   const isCompleted = isCourseModuleItemCompleted({
     course: selectedCourseId,
     courseModule: selectedCourseModuleId,
@@ -284,15 +290,11 @@ export const CourseModuleContent = () => {
           actions={
             <>
               <MarkCompleteButton testPaper={selectedTestPaper} material={selectedMaterial} />
+              <AskDoubtButton {...lessonProps} />
               <div className="flex items-center gap-0.5 rounded-full bg-muted/60 p-1">
                 <LikeCourse collectionItem={item} collectionRef={collectionRef} />
                 <BookmarkCourse collectionItem={item._id} collectionRef={collectionRef} />
-                <ShareCourse courseId={selectedCourseId} appearance="subtle" />
-                <PrintCourse
-                  courseId={selectedCourseId}
-                  courseModuleId={selectedCourseModuleId}
-                  testPaperId={selectedTestPaper?._id ?? null}
-                />
+                <LessonMoreMenu {...lessonProps} />
               </div>
             </>
           }

@@ -5,8 +5,10 @@ import {
   CaretLeftIcon,
   CaretRightIcon,
   ChartLineUpIcon,
+  FlagIcon,
   type Icon,
   LockKeyIcon,
+  ReceiptIcon,
   UserIcon,
 } from '@phosphor-icons/react';
 import { AccountSettingsRoutes } from '@repo/shared/utils';
@@ -14,11 +16,13 @@ import { Link } from '@repo/ui/app';
 import { Badge } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
 import { UserService } from '@services';
-import { useSelectedUser, useUserLookups, useUserStore } from '@stores';
+import { useSelectedUser, useTicketStore, useUserLookups, useUserStore } from '@stores';
 import { capitalize, successToast } from '@utils/helpers';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { type ComponentType, useState } from 'react';
 import { Profile } from './Profile';
+import { Purchases } from './Purchases';
+import { Reports } from './Reports';
 import { Security } from './Security';
 
 interface INavItem {
@@ -31,6 +35,32 @@ interface INavItem {
   isPhoneOnly?: boolean;
 }
 
+type SettingsPanel =
+  | AccountSettingsType.PROFILE
+  | AccountSettingsType.SECURITY
+  | AccountSettingsType.REPORTS
+  | AccountSettingsType.PURCHASES;
+
+const PANELS: Record<SettingsPanel, ComponentType> = {
+  [AccountSettingsType.PROFILE]: Profile,
+  [AccountSettingsType.SECURITY]: Security,
+  [AccountSettingsType.REPORTS]: Reports,
+  [AccountSettingsType.PURCHASES]: Purchases,
+};
+
+/** The panel a route shows; the index route is the phone's menu, and wider screens open it on the profile. */
+const ROUTED_PANELS: SettingsPanel[] = [
+  AccountSettingsType.SECURITY,
+  AccountSettingsType.REPORTS,
+  AccountSettingsType.PURCHASES,
+];
+
+const getPanel = (route: string): SettingsPanel =>
+  ROUTED_PANELS.find((type) => route.includes(AccountSettingsRoutes[type])) ?? AccountSettingsType.PROFILE;
+
+const getReportsLabel = (unread: number) =>
+  unread ? `${AccountSettingsType.REPORTS} (${unread} new)` : AccountSettingsType.REPORTS;
+
 export const AccountSettings = () => {
   const userStore = useUserLookups();
   const { patchUser, getOrgById } = userStore;
@@ -39,6 +69,7 @@ export const AccountSettings = () => {
   const [avatarFile, setAvatarFile] = useState<File | undefined>(undefined);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const { route } = useRouter();
+  const unreadReports = useTicketStore((state) => state.unreadCount);
 
   const updatePhotoUrl = async (file: File | undefined) => {
     if (!selectedUser) return;
@@ -61,11 +92,9 @@ export const AccountSettings = () => {
     }
   };
 
-  const isSecurity = route.includes(AccountSettingsRoutes[AccountSettingsType.SECURITY]);
+  const panel = getPanel(route);
+  const Panel = PANELS[panel];
   const isIndex = route === AccountSettingsRoutes[AccountSettingsType.ACCOUNT_SETTINGS];
-  // The index route is the phone's menu; wider screens have the menu beside the panel, so they
-  // open straight on the profile.
-  const isProfile = !isSecurity && !isIndex;
 
   const navItems: INavItem[] = [
     {
@@ -73,14 +102,28 @@ export const AccountSettings = () => {
       description: 'Name, role and contact details',
       href: AccountSettingsRoutes[AccountSettingsType.PROFILE],
       icon: UserIcon,
-      isCurrent: isProfile || isIndex,
+      isCurrent: panel === AccountSettingsType.PROFILE,
     },
     {
       label: AccountSettingsType.SECURITY,
       description: 'Password and sign-in',
       href: AccountSettingsRoutes[AccountSettingsType.SECURITY],
       icon: LockKeyIcon,
-      isCurrent: isSecurity,
+      isCurrent: panel === AccountSettingsType.SECURITY,
+    },
+    {
+      label: AccountSettingsType.PURCHASES,
+      description: 'Courses and plans you paid for',
+      href: AccountSettingsRoutes[AccountSettingsType.PURCHASES],
+      icon: ReceiptIcon,
+      isCurrent: panel === AccountSettingsType.PURCHASES,
+    },
+    {
+      label: getReportsLabel(unreadReports),
+      description: 'Doubts, reported problems and replies',
+      href: AccountSettingsRoutes[AccountSettingsType.REPORTS],
+      icon: FlagIcon,
+      isCurrent: panel === AccountSettingsType.REPORTS,
     },
     {
       label: 'Activity',
@@ -194,7 +237,7 @@ export const AccountSettings = () => {
           className={cn('flex min-w-0 flex-col gap-6', isIndex && 'hidden md:flex')}
           aria-label={currentItem?.label}
         >
-          {isSecurity ? <Security /> : <Profile />}
+          <Panel />
         </main>
       </div>
     </div>

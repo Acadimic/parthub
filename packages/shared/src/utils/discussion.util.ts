@@ -14,6 +14,9 @@ export const DISCUSSION_FILE_EXTENSIONS: FileExtension[] = [
   FileExtension.PNG,
   FileExtension.JPG,
   FileExtension.JPEG,
+  // A large PNG or JPEG is compressed to WebP before upload, so it arrives as one.
+  FileExtension.WEBP,
+  FileExtension.GIF,
   FileExtension.PDF,
 ];
 

@@ -20,3 +20,4 @@ export * from './enrollment.interface';
 export * from './order.interface';
 export * from './discussion.interface';
 export * from './scene3d.interface';
+export * from './ticket.interface';

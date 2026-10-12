@@ -65,6 +65,9 @@ export enum PermissionItem {
   // Course discussion: comments and reviews
   MANAGE_DISCUSSION = 'manageDiscussion',
 
+  // Reported issues: a learner raises their own; staff handle their organization's
+  MANAGE_TICKET = 'manageTicket',
+
   // Student
   STUDENT = 'student',
 }

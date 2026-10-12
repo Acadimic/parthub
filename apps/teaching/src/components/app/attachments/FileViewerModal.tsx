@@ -11,7 +11,13 @@ interface IProps {
   onClose: () => void;
 }
 
-const IMAGE_EXTENSIONS: FileExtension[] = [FileExtension.PNG, FileExtension.JPG, FileExtension.JPEG];
+const IMAGE_EXTENSIONS: FileExtension[] = [
+  FileExtension.PNG,
+  FileExtension.JPG,
+  FileExtension.JPEG,
+  FileExtension.WEBP,
+  FileExtension.GIF,
+];
 
 /**
  * Looks at an attachment without leaving the page: a PDF in a frame, an image inline, anything

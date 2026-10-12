@@ -45,6 +45,16 @@ export class Enrollment extends BaseSchema {
   /** The shareable order that bought this seat, when it came from one. */
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Order' })
   order: string;
+
+  /** Set when platform staff record a refund made in the Razorpay dashboard. */
+  @Prop({ type: Date })
+  refundedAt: Date;
+
+  @Prop({ type: String })
+  razorpayRefundId: string;
+
+  @Prop({ type: Number, min: 0 })
+  refundAmount: number;
 }
 
 export const EnrollmentSchema = SchemaFactory.createForClass(Enrollment);

@@ -4,6 +4,8 @@ export enum OrderStatus {
   PAID = 'paid',
   CANCELLED = 'cancelled',
   EXPIRED = 'expired',
+  /** Paid, then refunded by platform staff; the seats it granted are ended. */
+  REFUNDED = 'refunded',
 }
 
 export enum CouponType {

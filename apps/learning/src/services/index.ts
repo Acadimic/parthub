@@ -16,6 +16,7 @@ import ReactionService from './reaction.service';
 import StandardService from './standard.service';
 import SubjectService from './subject.service';
 import TestPaperService from './test-paper.service';
+import TicketService from './ticket.service';
 import UserService from './user.service';
 
 export {
@@ -37,5 +38,6 @@ export {
   StandardService,
   SubjectService,
   TestPaperService,
+  TicketService,
   UserService,
 };

@@ -23,6 +23,7 @@ import { RazorpayModule } from '@modules/razorpay/razorpay.module';
 import { ReactionModule } from '@modules/reaction/reaction.module';
 import { S3Module } from '@modules/s3/s3.module';
 import { SendGridModule } from '@modules/sendgrid/sendgrid.module';
+import { TicketModule } from '@modules/ticket/ticket.module';
 import { StandardModule } from '@modules/standard/standard.module';
 import { SubjectModule } from '@modules/subject/subject.module';
 import { TestPaperModule } from '@modules/test-paper/test-paper.module';
@@ -127,6 +128,7 @@ const CLOUD_LOGGING_SEVERITY: Record<string, string> = { trace: 'DEBUG', warn: '
     SubjectModule,
     CourseModule,
     CourseCommentModule,
+    TicketModule,
     CourseReviewModule,
     MaterialModule,
     ChapterModule,

@@ -151,6 +151,12 @@ export class CourseService {
     return rows.map((row) => ({ _id: String(row._id), name: row.name }));
   }
 
+  /** A course's name for labelling a ticket, deleted or not; empty when there is no such course. */
+  async getCourseName(courseId: string): Promise<string> {
+    const row = await this.courseModel.findOne({ _id: courseId }, { name: 1 }).lean<{ name: string }>();
+    return row?.name ?? '';
+  }
+
   /**
    * Whether the caller may comment on or review a course: a learner who may open it, or staff of the
    * organization that owns it. Seeing a published course is not enough on either side.
@@ -502,6 +508,17 @@ export class CourseService {
       .lean<CourseModuleDocument>();
     if (!courseModule) return null;
     return this.testPaperService.getSectionsWithQuestions(course.org, testPaperId);
+  }
+
+  /** The module of `courseId` that holds the lesson or paper, or null when the course has no such item. */
+  async findModuleHolding(
+    courseId: string,
+    item: { material: string } | { testPaper: string },
+  ): Promise<CourseModuleDocument | null> {
+    const where = 'material' in item ? { materials: item.material } : { testPapers: item.testPaper };
+    return this.courseModuleModel
+      .findOne({ course: courseId, ...where, _deleted: { $ne: true } })
+      .lean<CourseModuleDocument>();
   }
 
   /**

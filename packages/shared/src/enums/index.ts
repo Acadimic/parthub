@@ -23,3 +23,4 @@ export * from './auth.enum';
 export * from './editor.enum';
 export * from './rich-text.enum';
 export * from './discussion.enum';
+export * from './ticket.enum';

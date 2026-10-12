@@ -12,6 +12,7 @@ import {
 } from '@phosphor-icons/react';
 import { COMPANY } from '@utils/constants';
 import Link from 'next/link';
+import { ContactMessage } from './ContactMessage';
 
 interface IChannel {
   icon: Icon;
@@ -81,7 +82,10 @@ export const Contact = () => (
       </div>
     </Band>
     <Container>
-      <div className="grid grid-cols-1 gap-4 py-10 sm:grid-cols-2 md:py-14 lg:grid-cols-3">
+      <div className="pt-10 md:pt-14">
+        <ContactMessage />
+      </div>
+      <div className="grid grid-cols-1 gap-4 py-10 sm:grid-cols-2 md:pb-14 lg:grid-cols-3">
         {CHANNELS.map((channel) => (
           <a
             key={channel.title}

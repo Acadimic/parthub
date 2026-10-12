@@ -87,6 +87,20 @@ export class OrderDto extends BaseOwnedDto {
   @IsOptional()
   @IsString()
   razorpayPaymentId?: string;
+
+  /** Set when platform staff record a refund. ISO 8601. */
+  @IsOptional()
+  @IsDateString()
+  refundedAt?: string;
+
+  @IsOptional()
+  @IsString()
+  razorpayRefundId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  refundAmount?: number;
 }
 
 /** `POST order/create`, from the teaching app. */

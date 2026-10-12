@@ -57,6 +57,16 @@ export class Order extends BaseSchema {
 
   @Prop({ type: String })
   razorpayPaymentId: string;
+
+  /** Set when platform staff record a refund made in the Razorpay dashboard. */
+  @Prop({ type: Date })
+  refundedAt: Date;
+
+  @Prop({ type: String })
+  razorpayRefundId: string;
+
+  @Prop({ type: Number, min: 0 })
+  refundAmount: number;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

@@ -9,6 +9,9 @@ export enum FileExtension {
   PNG = 'png',
   JPEG = 'jpeg',
   JPG = 'jpg',
+  /** What `compressImage` turns a large PNG or JPEG into before upload. */
+  WEBP = 'webp',
+  GIF = 'gif',
   PDF = 'pdf',
   DOC = 'doc',
   DOCX = 'docx',

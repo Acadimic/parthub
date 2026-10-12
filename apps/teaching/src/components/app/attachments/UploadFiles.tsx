@@ -13,7 +13,13 @@ interface IProps extends IFileUploadProps {
   isUploading?: boolean;
 }
 
-const IMAGE_EXTENSIONS: FileExtension[] = [FileExtension.PNG, FileExtension.JPG, FileExtension.JPEG];
+const IMAGE_EXTENSIONS: FileExtension[] = [
+  FileExtension.PNG,
+  FileExtension.JPG,
+  FileExtension.JPEG,
+  FileExtension.WEBP,
+  FileExtension.GIF,
+];
 
 const acceptedLabel = ({ isPdf, isImage, isVideo }: IFileUploadProps) => {
   const kinds = [isPdf && 'PDF', isImage && 'PNG, JPG or GIF', isVideo && 'MP4'].filter(Boolean);

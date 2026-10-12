@@ -1,5 +1,6 @@
+import { ReportButton } from '@components/app/report';
 import { type OrderDto } from '@repo/shared/contracts';
-import { OrderStatus } from '@repo/shared/enums';
+import { OrderStatus, TicketCategory } from '@repo/shared/enums';
 import { Button, Link, RectangleSkeleton } from '@repo/ui/app';
 import { Badge, TextInput } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
@@ -38,6 +39,21 @@ const STATUS_TONE: Record<OrderStatus, 'success' | 'primary' | 'neutral' | 'dest
   [OrderStatus.PAID]: 'success',
   [OrderStatus.EXPIRED]: 'neutral',
   [OrderStatus.CANCELLED]: 'destructive',
+  [OrderStatus.REFUNDED]: 'neutral',
+};
+
+/** The buyer's way to report a problem with an order they paid for. */
+const OrderReport = ({ order, isMine }: { order: OrderDto; isMine: boolean }) => {
+  if (!isMine || order.status === OrderStatus.OPEN) return null;
+  return (
+    <ReportButton
+      isLabelled
+      className="self-center text-sm"
+      title="Report a payment problem"
+      description="Charged but no access, charged twice, a refund or an invoice: platform support replies under My Reports."
+      target={{ category: TicketCategory.PAYMENT, order: order._id }}
+    />
+  );
 };
 
 /** Everything the order promises, as the buyer will get it. */
@@ -318,6 +334,7 @@ export const OrderCheckout = ({ code }: { code: string }) => {
             <Totals order={order} />
             {isOpen ? <CouponBox order={order} isSignedIn={isSignedIn} /> : null}
             {isPaid ? <PaidPanel order={order} isMine={isMine} /> : null}
+            <OrderReport order={order} isMine={isMine} />
             {isOpen ? <PayAction order={order} isSignedIn={isSignedIn} /> : null}
             {!isOpen && !isPaid ? (
               <p className="text-sm text-muted-foreground">

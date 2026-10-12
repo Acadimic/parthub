@@ -8,12 +8,14 @@ import {
   CaretRightIcon,
   ChartLineUpIcon,
   CheckIcon,
+  FlagIcon,
   GearSixIcon,
   MoonIcon,
+  ReceiptIcon,
   SignOutIcon,
   SunIcon,
 } from '@phosphor-icons/react';
-import { type IUser, useSelectedUser, useSelectorLookups, useUserLookups } from '@stores';
+import { type IUser, useSelectedUser, useSelectorLookups, useTicketStore, useUserLookups } from '@stores';
 import { AccountSettingsRoutes, isProfileForApp } from '@repo/shared/utils';
 import { OTHER_APP, THIS_APP } from '@utils/constants';
 import { capitalize, logOut } from '@utils/helpers';
@@ -21,7 +23,7 @@ import { useRouter } from 'next/router';
 import { Menu } from '@repo/ui/app';
 import { cn } from '@repo/ui/lib';
 import { Badge } from '@repo/ui/core';
-import { useColorMode } from '@repo/ui/hooks';
+import { useColorMode, useLoadOnce } from '@repo/ui/hooks';
 
 /** ["School", "Teacher"], or just ["Student"] when the organisation type and the role say the same thing. */
 const accountLabels = (orgType: string | undefined, permission: string) =>
@@ -42,6 +44,9 @@ export const ProfileDropdown = ({ isCompact }: IProps) => {
   const loggedInUsers = userStore.getLoggedInUsers();
   const { isSmallScreen } = useWindowDimensions();
   const { isDark, toggleColorMode } = useColorMode();
+  // Staff replies the learner has not opened, so a reply is noticed without visiting My Reports.
+  useLoadOnce(useTicketStore, 'unread', (state) => state.loadUnreadCount);
+  const unreadReports = useTicketStore((state) => state.unreadCount);
 
   const handleLogout = () => {
     logOut();
@@ -63,6 +68,16 @@ export const ProfileDropdown = ({ isCompact }: IProps) => {
       label: 'My activity',
       icon: <ChartLineUpIcon className="w-4 h-4" />,
       onClick: () => push('/activity'),
+    },
+    {
+      label: unreadReports ? `My reports (${unreadReports} new)` : 'My reports',
+      icon: <FlagIcon className="w-4 h-4" />,
+      onClick: () => push(AccountSettingsRoutes[AccountSettingsType.REPORTS]),
+    },
+    {
+      label: AccountSettingsType.PURCHASES,
+      icon: <ReceiptIcon className="w-4 h-4" />,
+      onClick: () => push(AccountSettingsRoutes[AccountSettingsType.PURCHASES]),
     },
     {
       label: isDark ? 'Light mode' : 'Dark mode',

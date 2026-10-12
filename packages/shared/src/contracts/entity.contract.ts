@@ -21,6 +21,14 @@ export type { ReactionDto } from '../dtos/validations/reaction/reaction.dto';
 export type { CourseCommentDto } from '../dtos/validations/discussion/course-comment.dto';
 export type { CourseReviewDto } from '../dtos/validations/discussion/course-review.dto';
 export type { CommentInboxQueryDto } from '../dtos/validations/discussion/comment-inbox-query.dto';
+export type {
+  TicketDto,
+  TicketMessageDto,
+  TicketReplyDto,
+  TicketStatusDto,
+  TicketInboxQueryDto,
+  RecordRefundDto,
+} from '../dtos/validations/ticket/ticket.dto';
 export type { ChapterDto } from '../dtos/validations/chapter/chapter.dto';
 export type { MaterialDto } from '../dtos/validations/material/material.dto';
 export type { QuestionDto } from '../dtos/validations/question/question.dto';

@@ -14,7 +14,11 @@ export interface IAttachmentProps {
 
 const getFileIcon = (extension: FileExtension, url?: string) => {
   if (extension === FileExtension.PDF) return <FilePdfIcon weight="fill" className="w-5 h-5 text-destructive" />;
-  if ([FileExtension.JPEG, FileExtension.PNG, FileExtension.JPG].includes(extension)) {
+  if (
+    [FileExtension.JPEG, FileExtension.PNG, FileExtension.JPG, FileExtension.WEBP, FileExtension.GIF].includes(
+      extension,
+    )
+  ) {
     return <ImagesIcon weight="bold" className="w-5 h-5 text-inherit" />;
   }
   if (url?.includes(LinkType.YOUTUBE)) return <YoutubeLogoIcon weight="fill" className="w-5 h-5 text-destructive" />;

@@ -51,11 +51,12 @@ export const DEFAULT_PERMISSIONS: Record<DefaultRole, PermissionItem[]> = {
     PermissionItem.VIEW_QUESTION,
     PermissionItem.VIEW_MEET,
     // Learner-owned features: a student manages only their own bookmarks, reactions, follows,
-    // comments and reviews.
+    // comments, reviews and reported issues.
     PermissionItem.MANAGE_BOOKMARK,
     PermissionItem.MANAGE_REACTION,
     PermissionItem.MANAGE_FOLLOWER,
     PermissionItem.MANAGE_DISCUSSION,
+    PermissionItem.MANAGE_TICKET,
     PermissionItem.STUDENT,
   ],
 };
@@ -84,6 +85,8 @@ export const AccountSettingsRoutes: Record<AccountSettingsType, string> = {
   [AccountSettingsType.ACCOUNT_SETTINGS]: '/account-settings',
   [AccountSettingsType.PROFILE]: '/account-settings/profile',
   [AccountSettingsType.SECURITY]: '/account-settings/security',
+  [AccountSettingsType.REPORTS]: '/account-settings/reports',
+  [AccountSettingsType.PURCHASES]: '/account-settings/purchases',
 };
 
 /** `Date.getDay()` index to weekday name. */

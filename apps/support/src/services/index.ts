@@ -1,5 +1,6 @@
 import CommonService from './common.service';
 import StandardService from './standard.service';
 import SubjectService from './subject.service';
+import TicketService from './ticket.service';
 
-export { CommonService, StandardService, SubjectService };
+export { CommonService, StandardService, SubjectService, TicketService };

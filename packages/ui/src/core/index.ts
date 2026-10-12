@@ -68,7 +68,7 @@ export { AlertDialog } from './AlertDialog';
 export type { IAlertDialogProps } from './AlertDialog';
 
 export { Badge } from './Badge';
-export type { IBadgeProps } from './Badge';
+export type { IBadgeProps, BadgeTone } from './Badge';
 
 export { ScrollArea } from './ScrollArea';
 export type { IScrollAreaProps } from './ScrollArea';

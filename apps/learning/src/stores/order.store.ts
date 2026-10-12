@@ -5,15 +5,19 @@ import { OrderService } from '../services';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 
-/** The fetches this store tracks: the link itself, the coupon, and the two halves of paying. */
-type OrderFetch = 'order' | 'coupon' | 'checkout' | 'verify';
+/** The fetches this store tracks: the link itself, the learner's orders, the coupon, and the two halves of paying. */
+type OrderFetch = 'order' | 'myOrders' | 'coupon' | 'checkout' | 'verify';
 
 export interface IOrderState extends IRequestSlice<OrderFetch> {
-  /** Orders by their link code — the page only ever holds the one it is showing. */
+  /** Orders by their link code: the one a link page shows, and the learner's own once Purchases loads them. */
   orderMap: Record<string, OrderDto>;
 
   getOrderByCode: (code: string) => OrderDto | undefined;
+  /** Orders the learner has bought, newest payment first. */
+  getOrdersBoughtBy: (userId: string) => OrderDto[];
   addOrders: (orders: OrderDto[]) => void;
+
+  loadMyOrders: () => Promise<void>;
 
   loadOrder: (code: string) => Promise<void>;
   applyCoupon: (code: string, coupon: string) => Promise<void>;
@@ -31,9 +35,14 @@ const keyByCode = (rows: OrderDto[]): Record<string, OrderDto> =>
 
 export const useOrderStore = create<IOrderState>()((set, get) => ({
   orderMap: {},
-  ...createRequestSlice(['order', 'coupon', 'checkout', 'verify'], set, get),
+  ...createRequestSlice(['order', 'myOrders', 'coupon', 'checkout', 'verify'], set, get),
 
   getOrderByCode: (code) => get().orderMap[code],
+
+  getOrdersBoughtBy: (userId) =>
+    Object.values(get().orderMap)
+      .filter((order) => order.purchasedBy === userId)
+      .sort((a, b) => (b.paidAt ?? '').localeCompare(a.paidAt ?? '')),
 
   addOrders: (orders) => {
     set((state) => ({ orderMap: { ...state.orderMap, ...keyByCode(orders) } }));
@@ -43,6 +52,12 @@ export const useOrderStore = create<IOrderState>()((set, get) => ({
     get().run('order', async () => {
       const result = await OrderService.getByCode(code);
       if (result?.data) get().addOrders([result.data]);
+    }),
+
+  loadMyOrders: () =>
+    get().run('myOrders', async () => {
+      const result = await OrderService.getMyOrders();
+      if (result?.data) get().addOrders(result.data);
     }),
 
   applyCoupon: (code, coupon) =>

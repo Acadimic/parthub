@@ -3,9 +3,10 @@ import { Badge } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
 import { type MarkingType } from '@repo/shared/interfaces';
 import { Bookmark } from '@components/common';
-import { CollectionType, Marking, QuestionType } from '@enums';
+import { ReportButton } from '@components/app/report';
+import { CollectionType, Marking, QuestionType, TicketCategory } from '@enums';
 import { CaretDownIcon, ClockIcon } from '@phosphor-icons/react';
-import { useQuestionLookups, useSelectedQuestion, useTestPaperLookups } from '@stores';
+import { useQuestionLookups, useSelectedQuestion, useSelectorStore, useTestPaperLookups } from '@stores';
 import { splitCamelCase } from '@utils/helpers';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
@@ -54,6 +55,45 @@ const QuestionScore = ({
   );
 };
 
+interface IQuestionTicketsProps {
+  courseId: string;
+  courseModuleId: string;
+  testPaperId: string;
+  questionId: string;
+  /** Off during a timed attempt, so a teacher is never asked to help mid-exam. */
+  canAskDoubt: boolean;
+}
+
+/** Report a problem with the question, and ask a doubt about it once that cannot help mid-exam. */
+const QuestionTickets = ({ courseId, courseModuleId, testPaperId, questionId, canAskDoubt }: IQuestionTicketsProps) => {
+  const target = {
+    course: courseId,
+    courseModule: courseModuleId || null,
+    testPaper: testPaperId,
+    question: questionId,
+  };
+  return (
+    <>
+      {canAskDoubt ? (
+        <ReportButton
+          isLabelled={false}
+          className="h-8 w-8 p-0"
+          title="Ask a doubt about this question"
+          description="Only you and the course team see it. The reply shows under My Reports."
+          target={{ ...target, category: TicketCategory.DOUBT }}
+        />
+      ) : null}
+      <ReportButton
+        isLabelled={false}
+        className="h-8 w-8 p-0"
+        title="Report this question"
+        description="Your teacher sees the report and can correct the question or its answer. You can follow it under My Reports."
+        target={{ ...target, category: TicketCategory.QUESTION }}
+      />
+    </>
+  );
+};
+
 export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstruction, onReviewQuestion }: IProps) => {
   const testPaperStore = useTestPaperLookups();
   const { getTestPaperSectionsByIds } = testPaperStore;
@@ -61,6 +101,9 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
   const { getCorrectOptionIndexes } = questionStore;
   const { exam } = testPaperStore;
   const selectedQuestion = useSelectedQuestion();
+  // A question is reported against the course it was opened from; a paper opened elsewhere has none.
+  const selectedCourseId = useSelectorStore((state) => state.selectedCourseId);
+  const selectedCourseModuleId = useSelectorStore((state) => state.selectedCourseModuleId);
   const { getSolutionByQuestionId, getQuestionOptions } = questionStore;
   const [refresh, setRefresh] = useState(false);
 
@@ -155,6 +198,15 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
             ) : null}
             <QuestionScore isCompleted={isCompleted} marks={marks} markings={selectedQuestion.markings} />
             <Bookmark collectionItem={selectedQuestion._id} collectionRef={CollectionType.QUESTION} />
+            {selectedCourseId ? (
+              <QuestionTickets
+                courseId={selectedCourseId}
+                courseModuleId={selectedCourseModuleId}
+                testPaperId={exam._id}
+                questionId={selectedQuestion._id}
+                canAskDoubt={isResultPage || Boolean(exam.isPractice)}
+              />
+            ) : null}
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-auto px-4 py-4 md:px-6 md:py-5">

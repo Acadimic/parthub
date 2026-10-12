@@ -128,8 +128,8 @@ export const HelpCenter = () => {
           <div className="rounded-2xl border border-border bg-muted/30 p-6 md:p-8">
             <SectionHeading
               eyebrow="Still stuck?"
-              title="Write to us"
-              subtitle={`Email ${COMPANY.supportEmail} from the address on your account, or use the contact page for the right team.`}
+              title="Report a problem or write to us"
+              subtitle={`Send support a message from the contact page and follow the reply under My Reports, or email ${COMPANY.supportEmail} from the address on your account.`}
               action={{ label: 'Contact us', href: '/contact' }}
             />
           </div>

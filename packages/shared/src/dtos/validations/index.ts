@@ -38,3 +38,4 @@ export * from './discussion/course-comment.dto';
 export * from './discussion/course-review.dto';
 export * from './discussion/discussion-page-query.dto';
 export * from './discussion/comment-inbox-query.dto';
+export * from './ticket/ticket.dto';

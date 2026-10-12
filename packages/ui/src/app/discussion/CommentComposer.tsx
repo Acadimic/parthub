@@ -1,6 +1,6 @@
 import { FilePdfIcon, PaperPlaneRightIcon, PaperclipIcon, XIcon } from '@phosphor-icons/react';
 import { DISCUSSION_FILE_EXTENSIONS, DISCUSSION_LIMITS, getFileExtension } from '@repo/shared/utils';
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { cn } from '../../lib/cn';
 import { Button } from '../buttons/Buttons';
 import { TextArea } from '../inputs/TextArea';
@@ -29,8 +29,15 @@ const getFileProblem = (file: File): string | null => {
 
 /** A staged file: a thumbnail for an image, a chip for a PDF, each with a remove button. */
 const StagedFile = ({ file, onRemove }: { file: File; onRemove: () => void }) => {
-  const previewUrl = useMemo(() => (file.type.startsWith('image/') ? URL.createObjectURL(file) : null), [file]);
-  useEffect(() => () => (previewUrl ? URL.revokeObjectURL(previewUrl) : undefined), [previewUrl]);
+  // Made inside the effect, not memoised: Strict Mode runs the cleanup once after mount, and a
+  // memoised URL would survive that revoke and render as a broken image.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!file.type.startsWith('image/')) return undefined;
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
   return (
     <div className="relative">
       {previewUrl ? (
@@ -130,7 +137,10 @@ export const CommentComposer = ({
               <StagedFile
                 key={`${file.name}-${file.lastModified}-${index}`}
                 file={file}
-                onRemove={() => setFiles(files.filter((_, at) => at !== index))}
+                onRemove={() => {
+                  setFiles(files.filter((_, at) => at !== index));
+                  setProblem(null);
+                }}
               />
             ))}
           </div>
@@ -139,15 +149,22 @@ export const CommentComposer = ({
           <div className={cn(isFull || isPosting ? 'pointer-events-none opacity-40' : '')}>
             {renderFilePicker(trigger, addFiles)}
           </div>
-          <span className="text-xxs text-muted-foreground">
+          {/* The hint gives way on a narrow screen, where the paperclip already says it; the count stays. */}
+          <span className={cn('truncate text-xxs text-muted-foreground', !files.length && 'hidden sm:inline')}>
             {files.length ? `${files.length}/${MAX_ATTACHMENTS} files` : 'Images or PDF, up to 10 MB'}
           </span>
           <div className="ml-auto flex items-center gap-1.5">
             {onCancel ? (
-              <Button isSubtle className="px-3 py-1.5 text-xs" text="Cancel" onClick={onCancel} disabled={isPosting} />
+              <Button
+                isSubtle
+                className="whitespace-nowrap px-3 py-1.5 text-xs"
+                text="Cancel"
+                onClick={onCancel}
+                disabled={isPosting}
+              />
             ) : null}
             <Button
-              className="px-3 py-1.5 text-xs"
+              className="whitespace-nowrap px-3 py-1.5 text-xs"
               text={submitLabel}
               disabled={!canPost}
               isLoading={isPosting}

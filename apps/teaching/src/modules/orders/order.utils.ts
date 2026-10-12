@@ -30,6 +30,7 @@ export const ORDER_STATUS_TONE: Record<OrderStatus, 'success' | 'info' | 'neutra
   [OrderStatus.PAID]: 'success',
   [OrderStatus.EXPIRED]: 'neutral',
   [OrderStatus.CANCELLED]: 'destructive',
+  [OrderStatus.REFUNDED]: 'neutral',
 };
 
 /** Whether a coupon can be applied today: switched on, inside its window, and not used up. */

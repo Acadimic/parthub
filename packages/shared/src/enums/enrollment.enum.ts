@@ -6,4 +6,6 @@ export enum EnrollmentStatus {
   /** A period plan whose term has run out; renewing makes a new row. */
   EXPIRED = 'expired',
   CANCELLED = 'cancelled',
+  /** Paid, then refunded by platform staff; holds no access. */
+  REFUNDED = 'refunded',
 }

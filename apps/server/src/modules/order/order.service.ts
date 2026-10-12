@@ -64,6 +64,9 @@ export class OrderService {
       paidAt: row.paidAt?.toISOString(),
       razorpayOrderId: row.razorpayOrderId,
       razorpayPaymentId: row.razorpayPaymentId,
+      refundedAt: row.refundedAt?.toISOString(),
+      razorpayRefundId: row.razorpayRefundId,
+      refundAmount: row.refundAmount,
     };
   }
 
@@ -159,6 +162,42 @@ export class OrderService {
       .sort({ paidAt: -1 })
       .lean<OrderDocument[]>();
     return rows.map((row) => this.getTransformed(row));
+  }
+
+  /** One order the learner bought, or null: a buyer reports a problem only on their own. */
+  async findForBuyer(userId: Types.ObjectId, id: string): Promise<OrderDocument | null> {
+    return this.orderModel
+      .findOne({ _id: id, purchasedBy: String(userId), _deleted: { $ne: true } })
+      .lean<OrderDocument>();
+  }
+
+  /** Platform staff read any order a payment ticket names. */
+  async findById(id: string): Promise<OrderDocument | null> {
+    return this.orderModel.findOne({ _id: id, _deleted: { $ne: true } }).lean<OrderDocument>();
+  }
+
+  /**
+   * Records a refund staff made in the Razorpay dashboard and ends every seat the order granted.
+   * The order is the selling organization's row, so the write goes by id after staff were checked.
+   */
+  async recordRefund(id: string, refund: { razorpayRefundId: string; amount: number }): Promise<void> {
+    const refundedAt = new Date();
+    const row = await this.orderModel
+      .findOneAndUpdate(
+        { _id: id, status: OrderStatus.PAID, _deleted: { $ne: true } },
+        {
+          $set: {
+            status: OrderStatus.REFUNDED,
+            refundedAt,
+            razorpayRefundId: refund.razorpayRefundId,
+            refundAmount: refund.amount,
+          },
+        },
+        { returnDocument: 'after' },
+      )
+      .lean<OrderDocument>();
+    if (!row) throw new ConflictException('Only a paid order can be refunded.');
+    await this.enrollmentService.recordRefund({ order: id }, { ...refund, refundedAt });
   }
 
   /** What the link shows anyone who opens it. Payment ids stay server-side. */

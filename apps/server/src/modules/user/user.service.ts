@@ -20,7 +20,7 @@ import {
   UpdateProfileDto,
   UserDto,
 } from '@repo/shared/validations';
-import { type IDiscussionAuthor } from '@repo/shared/interfaces';
+import { type IDiscussionAuthor, type ITicketReporter } from '@repo/shared/interfaces';
 import { isProfileForApp } from '@repo/shared/utils';
 import { getObjectId } from '@utils/util';
 import { Model, Types } from 'mongoose';
@@ -143,6 +143,19 @@ export class UserService {
       name: user.name || [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Learner',
       avatar: user.avatar || null,
       isTeacher: user.permission !== DefaultRole.STUDENT && String(user.org) === String(courseOrg),
+    }));
+  }
+
+  /** Name and email of whoever raised a ticket. Removed users still have a name, so deleted rows count. */
+  async getContactsByIds(ids: string[]): Promise<ITicketReporter[]> {
+    if (!ids.length) return [];
+    const users = await this.userModel
+      .find({ _id: { $in: ids } }, { name: 1, firstName: 1, lastName: 1, email: 1 })
+      .lean<UserDocument[]>();
+    return users.map((user) => ({
+      _id: String(user._id),
+      name: user.name || [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Learner',
+      email: user.email,
     }));
   }
 

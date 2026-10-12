@@ -9,5 +9,6 @@ export * from './resource.store';
 export * from './selector.store';
 export * from './standard.store';
 export * from './test-paper.store';
+export * from './ticket.store';
 export * from './toast.store';
 export * from './user.store';

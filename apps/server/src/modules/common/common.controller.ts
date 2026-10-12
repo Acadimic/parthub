@@ -130,7 +130,9 @@ export class CommonController {
   @Private()
   @Post('private-presigned-GET-urls')
   async privateGetPreSignedGETUrls(@Body() payload: PresignedGetUrlsDto): Promise<IPresignedUrl[]> {
-    const data = await this.commonService.getPreSignedGETUrls(payload.keys, this.orgId(), payload.isPublic);
+    // Reads cross organizations here too: a ticket's attachments sit in the reporter's folder, and
+    // the service account this runs as never owns them.
+    const data = await this.commonService.getPreSignedGETUrls(payload.keys, this.orgId(), payload.isPublic, true);
     return data;
   }
 }

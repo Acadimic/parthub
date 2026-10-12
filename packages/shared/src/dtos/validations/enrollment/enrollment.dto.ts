@@ -61,6 +61,20 @@ export class EnrollmentDto extends BaseOwnedDto {
   @IsOptional()
   @IsMongoId()
   order?: string;
+
+  /** Set when platform staff record a refund. ISO 8601. */
+  @IsOptional()
+  @IsDateString()
+  refundedAt?: string;
+
+  @IsOptional()
+  @IsString()
+  razorpayRefundId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  refundAmount?: number;
 }
 
 /** `POST enrollment/checkout`: the course, and which of its plans when it has any. */

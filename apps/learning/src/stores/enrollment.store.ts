@@ -17,6 +17,8 @@ export interface IEnrollmentState extends IRequestSlice<EnrollmentFetch> {
   /** The seat that grants access to a course right now, if any. A run-out term does not count. */
   getActiveEnrollment: (courseId: string) => EnrollmentDto | undefined;
   isEnrolled: (courseId: string) => boolean;
+  /** Seats paid for on a course page. One bought through an order is the order's, so it is left out. */
+  getPaidSeats: () => EnrollmentDto[];
 
   addEnrollments: (enrollments: EnrollmentDto[]) => void;
 
@@ -50,6 +52,12 @@ export const useEnrollmentStore = create<IEnrollmentState>()((set, get) => ({
       .find((enrollment) => enrollment.course === courseId && isCurrent(enrollment)),
 
   isEnrolled: (courseId) => Boolean(get().getActiveEnrollment(courseId)),
+
+  getPaidSeats: () =>
+    get()
+      .getEnrollments()
+      .filter((enrollment) => enrollment.amount > 0 && !enrollment.order)
+      .sort((a, b) => (b.startsAt ?? '').localeCompare(a.startsAt ?? '')),
 
   addEnrollments: (enrollments) => {
     set((state) => ({ enrollmentMap: { ...state.enrollmentMap, ...keyById(enrollments) } }));

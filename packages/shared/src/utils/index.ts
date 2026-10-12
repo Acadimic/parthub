@@ -12,3 +12,4 @@ export * from './material-stats.util';
 export * from './discussion.util';
 export * from './graph';
 export * from './scene';
+export * from './ticket.util';

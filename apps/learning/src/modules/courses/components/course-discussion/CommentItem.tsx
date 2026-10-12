@@ -7,7 +7,7 @@ import { ExpandableText } from '@repo/ui/core';
 import { type IMenuItem } from '@repo/ui/types';
 import { useDiscussionLookups, useDiscussionStore, useSelectedUser } from '@stores';
 import { useState } from 'react';
-import { CommentAttachments } from './CommentAttachments';
+import { SignedAttachments } from '@components/app/attachments';
 import { CommentComposer } from './CommentComposer';
 import { CommentSource } from './CommentSource';
 import { LikeButton } from './LikeButton';
@@ -162,7 +162,7 @@ export const CommentItem = ({ comment, isReply }: IProps) => {
           isEditing={isEditing}
           onClose={() => setIsEditing(false)}
         />
-        <CommentAttachments attachments={comment.attachments} />
+        <SignedAttachments attachments={comment.attachments} />
         {isReply ? (
           <div className="mt-1.5 flex items-center">
             <LikeButton itemId={comment._id} collectionRef={CollectionType.COURSE_COMMENT} />

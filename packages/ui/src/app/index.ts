@@ -24,6 +24,7 @@ export * from './progress';
 export * from './selections';
 export * from './skeletons';
 export * from './tabs';
+export * from './tickets';
 export * from './tooltips';
 export * from './error';
 
