@@ -244,5 +244,5 @@ Manish asked for a visible Print control on the course modules page. `PrintButto
 `modules/courses/components/course-modules/PrintCourse.tsx` sits in the top bar of
 `CourseModules.tsx` before Contents and the profile, and opens the same `getPrintMenuItems` as the
 lesson's ⋯ menu: the course, the module on screen, and the quiz on screen when one is selected.
-The word hides below `sm`. Checked on desktop and phone: the menu lists the course and the module,
+It is an icon-only round button (20 px printer, "Print" in its tooltip). Checked on desktop and phone: the menu lists the course and the module,
 and "Print course" opens `/courses/<id>/print` in a new tab.
