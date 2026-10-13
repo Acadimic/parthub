@@ -108,21 +108,32 @@ export const CourseModules = () => {
             >
               Overview
             </Link>
-            <div className="hidden min-w-0 flex-1 md:block">
+            {/* The trail, then the printer right after its last crumb; on a phone the trail is the
+                course's name and progress, and the printer follows that. */}
+            <div className="hidden min-w-0 flex-1 items-center gap-1 md:flex">
               <Breadcrumb items={crumbs} />
-            </div>
-            <div className="min-w-0 flex-1 md:hidden">
-              <div className="truncate text-sm font-semibold">{selectedCourse.name}</div>
-              <div className={cn('font-mono text-xxs', isDone ? 'text-success' : 'text-muted-foreground')}>
-                {isDone ? 'Completed' : `${progress.completed}/${progress.total} done`}
-              </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-1 md:gap-2">
+              <div className="mx-1 h-4 w-px shrink-0 bg-border" />
               <PrintButton
                 courseId={selectedCourse._id}
                 courseModuleId={selectedCourseModuleId}
                 testPaperId={selectedTestPaperId || null}
               />
+            </div>
+            <div className="flex min-w-0 flex-1 items-center gap-1 md:hidden">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold">{selectedCourse.name}</div>
+                <div className={cn('font-mono text-xxs', isDone ? 'text-success' : 'text-muted-foreground')}>
+                  {isDone ? 'Completed' : `${progress.completed}/${progress.total} done`}
+                </div>
+              </div>
+              <div className="mx-1 h-4 w-px shrink-0 bg-border" />
+              <PrintButton
+                courseId={selectedCourse._id}
+                courseModuleId={selectedCourseModuleId}
+                testPaperId={selectedTestPaperId || null}
+              />
+            </div>
+            <div className="flex shrink-0 items-center gap-1 md:gap-2">
               <div className="lg:hidden">
                 <Button
                   isSecondary

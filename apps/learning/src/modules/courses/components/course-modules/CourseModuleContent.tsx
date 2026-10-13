@@ -116,15 +116,21 @@ const LessonHeader = ({
         {item.name}
       </h1>
     </div>
-    <div className="flex shrink-0 items-center gap-x-3">
+    {/* One row at one spacing: the kind chips, the tick when done, the duration, all 24px tall. */}
+    <div className="flex shrink-0 items-center gap-1.5">
       {kinds.length > 1 ? <ContentKinds kinds={kinds} size="sm" /> : <ContentTypeBadge type={type} size="sm" />}
+      {/* Done: a tile the size of the kind chips beside it, the word for screen readers only. The
+          tooltip sits inside, on the icon — its inline wrapper around the tile would add line
+          height and drop the tile a pixel below its neighbours. */}
       {isCompleted ? (
-        <Badge tone="success" className="gap-1">
-          <CheckCircleIcon weight="fill" className="h-3 w-3" />
-          Completed
+        <Badge tone="success" className="h-6 w-6 justify-center p-0">
+          <Tooltip title="Completed">
+            <CheckCircleIcon weight="fill" className="h-4 w-4" />
+          </Tooltip>
+          <span className="sr-only">Completed</span>
         </Badge>
       ) : null}
-      <Badge tone="warning" appearance="soft" className="gap-1">
+      <Badge tone="warning" appearance="soft" className="h-6 gap-1">
         <ClockIcon weight="bold" className="h-3 w-3" />
         {durationMins} min
       </Badge>

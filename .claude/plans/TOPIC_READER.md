@@ -362,3 +362,6 @@ the reader suite; row heights.
   `components/app/badges/ContentKinds.tsx`, the same tones as the kind chips in the lesson header.
   Opened and unopened differ by opacity (70 % and 25 %), the current one is taller with a halo in
   its own tone. The pager row's top border is gone (its separation is the toolbar's line below).
+- **Header badges (2026-10-14):** the lesson header's "Completed" badge is a 24 px tick tile with
+  the word for screen readers only, and the kind chips, the tick and the duration badge form one
+  row at one spacing (6 px) and one height (24 px).

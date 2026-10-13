@@ -1,5 +1,7 @@
-import { ClipboardTextIcon, PrinterIcon, StackIcon } from '@phosphor-icons/react';
+import { CaretDownIcon, ClipboardTextIcon, PrinterIcon, StackIcon } from '@phosphor-icons/react';
 import { Button, Menu, Tooltip } from '@repo/ui/app';
+import { cn } from '@repo/ui/lib';
+import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IMenuItem } from '@repo/ui/types';
 
 /** A printout opens in a tab of its own, where the print dialog opens by itself. */
@@ -43,8 +45,10 @@ export const getPrintMenuItems = (
 };
 
 /**
- * A visible way to print from the learning view's top bar, as one printer icon with the word in
- * its tooltip, opening the same choices as the lesson's ⋯ menu.
+ * A visible way to print from the learning view's top bar: a soft pill in the primary tone with
+ * the duotone printer, the word, and a caret for the choices behind it — the same ones as the
+ * lesson's ⋯ menu. On a phone it is the printer alone, in a circle: a hidden label would still
+ * keep its slot and push the icon off centre.
  */
 export const PrintButton = ({
   courseId,
@@ -54,20 +58,38 @@ export const PrintButton = ({
   courseId: string;
   courseModuleId: string;
   testPaperId: string | null;
-}) => (
-  <Tooltip title="Print">
-    <Menu
-      menuItems={getPrintMenuItems(courseId, courseModuleId, testPaperId)}
-      className="px-0"
-      component={
-        <Button
-          isSubtle
-          isRound
-          aria-label="Print"
-          className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
-          leftsection={<PrinterIcon weight="bold" className="h-5 w-5" />}
-        />
-      }
-    />
-  </Tooltip>
-);
+}) => {
+  const { isSmallScreen } = useWindowDimensions();
+  const pill =
+    'bg-primary/10 text-primary ring-1 ring-inset ring-primary/20 transition-colors hover:bg-primary/15 hover:text-primary';
+  return (
+    <Tooltip title="Print the course, this module or this quiz">
+      <Menu
+        menuItems={getPrintMenuItems(courseId, courseModuleId, testPaperId)}
+        className="px-0"
+        component={
+          isSmallScreen ? (
+            <Button
+              isSubtle
+              isRound
+              aria-label="Print"
+              className={cn('h-8 w-8 p-0', pill)}
+              leftsection={<PrinterIcon weight="duotone" className="h-[18px] w-[18px]" />}
+            />
+          ) : (
+            <Button
+              isSubtle
+              isRound
+              aria-label="Print"
+              className={cn('h-8 px-2.5 text-xs font-semibold', pill)}
+              leftsection={<PrinterIcon weight="duotone" className="h-[18px] w-[18px]" />}
+              rightsection={<CaretDownIcon weight="bold" className="h-3 w-3 opacity-70" />}
+            >
+              Print
+            </Button>
+          )
+        }
+      />
+    </Tooltip>
+  );
+};
