@@ -6,11 +6,12 @@ import { cn } from '@repo/ui/lib';
 import { Attachment } from '@components/app/attachments';
 import { ContentKinds, ContentTypeBadge, type IContentKind, getMaterialKinds } from '@components/app/badges';
 import { BlankState } from '@components/others';
+import { ReaderProgress } from '@components/tools';
 import { CollectionType, type ModuleContentType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { useCourse } from '@hooks/course.hook';
 import { useLessonReader } from '@hooks/lesson-reader.hook';
-import { getItemName } from '@utils/helpers';
+import { getEdgeLabel, getItemName } from '@utils/helpers';
 import {
   ArrowsOutIcon,
   BookOpenTextIcon,
@@ -39,7 +40,6 @@ import { Content } from './content';
 import { LikeCourse } from './LikeCourse';
 import { MarkCompleteButton } from './MarkCompleteButton';
 import { AskDoubtButton, LessonMoreMenu } from './LessonActions';
-import { LessonViewToggle } from './LessonViewToggle';
 import { TopicPager } from './TopicPager';
 import { NextSessionBanner } from '@modules/sessions';
 
@@ -144,7 +144,6 @@ const LessonHeader = ({
   isCompleted,
   courseModule,
   durationMins,
-  viewToggle,
 }: {
   item: IMaterial | ITestPaper;
   type: ModuleContentType;
@@ -153,8 +152,6 @@ const LessonHeader = ({
   isCompleted: boolean;
   courseModule: ICourseModule | undefined;
   durationMins: number;
-  /** Topics or full lesson; `null` for a test paper, which has no body to page. */
-  viewToggle: React.ReactNode | null;
 }) => (
   <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 px-1">
     <div className="flex min-w-0 flex-1 items-center gap-1.5">
@@ -182,7 +179,6 @@ const LessonHeader = ({
         <ClockIcon weight="bold" className="h-3 w-3" />
         {durationMins} min
       </Badge>
-      {viewToggle}
     </div>
   </header>
 );
@@ -231,7 +227,7 @@ export const CourseModuleContent = () => {
   // showed every item as unliked and unsaved until the learner clicked.
   useLoadOnce(useResourceStore, 'reactions', (state) => state.loadReactions);
   useLoadOnce(useResourceStore, 'bookmarks', (state) => state.loadBookmarks);
-  const { selectedCourseId, selectedCourseModuleId, selectedUserId, restoreLessonViewMode } = selectorStore;
+  const { selectedCourseId, selectedCourseModuleId, selectedUserId } = selectorStore;
   const selectedTestPaper = useSelectedTestPaper();
   const selectedCourse = useSelectedCourse();
   const selectedMaterial = useSelectedMaterial();
@@ -239,9 +235,8 @@ export const CourseModuleContent = () => {
   const { getMeetsByIds } = meetStore;
   const chips = useFrameChips(selectedMaterial);
 
-  // Both are kept in the browser, so they are read back once the learner is known.
+  // Kept in the browser per learner, so it is read back once the learner is known.
   useEffect(() => {
-    restoreLessonViewMode();
     useCourseStore.getState().restoreViewedLessonPages();
   }, [selectedUserId]);
 
@@ -304,12 +299,12 @@ export const CourseModuleContent = () => {
         isCompleted={isCompleted}
         courseModule={courseModule}
         durationMins={getDurationMins(selectedMaterial, selectedTestPaper)}
-        viewToggle={selectedMaterial ? <LessonViewToggle /> : null}
       />
 
       {/* The lesson takes the height left under the header and any banner, so the column itself
           never scrolls: only the content inside the frame does. */}
       <Card className="flex flex-1 flex-col overflow-hidden">
+        {selectedMaterial ? <ReaderProgress material={selectedMaterial} /> : null}
         <div className="relative min-h-[240px] w-full flex-1">
           <div className="absolute inset-0">
             <Content
@@ -361,14 +356,14 @@ const LessonPager = ({ courseId }: { courseId: string }) => {
   return (
     <>
       <div className="mx-1 hidden h-5 w-px bg-border sm:block" />
-      <Tooltip title={previous ? `Previous: ${getItemName(previous)}` : 'Start of course'}>
+      <Tooltip title={getEdgeLabel(previous, 'Previous', 'Start of course')}>
         <Button
           isRound
           isSubtle
-          aria-label={previous ? `Previous: ${getItemName(previous)}` : 'Start of course'}
+          aria-label={getEdgeLabel(previous, 'Previous', 'Start of course')}
           disabled={!previous}
           className="h-9 w-9 shrink-0 p-0 text-muted-foreground hover:text-foreground"
-          onClick={() => selectAdjacentItem(courseId, -1)}
+          onClick={() => selectAdjacentItem(courseId, -1, 0)}
           leftsection={<CaretLeftIcon weight="bold" className="h-4 w-4" />}
         />
       </Tooltip>
@@ -381,10 +376,10 @@ const LessonPager = ({ courseId }: { courseId: string }) => {
           <Button
             isRound
             isSubtle
-            aria-label={`Next: ${getItemName(next)}`}
+            aria-label={getEdgeLabel(next, 'Next', 'End of course')}
             className="h-9 min-w-0 pl-4 pr-3 text-primary [&>div]:min-w-0"
             labelClassName="min-w-0 truncate"
-            onClick={() => selectAdjacentItem(courseId, 1)}
+            onClick={() => selectAdjacentItem(courseId, 1, 0)}
             rightsection={<CaretRightIcon weight="bold" className="h-4 w-4" />}
           >
             <span className="hidden text-xs font-semibold uppercase tracking-caps opacity-70 sm:inline">Next</span>

@@ -9,6 +9,7 @@ import { CourseService, MeetService, PlanService } from '../services';
 import { type ICourseModuleContents } from '../services/course.service';
 import {
   capitalize,
+  errorToast,
   getCoursePath,
   getObjectId,
   getToken,
@@ -72,8 +73,6 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   /** Whether a module's materials and test papers are all done, or only some. */
   isCourseModuleCompleted: (courseModuleId: string) => { isAllCompleted: boolean; isPartiallyCompleted: boolean };
   isLessonPageViewed: (materialId: string, pageKey: string) => boolean;
-  /** Pages of the lesson not opened yet, out of the keys it has now; a page it no longer has does not count. */
-  countUnviewedLessonPages: (materialId: string, pageKeys: string[]) => number;
 
   addCourses: (courses: ICourse[]) => void;
   addPlans: (plans: PlanDto[]) => void;
@@ -81,6 +80,7 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   addCompletedModules: (completedModules: ICompletedModuleFields[]) => void;
   patchCourse: (courseId: string, fields: Partial<ICourse>) => void;
   patchCompletedModule: (completedModuleId: string, fields: Partial<ICompletedModuleFields>) => void;
+  removeCompletedModuleById: (completedModuleId: string) => void;
   removeCourseById: (courseId: string) => void;
   removeCourseModuleById: (courseModuleId: string) => void;
   markLessonPageViewed: (materialId: string, pageKey: string) => void;
@@ -89,6 +89,21 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
 
   createPlan: (courseId: string, order: number, period: PeriodType) => PlanDto;
   createCompletedModule: (data: IGetCompletedModule, collectionRef: CollectionType) => ICompletedModuleFields;
+  /**
+   * Saves whether an item is done. Applied first and sent after, rolled back if the save fails,
+   * which is then thrown for the caller to report. One row per item: an existing row is patched
+   * rather than a second one created, so undoing and redoing never leaves two rows for the lesson.
+   */
+  saveCompletedModule: (
+    data: IGetCompletedModule,
+    collectionRef: CollectionType,
+    isCompleted: boolean,
+  ) => Promise<void>;
+  /**
+   * Marks an item done on the learner's behalf — reaching a lesson's last topic, finishing a
+   * test — without a toast. Nothing happens for an item already done, so it can be called freely.
+   */
+  completeCourseModuleItem: (data: IGetCompletedModule, collectionRef: CollectionType) => Promise<void>;
 
   loadCourses: () => Promise<void>;
   loadCoursePlans: (courseId: string) => Promise<void>;
@@ -281,9 +296,6 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
 
   isLessonPageViewed: (materialId, pageKey) => (get().viewedLessonPagesMap[materialId] ?? []).includes(pageKey),
 
-  countUnviewedLessonPages: (materialId, pageKeys) =>
-    pageKeys.filter((pageKey) => !get().isLessonPageViewed(materialId, pageKey)).length,
-
   isCourseModuleCompleted: (courseModuleId) => {
     const courseModule = get().getCourseModuleById(courseModuleId);
     if (!courseModule) return { isAllCompleted: false, isPartiallyCompleted: false };
@@ -336,6 +348,13 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
           [completedModuleId]: { ...completedModule, ...fields },
         },
       };
+    });
+  },
+
+  removeCompletedModuleById: (completedModuleId) => {
+    set((state) => {
+      const { [completedModuleId]: removed, ...completedModuleMap } = state.completedModuleMap;
+      return removed ? { completedModuleMap } : state;
     });
   },
 
@@ -396,6 +415,36 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
     };
     get().addCompletedModules([completedModule]);
     return completedModule;
+  },
+
+  saveCompletedModule: async (data, collectionRef, isCompleted) => {
+    const existing = get().getCompletedModule(data);
+    let row: ICompletedModuleFields;
+    if (existing) {
+      row = { ...existing, isCompleted };
+      get().patchCompletedModule(row._id, { isCompleted });
+    } else {
+      // Minted as completed; a row is only ever created to mark something done.
+      row = get().createCompletedModule(data, collectionRef);
+    }
+    try {
+      await CourseService.upsertCompletedModule(row);
+    } catch (error) {
+      // Back to what the server knows: the old flag, or no row at all.
+      if (existing) get().patchCompletedModule(existing._id, { isCompleted: existing.isCompleted });
+      else get().removeCompletedModuleById(row._id);
+      throw error;
+    }
+  },
+
+  completeCourseModuleItem: async (data, collectionRef) => {
+    if (get().isCourseModuleItemCompleted(data)) return;
+    try {
+      // Quietly: the badge and the Completed pill say it; only a failure needs words.
+      await get().saveCompletedModule(data, collectionRef, true);
+    } catch (error) {
+      errorToast({ message: (error as Error)?.message || 'Could not save your progress. Please try again.' });
+    }
   },
 
   // The catalogue is every published course, whichever organization authored it, so this needs no

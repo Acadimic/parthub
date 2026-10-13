@@ -273,3 +273,75 @@ safe beside it). A `/code-review high` pass over the working tree raised eight f
 8. **Six splits per lesson and a re-registered key listener.** `getLessonPages` caches by the
    immutable store row in a `WeakMap`; the splitter decides whether a section is empty before
    building its value; the keydown listener is registered once and reads the latest moves from a ref.
+- **Toggle into the progress strip (2026-10-14, after 5eb6956):** Manish asked for the Topics /
+  Full lesson toggle as icons only, tried it in the pager row and the chip row, and settled on the
+  progress strip, which now shows in both views. `ReaderProgress` moved out of `TopicReader` to
+  the top of the lesson card in `CourseModuleContent`, takes only the material, and starts with
+  `LessonViewToggle` (two icon buttons in one pill; tooltips and `aria-label`s carry the words)
+  and a divider before the segments and "N left". In the full view the segments still show what
+  has been opened, and a tap on one switches to topics at that page. The pager row is set like the exam
+  footer — a secondary Previous and a primary Next, rectangular, h-8, text-xs, words from `sm` up —
+  at 40 px (was 56) and renders only in Topics mode; the header and
+  the chip row carry no toggle. The strip is 41 px (h-7 icon buttons, py-1, a faint `bg-muted/30` band). Checked on desktop and phone: the toggle
+  switches both ways from it, the ten `h2`s show in full, and a segment tap in full view lands on
+  topic 5 in the reader.
+- **Completion rules (2026-10-14):** Manish asked for three changes. (1) **Leaving** a lesson's last
+  topic marks the lesson done — back, forward into the next lesson, or by picking another topic —
+  not arriving at it, which a learner may do by stepping back from the next lesson. The page
+  effect in `TopicReader` returns a cleanup that calls the course store's new
+  `completeCourseModuleItem`, quietly (no toast; the badge and the Completed pill say it). The
+  cleanup also runs on a StrictMode re-mount, a view switch and leaving the course, so it first
+  checks that the selection has actually moved on from that page.
+  (2) The swipe is free at any time: the "N of M topics read" lock and the "All topics read" banner
+  are gone, and `MarkCompleteButton` saves through the store's new `saveCompletedModule` (the
+  optimistic patch-or-create with rollback that used to live in the button). (3) A test paper is
+  marked done when the learner finishes it: an attempt on Submit (`submitExamAndComplete` in
+  `hooks/exam.hook.ts`, after the result saved), and a practice sitting when its analytics open,
+  since practice never submits a result. Both read the course from the sitting and the module from
+  the selection, so a paper opened outside a course marks nothing. `countUnviewedLessonPages` was
+  removed with the lock. Checked in the browser: arriving at the last topic of a Spanish lesson adds
+  nothing; Previous, Next into the next lesson, and a pick from the path each add the badge and the
+  Undo pill with no toast, and switching to the full view from the last topic does not; the swipe on an unread lesson reads "Swipe to complete" and is not
+  disabled; on the Astrophysics quiz both Practice → View analytics and Attempt → Submit mark the
+  item, and Undo clears it. Every completion made by the checks was undone afterwards.
+- **Strip in full screen (2026-10-14):** `ReaderProgress` and `LessonViewToggle` moved to
+  `components/tools/`, and `FullScreenStrip` (the strip for the selected lesson, nothing for a
+  test paper) sits at the top of all three full-screen surfaces: the text viewer's modal, the URL
+  viewer's modal and the pinned video player. The toggle works there too — Full lesson inside
+  full screen shows the whole body with the strip above it — and a segment tap jumps the topic.
+  Checked on desktop and phone, on a text topic and on the video page.
+
+---
+
+## 9. Second review (2026-10-14)
+
+Before the second commit, `/code-review high` over the working tree raised ten findings. Nine
+were fixed and re-verified; the tenth (the reader hook instantiated in several components, each
+re-flattening the course's items) is a performance note left as a follow-up, since the page
+splitting it also raised is already cached per lesson row.
+
+1. **A full-view learner's first topic was marked read on a hard reload**, because the stored mode
+   was restored in a parent effect after the reader had mounted. The selector store now reads the
+   stored mode when it is created on the client, and `restoreLessonViewMode` is gone.
+2. **Arrow keys turned pages behind an open dialog or popover.** The key handler now yields while
+   a `[role="dialog"]` or a Radix popper is in the document.
+3. **Every backward move landed on the last page**, including the item-wise pagers, and the
+   `'last'` value lingered into the full view. `selectAdjacentItem` takes the landing page; the
+   reader's Prev asks for `'last'`, the toolbar and the full-screen bar's item-wise moves ask for 0,
+   and the full-screen bar routes topic-wise moves through the reader.
+4. **A child's `animationend` cut the arrival short.** `PageArrival` now ends only on its own.
+5. **An empty lesson read "All read".** The strip shows only the toggle when there are no pages.
+6. **The toolbar pager hand-built its labels.** It uses `getEdgeLabel`.
+7. **A failed create left a client-minted row** in the completed map. `saveCompletedModule` now
+   removes a row it created when the save fails, and no longer re-patches a fresh row.
+8. **The path's rows were raw `<button>`s.** They are the library `Button`.
+9. **A practice sitting re-marked itself** whenever its analytics opened. `completeExamItem` marks
+   each sitting once (by its id). A new Practice or Attempt is a new sitting, so finishing it
+   again marks again, by design.
+
+Verification after the fixes: lint exit 0, learning typecheck and production build green, and the
+browser suites: hard reload in the full view marks nothing; item-wise Previous in the full view
+then Topics opens page 1; ArrowRight with the picker open does nothing; the reader's Prev from the
+next lesson lands on page 15; leaving the last topic back, forward or by a pick completes, a view
+switch does not; practice and attempt both mark and undo; full-screen moves, taps and dropdown;
+the reader suite; row heights.

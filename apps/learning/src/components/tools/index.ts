@@ -1,4 +1,7 @@
 export * from './FullScreenBar';
+export * from './FullScreenStrip';
+export * from './LessonViewToggle';
+export * from './ReaderProgress';
 export * from './HandleContentError';
 export * from './TopicPicker';
 export * from './VideoPlayer';

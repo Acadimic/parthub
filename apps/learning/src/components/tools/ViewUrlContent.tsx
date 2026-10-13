@@ -4,6 +4,7 @@ import { cn } from '@repo/ui/lib';
 import { useEffect, useMemo, useState } from 'react';
 import { HandleContentError } from './HandleContentError';
 import { FullScreenBar } from './FullScreenBar';
+import { FullScreenStrip } from './FullScreenStrip';
 
 interface IProps {
   url: string;
@@ -65,6 +66,7 @@ export const ViewUrlContent = ({ url, isStatic, isFullScreen, onFullScreenChange
         onClose={() => onFullScreenChange(false)}
         component={
           <div className="flex h-full w-full flex-col overflow-hidden" data-reader-surface="">
+            <FullScreenStrip />
             <div className="min-h-0 flex-1 overflow-hidden">{WHOLE}</div>
             <FullScreenBar onExit={() => onFullScreenChange(false)} />
           </div>

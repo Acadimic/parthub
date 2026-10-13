@@ -11,6 +11,7 @@ import {
   TimerIcon,
   WarningCircleIcon,
 } from '@phosphor-icons/react';
+import { submitExamAndComplete } from '@hooks/exam.hook';
 import { useTestPaperStore } from '@stores';
 import { formatSeconds, getVerdict } from '../analytics';
 import { type IResultAnalytics } from '../useResultAnalytics';
@@ -23,7 +24,6 @@ const VERDICT_RING: Record<ReturnType<typeof getVerdict>['tone'], string> = {
 
 /** Whether the submitted sitting reached the server, with a way to try again if it did not. */
 const SaveStatus = ({ isPractice, isSubmitted }: { isPractice: boolean; isSubmitted: boolean }) => {
-  const submitExam = useTestPaperStore((state) => state.submitExam);
   const request = useRequest(useTestPaperStore, 'submitResult');
   if (isPractice || !isSubmitted) return null;
   if (request.isLoading) {
@@ -44,7 +44,7 @@ const SaveStatus = ({ isPractice, isSubmitted }: { isPractice: boolean; isSubmit
         <Button
           isSecondary
           className="shrink-0 px-3 py-1.5"
-          onClick={submitExam}
+          onClick={submitExamAndComplete}
           leftsection={<ArrowClockwiseIcon weight="bold" className="h-4 w-4" />}
         >
           Try again

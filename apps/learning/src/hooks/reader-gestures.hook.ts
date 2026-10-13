@@ -20,6 +20,9 @@ export const READER_SURFACE_ATTR = 'data-reader-surface';
 const ARROW_KEY_OWNERS =
   'input, textarea, select, [contenteditable="true"], audio, video, iframe, [role="tablist"], [role="tab"], [role="menu"], [role="menuitem"], [role="listbox"], [role="option"], [role="slider"], [role="radiogroup"]';
 
+/** An open dialog or popover owns the keyboard, wherever its focus happens to sit. */
+const OPEN_OVERLAY = '[role="dialog"], [data-radix-popper-content-wrapper]';
+
 /** Things a tap means to operate rather than to turn the page. */
 const INTERACTIVE =
   'a, button, input, select, textarea, audio, video, iframe, summary, label, [role="button"], [contenteditable="true"]';
@@ -62,7 +65,7 @@ export const useReaderGestures = ({ onNext, onPrevious }: IReaderGestures) => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
       if (event.metaKey || event.ctrlKey || event.altKey) return;
-      if (document.activeElement?.closest(ARROW_KEY_OWNERS)) return;
+      if (document.activeElement?.closest(ARROW_KEY_OWNERS) || document.querySelector(OPEN_OVERLAY)) return;
       event.preventDefault();
       turn(event.key === 'ArrowRight' ? 'right' : 'left');
     };

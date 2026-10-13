@@ -25,8 +25,8 @@ const useFullScreenMoves = (onExit: () => void) => {
   const next = items[index + 1];
   const isTopicWise = reader.isReader && !!reader.page;
   // Within the lesson a move is a topic; at its ends, the neighbouring item.
-  const isAtStart = !isTopicWise || reader.isFirstPage;
-  const isAtEnd = !isTopicWise || reader.isLastPage;
+  const isAtStart = reader.isFirstPage;
+  const isAtEnd = reader.isLastPage;
   // Item-wise, the labels are the course's edges; topic-wise, the reader already has them.
   const edges = isTopicWise
     ? reader
@@ -37,10 +37,17 @@ const useFullScreenMoves = (onExit: () => void) => {
         isNextDisabled: !next,
       };
 
+  // A test paper has its own full-screen sitting, so moving to one leaves this one first.
   const goToItem = (target: ICourseModuleItem | undefined, direction: 1 | -1) => {
     if (!target || !selectedCourseId) return;
     if (target.testPaper) onExit();
-    selectAdjacentItem(selectedCourseId, direction);
+    selectAdjacentItem(selectedCourseId, direction, 0);
+  };
+
+  // Topic-wise the reader makes the move, so Prev lands on the previous lesson's last topic.
+  const goTopicWise = (move: () => void, edgeTarget: ICourseModuleItem | undefined, isAtEdge: boolean) => {
+    if (isAtEdge && edgeTarget?.testPaper) onExit();
+    move();
   };
 
   return {
@@ -50,8 +57,8 @@ const useFullScreenMoves = (onExit: () => void) => {
     selectedMaterial,
     reader,
     isTopicWise,
-    goBack: () => (isAtStart ? goToItem(previous, -1) : reader.goPrevious()),
-    goForward: () => (isAtEnd ? goToItem(next, 1) : reader.goNext()),
+    goBack: () => (isTopicWise ? goTopicWise(reader.goPrevious, previous, isAtStart) : goToItem(previous, -1)),
+    goForward: () => (isTopicWise ? goTopicWise(reader.goNext, next, isAtEnd) : goToItem(next, 1)),
     previousLabel: edges.previousLabel,
     nextLabel: edges.nextLabel,
     isPreviousDisabled: edges.isPreviousDisabled,

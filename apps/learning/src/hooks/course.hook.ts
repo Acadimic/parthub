@@ -111,16 +111,17 @@ export const useCourse = () => {
   };
 
   /**
-   * Moves the selection one item along the syllabus; a no-op at either end. Going back lands on
-   * the previous lesson's last page, so the reader's Prev reads straight through the course.
+   * Moves the selection one item along the syllabus and opens it on `landing`; a no-op at either
+   * end. The topic reader's Prev asks for `'last'`, so it reads straight back through the course;
+   * every item-wise pager asks for the first page.
    */
-  const selectAdjacentItem = (courseId: string, direction: 1 | -1) => {
+  const selectAdjacentItem = (courseId: string, direction: 1 | -1, landing: number | 'last') => {
     const items = getCourseItems(courseId);
     const index = getSelectedItemIndex(courseId);
     const next = items[index + direction];
     if (!next) return;
     selectItem(next);
-    if (direction === -1) setSelectedLessonPageIndex('last');
+    setSelectedLessonPageIndex(landing);
   };
 
   /** Sends a visitor with no session to sign in, and back to `redirectUri` afterwards. */

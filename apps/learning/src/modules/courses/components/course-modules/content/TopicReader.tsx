@@ -1,14 +1,13 @@
 import { cn } from '@repo/ui/lib';
 import { ViewTextContent } from '@components/tools';
 import { BlankState } from '@components/others';
-import { StorageKey } from '@enums';
+import { CollectionType, StorageKey } from '@enums';
 import { useLessonReader } from '@hooks/lesson-reader.hook';
 import { READER_SURFACE_ATTR, type ReaderEdge, useReaderGestures } from '@hooks/reader-gestures.hook';
 import { CaretLeftIcon, CaretRightIcon, HandTapIcon } from '@phosphor-icons/react';
-import { type IMaterial, useCourseStore, useSelectorLookups } from '@stores';
+import { type IMaterial, useCourseStore, useSelectorLookups, useSelectorStore } from '@stores';
 import { useEffect, useRef, useState } from 'react';
 import { AttachmentContent } from './AttachmentContent';
-import { ReaderProgress } from './ReaderProgress';
 
 interface IProps {
   material: IMaterial;
@@ -84,7 +83,8 @@ const PageArrival = ({
   return (
     <div
       className={cn('h-full w-full', isAnimated && isArriving && arrival)}
-      onAnimationEnd={() => setIsArriving(false)}
+      // A child's own animation ending must not cut the arrival short.
+      onAnimationEnd={(event) => event.target === event.currentTarget && setIsArriving(false)}
     >
       {children}
     </div>
@@ -97,8 +97,8 @@ const PageArrival = ({
  * until every page has been opened once.
  */
 export const TopicReader = ({ material, isFullScreen, onFullScreenChange }: IProps) => {
-  const { pages, page, pageIndex, goToPage, goNext, goPrevious } = useLessonReader(material);
-  const { selectedLessonPageIndex } = useSelectorLookups();
+  const { page, pageIndex, isLastPage, goNext, goPrevious } = useLessonReader(material);
+  const { selectedCourseId, selectedCourseModuleId, selectedLessonPageIndex } = useSelectorLookups();
   const { handlers, flash, tapCount } = useReaderGestures({ onNext: goNext, onPrevious: goPrevious });
   // Where the last page was, so the new one knows which side to arrive from. Across lessons the
   // index says nothing, so the move that was asked for decides: the last page means going back.
@@ -126,7 +126,20 @@ export const TopicReader = ({ material, isFullScreen, onFullScreenChange }: IPro
   }, [tapCount]);
 
   useEffect(() => {
-    if (page) useCourseStore.getState().markLessonPageViewed(material._id, page.key);
+    if (!page) return;
+    useCourseStore.getState().markLessonPageViewed(material._id, page.key);
+    if (!isLastPage || !selectedCourseId || !selectedCourseModuleId) return;
+    // Leaving the last topic — back, forward, or by picking another — is what finishes the lesson.
+    // Arriving is not: a learner may land here from the next lesson and only glance at it.
+    const key = { course: selectedCourseId, courseModule: selectedCourseModuleId, collectionItem: material._id };
+    return () => {
+      // The cleanup also runs on a re-mount and when the whole view goes away; only a selection
+      // that has actually moved on from this page counts as leaving it.
+      const { selectedMaterialId, selectedLessonPageIndex: pageNow } = useSelectorStore.getState();
+      const isStillHere = selectedMaterialId === material._id && (pageNow === 'last' || pageNow === pageIndex);
+      if (isStillHere) return;
+      useCourseStore.getState().completeCourseModuleItem(key, CollectionType.MATERIAL);
+    };
   }, [material._id, page?.key]);
 
   if (!page) {
@@ -140,28 +153,21 @@ export const TopicReader = ({ material, isFullScreen, onFullScreenChange }: IPro
   }
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <ReaderProgress material={material} pages={pages} pageIndex={pageIndex} onPick={goToPage} />
-      <div className="relative min-h-0 flex-1" {...{ [READER_SURFACE_ATTR]: '' }} {...handlers}>
-        {flash ? <EdgeFlash edge={flash} /> : null}
-        {isHintOpen ? <TapHint onDone={dismissHint} /> : null}
-        {/* Keyed by page so each one mounts fresh, starts at its top and plays its arrival. */}
-        <PageArrival key={`${material._id}:${page.key}`} direction={direction} isAnimated={!isFullScreen}>
-          {page.kind === 'section' ? (
-            <ViewTextContent
-              content={page.content}
-              isFullScreen={isFullScreen}
-              onFullScreenChange={onFullScreenChange}
-            />
-          ) : (
-            <AttachmentContent
-              attachment={page.attachment}
-              isFullScreen={isFullScreen}
-              onFullScreenChange={onFullScreenChange}
-            />
-          )}
-        </PageArrival>
-      </div>
+    <div className="relative h-full w-full" {...{ [READER_SURFACE_ATTR]: '' }} {...handlers}>
+      {flash ? <EdgeFlash edge={flash} /> : null}
+      {isHintOpen ? <TapHint onDone={dismissHint} /> : null}
+      {/* Keyed by page so each one mounts fresh, starts at its top and plays its arrival. */}
+      <PageArrival key={`${material._id}:${page.key}`} direction={direction} isAnimated={!isFullScreen}>
+        {page.kind === 'section' ? (
+          <ViewTextContent content={page.content} isFullScreen={isFullScreen} onFullScreenChange={onFullScreenChange} />
+        ) : (
+          <AttachmentContent
+            attachment={page.attachment}
+            isFullScreen={isFullScreen}
+            onFullScreenChange={onFullScreenChange}
+          />
+        )}
+      </PageArrival>
     </div>
   );
 };

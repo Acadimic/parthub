@@ -31,12 +31,12 @@ export const useLessonReader = (material: IMaterial | undefined) => {
 
   const goNext = () => {
     if (pageIndex < lastIndex) goToPage(pageIndex + 1);
-    else if (selectedCourseId) selectAdjacentItem(selectedCourseId, 1);
+    else if (selectedCourseId) selectAdjacentItem(selectedCourseId, 1, 0);
   };
 
   const goPrevious = () => {
     if (pageIndex > 0) goToPage(pageIndex - 1);
-    else if (selectedCourseId) selectAdjacentItem(selectedCourseId, -1);
+    else if (selectedCourseId) selectAdjacentItem(selectedCourseId, -1, 'last');
   };
 
   return {

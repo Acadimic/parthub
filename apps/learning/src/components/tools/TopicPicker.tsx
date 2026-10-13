@@ -1,3 +1,4 @@
+import { Button } from '@repo/ui/app';
 import { Popover } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
 import { isVideoAttachment } from '@repo/shared/utils';
@@ -45,21 +46,25 @@ export const TopicPath = ({ material, pages, pageIndex, onPick }: ITopicPathProp
         const isCurrent = index === pageIndex;
         return (
           <li key={item.key}>
-            <button
-              type="button"
+            <Button
+              isSubtle
+              isFull
               aria-current={isCurrent || undefined}
               className={cn(
-                'flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted',
-                isCurrent ? 'font-semibold text-primary' : 'text-foreground',
+                'h-auto justify-start gap-3 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-muted',
+                isCurrent ? 'font-semibold text-primary' : 'font-normal text-foreground',
               )}
+              labelClassName="flex min-w-0 flex-1 items-center gap-2"
               onClick={() => onPick(index)}
+              leftsection={
+                <PathNode index={index} isViewed={isLessonPageViewed(material._id, item.key)} isCurrent={isCurrent} />
+              }
             >
-              <PathNode index={index} isViewed={isLessonPageViewed(material._id, item.key)} isCurrent={isCurrent} />
               <PageIcon page={item} />
               <span className={cn('min-w-0 flex-1 truncate', item.kind === 'section' && item.parentTitle && 'pl-3')}>
                 {item.title || material.name}
               </span>
-            </button>
+            </Button>
           </li>
         );
       })}

@@ -6,6 +6,7 @@ import { cn } from '@repo/ui/lib';
 import { useEffect, useState } from 'react';
 import ReactPlayer from 'react-player';
 import { FullScreenBar } from './FullScreenBar';
+import { FullScreenStrip } from './FullScreenStrip';
 
 interface IProps {
   url: string;
@@ -66,6 +67,7 @@ export const VideoPlayer = ({ url, isStatic, isFullScreen, onFullScreenChange }:
       className={cn('relative h-full w-full', isFullScreen && 'fixed inset-0 z-[1300] flex flex-col bg-black')}
       data-reader-surface=""
     >
+      {isFullScreen ? <FullScreenStrip /> : null}
       <div className={cn('relative w-full', isFullScreen ? 'min-h-0 flex-1' : 'h-full')}>{getPlayer()}</div>
       {isFullScreen ? <FullScreenBar onExit={() => onFullScreenChange(false)} /> : null}
     </div>

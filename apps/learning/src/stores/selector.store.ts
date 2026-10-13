@@ -52,7 +52,7 @@ export interface ISelectorState {
    * lesson asks for: its page count is unknown until its body arrives, so the reader resolves it.
    */
   selectedLessonPageIndex: number | 'last';
-  /** Remembered in the browser; `restoreLessonViewMode` reads it back once on the client. */
+  /** Remembered in the browser, and read back before anything mounts on the client. */
   lessonViewMode: LessonViewMode;
   setSelectedOrgId: (value: string) => void;
   setSelectedUserId: (value: string) => void;
@@ -80,7 +80,6 @@ export interface ISelectorState {
   setSelectedAttachment: (value: AttachmentDto | null) => void;
   setSelectedLessonPageIndex: (value: number | 'last') => void;
   setLessonViewMode: (value: LessonViewMode) => void;
-  restoreLessonViewMode: () => void;
   removeSelectedTestPaperId: () => void;
   removeSelectedTestPaperSectionId: () => void;
   removeSelectedQuestionId: () => void;
@@ -126,7 +125,9 @@ const INITIAL = {
   selectedContent: null,
   selectedAttachment: null,
   selectedLessonPageIndex: 0,
-  lessonViewMode: LessonViewMode.READER,
+  // On the server there is nothing to read; on the client the stored choice has to be in place
+  // before the reader mounts, or a full-view learner's first topic is marked as read in passing.
+  lessonViewMode: typeof window === 'undefined' ? LessonViewMode.READER : readLessonViewMode(),
 };
 
 export const useSelectorStore = create<ISelectorState>()((set) => ({
@@ -210,9 +211,6 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
   setLessonViewMode: (value) => {
     set({ lessonViewMode: value });
     writeLessonViewMode(value);
-  },
-  restoreLessonViewMode: () => {
-    set({ lessonViewMode: readLessonViewMode() });
   },
   removeSelectedTestPaperId: () => {
     set({ selectedTestPaperId: '' });

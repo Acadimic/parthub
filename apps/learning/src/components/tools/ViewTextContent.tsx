@@ -3,6 +3,7 @@ import { RichTextView } from '@repo/ui/content';
 import { type IRichText } from '@repo/shared/interfaces';
 import { useMemo } from 'react';
 import { FullScreenBar } from './FullScreenBar';
+import { FullScreenStrip } from './FullScreenStrip';
 
 interface IProps {
   content?: IRichText | null;
@@ -29,6 +30,7 @@ export const ViewTextContent = ({ content, isFullScreen, onFullScreenChange }: I
         onClose={() => onFullScreenChange(false)}
         component={
           <div className="flex h-full w-full flex-col" data-reader-surface="">
+            <FullScreenStrip />
             <div className="min-h-0 w-full flex-1 overflow-auto">
               <div className="mx-auto w-full max-w-4xl">{CONTENT}</div>
             </div>
