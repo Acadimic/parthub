@@ -2,7 +2,8 @@ import { type IRichText } from '@repo/shared/interfaces';
 import { type AttachmentDto } from '@repo/shared/contracts';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { CourseItemType, CourseOutlineTab, QuestionType, StorageKey } from '../enums';
+import { CourseItemType, CourseOutlineTab, LessonViewMode, QuestionType, StorageKey } from '../enums';
+import { readLessonViewMode, writeLessonViewMode } from '../utils/helpers/lesson-pages';
 
 /**
  * What the learner currently has selected. **Ids and plain values only.**
@@ -46,6 +47,13 @@ export interface ISelectorState {
   selectedContent: IRichText | null;
   /** The attachment the learner is viewing. Held whole, not by id — it is a subdocument. */
   selectedAttachment: AttachmentDto | null;
+  /**
+   * The reader's page within the selected lesson. `'last'` is what going back from the next
+   * lesson asks for: its page count is unknown until its body arrives, so the reader resolves it.
+   */
+  selectedLessonPageIndex: number | 'last';
+  /** Remembered in the browser; `restoreLessonViewMode` reads it back once on the client. */
+  lessonViewMode: LessonViewMode;
   setSelectedOrgId: (value: string) => void;
   setSelectedUserId: (value: string) => void;
   setSelectedTestPaperId: (value: string) => void;
@@ -70,6 +78,9 @@ export interface ISelectorState {
   setIsExploreOpen: (value: boolean) => void;
   setSelectedContent: (value: IRichText | null) => void;
   setSelectedAttachment: (value: AttachmentDto | null) => void;
+  setSelectedLessonPageIndex: (value: number | 'last') => void;
+  setLessonViewMode: (value: LessonViewMode) => void;
+  restoreLessonViewMode: () => void;
   removeSelectedTestPaperId: () => void;
   removeSelectedTestPaperSectionId: () => void;
   removeSelectedQuestionId: () => void;
@@ -114,6 +125,8 @@ const INITIAL = {
   isExploreOpen: false,
   selectedContent: null,
   selectedAttachment: null,
+  selectedLessonPageIndex: 0,
+  lessonViewMode: LessonViewMode.READER,
 };
 
 export const useSelectorStore = create<ISelectorState>()((set) => ({
@@ -190,6 +203,16 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
   },
   setSelectedAttachment: (value) => {
     set({ selectedAttachment: value });
+  },
+  setSelectedLessonPageIndex: (value) => {
+    set({ selectedLessonPageIndex: value });
+  },
+  setLessonViewMode: (value) => {
+    set({ lessonViewMode: value });
+    writeLessonViewMode(value);
+  },
+  restoreLessonViewMode: () => {
+    set({ lessonViewMode: readLessonViewMode() });
   },
   removeSelectedTestPaperId: () => {
     set({ selectedTestPaperId: '' });

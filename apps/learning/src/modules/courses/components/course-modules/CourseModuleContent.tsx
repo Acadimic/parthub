@@ -9,7 +9,8 @@ import { BlankState } from '@components/others';
 import { CollectionType, type ModuleContentType } from '@enums';
 import { useAttachment } from '@hooks/attachment.hook';
 import { useCourse } from '@hooks/course.hook';
-import { type ICourseModuleItem } from '@interfaces';
+import { useLessonReader } from '@hooks/lesson-reader.hook';
+import { getItemName } from '@utils/helpers';
 import {
   ArrowsOutIcon,
   BookOpenTextIcon,
@@ -23,6 +24,7 @@ import {
   type IMaterial,
   type ITestPaper,
   useCourseLookups,
+  useCourseStore,
   useMeetLookups,
   useResourceStore,
   useSelectedCourse,
@@ -37,6 +39,8 @@ import { Content } from './content';
 import { LikeCourse } from './LikeCourse';
 import { MarkCompleteButton } from './MarkCompleteButton';
 import { AskDoubtButton, LessonMoreMenu } from './LessonActions';
+import { LessonViewToggle } from './LessonViewToggle';
+import { TopicPager } from './TopicPager';
 import { NextSessionBanner } from '@modules/sessions';
 
 /** An item is a material or a test paper; both carry a duration, and only one is ever set. */
@@ -129,9 +133,6 @@ const FrameToolbar = ({
   );
 };
 
-/** The item's display name, whichever kind it is. */
-const getItemName = (item: ICourseModuleItem) => item.material?.name ?? item.testPaper?.name ?? '';
-
 /**
  * One quiet line above the frame, read like a breadcrumb: the module, then the lesson's name
  * beside it, with its facts on the right. Nothing above the content is large enough to compete.
@@ -143,6 +144,7 @@ const LessonHeader = ({
   isCompleted,
   courseModule,
   durationMins,
+  viewToggle,
 }: {
   item: IMaterial | ITestPaper;
   type: ModuleContentType;
@@ -151,6 +153,8 @@ const LessonHeader = ({
   isCompleted: boolean;
   courseModule: ICourseModule | undefined;
   durationMins: number;
+  /** Topics or full lesson; `null` for a test paper, which has no body to page. */
+  viewToggle: React.ReactNode | null;
 }) => (
   <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 px-1">
     <div className="flex min-w-0 flex-1 items-center gap-1.5">
@@ -178,9 +182,46 @@ const LessonHeader = ({
         <ClockIcon weight="bold" className="h-3 w-3" />
         {durationMins} min
       </Badge>
+      {viewToggle}
     </div>
   </header>
 );
+
+/**
+ * What the chip row marks and does. In the topic reader a chip moves to that page; in the full
+ * view it swaps the frame's content for the body or the attachment.
+ */
+const useFrameChips = (material: IMaterial | undefined) => {
+  const { selectedContent, selectedAttachment, setSelectedContent, removeSelectedAttachment } = useSelectorLookups();
+  const { handleClickAttachment } = useAttachment();
+  const reader = useLessonReader(material);
+  const readerPage = reader.isReader ? reader.page : undefined;
+
+  const onClickContent = () => {
+    if (reader.isReader) return reader.goToPage(0);
+    setSelectedContent(material?.content ?? null);
+    removeSelectedAttachment();
+  };
+
+  const onClickAttachment = (attachment: AttachmentDto) => {
+    if (!reader.isReader) return handleClickAttachment(attachment);
+    const index = reader.pages.findIndex((page) => page.kind === 'attachment' && page.key === attachment.key);
+    if (index !== -1) reader.goToPage(index);
+  };
+
+  const getSelectedAttachmentKey = () => {
+    if (!readerPage) return selectedAttachment?.key;
+    return readerPage.kind === 'attachment' ? readerPage.key : undefined;
+  };
+
+  return {
+    isReader: reader.isReader,
+    hasSelectedContent: readerPage ? readerPage.kind === 'section' : Boolean(selectedContent),
+    selectedAttachmentKey: getSelectedAttachmentKey(),
+    onClickContent,
+    onClickAttachment,
+  };
+};
 
 export const CourseModuleContent = () => {
   const selectorStore = useSelectorLookups();
@@ -190,29 +231,29 @@ export const CourseModuleContent = () => {
   // showed every item as unliked and unsaved until the learner clicked.
   useLoadOnce(useResourceStore, 'reactions', (state) => state.loadReactions);
   useLoadOnce(useResourceStore, 'bookmarks', (state) => state.loadBookmarks);
-  const {
-    selectedCourseId,
-    selectedAttachment,
-    selectedCourseModuleId,
-    selectedContent,
-    setSelectedContent,
-    removeSelectedAttachment,
-  } = selectorStore;
+  const { selectedCourseId, selectedCourseModuleId, selectedUserId, restoreLessonViewMode } = selectorStore;
   const selectedTestPaper = useSelectedTestPaper();
   const selectedCourse = useSelectedCourse();
   const selectedMaterial = useSelectedMaterial();
-  const { handleClickAttachment } = useAttachment();
   const { getModuleContentType } = useCourse();
   const { getMeetsByIds } = meetStore;
+  const chips = useFrameChips(selectedMaterial);
 
-  const handleClickContent = () => {
-    setSelectedContent(selectedMaterial?.content ?? null);
-    removeSelectedAttachment();
-  };
+  // Both are kept in the browser, so they are read back once the learner is known.
+  useEffect(() => {
+    restoreLessonViewMode();
+    useCourseStore.getState().restoreViewedLessonPages();
+  }, [selectedUserId]);
 
   const item: IMaterial | ITestPaper | undefined = selectedMaterial ?? selectedTestPaper;
   const topRef = useRef<HTMLDivElement>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
+
+  // A test paper has its own full-screen sitting, so arriving at one from a full-screen lesson —
+  // by key, by tap, or by the pager — leaves this one; otherwise the next lesson would open in it.
+  useEffect(() => {
+    if (selectedTestPaper) setIsFullScreen(false);
+  }, [selectedTestPaper?._id]);
 
   // A new lesson starts at its top. The column scrolls, not the page, so the nearest scroller is
   // the one to reset.
@@ -263,6 +304,7 @@ export const CourseModuleContent = () => {
         isCompleted={isCompleted}
         courseModule={courseModule}
         durationMins={getDurationMins(selectedMaterial, selectedTestPaper)}
+        viewToggle={selectedMaterial ? <LessonViewToggle /> : null}
       />
 
       {/* The lesson takes the height left under the header and any banner, so the column itself
@@ -280,12 +322,13 @@ export const CourseModuleContent = () => {
             />
           </div>
         </div>
+        {selectedMaterial && chips.isReader ? <TopicPager material={selectedMaterial} /> : null}
         <FrameToolbar
           material={selectedMaterial}
-          hasSelectedContent={Boolean(selectedContent)}
-          selectedAttachmentKey={selectedAttachment?.key}
-          onClickContent={handleClickContent}
-          onClickAttachment={handleClickAttachment}
+          hasSelectedContent={chips.hasSelectedContent}
+          selectedAttachmentKey={chips.selectedAttachmentKey}
+          onClickContent={chips.onClickContent}
+          onClickAttachment={chips.onClickAttachment}
           onFullScreen={selectedMaterial ? () => setIsFullScreen(true) : null}
           actions={
             <>

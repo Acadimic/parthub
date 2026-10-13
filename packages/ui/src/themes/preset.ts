@@ -172,6 +172,27 @@ export const uiPreset = {
           from: { transform: 'translateY(100%)' },
           to: { transform: 'translateY(0)' },
         },
+        // A page of the topic reader arrives from the side it was asked for: a short travel with a
+        // fade, so turning a page reads as movement without the whole frame sliding away.
+        'page-in-right': {
+          from: { opacity: '0', transform: 'translateX(28px)' },
+          to: { opacity: '1', transform: 'translateX(0)' },
+        },
+        'page-in-left': {
+          from: { opacity: '0', transform: 'translateX(-28px)' },
+          to: { opacity: '1', transform: 'translateX(0)' },
+        },
+        // The flash on the edge a learner tapped, so the tap has a visible answer before the page turns.
+        'tap-flash': {
+          from: { opacity: '0.6' },
+          to: { opacity: '0' },
+        },
+        // A reward surfacing: a bounce past full size and back, as a game's "level up" does.
+        'pop-in': {
+          '0%': { opacity: '0', transform: 'scale(0.6)' },
+          '60%': { opacity: '1', transform: 'scale(1.08)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
       },
 
       animation: {
@@ -188,6 +209,10 @@ export const uiPreset = {
         'slide-in-right': 'slide-in-right 0.3s cubic-bezier(0.32, 0.72, 0, 1) both',
         'slide-in-left': 'slide-in-left 0.3s cubic-bezier(0.32, 0.72, 0, 1) both',
         'slide-in-bottom': 'slide-in-bottom 0.3s cubic-bezier(0.32, 0.72, 0, 1) both',
+        'page-in-right': 'page-in-right 0.28s cubic-bezier(0.32, 0.72, 0, 1) both',
+        'page-in-left': 'page-in-left 0.28s cubic-bezier(0.32, 0.72, 0, 1) both',
+        'tap-flash': 'tap-flash 0.45s ease-out both',
+        'pop-in': 'pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both',
         // Duration and play-state come through custom properties rather than being set inline.
         // `important: true` makes this shorthand `!important`, which beats a plain inline
         // `animation-duration` — the bar then inherited the shorthand's implicit `0s`, completed

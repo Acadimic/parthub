@@ -64,7 +64,7 @@ export const ViewUrlContent = ({ url, isStatic, isFullScreen, onFullScreenChange
         isOpen={isFullScreen}
         onClose={() => onFullScreenChange(false)}
         component={
-          <div className="flex h-full w-full flex-col overflow-hidden">
+          <div className="flex h-full w-full flex-col overflow-hidden" data-reader-surface="">
             <div className="min-h-0 flex-1 overflow-hidden">{WHOLE}</div>
             <FullScreenBar onExit={() => onFullScreenChange(false)} />
           </div>

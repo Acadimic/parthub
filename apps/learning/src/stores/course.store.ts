@@ -13,7 +13,9 @@ import {
   getObjectId,
   getToken,
   onceInFlight,
+  readViewedLessonPages,
   seedPresignedUrlCache,
+  writeViewedLessonPages,
 } from '../utils/helpers';
 import { useMaterialStore } from './material.store';
 import { useMeetStore } from './meet.store';
@@ -39,6 +41,11 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   planMap: Record<string, PlanDto>;
   courseModuleMap: Record<string, ICourseModule>;
   completedModuleMap: Record<string, ICompletedModuleFields>;
+  /**
+   * The reader pages the learner has opened, by material. Browser-only for now: it gates the
+   * swipe to complete, and the completion itself is what the server keeps.
+   */
+  viewedLessonPagesMap: Record<string, string[]>;
 
   getCourseById: (courseId: string) => ICourse | undefined;
   /** A published course by its public address; the catalogue holds every one. */
@@ -64,6 +71,9 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   isCourseModuleItemSkipped: (data: IGetCompletedModule) => boolean;
   /** Whether a module's materials and test papers are all done, or only some. */
   isCourseModuleCompleted: (courseModuleId: string) => { isAllCompleted: boolean; isPartiallyCompleted: boolean };
+  isLessonPageViewed: (materialId: string, pageKey: string) => boolean;
+  /** Pages of the lesson not opened yet, out of the keys it has now; a page it no longer has does not count. */
+  countUnviewedLessonPages: (materialId: string, pageKeys: string[]) => number;
 
   addCourses: (courses: ICourse[]) => void;
   addPlans: (plans: PlanDto[]) => void;
@@ -73,6 +83,9 @@ export interface ICourseState extends IRequestSlice<CourseFetch> {
   patchCompletedModule: (completedModuleId: string, fields: Partial<ICompletedModuleFields>) => void;
   removeCourseById: (courseId: string) => void;
   removeCourseModuleById: (courseModuleId: string) => void;
+  markLessonPageViewed: (materialId: string, pageKey: string) => void;
+  /** Reads the signed-in learner's viewed pages back from the browser; call once the user is known. */
+  restoreViewedLessonPages: () => void;
 
   createPlan: (courseId: string, order: number, period: PeriodType) => PlanDto;
   createCompletedModule: (data: IGetCompletedModule, collectionRef: CollectionType) => ICompletedModuleFields;
@@ -180,6 +193,7 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
   planMap: {},
   courseModuleMap: {},
   completedModuleMap: {},
+  viewedLessonPagesMap: {},
   ...createRequestSlice(['courses', 'plans', 'courseModules', 'moduleContents', 'completedModules'], set, get),
 
   getCourseById: (courseId) => (courseId ? get().courseMap[courseId] : undefined),
@@ -265,6 +279,11 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
 
   isCourseModuleItemSkipped: (data) => get().getCompletedModule(data)?.isSkipped ?? false,
 
+  isLessonPageViewed: (materialId, pageKey) => (get().viewedLessonPagesMap[materialId] ?? []).includes(pageKey),
+
+  countUnviewedLessonPages: (materialId, pageKeys) =>
+    pageKeys.filter((pageKey) => !get().isLessonPageViewed(materialId, pageKey)).length,
+
   isCourseModuleCompleted: (courseModuleId) => {
     const courseModule = get().getCourseModuleById(courseModuleId);
     if (!courseModule) return { isAllCompleted: false, isPartiallyCompleted: false };
@@ -332,6 +351,20 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
       const { [courseModuleId]: removed, ...courseModuleMap } = state.courseModuleMap;
       return removed ? { courseModuleMap } : state;
     });
+  },
+
+  markLessonPageViewed: (materialId, pageKey) => {
+    if (get().isLessonPageViewed(materialId, pageKey)) return;
+    const viewed = [...(get().viewedLessonPagesMap[materialId] ?? []), pageKey];
+    const viewedLessonPagesMap = { ...get().viewedLessonPagesMap, [materialId]: viewed };
+    set({ viewedLessonPagesMap });
+    const selectedUserId = useSelectorStore.getState().selectedUserId;
+    if (selectedUserId) writeViewedLessonPages(selectedUserId, viewedLessonPagesMap);
+  },
+
+  restoreViewedLessonPages: () => {
+    const selectedUserId = useSelectorStore.getState().selectedUserId;
+    set({ viewedLessonPagesMap: selectedUserId ? readViewedLessonPages(selectedUserId) : {} });
   },
 
   createPlan: (courseId, order, period) => {
@@ -415,7 +448,7 @@ export const useCourseStore = create<ICourseState>()((set, get) => ({
     ),
 
   reset: () => {
-    set({ courseMap: {}, planMap: {}, courseModuleMap: {}, completedModuleMap: {} });
+    set({ courseMap: {}, planMap: {}, courseModuleMap: {}, completedModuleMap: {}, viewedLessonPagesMap: {} });
     get().resetRequests();
   },
 }));

@@ -1,30 +1,79 @@
 import { Button, Tooltip } from '@repo/ui/app';
 import { useCourse } from '@hooks/course.hook';
+import { useLessonReader } from '@hooks/lesson-reader.hook';
 import { type ICourseModuleItem } from '@interfaces';
-import { ArrowsInIcon, CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
-import { useSelectorLookups } from '@stores';
-
-const getItemName = (item: ICourseModuleItem) => item.material?.name ?? item.testPaper?.name ?? '';
+import { ArrowsInIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon } from '@phosphor-icons/react';
+import { useSelectedMaterial, useSelectorLookups } from '@stores';
+import { getEdgeLabel, getItemName, getLessonPageTitle } from '@utils/helpers';
+import { TopicPicker } from './TopicPicker';
 
 /**
- * The footer of a full-screen viewer: the way back out, where the learner is in the course, and
- * the previous and next lessons, so a course can be read end to end without leaving full screen.
- * A test paper has its own full-screen sitting, so moving to one leaves this one first.
+ * The footer of a full-screen viewer: the way back out, where the learner is, and the previous
+ * and next moves. In the topic reader a move is one topic, handing over to the neighbouring
+ * lesson past either end; in the full view it is one lesson. A test paper has its own
+ * full-screen sitting, so moving to one leaves this one first.
  */
-export const FullScreenBar = ({ onExit }: { onExit: () => void }) => {
+/** The bar's two moves, their labels and whether either end has been reached. */
+const useFullScreenMoves = (onExit: () => void) => {
   const { selectedCourseId } = useSelectorLookups();
+  const selectedMaterial = useSelectedMaterial();
+  const reader = useLessonReader(selectedMaterial);
   const { getCourseItems, getSelectedItemIndex, selectAdjacentItem } = useCourse();
   const items = selectedCourseId ? getCourseItems(selectedCourseId) : [];
   const index = selectedCourseId ? getSelectedItemIndex(selectedCourseId) : -1;
-  const current = items[index];
   const previous = items[index - 1];
   const next = items[index + 1];
+  const isTopicWise = reader.isReader && !!reader.page;
+  // Within the lesson a move is a topic; at its ends, the neighbouring item.
+  const isAtStart = !isTopicWise || reader.isFirstPage;
+  const isAtEnd = !isTopicWise || reader.isLastPage;
+  // Item-wise, the labels are the course's edges; topic-wise, the reader already has them.
+  const edges = isTopicWise
+    ? reader
+    : {
+        previousLabel: getEdgeLabel(previous, 'Previous', 'Start of course'),
+        nextLabel: getEdgeLabel(next, 'Next', 'End of course'),
+        isPreviousDisabled: !previous,
+        isNextDisabled: !next,
+      };
 
-  const go = (target: ICourseModuleItem | undefined, direction: 1 | -1) => {
+  const goToItem = (target: ICourseModuleItem | undefined, direction: 1 | -1) => {
     if (!target || !selectedCourseId) return;
     if (target.testPaper) onExit();
     selectAdjacentItem(selectedCourseId, direction);
   };
+
+  return {
+    current: items[index],
+    index,
+    total: items.length,
+    selectedMaterial,
+    reader,
+    isTopicWise,
+    goBack: () => (isAtStart ? goToItem(previous, -1) : reader.goPrevious()),
+    goForward: () => (isAtEnd ? goToItem(next, 1) : reader.goNext()),
+    previousLabel: edges.previousLabel,
+    nextLabel: edges.nextLabel,
+    isPreviousDisabled: edges.isPreviousDisabled,
+    isNextDisabled: edges.isNextDisabled,
+  };
+};
+
+export const FullScreenBar = ({ onExit }: { onExit: () => void }) => {
+  const {
+    current,
+    index,
+    total,
+    selectedMaterial,
+    reader,
+    isTopicWise,
+    goBack,
+    goForward,
+    previousLabel,
+    nextLabel,
+    isPreviousDisabled,
+    isNextDisabled,
+  } = useFullScreenMoves(onExit);
 
   return (
     <div className="flex h-14 shrink-0 items-center gap-3 border-t border-border bg-background px-3 md:px-4">
@@ -39,39 +88,65 @@ export const FullScreenBar = ({ onExit }: { onExit: () => void }) => {
       >
         Exit full screen
       </Button>
-      <div className="min-w-0 flex-1 text-center">
-        {current ? (
-          <>
+      <div className="flex min-w-0 flex-1 justify-center">
+        {isTopicWise && reader.page && selectedMaterial ? (
+          <TopicPicker
+            material={selectedMaterial}
+            pages={reader.pages}
+            pageIndex={reader.pageIndex}
+            onPick={reader.goToPage}
+            triggerClassName="flex min-w-0 max-w-full justify-center"
+            trigger={
+              <Button
+                isSubtle
+                isRound
+                aria-label="Choose a topic"
+                className="h-11 min-w-0 max-w-full px-3 hover:bg-muted [&>div]:min-w-0"
+                labelClassName="min-w-0"
+                rightsection={<CaretUpIcon weight="bold" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+              >
+                <span className="block truncate text-center text-sm font-semibold">
+                  {getLessonPageTitle(reader.page, selectedMaterial.name)}
+                </span>
+                <span className="block truncate text-center font-mono text-xxs font-normal text-muted-foreground">
+                  Topic {reader.pageIndex + 1} / {reader.pages.length} · {selectedMaterial.name}
+                </span>
+              </Button>
+            }
+          />
+        ) : null}
+        {!isTopicWise && current ? (
+          <div className="min-w-0 text-center">
             <div className="truncate text-sm font-semibold">{getItemName(current)}</div>
             <div className="font-mono text-xxs text-muted-foreground">
-              {index + 1} / {items.length}
+              {index + 1} / {total}
             </div>
-          </>
+          </div>
         ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
-        <Tooltip title={previous ? `Previous: ${getItemName(previous)}` : 'Start of course'}>
+        <Tooltip title={previousLabel}>
           <Button
             isSecondary
             isRound
-            disabled={!previous}
-            aria-label={previous ? `Previous: ${getItemName(previous)}` : 'Start of course'}
+            disabled={isPreviousDisabled}
+            aria-label={previousLabel}
             className="h-9 px-3"
             labelClassName="hidden md:block"
-            onClick={() => go(previous, -1)}
+            onClick={goBack}
             leftsection={<CaretLeftIcon weight="bold" className="h-4 w-4" />}
           >
             Previous
           </Button>
         </Tooltip>
-        <Tooltip title={next ? `Next: ${getItemName(next)}` : 'End of course'}>
+        <Tooltip title={nextLabel}>
           <Button
             isRound
-            disabled={!next}
-            aria-label={next ? `Next: ${getItemName(next)}` : 'End of course'}
+            disabled={isNextDisabled}
+            aria-label={nextLabel}
             className="h-9 px-4"
             labelClassName="hidden sm:block"
-            onClick={() => go(next, 1)}
+            onClick={goForward}
             rightsection={<CaretRightIcon weight="bold" className="h-4 w-4" />}
           >
             Next

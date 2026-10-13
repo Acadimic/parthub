@@ -28,7 +28,7 @@ export const ViewTextContent = ({ content, isFullScreen, onFullScreenChange }: I
         isOpen={isFullScreen}
         onClose={() => onFullScreenChange(false)}
         component={
-          <div className="flex h-full w-full flex-col">
+          <div className="flex h-full w-full flex-col" data-reader-surface="">
             <div className="min-h-0 w-full flex-1 overflow-auto">
               <div className="mx-auto w-full max-w-4xl">{CONTENT}</div>
             </div>

@@ -1,5 +1,6 @@
-import { Button, SwipeButton } from '@repo/ui/app';
+import { Button, SwipeButton, Tooltip } from '@repo/ui/app';
 import { CollectionType } from '@enums';
+import { useLessonReader } from '@hooks/lesson-reader.hook';
 import { ArrowCounterClockwiseIcon, CheckIcon } from '@phosphor-icons/react';
 import { CourseService } from '@services';
 import { type IMaterial, type ITestPaper, useCourseLookups, useSelectorLookups } from '@stores';
@@ -13,19 +14,28 @@ interface IProps {
 
 /**
  * Marks the lesson on screen done, or undoes that. A swipe is needed to mark it done so a stray
- * tap cannot; undoing is a plain button, since the worst case is swiping again.
+ * tap cannot; undoing is a plain button, since the worst case is swiping again. In the topic
+ * reader the swipe waits until every page of the lesson has been opened.
  */
 export const MarkCompleteButton = ({ testPaper, material }: IProps) => {
   const item: ITestPaper | IMaterial | undefined = testPaper ?? material;
   const courseStore = useCourseLookups();
   const { selectedCourseId, selectedCourseModuleId } = useSelectorLookups();
   const { isCourseModuleItemCompleted, getCompletedModule, patchCompletedModule, createCompletedModule } = courseStore;
+  const { isReader, pages } = useLessonReader(material);
   const [isSaving, setIsSaving] = useState(false);
 
   if (!item || !selectedCourseId || !selectedCourseModuleId) return null;
 
   const key = { course: selectedCourseId, courseModule: selectedCourseModuleId, collectionItem: item._id };
   const isCompleted = isCourseModuleItemCompleted(key);
+  const unviewedCount =
+    material && isReader
+      ? courseStore.countUnviewedLessonPages(
+          material._id,
+          pages.map((page) => page.key),
+        )
+      : 0;
 
   // One row per item: an existing row is patched rather than a second one created, so undoing and
   // redoing never leaves two rows for the lesson, where the older one would win the lookup.
@@ -68,6 +78,24 @@ export const MarkCompleteButton = ({ testPaper, material }: IProps) => {
           Undo
         </Button>
       </div>
+    );
+  }
+
+  if (unviewedCount) {
+    const hint = `Open ${unviewedCount === pages.length ? 'all' : 'the remaining'} ${unviewedCount} ${unviewedCount === 1 ? 'topic' : 'topics'} to complete this lesson`;
+    return (
+      <Tooltip title={hint}>
+        <div className="w-full sm:w-[200px]">
+          <SwipeButton
+            onComplete={() => save(true)}
+            isCompleted={false}
+            disabled
+            isFull
+            height={36}
+            text={`${pages.length - unviewedCount} of ${pages.length} topics read`}
+          />
+        </div>
+      </Tooltip>
     );
   }
 

@@ -28,6 +28,7 @@ export const useCourse = () => {
     removeSelectedTestPaperId,
     removeSelectedMaterialId,
     removeSelectedContent,
+    setSelectedLessonPageIndex,
     selectedCourseModuleId,
     selectedMaterialId,
     selectedTestPaperId,
@@ -94,6 +95,7 @@ export const useCourse = () => {
       removeSelectedMaterialId();
     }
     removeSelectedContent();
+    setSelectedLessonPageIndex(0);
   };
 
   /** The item to land on when nothing is selected: the first one not yet completed, else the first. */
@@ -108,12 +110,17 @@ export const useCourse = () => {
     return item;
   };
 
-  /** Moves the selection one item along the syllabus; a no-op at either end. */
+  /**
+   * Moves the selection one item along the syllabus; a no-op at either end. Going back lands on
+   * the previous lesson's last page, so the reader's Prev reads straight through the course.
+   */
   const selectAdjacentItem = (courseId: string, direction: 1 | -1) => {
     const items = getCourseItems(courseId);
     const index = getSelectedItemIndex(courseId);
     const next = items[index + direction];
-    if (next) selectItem(next);
+    if (!next) return;
+    selectItem(next);
+    if (direction === -1) setSelectedLessonPageIndex('last');
   };
 
   /** Sends a visitor with no session to sign in, and back to `redirectUri` afterwards. */

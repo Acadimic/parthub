@@ -22,3 +22,9 @@ export enum CourseOutlineTab {
   DISCUSSION = 'discussion',
   DOUBTS = 'doubts',
 }
+
+/** How a lesson is read: one topic at a time with its own pager, or the whole body at once. */
+export enum LessonViewMode {
+  READER = 'reader',
+  FULL = 'full',
+}

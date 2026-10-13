@@ -62,7 +62,10 @@ export const VideoPlayer = ({ url, isStatic, isFullScreen, onFullScreenChange }:
   // restarts playback. The same node is pinned over the page instead, at the modal's layer, with
   // the shared footer under it; the player's wrapper is there in both modes so it never remounts.
   return (
-    <div className={cn('relative h-full w-full', isFullScreen && 'fixed inset-0 z-[1300] flex flex-col bg-black')}>
+    <div
+      className={cn('relative h-full w-full', isFullScreen && 'fixed inset-0 z-[1300] flex flex-col bg-black')}
+      data-reader-surface=""
+    >
       <div className={cn('relative w-full', isFullScreen ? 'min-h-0 flex-1' : 'h-full')}>{getPlayer()}</div>
       {isFullScreen ? <FullScreenBar onExit={() => onFullScreenChange(false)} /> : null}
     </div>

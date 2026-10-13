@@ -1,3 +1,5 @@
+import { type AttachmentDto } from '@repo/shared/contracts';
+import { type IRichText } from '@repo/shared/interfaces';
 import { type IMaterial, type ITestPaper } from '@stores';
 
 export interface ICourseModuleItem {
@@ -37,3 +39,12 @@ export interface ICourseProgress {
   /** 0–100, and 0 for a course with no items. */
   percent: number;
 }
+
+/**
+ * One page of a lesson in the topic reader: a slice of the body cut at a heading, or an attachment.
+ * `key` is what the viewed-pages record holds, so it must be stable across reloads: a section's
+ * position, or an attachment's object key.
+ */
+export type ILessonPage =
+  | { kind: 'section'; key: string; title: string; parentTitle: string; content: IRichText }
+  | { kind: 'attachment'; key: string; title: string; attachment: AttachmentDto };

@@ -1,9 +1,11 @@
 import { Loader } from '@repo/ui/app';
 import { BlankState } from '@components/others';
-import { VideoPlayer, ViewTextContent, ViewUrlContent } from '@components/tools';
-import { DocumentType, LinkType } from '@enums';
+import { ViewTextContent } from '@components/tools';
+import { useLessonReader } from '@hooks/lesson-reader.hook';
 import { type IMaterial, useSelectorLookups } from '@stores';
 import { useEffect } from 'react';
+import { AttachmentContent } from './AttachmentContent';
+import { TopicReader } from './TopicReader';
 
 interface IProps {
   material: IMaterial;
@@ -14,6 +16,7 @@ interface IProps {
 export const MaterialItem = ({ material, isFullScreen, onFullScreenChange }: IProps) => {
   const selectorStore = useSelectorLookups();
   const { selectedContent, selectedAttachment, setSelectedContent, removeSelectedAttachment } = selectorStore;
+  const { isReader } = useLessonReader(material);
 
   useEffect(() => {
     const isMaterialAttachment = (material.attachments ?? []).some(
@@ -37,6 +40,9 @@ export const MaterialItem = ({ material, isFullScreen, onFullScreenChange }: IPr
         />
       );
     }
+    if (isReader) {
+      return <TopicReader material={material} isFullScreen={isFullScreen} onFullScreenChange={onFullScreenChange} />;
+    }
     if (selectedContent) {
       return (
         <ViewTextContent
@@ -48,35 +54,9 @@ export const MaterialItem = ({ material, isFullScreen, onFullScreenChange }: IPr
     }
     // The effect above picks what to show after the first paint; until then, a spinner.
     if (!selectedAttachment) return <Loader isLoading />;
-    if (selectedAttachment?.documentType === DocumentType.FILE && selectedAttachment.isUploaded) {
-      return (
-        <ViewUrlContent
-          url={selectedAttachment.url}
-          isStatic={!selectedAttachment.isUploaded}
-          isFullScreen={isFullScreen}
-          onFullScreenChange={onFullScreenChange}
-        />
-      );
-    }
-    if (
-      selectedAttachment?.documentType === DocumentType.LINK &&
-      !selectedAttachment.isUploaded &&
-      selectedAttachment.linkType &&
-      [LinkType.YOUTUBE, LinkType.VIDEO].includes(selectedAttachment.linkType)
-    ) {
-      return (
-        <VideoPlayer
-          url={selectedAttachment.url}
-          isStatic={true}
-          isFullScreen={isFullScreen}
-          onFullScreenChange={onFullScreenChange}
-        />
-      );
-    }
     return (
-      <ViewUrlContent
-        url={selectedAttachment.url}
-        isStatic={!selectedAttachment.isUploaded}
+      <AttachmentContent
+        attachment={selectedAttachment}
         isFullScreen={isFullScreen}
         onFullScreenChange={onFullScreenChange}
       />
