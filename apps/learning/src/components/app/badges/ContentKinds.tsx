@@ -9,6 +9,7 @@ import {
   SpeakerHighIcon,
   VideoIcon,
 } from '@phosphor-icons/react';
+import { type AttachmentDto } from '@repo/shared/contracts';
 import { type IMaterial } from '@stores';
 import { VIDEO_LINK_TYPES } from '@repo/shared/utils';
 
@@ -67,6 +68,27 @@ const KIND_STYLES: Record<ContentKind, IKindStyle> = {
 
 const KIND_ORDER: ContentKind[] = ['reading', 'video', 'document', 'link', 'audio'];
 
+/** What kind of content an attachment is: a video, an audio clip, a document, else a link. */
+export const getAttachmentKind = (attachment: AttachmentDto): ContentKind => {
+  if (attachment.documentType === DocumentType.VIDEO) return 'video';
+  if (attachment.documentType === DocumentType.AUDIO) return 'audio';
+  if (attachment.documentType === DocumentType.FILE) return 'document';
+  if (attachment.linkType && VIDEO_LINK_TYPES.includes(attachment.linkType)) return 'video';
+  return 'link';
+};
+
+/**
+ * A progress bar's fill and halo in a kind's colour, for the reader's strip: the same tones the
+ * chips above use, so a video segment and the video chip read as one thing.
+ */
+export const KIND_BAR: Record<ContentKind, { fill: string; halo: string }> = {
+  reading: { fill: 'bg-content-reading', halo: 'shadow-content-reading/20' },
+  video: { fill: 'bg-content-video', halo: 'shadow-content-video/20' },
+  document: { fill: 'bg-chart-3', halo: 'shadow-chart-3/20' },
+  link: { fill: 'bg-info', halo: 'shadow-info/20' },
+  audio: { fill: 'bg-chart-5', halo: 'shadow-chart-5/20' },
+};
+
 /** Every kind of content in a material, in a fixed order, with how many of each. */
 export const getMaterialKinds = (material: IMaterial): IContentKind[] => {
   const counts: Record<ContentKind, number> = {
@@ -77,11 +99,7 @@ export const getMaterialKinds = (material: IMaterial): IContentKind[] => {
     audio: 0,
   };
   (material.attachments ?? []).forEach((attachment) => {
-    if (attachment.documentType === DocumentType.VIDEO) counts.video += 1;
-    else if (attachment.documentType === DocumentType.AUDIO) counts.audio += 1;
-    else if (attachment.documentType === DocumentType.FILE) counts.document += 1;
-    else if (attachment.linkType && VIDEO_LINK_TYPES.includes(attachment.linkType)) counts.video += 1;
-    else counts.link += 1;
+    counts[getAttachmentKind(attachment)] += 1;
   });
   return KIND_ORDER.filter((kind) => counts[kind] > 0).map((kind) => ({ kind, count: counts[kind] }));
 };

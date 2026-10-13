@@ -345,3 +345,20 @@ then Topics opens page 1; ArrowRight with the picker open does nothing; the read
 next lesson lands on page 15; leaving the last topic back, forward or by a pick completes, a view
 switch does not; practice and attempt both mark and undo; full-screen moves, taps and dropdown;
 the reader suite; row heights.
+- **Chip row removed (2026-10-14, after 7ede506):** Manish asked for the Lesson / attachment chip
+  row under the content to go, and for its entries to live behind a ⋯ of their own, somewhere
+  better. `SourcesMenu` in `components/tools/` (with `useSourceMenuItems`: the body, then each
+  attachment, the current one lit) sits at the right end of the progress strip, so it is reachable
+  in both views and inside full screen; it renders nothing for a lesson without attachments. In the
+  reader an entry moves to that page; in the full view it swaps the frame's content, as the chips
+  did. The actions ⋯ is unchanged. The entries carry the icon the chip row gave each attachment
+  (`getAttachmentIcon`, now exported from `components/app/attachments/Attachment.tsx`: the red
+  YouTube mark, PDF, picture, link), and the topic path uses the same, with an article icon on a section row and an indent icon on a
+  sub-topic, every row reading from the left. `FrameToolbar` lost its
+  four chip props. Checked on desktop, iPhone 13 and iPhone SE: no horizontal overflow, the strip
+  stays 41 px, the menu opens inside the viewport, entries move the page in both views.
+- **Strip segments by kind (2026-10-14):** each segment takes its content kind's colour — reading,
+  video, document, link, audio — through `KIND_BAR` and `getAttachmentKind` in
+  `components/app/badges/ContentKinds.tsx`, the same tones as the kind chips in the lesson header.
+  Opened and unopened differ by opacity (70 % and 25 %), the current one is taller with a halo in
+  its own tone. The pager row's top border is gone (its separation is the toolbar's line below).

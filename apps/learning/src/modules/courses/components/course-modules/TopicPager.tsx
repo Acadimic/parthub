@@ -28,7 +28,7 @@ export const TopicPager = ({ material }: { material: IMaterial }) => {
   if (!isReader || !page) return null;
 
   return (
-    <div className="border-t border-border">
+    <div>
       <div className="flex items-center gap-2 px-2 py-1 md:px-3">
         <Tooltip title={previousLabel}>
           <Button

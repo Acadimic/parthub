@@ -13,7 +13,8 @@ interface IProps {
   className?: string;
 }
 
-const getFileIcon = (extension: FileExtension, url?: string) => {
+/** The icon an attachment is shown with, by what it is: a PDF, a picture, a YouTube video, a link. */
+export const getAttachmentIcon = (extension: FileExtension, url?: string) => {
   if (extension === FileExtension.PDF) return <FilePdfIcon weight="fill" className="w-5 h-5 text-destructive" />;
   if (
     [FileExtension.JPEG, FileExtension.PNG, FileExtension.JPG, FileExtension.WEBP, FileExtension.GIF].includes(
@@ -33,7 +34,7 @@ export const Attachment = ({ fileName, extension, index, onRemove, url, classNam
     <div
       className={`border border-border px-2 py-1 flex items-center justify-start gap-1 text-xs font-medium rounded-full ${className ? className : ''}`}
     >
-      {getFileIcon(extension, url)}
+      {getAttachmentIcon(extension, url)}
       <div
         className={`flex-1 flex justify-center items-center font-medium relative ${url ? 'cursor-pointer hover:text-primary' : ''}`}
         // onClick={() => handleClickAttachment(url, isStatic)}

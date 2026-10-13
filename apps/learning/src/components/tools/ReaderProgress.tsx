@@ -1,9 +1,11 @@
 import { cn } from '@repo/ui/lib';
+import { KIND_BAR, getAttachmentKind } from '@components/app/badges';
 import { LessonViewMode } from '@enums';
 import { useLessonReader } from '@hooks/lesson-reader.hook';
 import { CheckCircleIcon } from '@phosphor-icons/react';
 import { type IMaterial, useCourseLookups, useSelectorLookups } from '@stores';
 import { LessonViewToggle } from './LessonViewToggle';
+import { SourcesMenu } from './SourcesMenu';
 
 /**
  * The strip along the top of the lesson, in both views: the view toggle, then one segment per
@@ -39,6 +41,8 @@ export const ReaderProgress = ({ material }: { material: IMaterial }) => {
         {pages.map((page, index) => {
           const isViewed = isLessonPageViewed(material._id, page.key);
           const isCurrent = isReader && index === pageIndex;
+          // Each segment in its kind's colour, as the chips above: reading, video, document, link.
+          const bar = KIND_BAR[page.kind === 'section' ? 'reading' : getAttachmentKind(page.attachment)];
           return (
             // A native title rather than the Tooltip: its wrapping span would take the segment's flex width.
             <button
@@ -53,9 +57,10 @@ export const ReaderProgress = ({ material }: { material: IMaterial }) => {
               <span
                 className={cn(
                   'h-1.5 w-full rounded-full transition-all duration-250',
-                  isCurrent && 'h-2.5 bg-primary shadow-[0_0_0_3px] shadow-primary/20',
-                  !isCurrent && isViewed && 'bg-primary/70 group-hover:bg-primary',
-                  !isCurrent && !isViewed && 'bg-border group-hover:bg-muted-foreground/40',
+                  bar.fill,
+                  isCurrent && cn('h-2.5 shadow-[0_0_0_3px]', bar.halo),
+                  !isCurrent && isViewed && 'opacity-70 group-hover:opacity-100',
+                  !isCurrent && !isViewed && 'opacity-25 group-hover:opacity-50',
                 )}
               />
             </button>
@@ -70,6 +75,7 @@ export const ReaderProgress = ({ material }: { material: IMaterial }) => {
           All read
         </span>
       )}
+      <SourcesMenu material={material} />
     </div>
   );
 };

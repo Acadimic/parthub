@@ -1,25 +1,15 @@
-import { type AttachmentDto } from '@repo/shared/contracts';
 import { Button, Tooltip } from '@repo/ui/app';
 import { useLoadOnce } from '@repo/ui/hooks';
 import { Badge } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
-import { Attachment } from '@components/app/attachments';
 import { ContentKinds, ContentTypeBadge, type IContentKind, getMaterialKinds } from '@components/app/badges';
 import { BlankState } from '@components/others';
 import { ReaderProgress } from '@components/tools';
 import { CollectionType, type ModuleContentType } from '@enums';
-import { useAttachment } from '@hooks/attachment.hook';
 import { useCourse } from '@hooks/course.hook';
 import { useLessonReader } from '@hooks/lesson-reader.hook';
 import { getEdgeLabel, getItemName } from '@utils/helpers';
-import {
-  ArrowsOutIcon,
-  BookOpenTextIcon,
-  CaretLeftIcon,
-  CaretRightIcon,
-  CheckCircleIcon,
-  ClockIcon,
-} from '@phosphor-icons/react';
+import { ArrowsOutIcon, CaretLeftIcon, CaretRightIcon, CheckCircleIcon, ClockIcon } from '@phosphor-icons/react';
 import {
   type ICourseModule,
   type IMaterial,
@@ -52,64 +42,23 @@ const Card = ({ children, className }: { children: React.ReactNode; className?: 
 );
 
 /**
- * The frame's footer, so everything a learner does with the lesson sits under it in view: the
- * sources the frame can show (only when there are any), then marking it done, reacting, full
- * screen, and the way to the next lesson.
+ * The frame's footer, so everything a learner does with the lesson sits under it in view: marking
+ * it done, reacting, the ⋯ menu, full screen, and the way to the next lesson. The lesson's sources
+ * have their own ⋯ in the progress strip above the content.
  */
 const FrameToolbar = ({
-  material,
-  hasSelectedContent,
-  selectedAttachmentKey,
-  onClickContent,
-  onClickAttachment,
   onFullScreen,
   actions,
 }: {
-  material?: IMaterial;
-  hasSelectedContent: boolean;
-  selectedAttachmentKey?: string;
-  onClickContent: () => void;
-  onClickAttachment: (attachment: AttachmentDto) => void;
   /** `null` for a test paper, which has its own full-screen sitting. */
   onFullScreen: (() => void) | null;
   /** Mark complete and the reactions, on the footer's left. */
   actions: React.ReactNode;
 }) => {
   const { selectedCourseId } = useSelectorLookups();
-  const attachments = material?.attachments ?? [];
 
   return (
     <div className="border-t border-border">
-      {/* The lesson and its attachments, scrolling sideways when there are many. */}
-      {attachments.length ? (
-        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto border-b border-border px-2 py-1.5 md:px-3">
-          <Button
-            onClick={onClickContent}
-            isSecondary={!hasSelectedContent}
-            className="shrink-0 px-3 py-1"
-            isRound
-            leftsection={<BookOpenTextIcon weight="bold" className="h-4 w-4" />}
-          >
-            Lesson
-          </Button>
-          {attachments.map((attachment, attachmentIndex) => (
-            <Button
-              key={attachment.key}
-              onClick={() => onClickAttachment(attachment)}
-              isSecondary={selectedAttachmentKey !== attachment.key}
-              className="shrink-0 !px-0 !py-0"
-              isRound
-            >
-              <Attachment
-                fileName={attachment.fileName}
-                extension={attachment.fileExtension}
-                url={attachment.url}
-                index={attachmentIndex}
-              />
-            </Button>
-          ))}
-        </div>
-      ) : null}
       <div className="flex flex-wrap items-center gap-2 px-2 py-2 md:px-3">
         {actions}
         {/* A zero basis lets this end share the actions' line and shrink the next title to fit. */}
@@ -183,42 +132,6 @@ const LessonHeader = ({
   </header>
 );
 
-/**
- * What the chip row marks and does. In the topic reader a chip moves to that page; in the full
- * view it swaps the frame's content for the body or the attachment.
- */
-const useFrameChips = (material: IMaterial | undefined) => {
-  const { selectedContent, selectedAttachment, setSelectedContent, removeSelectedAttachment } = useSelectorLookups();
-  const { handleClickAttachment } = useAttachment();
-  const reader = useLessonReader(material);
-  const readerPage = reader.isReader ? reader.page : undefined;
-
-  const onClickContent = () => {
-    if (reader.isReader) return reader.goToPage(0);
-    setSelectedContent(material?.content ?? null);
-    removeSelectedAttachment();
-  };
-
-  const onClickAttachment = (attachment: AttachmentDto) => {
-    if (!reader.isReader) return handleClickAttachment(attachment);
-    const index = reader.pages.findIndex((page) => page.kind === 'attachment' && page.key === attachment.key);
-    if (index !== -1) reader.goToPage(index);
-  };
-
-  const getSelectedAttachmentKey = () => {
-    if (!readerPage) return selectedAttachment?.key;
-    return readerPage.kind === 'attachment' ? readerPage.key : undefined;
-  };
-
-  return {
-    isReader: reader.isReader,
-    hasSelectedContent: readerPage ? readerPage.kind === 'section' : Boolean(selectedContent),
-    selectedAttachmentKey: getSelectedAttachmentKey(),
-    onClickContent,
-    onClickAttachment,
-  };
-};
-
 export const CourseModuleContent = () => {
   const selectorStore = useSelectorLookups();
   const meetStore = useMeetLookups();
@@ -233,7 +146,7 @@ export const CourseModuleContent = () => {
   const selectedMaterial = useSelectedMaterial();
   const { getModuleContentType } = useCourse();
   const { getMeetsByIds } = meetStore;
-  const chips = useFrameChips(selectedMaterial);
+  const reader = useLessonReader(selectedMaterial);
 
   // Kept in the browser per learner, so it is read back once the learner is known.
   useEffect(() => {
@@ -317,13 +230,8 @@ export const CourseModuleContent = () => {
             />
           </div>
         </div>
-        {selectedMaterial && chips.isReader ? <TopicPager material={selectedMaterial} /> : null}
+        {selectedMaterial && reader.isReader ? <TopicPager material={selectedMaterial} /> : null}
         <FrameToolbar
-          material={selectedMaterial}
-          hasSelectedContent={chips.hasSelectedContent}
-          selectedAttachmentKey={chips.selectedAttachmentKey}
-          onClickContent={chips.onClickContent}
-          onClickAttachment={chips.onClickAttachment}
           onFullScreen={selectedMaterial ? () => setIsFullScreen(true) : null}
           actions={
             <>
