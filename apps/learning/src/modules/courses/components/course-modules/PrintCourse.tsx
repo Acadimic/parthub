@@ -1,3 +1,4 @@
+import { Button, Menu } from '@repo/ui/app';
 import { ClipboardTextIcon, PrinterIcon, StackIcon } from '@phosphor-icons/react';
 import { type IMenuItem } from '@repo/ui/types';
 
@@ -40,3 +41,33 @@ export const getPrintMenuItems = (
       : []),
   ];
 };
+
+/**
+ * A visible way to print from the learning view's top bar, opening the same choices as the
+ * lesson's ⋯ menu. The word hides on a phone, where the printer alone says it.
+ */
+export const PrintButton = ({
+  courseId,
+  courseModuleId,
+  testPaperId,
+}: {
+  courseId: string;
+  courseModuleId: string;
+  testPaperId: string | null;
+}) => (
+  <Menu
+    menuItems={getPrintMenuItems(courseId, courseModuleId, testPaperId)}
+    className="px-0"
+    component={
+      <Button
+        isSecondary
+        aria-label="Print"
+        className="px-3 py-1.5"
+        labelClassName="hidden sm:block"
+        leftsection={<PrinterIcon weight="bold" className="h-4 w-4" />}
+      >
+        Print
+      </Button>
+    }
+  />
+);

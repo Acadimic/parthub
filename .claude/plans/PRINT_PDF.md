@@ -237,3 +237,12 @@ their font and never download it. Measured: test paper with answers 589 → 376 
 181 → 79 KB, result 492 → 226 KB, a 31-page module 1,017 → 633 KB, Quantitative Aptitude 5
 6,172 → 2,781 KB, Data Interpretation 5,151 → 4,325 KB (its chart figures are SVG images, whose
 labels keep their own font). Pagination is unchanged.
+
+## Print button in the learning view's top bar (2026-10-14)
+
+Manish asked for a visible Print control on the course modules page. `PrintButton` in
+`modules/courses/components/course-modules/PrintCourse.tsx` sits in the top bar of
+`CourseModules.tsx` before Contents and the profile, and opens the same `getPrintMenuItems` as the
+lesson's ⋯ menu: the course, the module on screen, and the quiz on screen when one is selected.
+The word hides below `sm`. Checked on desktop and phone: the menu lists the course and the module,
+and "Print course" opens `/courses/<id>/print` in a new tab.

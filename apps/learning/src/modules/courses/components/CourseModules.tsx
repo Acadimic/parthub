@@ -14,7 +14,7 @@ import {
 } from '@phosphor-icons/react';
 import { type ICourse, useSelectedCourse, useSelectorLookups } from '@stores';
 import { getCoursePath } from '@utils/helpers';
-import { CourseCompleteBanner, CourseModuleContent } from './course-modules';
+import { CourseCompleteBanner, CourseModuleContent, PrintButton } from './course-modules';
 import { CourseOutline } from './CourseOutline';
 
 /** The outline's header: the course name, a way back to its overview, and how far through it is. */
@@ -62,7 +62,12 @@ const OutlineHeader = ({ course }: { course: ICourse }) => {
 export const CourseModules = () => {
   const selectedCourse = useSelectedCourse();
   const { selectItem, isCourseMenuOpen, handleCourseMenuClick, getCourseProgress } = useCourse();
-  const { isCourseOutlineHidden: isOutlineHidden, setIsCourseOutlineHidden: setIsOutlineHidden } = useSelectorLookups();
+  const {
+    isCourseOutlineHidden: isOutlineHidden,
+    setIsCourseOutlineHidden: setIsOutlineHidden,
+    selectedCourseModuleId,
+    selectedTestPaperId,
+  } = useSelectorLookups();
 
   if (!selectedCourse) return null;
 
@@ -113,6 +118,11 @@ export const CourseModules = () => {
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1 md:gap-2">
+              <PrintButton
+                courseId={selectedCourse._id}
+                courseModuleId={selectedCourseModuleId}
+                testPaperId={selectedTestPaperId || null}
+              />
               <div className="lg:hidden">
                 <Button
                   isSecondary

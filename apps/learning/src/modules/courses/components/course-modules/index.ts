@@ -5,3 +5,4 @@ export * from './LikeCourse';
 export * from './MarkCompleteButton';
 export * from './ShareCourse';
 export * from './CourseCompleteBanner';
+export * from './PrintCourse';
