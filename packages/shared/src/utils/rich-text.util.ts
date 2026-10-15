@@ -21,6 +21,8 @@ import { imageNode } from './rich-text-image.util';
 import { type IInlinePiece, splitInlineMath } from './rich-text-math.util';
 import { createEmptyRichText, docToPlainText, INLINE_CONTAINERS } from './rich-text-plain.util';
 import { sceneFenceNode } from './scene/format.util';
+import { ACTIVITY_FENCE_NAMES, type ActivityFence } from './activity.util';
+import { activityFromMarkdown, type IActivityParsers } from './activity-markdown.util';
 
 export { createEmptyRichText, docToPlainText, isRichTextEmpty } from './rich-text-plain.util';
 
@@ -324,10 +326,36 @@ const readListening: BlockReader = (lines, index) => {
   };
 };
 
+/** `::: check`, `::: reveal`, `::: soundboard`, `::: cards`, `::: say`; a line of `:::` closes it. */
+const ACTIVITY_OPEN = new RegExp(`^:::\\s*(${ACTIVITY_FENCE_NAMES.join('|')})\\b(.*)$`);
+/**
+ * An interactive block. A fence that does not hold what its kind needs (a check with one option, a
+ * reveal with no answer) is not read as one, so its lines stay ordinary text and nothing is lost.
+ */
+const ACTIVITY_PARSERS: Omit<IActivityParsers, 'attrs'> = {
+  parseBlocks: (markdown) => parseBlocks(markdown),
+  parseInline,
+  toParagraphs,
+};
+
+const readActivity: BlockReader = (lines, index) => {
+  const open = ACTIVITY_OPEN.exec(lines[index].trim());
+  if (!open) return null;
+  let close = index + 1;
+  while (close < lines.length && !DIV_CLOSE.test(lines[close].trim())) close += 1;
+  if (close >= lines.length) return null;
+  const node = activityFromMarkdown(open[1] as ActivityFence, lines.slice(index + 1, close), {
+    ...ACTIVITY_PARSERS,
+    attrs: parseMarkdownAttrs(open[2] ?? ''),
+  });
+  return node ? { node, next: close + 1 } : null;
+};
+
 /** Order matters: a fence swallows its body, so it is tried before anything inside it can match. */
 const BLOCK_READERS: BlockReader[] = [
   readFence,
   readListening,
+  readActivity,
   readImage,
   readTable,
   readRule,

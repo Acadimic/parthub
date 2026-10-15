@@ -20,7 +20,20 @@ export interface IPronunciationAttrs {
   translit: string;
   /** A stored bucket address, or `''` for the device voice. */
   audio: string;
+  /** The grammatical gender of a noun or a word that agrees with one, shown as a colour; `''` for none. */
+  gender: WordGender | '';
 }
+
+/** Masculine, feminine, neuter: written `g=m` on a span. */
+export const WORD_GENDERS = ['m', 'f', 'n'] as const;
+export type WordGender = (typeof WORD_GENDERS)[number];
+export const WORD_GENDER_NAMES: Record<WordGender, string> = { m: 'masculine', f: 'feminine', n: 'neuter' };
+
+/** `m`, `masc`, `masculine` (any case) → `m`; anything else → `''`. */
+export const wordGenderOf = (value: RichTextAttrValue | undefined): WordGender | '' => {
+  const letter = typeof value === 'string' ? value.trim().toLowerCase().charAt(0) : '';
+  return WORD_GENDERS.find((gender) => gender === letter) ?? '';
+};
 
 export interface IListeningAttrs {
   lang: string;
@@ -85,6 +98,7 @@ export const pronunciationAttrsOf = (mark: IRichTextMark): IPronunciationAttrs =
   ipa: stringOf(mark.attrs?.ipa),
   translit: stringOf(mark.attrs?.translit),
   audio: stringOf(mark.attrs?.audio),
+  gender: wordGenderOf(mark.attrs?.gender),
 });
 
 /** Two pronunciation marks are the same run when every attribute matches. */
@@ -129,5 +143,6 @@ export const pronunciationMarkFrom = (attrs: Record<string, string>): IRichTextM
     ipa: stripIpaSlashes(attrs.ipa ?? ''),
     translit: attrs.translit ?? '',
     audio: '',
+    gender: wordGenderOf(attrs.g ?? attrs.gender),
   },
 });

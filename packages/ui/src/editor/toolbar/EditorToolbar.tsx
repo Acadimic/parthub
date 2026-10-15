@@ -1,4 +1,11 @@
 import {
+  CardsIcon,
+  FootprintsIcon,
+  HandTapIcon,
+  LightbulbIcon,
+  MicrophoneStageIcon,
+  QuestionIcon,
+  SquaresFourIcon,
   ArrowUUpLeftIcon,
   ArrowUUpRightIcon,
   CaretDownIcon,
@@ -27,12 +34,13 @@ import {
 } from '@phosphor-icons/react';
 import { getMarkRange } from '@tiptap/core';
 import { type Editor, useEditorState } from '@tiptap/react';
-import { type IPronunciationAttrs, LISTENING_NODE, PRONUNCIATION_MARK } from '@repo/shared/utils';
+import { type IPronunciationAttrs, LISTENING_NODE, PRONUNCIATION_MARK, wordGenderOf } from '@repo/shared/utils';
 import { useLayoutEffect, useState } from 'react';
 import { type IMenuItem, Menu } from '../../core/Menu';
 import { cn } from '../../lib/cn';
 import { PronunciationToolbar } from './PronunciationToolbar';
 import { TableInsertMenu } from './TableInsertMenu';
+import type { ActivityKind } from '../extensions/activities';
 import { TableToolbar } from './TableToolbar';
 import { CONTROL_CLASS, keepSelection, ToolbarAction, ToolbarButton, ToolbarGroup } from './ToolbarButton';
 
@@ -147,6 +155,7 @@ const currentPronunciation = (editor: Editor): IToolbarState['pronunciation'] =>
       ipa: String(attrs.ipa ?? ''),
       translit: String(attrs.translit ?? ''),
       audio: String(attrs.audio ?? ''),
+      gender: wordGenderOf(attrs.gender),
     },
     text: range ? editor.state.doc.textBetween(range.from, range.to) : '',
   };
@@ -169,6 +178,55 @@ const INITIAL_STATE: IToolbarState = {
   pronunciation: null,
   inListening: false,
 };
+
+const ACTIVITIES: { kind: ActivityKind; label: string; icon: React.ReactNode }[] = [
+  { kind: 'check', label: 'Quick check — a question answered on the spot', icon: <QuestionIcon className={ICON} /> },
+  {
+    kind: 'reveal',
+    label: 'Show answer — a question with its answer folded away',
+    icon: <LightbulbIcon className={ICON} />,
+  },
+  {
+    kind: 'soundboard',
+    label: 'Sound board — a table whose cells speak when tapped',
+    icon: <SquaresFourIcon className={ICON} />,
+  },
+  { kind: 'cards', label: 'Flashcards — words to turn and practise', icon: <CardsIcon className={ICON} /> },
+  {
+    kind: 'steps',
+    label: 'Step by step — a form that changes, one step at a time',
+    icon: <FootprintsIcon className={ICON} />,
+  },
+  {
+    kind: 'say',
+    label: 'Say it — lines to listen to, record and compare',
+    icon: <MicrophoneStageIcon className={ICON} />,
+  },
+];
+
+/** Interactive blocks: each arrives with placeholder text to write over. */
+const ActivityMenu = ({ editor }: { editor: Editor }) => (
+  <Menu
+    items={ACTIVITIES.map(({ kind, label, icon }) => ({
+      label,
+      icon,
+      onClick: () => editor.chain().focus().insertActivity(kind).run(),
+    }))}
+    className="inline-flex"
+    trigger={
+      <button
+        type="button"
+        onMouseDown={keepSelection}
+        aria-label="Interactive block"
+        title="Interactive block — quick check, show answer, sound board, flashcards, say it"
+        className={cn(CONTROL_CLASS, 'gap-1 px-1.5 text-foreground hover:bg-primary/10 hover:text-primary')}
+      >
+        <HandTapIcon className={ICON} />
+        <CaretDownIcon className="h-3 w-3" weight="bold" />
+      </button>
+    }
+  />
+);
 
 /** The pronunciation menu: mark or unmark the run, and wrap or unwrap a listening block. */
 const pronunciationMenu = (editor: Editor, state: IToolbarState): IMenuItem[] => {
@@ -416,6 +474,7 @@ export const EditorToolbar = ({ editor, onPickImage, isUploadingImage = false, o
             icon={<CubeIcon className={ICON} />}
             onClick={onInsertScene}
           />
+          <ActivityMenu editor={editor} />
           {!isCompact && (
             <ToolbarButton
               label="Divider"

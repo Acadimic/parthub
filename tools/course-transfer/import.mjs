@@ -195,7 +195,7 @@ const withContentImages = (value) => {
   if (Array.isArray(value)) return value.map(withContentImages);
   if (!value || typeof value !== 'object') return value;
   const next = Object.fromEntries(Object.entries(value).map(([k, v]) => [k, withContentImages(v)]));
-  if (next.type === 'image' && state.contentImages[next.attrs?.src]) next.attrs = { ...next.attrs, src: state.contentImages[next.attrs.src] };
+  if ((next.type === 'image' || next.type === 'picture') && state.contentImages[next.attrs?.src]) next.attrs = { ...next.attrs, src: state.contentImages[next.attrs.src] };
   if (state.contentAudio[next.attrs?.audio]) next.attrs = { ...next.attrs, audio: state.contentAudio[next.attrs.audio] };
   if (typeof next.attrs?.lineAudio === 'string' && next.attrs.lineAudio) {
     const lines = next.attrs.lineAudio.split('\n').map((a) => state.contentAudio[a] ?? a);

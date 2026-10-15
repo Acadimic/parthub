@@ -10,6 +10,24 @@ import {
   PRONUNCIATION_MARK,
   pronunciationAttrsOf,
   SCENE3D_NODE,
+  CHECK_NODE,
+  CHECK_OPTION_NODE,
+  CHECK_PROMPT_NODE,
+  CHECK_WHY_NODE,
+  FLASHCARD_BACK_NODE,
+  FLASHCARD_FRONT_NODE,
+  FLASHCARDS_NODE,
+  REVEAL_ANSWER_NODE,
+  REVEAL_NODE,
+  REVEAL_PROMPT_NODE,
+  PICTURE_LABEL_NODE,
+  PICTURE_NODE,
+  SAY_NODE,
+  SENTENCE_NODE,
+  SENTENCE_TILE_NODE,
+  SOUNDBOARD_NODE,
+  SOUNDMAP_NODE,
+  STEPS_NODE,
 } from '@repo/shared/utils';
 import type { IRichTextMark } from '@repo/shared/interfaces';
 
@@ -83,11 +101,12 @@ const pronunciationOf = (node: IRichTextNode): IRichTextMark | undefined =>
 
 /** `[Hola]{lang=es-ES ipa="ˈola"}`, attributes in a fixed order so a round trip is byte-stable. */
 const serializeSpan = (inner: string, mark: IRichTextMark): string => {
-  const { lang, ipa, translit } = pronunciationAttrsOf(mark);
+  const { lang, ipa, translit, gender } = pronunciationAttrsOf(mark);
   const attrs = formatMarkdownAttrs([
     ['lang', lang],
     ['ipa', ipa],
     ['translit', translit],
+    ['g', gender],
   ]);
   return `[${inner}]{${attrs}}`;
 };
@@ -210,6 +229,88 @@ const serializeScene = (node: IRichTextNode): string => {
   }
 };
 
+/** The blocks inside one part of an interactive block, as Markdown. */
+const serializePart = (node: IRichTextNode, part: string): string =>
+  (node.content?.find((child) => child.type === part)?.content ?? [])
+    .map((child) => serializeBlock(child))
+    .join('\n\n');
+
+/** One line of text from a part that holds a single paragraph (an option, a card side). */
+const serializeLine = (node: IRichTextNode | undefined): string =>
+  (node?.content ?? [])
+    .map((child) => serializeBlock(child))
+    .join(' ')
+    .replace(/\n/g, ' ')
+    .trim();
+
+/** `::: reveal`, the question, `---`, the answer, `:::`. */
+const serializeReveal = (node: IRichTextNode): string =>
+  `::: reveal\n${serializePart(node, REVEAL_PROMPT_NODE)}\n---\n${serializePart(node, REVEAL_ANSWER_NODE)}\n:::`;
+
+/** `::: check`, the question, `- [x]` / `- [ ]` options, then `---` and the why if there is one. */
+const serializeCheck = (node: IRichTextNode): string => {
+  const options = (node.content ?? [])
+    .filter((child) => child.type === CHECK_OPTION_NODE)
+    .map((option) => `- [${option.attrs?.correct === true ? 'x' : ' '}] ${serializeLine(option)}`);
+  const why = serializePart(node, CHECK_WHY_NODE);
+  return `::: check\n${serializePart(node, CHECK_PROMPT_NODE)}\n${options.join('\n')}${why ? `\n---\n${why}` : ''}\n:::`;
+};
+
+/** `::: cards` with one `- front :: back` line per card. */
+const serializeCards = (node: IRichTextNode): string => {
+  const lines = (node.content ?? []).map((card) => {
+    const side = (part: string) => serializeLine(card.content?.find((child) => child.type === part));
+    return `- ${side(FLASHCARD_FRONT_NODE)} :: ${side(FLASHCARD_BACK_NODE)}`;
+  });
+  return `::: cards\n${lines.join('\n')}\n:::`;
+};
+
+/** `::: steps`, each step's blocks, steps separated by `---`. */
+const serializeSteps = (node: IRichTextNode): string =>
+  `::: steps\n${(node.content ?? [])
+    .map((step) => (step.content ?? []).map((child) => serializeBlock(child)).join('\n\n'))
+    .join('\n---\n')}\n:::`;
+
+/** `::: picture src=… alt=… mode=…`, then `- x,y word :: meaning` per point. */
+const serializePicture = (node: IRichTextNode): string => {
+  const attrs = formatMarkdownAttrs([
+    ['src', String(node.attrs?.src ?? '')],
+    ['alt', String(node.attrs?.alt ?? '')],
+    ['mode', node.attrs?.mode === 'find' ? 'find' : ''],
+  ]);
+  const lines = (node.content ?? [])
+    .filter((label) => label.type === PICTURE_LABEL_NODE)
+    .map((label) => {
+      const [word, meaning] = label.content ?? [];
+      const point = `${Number(label.attrs?.x ?? 50)},${Number(label.attrs?.y ?? 50)}`;
+      return `- ${point} ${serializeLine({ type: 'x', content: word ? [word] : [] })}${meaning ? ` :: ${serializeLine({ type: 'x', content: [meaning] })}` : ''}`;
+    });
+  return `::: picture ${attrs}\n${lines.join('\n')}\n:::`;
+};
+
+/** `::: sentence`, `- role word :: meaning` per tile, the caption, sentences separated by `---`. */
+const serializeSentence = (node: IRichTextNode): string => {
+  const variants = (node.content ?? []).map((variant) => {
+    const parts = variant.content ?? [];
+    const tiles = parts
+      .filter((part) => part.type === SENTENCE_TILE_NODE)
+      .map((tile) => {
+        const [word, meaning] = tile.content ?? [];
+        const role = String(tile.attrs?.role ?? 'doer');
+        const wordText = serializeLine({ type: 'x', content: word ? [word] : [] });
+        return `- ${role} ${wordText}${meaning ? ` :: ${serializeLine({ type: 'x', content: [meaning] })}` : ''}`;
+      });
+    const caption = parts.find((part) => part.type !== SENTENCE_TILE_NODE);
+    return [...tiles, ...(caption ? [serializeBlock(caption)] : [])].join('\n');
+  });
+  return `::: sentence\n${variants.join('\n---\n')}\n:::`;
+};
+
+const serializeWrapped =
+  (name: string) =>
+  (node: IRichTextNode): string =>
+    `::: ${name}\n${(node.content ?? []).map((child) => serializeBlock(child)).join('\n\n')}\n:::`;
+
 /** The blocks with no attributes to read and no nesting to flatten. */
 const SIMPLE_BLOCKS: Record<string, (node: IRichTextNode) => string> = {
   table: serializeTable,
@@ -224,6 +325,15 @@ const SIMPLE_BLOCKS: Record<string, (node: IRichTextNode) => string> = {
   [IMAGE_NAME]: serializeImage,
   [LISTENING_NODE]: serializeListening,
   [SCENE3D_NODE]: serializeScene,
+  [REVEAL_NODE]: serializeReveal,
+  [CHECK_NODE]: serializeCheck,
+  [SOUNDBOARD_NODE]: serializeWrapped('soundboard'),
+  [FLASHCARDS_NODE]: serializeCards,
+  [SAY_NODE]: serializeWrapped('say'),
+  [STEPS_NODE]: serializeSteps,
+  [PICTURE_NODE]: serializePicture,
+  [SOUNDMAP_NODE]: serializeWrapped('soundmap'),
+  [SENTENCE_NODE]: serializeSentence,
 };
 
 function serializeBlock(node: IRichTextNode): string {

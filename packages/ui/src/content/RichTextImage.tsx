@@ -76,7 +76,8 @@ export const RichTextImage = ({ src, alt, caption, width, className }: IRichText
         // tile (an answer option) stays a tile. Generated SVGs carry their width for this reason.
         className={cn(
           frame,
-          'block h-auto w-auto rounded',
+          // Capped in height too, so one tall figure never takes the whole screen in the topic reader.
+          'block h-auto max-h-[min(60vh,28rem)] w-auto rounded object-contain',
           // A drawn figure (SVG) is dark ink an image cannot recolour from the theme, so in dark
           // mode it is inverted, hues turned back; a photo is left as it is. Print is always light.
           isDrawnFigure(src) && 'dark:hue-rotate-180 dark:invert',

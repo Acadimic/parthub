@@ -15,6 +15,7 @@ import { checkFigures, FIGURE_RULES } from './figures';
 import { GRAPH_RULES } from './graphs';
 import { SCENE_RULES } from './scenes';
 import { checkPronunciation, pronunciationRules } from './pronunciation';
+import { checkActivities } from './activities';
 
 /** How many of each type a section should get. */
 export type IQuestionCounts = Record<QuestionType, number>;
@@ -429,6 +430,7 @@ const checkQuestion = (question: IAiQuestion, path: string, target: IValidationT
     .join('\n');
   checkMarkdownMath(markdown, path, issues);
   checkPronunciation(markdown, path, issues);
+  checkActivities(markdown, path, issues);
   if (!Object.values(LevelType).includes(question.level)) {
     issues.push({
       level: 'error',

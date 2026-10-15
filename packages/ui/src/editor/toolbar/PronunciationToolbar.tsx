@@ -1,6 +1,7 @@
 import { SpeakerHighIcon, TrashIcon } from '@phosphor-icons/react';
 import type { Editor } from '@tiptap/react';
-import { findSpeechLanguage, type IPronunciationAttrs } from '@repo/shared/utils';
+import { findSpeechLanguage, WORD_GENDER_NAMES, WORD_GENDERS, type IPronunciationAttrs } from '@repo/shared/utils';
+import { GENDER_FILL } from '../../content/gender';
 import { cn } from '../../lib/cn';
 import { LanguagePicker } from '../pronunciation/LanguagePicker';
 import { PreviewButtons } from '../pronunciation/PreviewButtons';
@@ -58,6 +59,26 @@ export const PronunciationToolbar = ({ editor, attrs, text }: IProps) => {
           />
         </label>
       ) : null}
+      <div className="flex overflow-hidden border border-border" role="group" aria-label="WordGender">
+        {WORD_GENDERS.map((gender) => {
+          const isOn = attrs.gender === gender;
+          return (
+            <button
+              key={gender}
+              type="button"
+              onClick={() => update({ gender: isOn ? '' : gender })}
+              aria-pressed={isOn}
+              title={`${WORD_GENDER_NAMES[gender]} — colours the word; click again to clear`}
+              className={cn(
+                'h-7 w-7 text-xs font-semibold transition-colors',
+                isOn ? cn(GENDER_FILL[gender], 'text-background') : 'bg-background text-foreground hover:bg-accent',
+              )}
+            >
+              {gender}
+            </button>
+          );
+        })}
+      </div>
       <PreviewButtons segments={[text]} lang={attrs.lang} audio={attrs.audio} />
       <ToolbarGroup label="Remove">
         <ToolbarButton

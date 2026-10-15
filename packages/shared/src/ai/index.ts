@@ -7,6 +7,7 @@ export * from './figures';
 export * from './graphs';
 export * from './scenes';
 export * from './pronunciation';
+export * from './activities';
 export * from './defaults';
 export * from './test-paper-generator';
 export * from './test-paper-plan';

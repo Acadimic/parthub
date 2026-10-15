@@ -195,7 +195,7 @@ try {
   const walk = (value) => {
     if (Array.isArray(value)) return value.forEach(walk);
     if (!value || typeof value !== 'object') return;
-    if (value.type === 'image' && typeof value.attrs?.src === 'string' && /\.s3\.[^/]*amazonaws\.com\//.test(value.attrs.src)) {
+    if ((value.type === 'image' || value.type === 'picture') && typeof value.attrs?.src === 'string' && /\.s3\.[^/]*amazonaws\.com\//.test(value.attrs.src)) {
       imageSources.add(value.attrs.src);
     }
     Object.values(value).forEach(walk);

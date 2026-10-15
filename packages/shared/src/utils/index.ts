@@ -8,6 +8,7 @@ export * from './rich-text-sections.util';
 export * from './latex-repair.util';
 export * from './object-id.util';
 export * from './pronunciation.util';
+export * from './activity.util';
 export * from './meet-occurrence.util';
 export * from './material-stats.util';
 export * from './discussion.util';

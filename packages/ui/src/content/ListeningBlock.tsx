@@ -18,6 +18,17 @@ export interface IListeningBlockProps {
   lines: IRichTextNode[];
   /** The same paragraphs rendered, one per line. */
   children: ReactNode[];
+  /**
+   * A dialogue's lines split into speaker and words, for the comic layout; empty when the lines
+   * carry no speakers, which then read as a plain list.
+   */
+  bubbles: IDialogueBubble[];
+}
+
+export interface IDialogueBubble {
+  speaker: string;
+  /** The line without its "**Name:**" label. */
+  content: ReactNode;
 }
 
 /** A dialogue line opens with its speaker in bold — "**Ana:**" — which is read, not spoken. */
@@ -70,6 +81,7 @@ export const ListeningBlock = ({
   isTranscriptHidden,
   lines,
   children,
+  bubbles,
 }: IListeningBlockProps) => {
   const id = useId();
   const [isRevealed, setIsRevealed] = useState(false);
@@ -140,20 +152,17 @@ export const ListeningBlock = ({
         </p>
       ) : null}
       {isTextHidden ? <HiddenText isDialogue={isDialogue} onReveal={() => setIsRevealed(true)} /> : null}
-      <div className={cn('py-2', isDialogue && 'divide-y divide-border/60', isTextHidden && 'hidden print:block')}>
-        {children.map((child, index) => (
-          <ListeningLine
-            key={index}
-            isActive={isPlaying && all.segment === index}
-            canPlay={canPlay}
-            text={segments[index]}
-            lang={lang}
-            audio={lineAudios[index] ?? ''}
-          >
-            {child}
-          </ListeningLine>
-        ))}
-      </div>
+      <ListeningBody
+        isDialogue={isDialogue}
+        bubbles={bubbles}
+        lines={children}
+        activeIndex={isPlaying ? all.segment : -1}
+        canPlay={canPlay}
+        segments={segments}
+        lang={lang}
+        lineAudios={lineAudios}
+        className={cn(isTextHidden && 'hidden print:block')}
+      />
     </section>
   );
 };
@@ -206,6 +215,177 @@ const ListeningLine = ({ children, isActive, canPlay, text, lang, audio }: IList
           )}
         </button>
       ) : null}
+    </div>
+  );
+};
+
+/** Speakers take colours in the order they first speak; categorical tokens, and each has a name too. */
+const SPEAKER_COLOURS = ['bg-chart-3', 'bg-chart-5', 'bg-chart-1', 'bg-chart-4', 'bg-chart-2'];
+
+interface IDialogueComicProps {
+  bubbles: IDialogueBubble[];
+  /** The line the whole-dialogue playback is on, or -1. */
+  activeIndex: number;
+  canPlay: boolean;
+  segments: string[];
+  lang: string;
+  lineAudios: string[];
+  className?: string;
+}
+
+/**
+ * A dialogue drawn as a comic strip: each line a speech bubble beside its speaker, the first
+ * speaker on the left and the others on the right, the line being spoken lit up.
+ */
+const DialogueComic = ({
+  bubbles,
+  activeIndex,
+  canPlay,
+  segments,
+  lang,
+  lineAudios,
+  className,
+}: IDialogueComicProps) => {
+  const speakers = bubbles.reduce<string[]>(
+    (list, { speaker }) => (list.includes(speaker) ? list : [...list, speaker]),
+    [],
+  );
+  return (
+    <ol className={cn('m-0 flex list-none flex-col gap-3 px-3 py-4', className)}>
+      {bubbles.map((bubble, index) => {
+        const who = speakers.indexOf(bubble.speaker);
+        return (
+          <DialogueBubble
+            key={index}
+            bubble={bubble}
+            isRight={who > 0}
+            colour={SPEAKER_COLOURS[who % SPEAKER_COLOURS.length]}
+            isActive={activeIndex === index}
+            canPlay={canPlay}
+            text={segments[index]}
+            lang={lang}
+            audio={lineAudios[index] ?? ''}
+          />
+        );
+      })}
+    </ol>
+  );
+};
+
+interface IDialogueBubbleProps {
+  bubble: IDialogueBubble;
+  isRight: boolean;
+  colour: string;
+  isActive: boolean;
+  canPlay: boolean;
+  text: string;
+  lang: string;
+  audio: string;
+}
+
+const DialogueBubble = ({ bubble, isRight, colour, isActive, canPlay, text, lang, audio }: IDialogueBubbleProps) => {
+  const id = useId();
+  const line = useSpeech(id);
+  const isLinePlaying = line.status !== 'idle';
+  const isLit = isActive || isLinePlaying;
+  return (
+    <li className={cn('flex items-end gap-2', isRight && 'flex-row-reverse')}>
+      <span className="flex w-12 shrink-0 flex-col items-center gap-0.5">
+        <span
+          className={cn(
+            'flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-background',
+            colour,
+          )}
+          aria-hidden="true"
+        >
+          {bubble.speaker.charAt(0).toUpperCase()}
+        </span>
+        <span className="max-w-full truncate text-xxs text-muted-foreground">{bubble.speaker}</span>
+      </span>
+      <div
+        className={cn(
+          'group relative flex max-w-[80%] items-start gap-2 border px-3 py-2 transition-colors [&_p]:my-0',
+          isLit ? 'border-primary bg-primary/10 animate-pop-in' : 'border-border bg-background',
+        )}
+        lang={lang}
+      >
+        <div className="min-w-0 text-base">{bubble.content}</div>
+        {canPlay && text ? (
+          <button
+            type="button"
+            onClick={() =>
+              isLinePlaying ? line.stop() : line.play({ segments: [text], lang, audio, rate: SPEECH_RATES.normal })
+            }
+            aria-label={isLinePlaying ? 'Stop this line' : `Play line: ${text}`}
+            className={cn(
+              'flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors print:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              isLinePlaying ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary hover:bg-primary/20',
+            )}
+          >
+            {isLinePlaying ? (
+              <StopIcon className="h-3 w-3" weight="fill" />
+            ) : (
+              <SpeakerHighIcon className="h-3 w-3" weight="bold" />
+            )}
+          </button>
+        ) : null}
+      </div>
+    </li>
+  );
+};
+
+interface IListeningBodyProps {
+  isDialogue: boolean;
+  bubbles: IDialogueBubble[];
+  lines: ReactNode[];
+  activeIndex: number;
+  canPlay: boolean;
+  segments: string[];
+  lang: string;
+  lineAudios: string[];
+  className?: string;
+}
+
+/** The lines: a comic strip when every line of a dialogue names its speaker, a list otherwise. */
+const ListeningBody = ({
+  isDialogue,
+  bubbles,
+  lines,
+  activeIndex,
+  canPlay,
+  segments,
+  lang,
+  lineAudios,
+  className,
+}: IListeningBodyProps) => {
+  const isComic = isDialogue && bubbles.length === lines.length && bubbles.every((bubble) => bubble.speaker);
+  if (isComic) {
+    return (
+      <DialogueComic
+        bubbles={bubbles}
+        activeIndex={activeIndex}
+        canPlay={canPlay}
+        segments={segments}
+        lang={lang}
+        lineAudios={lineAudios}
+        className={className}
+      />
+    );
+  }
+  return (
+    <div className={cn('py-2', isDialogue && 'divide-y divide-border/60', className)}>
+      {lines.map((child, index) => (
+        <ListeningLine
+          key={index}
+          isActive={activeIndex === index}
+          canPlay={canPlay}
+          text={segments[index]}
+          lang={lang}
+          audio={lineAudios[index] ?? ''}
+        >
+          {child}
+        </ListeningLine>
+      ))}
     </div>
   );
 };

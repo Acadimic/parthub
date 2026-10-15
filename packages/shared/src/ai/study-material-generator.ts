@@ -12,6 +12,7 @@ import { createObjectId } from '../utils/object-id.util';
 import { checkMarkdownMath, type IAiIssue, parseJsonObject, repairIssue } from './common';
 import { checkFigures } from './figures';
 import { checkPronunciation } from './pronunciation';
+import { checkActivities } from './activities';
 import { buildStudyMaterialPrompt } from './study-material-prompt';
 import { type IAiMaterialContext, type IAiMaterialSetup } from './study-material-setup';
 
@@ -116,6 +117,7 @@ const checkContent = (material: IAiMaterial, path: string, issues: IAiIssue[]) =
   }
   checkMarkdownMath(content, `${path}.content`, issues);
   checkPronunciation(content, `${path}.content`, issues);
+  checkActivities(content, `${path}.content`, issues);
 };
 
 const checkMaterial = (material: IAiMaterial, path: string, target: IMaterialValidationTarget, issues: IAiIssue[]) => {

@@ -61,6 +61,7 @@ export const Pronunciation = Mark.create<IPronunciationOptions>({
     ipa: stringAttribute('ipa'),
     translit: stringAttribute('translit'),
     audio: stringAttribute('audio'),
+    gender: stringAttribute('gender'),
   }),
 
   parseHTML: () => [{ tag: 'span[data-pronunciation]' }],
@@ -77,7 +78,7 @@ export const Pronunciation = Mark.create<IPronunciationOptions>({
           const lang = attrs.lang || this.options.defaultLanguage || lastLanguage.get();
           return chain()
             .setTextSelection({ from: range.from, to: range.to })
-            .setMark(this.name, { ipa: '', translit: '', audio: '', ...attrs, lang })
+            .setMark(this.name, { ipa: '', translit: '', audio: '', gender: '', ...attrs, lang })
             .run();
         },
       updatePronunciation:

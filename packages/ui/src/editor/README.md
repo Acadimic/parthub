@@ -64,20 +64,25 @@ exported to Markdown and imported from Markdown — all four, or it would be los
 
 ### Blocks
 
-| Node                                            | Notes                                                                                                                                |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `paragraph`                                     |                                                                                                                                      |
-| `heading`                                       | levels **1–3 only**; deeper headings are not admitted                                                                                |
-| `bulletList`, `orderedList`, `listItem`         | list items hold paragraphs                                                                                                           |
-| `blockquote`                                    |                                                                                                                                      |
-| `codeBlock`                                     | fenced; contents are literal                                                                                                         |
-| `horizontalRule`                                |                                                                                                                                      |
-| `hardBreak`                                     | Shift+Enter                                                                                                                          |
-| `table`, `tableRow`, `tableHeader`, `tableCell` | `bordered` flag on the table; cells hold **inline content only** (no blocks in cells); optional header row                           |
-| `blockMath`                                     | a display equation; `attrs.latex`, optional 3D graph `graph`/`graphView` (§3c)                                                       |
-| `image`                                         | a picture block; `attrs.src`, `alt`, `caption`, `width` (`small`, `medium`, `full`). See §3a                                         |
-| `listening`                                     | a listening passage or dialogue; `attrs.lang`, `mode` (`passage`, `dialogue`), `audio`; paragraphs only. §3b                         |
-| `scene3d`                                       | an interactive 3D scene; `attrs.spec` is its JSON (`IScene`), `attrs.template` the editor form it came from; printed as a still. §3d |
+| Node                                                          | Notes                                                                                                                                |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `paragraph`                                                   |                                                                                                                                      |
+| `heading`                                                     | levels **1–3 only**; deeper headings are not admitted                                                                                |
+| `bulletList`, `orderedList`, `listItem`                       | list items hold paragraphs                                                                                                           |
+| `blockquote`                                                  |                                                                                                                                      |
+| `codeBlock`                                                   | fenced; contents are literal                                                                                                         |
+| `horizontalRule`                                              |                                                                                                                                      |
+| `hardBreak`                                                   | Shift+Enter                                                                                                                          |
+| `table`, `tableRow`, `tableHeader`, `tableCell`               | `bordered` flag on the table; cells hold **inline content only** (no blocks in cells); optional header row                           |
+| `blockMath`                                                   | a display equation; `attrs.latex`, optional 3D graph `graph`/`graphView` (§3c)                                                       |
+| `image`                                                       | a picture block; `attrs.src`, `alt`, `caption`, `width` (`small`, `medium`, `full`). See §3a                                         |
+| `listening`                                                   | a listening passage or dialogue; `attrs.lang`, `mode` (`passage`, `dialogue`), `audio`; paragraphs only. §3b                         |
+| `scene3d`                                                     | an interactive 3D scene; `attrs.spec` is its JSON (`IScene`), `attrs.template` the editor form it came from; printed as a still. §3d |
+| `reveal` (`revealPrompt`, `revealAnswer`)                     | Show answer: a question and an answer folded away until the learner opens it. §3f                                                    |
+| `check` (`checkPrompt`, `checkOption`, `checkWhy`)            | Quick check: 2–6 options, `checkOption.attrs.correct`; any right option counts; the why opens on a right answer. §3f                 |
+| `soundboard`                                                  | Sound board: wraps one table; each cell with a pronounced run is a tile that speaks when tapped. §3f                                 |
+| `flashcards` (`flashcard`, `flashcardFront`, `flashcardBack`) | Flashcards: front (usually pronounced) and back, turned with a tap. §3f                                                              |
+| `sayIt`                                                       | Say it: paragraphs, each with Listen, Record and My voice (recorded on the device only). §3f                                         |
 
 ### Inline
 
@@ -182,6 +187,58 @@ ground (`transparent()` drops it, for the planned redraw). `RichTextImage` inver
 dark mode (hues turned back), so a white figure shows as a dark card with light ink; photos are left
 alone and print stays light. A teacher-side figure gallery is planned:
 `.claude/plans/FIGURES_2D.md`.
+
+### 3f. Interactive blocks
+
+Five containers from `.claude/plans/INTERACTIVE_LESSONS.md`, named in `@repo/shared/utils`
+`activity.util.ts`. Their text stays ordinary rich text, so pronunciation marks, generated audio,
+transliteration and the topic reader work inside them unchanged. Nothing a learner does in them is
+scored or stored.
+
+- **Reading view**: `content/activities/` — `RevealBlock`, `CheckBlock`, `SoundBoard`,
+  `FlashcardDeck`, `SayItBlock`, all in the shared `ActivityFrame`. A pronounced option or card
+  shows its words as plain text with its own speaker beside it, because the option is itself a
+  button. Print shows every answer (the right options marked, reveals open, cards listed).
+- **Editor**: the hand icon in Insert adds any of these, and Step by step, with placeholder text; each part is a
+  labelled frame, and a check option has a right/wrong toggle (`extensions/activities.ts`).
+- **Markdown**: fenced like `listening`, with `---` separating a question from its answer:
+
+  ```
+  ::: check
+  Which word means "he reads"?
+  - [ ] [पठामि]{lang=sa}
+  - [x] [पठति]{lang=sa}
+  ---
+  The ending -ति is he or she.
+  :::
+  ```
+
+  `::: reveal` (question, `---`, answer), `::: soundboard` (a pipe table), `::: cards`
+  (`- front :: back` lines), `::: say` (paragraphs). A fence that does not hold what its kind needs
+  stays text, and `checkActivities` in `@repo/shared/ai` reports it as an error on import.
+
+**Visual blocks (2026-10-16).** Two more containers and two reader changes, for concepts a learner
+should see rather than read:
+
+- `steps` (`step`): **Build it, step by step.** Each step is a line shown large (bold marks what
+  changed; bold whole syllables, never a lone vowel sign) and a caption. `::: steps`, steps
+  separated by `---`.
+- `picture` (`pictureLabel`): **Picture with labels.** `attrs.src/alt/mode` (`explore` | `find`);
+  each label has `x`, `y` (% of the picture) and holds a word paragraph and an optional meaning.
+  `::: picture src=figure:F1 alt="…" mode=find` then `- 24,40 [बालकः]{lang=sa g=m} :: boy`. Its `src`
+  is mapped, signed and transferred like an image's.
+- `soundmap`: **Where the sound is made.** Wraps a table like `soundboard`; a row's first cell names
+  a place (throat, palate, roof, teeth, lips), column headers may say puff, buzz or nose. Tapping
+  a letter plays it and lights its place on a head in profile, with the manner drawn and named.
+- `sentence` (`sentenceVariant`, `sentenceTile`): **Sentence picture.** Each variant is a sentence
+  of role tiles (`attrs.role`: doer, action, object, place, time, with, for, from, whose) plus a
+  caption; switching variants lights the tiles that changed. `::: sentence`, `- doer word ::
+  meaning` per tile, variants separated by `---`.
+- **Gender colour**: a pronunciation mark may carry `gender` (`m` | `f` | `n`; Markdown `g=m`). The
+  word is coloured with a categorical chart token everywhere it appears (text, tiles, cards,
+  options, picture points) and its card names the gender. Set it in the editor's pronunciation row.
+- **Dialogue as a comic**: a `listening` dialogue whose every line opens with "**Name:**" renders as
+  speech bubbles beside coloured initials, the line being spoken lit up. No schema change.
 
 ### Not supported, deliberately
 

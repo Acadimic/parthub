@@ -1,7 +1,8 @@
 import { CircleNotchIcon, SpeakerHighIcon, SpeakerSimpleSlashIcon, StopIcon } from '@phosphor-icons/react';
-import { type IPronunciationAttrs, speechLanguageName } from '@repo/shared/utils';
+import { WORD_GENDER_NAMES, type IPronunciationAttrs, speechLanguageName } from '@repo/shared/utils';
 import { type KeyboardEvent, type ReactNode, useId, useState } from 'react';
 import { cn } from '../lib/cn';
+import { GENDER_TEXT } from './gender';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { SPEECH_RATES, type SpeechStatus } from './speech/player';
 import { useSpeech, useVoiceAvailability } from './speech/use-speech';
@@ -35,7 +36,7 @@ const SpeakerIcon = ({ canPlay, status }: { canPlay: boolean; status: SpeechStat
  */
 export const PronouncedText = ({ children, text, pronunciation }: IPronouncedTextProps) => {
   const id = useId();
-  const { lang, ipa, translit, audio } = pronunciation;
+  const { lang, ipa, translit, audio, gender } = pronunciation;
   const { status, play, stop } = useSpeech(id);
   const availability = useVoiceAvailability(lang, !!audio);
   const [isOpen, setIsOpen] = useState(false);
@@ -63,6 +64,8 @@ export const PronouncedText = ({ children, text, pronunciation }: IPronouncedTex
             className={cn(
               'cursor-pointer underline decoration-dotted decoration-primary/60 decoration-2 underline-offset-4 transition-colors hover:bg-primary/5 hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               isBusy && 'bg-primary/10 decoration-primary',
+              // A gendered word wears its gender's colour; the card names it, so colour is not alone.
+              gender && cn(GENDER_TEXT[gender], 'decoration-current'),
             )}
           >
             {children}
@@ -93,6 +96,9 @@ export const PronouncedText = ({ children, text, pronunciation }: IPronouncedTex
           </span>
           {translit ? <span className="text-sm italic text-foreground/80">{translit}</span> : null}
           {ipa ? <span className="text-sm text-muted-foreground">/{ipa}/</span> : null}
+          {gender ? (
+            <span className={cn('text-xs font-semibold', GENDER_TEXT[gender])}>{WORD_GENDER_NAMES[gender]}</span>
+          ) : null}
         </div>
         {canPlay ? (
           <div className="flex gap-2 p-2">

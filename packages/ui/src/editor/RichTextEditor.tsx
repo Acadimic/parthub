@@ -9,6 +9,7 @@ import { useRichTextMedia } from '../contexts/rich-text-media-context';
 import { Label } from '../core/Label';
 import { cn } from '../lib/cn';
 import { IMAGE_ACCEPT, ImageBlock } from './extensions/image';
+import { ActivityExtensions } from './extensions/activities';
 import { ListeningNode } from './extensions/listening';
 import { MathExtensions } from './extensions/math-nodes';
 import { Pronunciation } from './extensions/pronunciation';
@@ -123,6 +124,7 @@ export const RichTextEditor = ({
       Pronunciation.configure({ defaultLanguage }),
       ListeningNode.configure({ defaultLanguage }),
       Scene3DBlock,
+      ...ActivityExtensions,
     ],
     content: value?.doc ?? null,
     // Required under the Pages Router: Tiptap renders to the DOM, so letting it render during SSR

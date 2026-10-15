@@ -1,6 +1,27 @@
 import type { IRichText, IRichTextMark, IRichTextNode, RichTextAttrValue } from '@repo/shared/interfaces';
 import {
+  CHECK_NODE,
+  CHECK_OPTION_NODE,
+  CHECK_PROMPT_NODE,
+  CHECK_WHY_NODE,
   docToPlainText,
+  FLASHCARD_BACK_NODE,
+  FLASHCARD_FRONT_NODE,
+  FLASHCARDS_NODE,
+  REVEAL_ANSWER_NODE,
+  REVEAL_NODE,
+  REVEAL_PROMPT_NODE,
+  PICTURE_LABEL_NODE,
+  PICTURE_NODE,
+  SAY_NODE,
+  SENTENCE_NODE,
+  SENTENCE_ROLES,
+  SENTENCE_TILE_NODE,
+  type SentenceRole,
+  SOUNDBOARD_NODE,
+  SOUNDMAP_NODE,
+  type MouthPlace,
+  STEPS_NODE,
   graphAttrsOfNode,
   isSamePronunciation,
   LISTENING_NODE,
@@ -11,8 +32,18 @@ import {
 } from '@repo/shared/utils';
 import { createElement, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
+import { spokenOf } from './activities/ActivityFrame';
+import { CheckBlock } from './activities/CheckBlock';
+import { FlashcardDeck } from './activities/FlashcardDeck';
+import { RevealBlock } from './activities/RevealBlock';
+import { PictureLabels } from './activities/PictureLabels';
+import { SayItBlock } from './activities/SayItBlock';
+import { SentenceBlock } from './activities/SentenceBlock';
+import { SoundBoard } from './activities/SoundBoard';
+import { type IManner, SoundMap } from './activities/SoundMap';
+import { StepsBlock } from './activities/StepsBlock';
 import { GraphButton } from './GraphButton';
-import { ListeningBlock } from './ListeningBlock';
+import { type IDialogueBubble, ListeningBlock } from './ListeningBlock';
 import { MathRender } from './MathRender';
 import { PronouncedText } from './PronouncedText';
 import { RichTextImage } from './RichTextImage';
@@ -190,11 +221,157 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
       lineAudio={stringAttr(node.attrs, 'lineAudio')}
       isTranscriptHidden={node.attrs?.transcript === 'hidden'}
       lines={node.content ?? []}
+      bubbles={(node.content ?? []).map((line, index) => dialogueBubbleOf(line, `${key}.b${index}`))}
     >
       {Array.isArray(children) ? children : [children]}
     </ListeningBlock>
   ),
   [SCENE3D_NODE]: (node, _children, key) => <SceneCard key={key} spec={stringAttr(node.attrs, 'spec')} />,
+  [REVEAL_NODE]: (node, _children, key) => (
+    <RevealBlock
+      key={key}
+      prompt={renderPart(node, REVEAL_PROMPT_NODE, `${key}.q`)}
+      answer={renderPart(node, REVEAL_ANSWER_NODE, `${key}.a`)}
+    />
+  ),
+  [CHECK_NODE]: (node, _children, key) => {
+    const options = (node.content ?? []).filter((child) => child.type === CHECK_OPTION_NODE);
+    const hasWhy = (node.content ?? []).some((child) => child.type === CHECK_WHY_NODE);
+    return (
+      <CheckBlock
+        key={key}
+        prompt={renderPart(node, CHECK_PROMPT_NODE, `${key}.q`)}
+        options={options.map((option, index) => {
+          const spoken = spokenOf(option);
+          return {
+            isCorrect: option.attrs?.correct === true,
+            content: renderChildren(option.content ?? [], `${key}.o${index}`),
+            spoken: spoken ? { ...spoken, label: docToPlainText(option).trim() } : null,
+          };
+        })}
+        why={hasWhy ? renderPart(node, CHECK_WHY_NODE, `${key}.w`) : null}
+      />
+    );
+  },
+  [SOUNDBOARD_NODE]: (node, _children, key) => {
+    const table = (node.content ?? []).find((child) => child.type === 'table');
+    const rows = (table?.content ?? []).map((row, rowIndex) =>
+      (row.content ?? []).map((cell, cellIndex) => ({
+        isHeader: cell.type === 'tableHeader',
+        content: renderChildren(cell.content ?? [], `${key}.${rowIndex}.${cellIndex}`),
+        spoken: spokenOf(cell),
+      })),
+    );
+    return <SoundBoard key={key} rows={rows} />;
+  },
+  [FLASHCARDS_NODE]: (node, _children, key) => (
+    <FlashcardDeck
+      key={key}
+      cards={(node.content ?? []).map((card, index) => {
+        const front = card.content?.find((child) => child.type === FLASHCARD_FRONT_NODE);
+        return {
+          front: renderPart(card, FLASHCARD_FRONT_NODE, `${key}.${index}.f`),
+          back: renderPart(card, FLASHCARD_BACK_NODE, `${key}.${index}.b`),
+          spoken: spokenOf(front),
+        };
+      })}
+    />
+  ),
+  [STEPS_NODE]: (node, _children, key) => (
+    <StepsBlock
+      key={key}
+      steps={(node.content ?? []).map((step, index) => {
+        const [first, ...rest] = step.content ?? [];
+        return {
+          display: first ? renderNode(first, `${key}.${index}.d`) : null,
+          caption: renderChildren(rest, `${key}.${index}.c`),
+        };
+      })}
+    />
+  ),
+  [PICTURE_NODE]: (node, _children, key) => (
+    <PictureLabels
+      key={key}
+      src={stringAttr(node.attrs, 'src')}
+      alt={stringAttr(node.attrs, 'alt')}
+      mode={node.attrs?.mode === 'find' ? 'find' : 'explore'}
+      labels={(node.content ?? [])
+        .filter((label) => label.type === PICTURE_LABEL_NODE)
+        .map((label, index) => {
+          const [word, meaning] = label.content ?? [];
+          return {
+            x: numberAttr(label.attrs, 'x', 50),
+            y: numberAttr(label.attrs, 'y', 50),
+            word: word ? renderNode(word, `${key}.${index}.w`) : null,
+            meaning: meaning ? renderNode(meaning, `${key}.${index}.m`) : null,
+            meaningText: meaning ? docToPlainText(meaning).trim() : '',
+            spoken: spokenOf(word),
+          };
+        })}
+    />
+  ),
+  [SOUNDMAP_NODE]: (node, _children, key) => {
+    const table = (node.content ?? []).find((child) => child.type === 'table');
+    const [head, ...body] = table?.content ?? [];
+    const cellOf = (cell: IRichTextNode, at: string) => ({
+      isHeader: cell.type === 'tableHeader',
+      content: renderChildren(cell.content ?? [], at),
+      spoken: spokenOf(cell),
+    });
+    const manners = (head?.content ?? []).map((cell) => mannerOf(docToPlainText(cell)));
+    return (
+      <SoundMap
+        key={key}
+        header={(head?.content ?? []).map((cell, index) => cellOf(cell, `${key}.h${index}`))}
+        rows={body.map((row, rowIndex) => {
+          const [label, ...cells] = row.content ?? [];
+          return {
+            place: placeOf(docToPlainText(label ?? null)),
+            label: cellOf(label ?? { type: 'tableCell' }, `${key}.${rowIndex}.l`),
+            cells: cells.map((cell, col) => ({
+              cell: cellOf(cell, `${key}.${rowIndex}.${col}`),
+              manner: manners[col + 1] ?? NO_MANNER,
+            })),
+          };
+        })}
+      />
+    );
+  },
+  [SENTENCE_NODE]: (node, _children, key) => (
+    <SentenceBlock
+      key={key}
+      variants={(node.content ?? []).map((variant, index) => {
+        const parts = variant.content ?? [];
+        const caption = parts.find((part) => part.type !== SENTENCE_TILE_NODE);
+        return {
+          tiles: parts
+            .filter((part) => part.type === SENTENCE_TILE_NODE)
+            .map((tile, at) => {
+              const [word, meaning] = tile.content ?? [];
+              const role = SENTENCE_ROLES.find((item) => item === tile.attrs?.role) ?? 'doer';
+              return {
+                role: role satisfies SentenceRole,
+                word: word ? renderChildren(word.content ?? [], `${key}.${index}.${at}.w`) : null,
+                meaning: meaning ? renderChildren(meaning.content ?? [], `${key}.${index}.${at}.m`) : null,
+                spoken: spokenOf(word),
+                text: word ? docToPlainText(word).trim() : '',
+              };
+            }),
+          caption: caption ? renderNode(caption, `${key}.${index}.c`) : null,
+        };
+      })}
+    />
+  ),
+  [SAY_NODE]: (node, _children, key) => (
+    <SayItBlock
+      key={key}
+      lines={(node.content ?? []).map((line, index) => ({
+        content: renderNode(line, `${key}.${index}`),
+        label: docToPlainText(line).trim(),
+        spoken: spokenOf(line),
+      }))}
+    />
+  ),
   blockMath: (node, _children, key) => {
     const latex = stringAttr(node.attrs, 'latex');
     const graph = graphAttrsOfNode(node.attrs);
@@ -255,6 +432,43 @@ const renderChildren = (nodes: IRichTextNode[], key: string): ReactNode[] => {
   }
   return out;
 };
+
+/** A dialogue line opens with its speaker in bold and a colon, "**Ana:**"; the bubble shows the rest. */
+const dialogueBubbleOf = (line: IRichTextNode, key: string): IDialogueBubble => {
+  const [first, ...rest] = line.content ?? [];
+  const isLabel =
+    first?.type === 'text' && first.marks?.some((mark) => mark.type === 'bold') && /:\s*$/.test(first.text ?? '');
+  if (!isLabel) return { speaker: '', content: null };
+  return { speaker: (first.text ?? '').replace(/:\s*$/, '').trim(), content: renderChildren(rest, key) };
+};
+
+const NO_MANNER: IManner = { isPuff: false, isBuzz: false, isNose: false };
+
+/** A sound map column's manner, from words in its header: "puff", "buzz", "nose". */
+const mannerOf = (header: string): IManner => {
+  const text = header.toLowerCase();
+  return {
+    isPuff: /puff|aspirat/.test(text),
+    isBuzz: /buzz|voiced/.test(text) && !/unvoiced/.test(text),
+    isNose: /nose|nasal/.test(text),
+  };
+};
+
+const PLACE_WORDS: [MouthPlace, RegExp][] = [
+  ['throat', /throat|velar|kaṇṭh|kanth/],
+  ['palate', /palat|tālu|talu/],
+  ['roof', /roof|retroflex|mūrdh|murdh/],
+  ['teeth', /teeth|tooth|dental|dant/],
+  ['lips', /lip|labial|oṣṭh|osth/],
+];
+
+/** A sound map row's place in the mouth, from the words in its first cell. */
+const placeOf = (label: string): MouthPlace | null =>
+  PLACE_WORDS.find(([, words]) => words.test(label.toLowerCase()))?.[0] ?? null;
+
+/** The rendered content of one named part of a block (a check's prompt, a reveal's answer). */
+const renderPart = (node: IRichTextNode, part: string, key: string): ReactNode[] =>
+  renderChildren(node.content?.find((child) => child.type === part)?.content ?? [], key);
 
 const renderNode = (node: IRichTextNode, key: string): ReactNode => {
   if (node.type === 'text') return <span key={key}>{applyMarks(node.text ?? '', node.marks)}</span>;

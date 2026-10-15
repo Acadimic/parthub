@@ -1,4 +1,5 @@
 import type { IRichTextNode } from '../interfaces/rich-text.interface';
+import { PICTURE_NODE } from './activity.util';
 
 /**
  * The picture block. `src` is one of three things: the address of an object in our own bucket,
@@ -26,7 +27,7 @@ export const collectImageSources = (doc: IRichTextNode | null): string[] => {
 /** The same document with each image `src` passed through `map`; nothing else is touched. */
 export const mapImageSources = <T extends IRichTextNode>(node: T, map: (src: string) => string): T => {
   const attrs =
-    node.type === IMAGE_NODE && typeof node.attrs?.src === 'string'
+    (node.type === IMAGE_NODE || node.type === PICTURE_NODE) && typeof node.attrs?.src === 'string'
       ? { ...node.attrs, src: map(node.attrs.src) }
       : node.attrs;
   const content = node.content?.map((child) => mapImageSources(child, map));
