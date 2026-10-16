@@ -170,7 +170,8 @@ export const CourseModules = () => {
           {/* A column at least as tall as the scroller, so the lesson can take what is left of it. */}
           <div className={cn('mx-auto flex min-h-full w-full flex-col px-3 py-4 md:px-6 md:py-6', columnWidth)}>
             <div className="flex flex-1 flex-col gap-4 md:gap-5">
-              <CourseCompleteBanner course={selectedCourse} />
+              {/* Keyed by course, so a close in one course does not carry into the next. */}
+              <CourseCompleteBanner key={selectedCourse._id} course={selectedCourse} />
               <CourseModuleContent />
             </div>
           </div>

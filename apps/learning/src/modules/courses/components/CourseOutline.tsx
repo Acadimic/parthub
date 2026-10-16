@@ -16,7 +16,6 @@ import { type ICourseModuleItem } from '@interfaces';
 import {
   ChatCircleDotsIcon,
   ChatsCircleIcon,
-  CheckIcon,
   ClipboardTextIcon,
   ListBulletsIcon,
   LockSimpleIcon,
@@ -151,7 +150,8 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect, moduleName }: IRowPr
   );
 };
 
-/** An open module's mark fills solid, so the expanded panels stand out from the folded ones. */
+/** An open module's mark fills solid, so the expanded panels stand out from the folded ones; a done
+    module keeps its number and turns green, so the order still reads down the list. */
 const getModuleMarkClass = (isDone: boolean, isOpen: boolean) => {
   if (isDone) {
     return isOpen ? 'bg-success-fill text-success-fill-foreground' : 'bg-success/15 text-success';
@@ -182,7 +182,7 @@ const ModuleTitle = ({
           getModuleMarkClass(isDone, isOpen),
         )}
       >
-        {isDone ? <CheckIcon weight="bold" className="h-3.5 w-3.5" /> : index + 1}
+        {index + 1}
       </span>
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold">{courseModule.name}</span>
@@ -428,8 +428,15 @@ export const CourseOutline = (props: IProps) => {
       onChange={(index) => setSelectedCourseOutlineTab(tabs[index]?.key ?? CourseOutlineTab.CONTENTS)}
       className={cn(!isPreview && 'flex min-h-0 flex-1 flex-col')}
       contentClassName={cn('mt-0', !isPreview && 'min-h-0 flex-1 overflow-y-auto')}
-      // Five tabs share the learning pane: tighter, and without icons until the pane is at its widest.
-      triggerClassName={cn('py-1.5 text-xs', isPreview ? 'px-3' : 'px-2 [&_svg]:hidden xl:[&_svg]:block')}
+      // Five tabs share the learning pane: tighter, and with icons only where there is room for them —
+      // the full-width drawer on a phone, where the five just fit at the narrower spacing, and the
+      // inline pane once it is at its widest.
+      triggerClassName={cn(
+        'py-1.5 text-xs',
+        isPreview
+          ? 'px-3'
+          : 'px-1.5 sm:px-2 [&>div]:gap-1 sm:[&>div]:gap-1.5 [&_svg]:block lg:[&_svg]:hidden xl:[&_svg]:block',
+      )}
       tabs={tabs}
     />
   );

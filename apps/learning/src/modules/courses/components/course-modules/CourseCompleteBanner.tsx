@@ -1,8 +1,9 @@
-import { Button, Link } from '@repo/ui/app';
+import { Button, Link, Tooltip } from '@repo/ui/app';
 import { useCourse } from '@hooks/course.hook';
-import { ArrowRightIcon, ChartLineUpIcon, TrophyIcon } from '@phosphor-icons/react';
+import { ArrowRightIcon, ChartLineUpIcon, TrophyIcon, XIcon } from '@phosphor-icons/react';
 import { type ICourse } from '@stores';
 import { getPlural } from '@utils/helpers';
+import { useState } from 'react';
 
 interface IProps {
   course: ICourse;
@@ -10,12 +11,15 @@ interface IProps {
 
 /**
  * Shown at the top of the lesson column once every item in the course is done: the achievement,
- * and the three sensible next moves. It renders nothing while anything is still open.
+ * and the three sensible next moves. It renders nothing while anything is still open. Closing it
+ * lasts the visit only: the course stays complete, so it is back on the next open as a reminder.
  */
 export const CourseCompleteBanner = ({ course }: IProps) => {
   const { getCourseProgress, getCourseItems, selectItem } = useCourse();
   const progress = getCourseProgress(course._id);
-  if (!progress.total || progress.completed < progress.total) return null;
+  const [isDismissed, setIsDismissed] = useState(false);
+
+  if (isDismissed || !progress.total || progress.completed < progress.total) return null;
 
   const tests = getCourseItems(course._id).filter((item) => item.testPaper).length;
   const lessons = progress.total - tests;
@@ -28,8 +32,18 @@ export const CourseCompleteBanner = ({ course }: IProps) => {
         aria-hidden="true"
         className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 text-success/10"
       />
+      <Tooltip title="Hide this banner">
+        <Button
+          isRound
+          isSubtle
+          aria-label="Hide this banner"
+          className="absolute right-2 top-2 z-10 h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+          onClick={() => setIsDismissed(true)}
+          leftsection={<XIcon weight="bold" className="h-4 w-4" />}
+        />
+      </Tooltip>
       <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-4 pr-8">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-success text-success-foreground">
             <TrophyIcon weight="fill" className="h-6 w-6" />
           </span>
