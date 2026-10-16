@@ -46,6 +46,10 @@ export const useLessonReader = (material: IMaterial | undefined) => {
     pageIndex,
     isFirstPage,
     isLastPage,
+    /** Where the lesson sits in the course's flat sequence of lessons and tests. */
+    itemIndex,
+    itemCount: items.length,
+    currentItem: items[itemIndex],
     /** The item the pager moves to past either end of the lesson, if there is one. */
     previousItem,
     nextItem,
@@ -57,5 +61,38 @@ export const useLessonReader = (material: IMaterial | undefined) => {
     goToPage,
     goNext,
     goPrevious,
+  };
+};
+
+/**
+ * One Previous and one Next over the lesson, whichever view is on. In the topic reader a move is
+ * one topic, handing over to the neighbouring lesson past either end; in the full view it is one
+ * lesson. `forwardTarget` names the item Next lands on when it leaves the lesson, and `nextPage`
+ * the topic it lands on when it stays, so a pager can say where it is going.
+ */
+export const useLessonMoves = (material: IMaterial | undefined) => {
+  const { selectedCourseId } = useSelectorLookups();
+  const { selectAdjacentItem } = useCourse();
+  const reader = useLessonReader(material);
+  const { previousItem, nextItem, isLastPage, pages, pageIndex } = reader;
+  const isTopicWise = reader.isReader && !!reader.page;
+  const forwardTarget = !isTopicWise || isLastPage ? nextItem : undefined;
+  const nextPage: ILessonPage | undefined = isTopicWise && !isLastPage ? pages[pageIndex + 1] : undefined;
+
+  const goToItem = (direction: 1 | -1) => {
+    if (selectedCourseId) selectAdjacentItem(selectedCourseId, direction, 0);
+  };
+
+  return {
+    reader,
+    isTopicWise,
+    forwardTarget,
+    nextPage,
+    previousLabel: isTopicWise ? reader.previousLabel : getEdgeLabel(previousItem, 'Previous', 'Start of course'),
+    nextLabel: isTopicWise ? reader.nextLabel : getEdgeLabel(nextItem, 'Next', 'End of course'),
+    isPreviousDisabled: isTopicWise ? reader.isPreviousDisabled : !previousItem,
+    isNextDisabled: isTopicWise ? reader.isNextDisabled : !nextItem,
+    goBack: () => (isTopicWise ? reader.goPrevious() : goToItem(-1)),
+    goForward: () => (isTopicWise ? reader.goNext() : goToItem(1)),
   };
 };

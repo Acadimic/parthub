@@ -7,9 +7,7 @@ import { BlankState } from '@components/others';
 import { ReaderProgress } from '@components/tools';
 import { CollectionType, type ModuleContentType } from '@enums';
 import { useCourse } from '@hooks/course.hook';
-import { useLessonReader } from '@hooks/lesson-reader.hook';
-import { getEdgeLabel, getItemName } from '@utils/helpers';
-import { ArrowsOutIcon, CaretLeftIcon, CaretRightIcon, CheckCircleIcon, ClockIcon } from '@phosphor-icons/react';
+import { ArrowsOutIcon, CaretRightIcon, CheckCircleIcon, ClockIcon } from '@phosphor-icons/react';
 import {
   type ICourseModule,
   type IMaterial,
@@ -30,7 +28,7 @@ import { Content } from './content';
 import { LikeCourse } from './LikeCourse';
 import { MarkCompleteButton } from './MarkCompleteButton';
 import { AskDoubtButton, LessonMoreMenu } from './LessonActions';
-import { TopicPager } from './TopicPager';
+import { LessonPager } from './LessonPager';
 import { NextSessionBanner } from '@modules/sessions';
 
 /** An item is a material or a test paper; both carry a duration, and only one is ever set. */
@@ -42,45 +40,40 @@ const Card = ({ children, className }: { children: React.ReactNode; className?: 
 );
 
 /**
- * The frame's footer, so everything a learner does with the lesson sits under it in view: marking
- * it done, reacting, the ⋯ menu, full screen, and the way to the next lesson. The lesson's sources
- * have their own ⋯ in the progress strip above the content.
+ * The frame's footer, two lines: the one Previous and Next over the lesson, then everything else
+ * a learner does with it — marking it done, reacting, the ⋯ menu and full screen. The lesson's
+ * sources have their own ⋯ in the progress strip above the content.
  */
 const FrameToolbar = ({
+  material,
   onFullScreen,
   actions,
 }: {
-  /** `null` for a test paper, which has its own full-screen sitting. */
-  onFullScreen: (() => void) | null;
-  /** Mark complete and the reactions, on the footer's left. */
+  /** The lesson in the frame; undefined for a test paper, whose pager moves a lesson at a time. */
+  material: IMaterial | undefined;
+  onFullScreen: () => void;
+  /** Mark complete and the reactions, on the second line's left. */
   actions: React.ReactNode;
-}) => {
-  const { selectedCourseId } = useSelectorLookups();
-
-  return (
-    <div className="border-t border-border">
-      <div className="flex flex-wrap items-center gap-2 px-2 py-2 md:px-3">
-        {actions}
-        {/* A zero basis lets this end share the actions' line and shrink the next title to fit. */}
-        <div className="flex min-w-0 flex-1 basis-0 items-center justify-end gap-1">
-          {onFullScreen ? (
-            <Tooltip title="Full screen">
-              <Button
-                isRound
-                isSubtle
-                aria-label="Full screen"
-                className="h-9 w-9 shrink-0 p-0 text-muted-foreground hover:text-foreground"
-                onClick={onFullScreen}
-                leftsection={<ArrowsOutIcon weight="bold" className="h-4 w-4" />}
-              />
-            </Tooltip>
-          ) : null}
-          {selectedCourseId ? <LessonPager courseId={selectedCourseId} /> : null}
-        </div>
+}) => (
+  <div className="bg-muted/20">
+    <LessonPager material={material} />
+    <div className="flex items-center gap-2 border-t border-border px-2 py-1.5 md:px-3">
+      {actions}
+      <div className="ml-auto flex shrink-0 items-center">
+        <Tooltip title="Full screen">
+          <Button
+            isRound
+            isSubtle
+            aria-label="Full screen"
+            className="h-9 w-9 shrink-0 p-0 text-muted-foreground hover:text-foreground"
+            onClick={onFullScreen}
+            leftsection={<ArrowsOutIcon weight="bold" className="h-4 w-4" />}
+          />
+        </Tooltip>
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 /**
  * One quiet line above the frame, read like a breadcrumb: the module, then the lesson's name
@@ -152,7 +145,6 @@ export const CourseModuleContent = () => {
   const selectedMaterial = useSelectedMaterial();
   const { getModuleContentType } = useCourse();
   const { getMeetsByIds } = meetStore;
-  const reader = useLessonReader(selectedMaterial);
 
   // Kept in the browser per learner, so it is read back once the learner is known.
   useEffect(() => {
@@ -162,12 +154,6 @@ export const CourseModuleContent = () => {
   const item: IMaterial | ITestPaper | undefined = selectedMaterial ?? selectedTestPaper;
   const topRef = useRef<HTMLDivElement>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
-
-  // A test paper has its own full-screen sitting, so arriving at one from a full-screen lesson —
-  // by key, by tap, or by the pager — leaves this one; otherwise the next lesson would open in it.
-  useEffect(() => {
-    if (selectedTestPaper) setIsFullScreen(false);
-  }, [selectedTestPaper?._id]);
 
   // A new lesson starts at its top. The column scrolls, not the page, so the nearest scroller is
   // the one to reset.
@@ -236,9 +222,9 @@ export const CourseModuleContent = () => {
             />
           </div>
         </div>
-        {selectedMaterial && reader.isReader ? <TopicPager material={selectedMaterial} /> : null}
         <FrameToolbar
-          onFullScreen={selectedMaterial ? () => setIsFullScreen(true) : null}
+          material={selectedMaterial}
+          onFullScreen={() => setIsFullScreen(true)}
           actions={
             <>
               <MarkCompleteButton testPaper={selectedTestPaper} material={selectedMaterial} />
@@ -253,57 +239,5 @@ export const CourseModuleContent = () => {
         />
       </Card>
     </div>
-  );
-};
-
-/**
- * Previous as an icon, the position in the course, and the next lesson named, so after marking a
- * lesson done the next one is a click away.
- */
-const LessonPager = ({ courseId }: { courseId: string }) => {
-  const { getCourseItems, getSelectedItemIndex, selectAdjacentItem } = useCourse();
-  const items = getCourseItems(courseId);
-  const index = getSelectedItemIndex(courseId);
-  const previous = items[index - 1];
-  const next = items[index + 1];
-
-  return (
-    <>
-      <div className="mx-1 hidden h-5 w-px bg-border sm:block" />
-      <Tooltip title={getEdgeLabel(previous, 'Previous', 'Start of course')}>
-        <Button
-          isRound
-          isSubtle
-          aria-label={getEdgeLabel(previous, 'Previous', 'Start of course')}
-          disabled={!previous}
-          className="h-9 w-9 shrink-0 p-0 text-muted-foreground hover:text-foreground"
-          onClick={() => selectAdjacentItem(courseId, -1, 0)}
-          leftsection={<CaretLeftIcon weight="bold" className="h-4 w-4" />}
-        />
-      </Tooltip>
-      <span className="hidden shrink-0 px-1 font-mono text-xs text-muted-foreground sm:inline">
-        {index + 1}/{items.length}
-      </span>
-      {next ? (
-        // The tint sits on a wrapper: a subtle button's own background is transparent and wins.
-        <span className="ml-1 flex min-w-0 max-w-[20rem] rounded-full bg-primary/[0.12] ring-1 ring-primary/20 transition-colors hover:bg-primary/20">
-          <Button
-            isRound
-            isSubtle
-            aria-label={getEdgeLabel(next, 'Next', 'End of course')}
-            className="h-9 min-w-0 pl-4 pr-3 text-primary [&>div]:min-w-0"
-            labelClassName="min-w-0 truncate"
-            onClick={() => selectAdjacentItem(courseId, 1, 0)}
-            rightsection={<CaretRightIcon weight="bold" className="h-4 w-4" />}
-          >
-            <span className="hidden text-xs font-semibold uppercase tracking-caps opacity-70 sm:inline">Next</span>
-            <span className="mx-1.5 hidden opacity-40 sm:inline">·</span>
-            <span className="text-sm font-semibold">{getItemName(next)}</span>
-          </Button>
-        </span>
-      ) : (
-        <span className="ml-1 shrink-0 text-xs font-medium text-muted-foreground">End of course</span>
-      )}
-    </>
   );
 };

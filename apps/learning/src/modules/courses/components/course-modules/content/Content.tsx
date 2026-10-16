@@ -62,7 +62,9 @@ export const Content = ({
   return (
     <div className="h-full w-full flex justify-center items-center relative">
       {material && getMaterialView(material)}
-      {!material && testPaper && <TestPaperItem testPaper={testPaper} />}
+      {!material && testPaper && (
+        <TestPaperItem testPaper={testPaper} isFullScreen={isFullScreen} onFullScreenChange={onFullScreenChange} />
+      )}
     </div>
   );
 };
