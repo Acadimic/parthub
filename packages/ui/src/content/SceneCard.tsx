@@ -80,7 +80,8 @@ export const SceneCard = ({ spec, className, actions }: ISceneCardProps) => {
 
   return (
     <div
-      className={cn('my-4 flex items-center gap-3 border border-border bg-card p-3', className)}
+      // Wraps, with the button dropping under the text, where the card is narrow: a two-up option.
+      className={cn('my-4 flex flex-wrap items-center gap-3 border border-border bg-card p-3', className)}
       // A scene inside a clickable card or question: opening it must not also act on what holds it.
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
@@ -88,7 +89,7 @@ export const SceneCard = ({ spec, className, actions }: ISceneCardProps) => {
       <span className="flex h-10 w-10 shrink-0 items-center justify-center bg-primary/10 text-primary">
         <CubeIcon weight="duotone" className="h-6 w-6" />
       </span>
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-[8rem] flex-1 flex-col">
         <span className="font-semibold text-foreground">{title}</span>
         <span className="text-xs text-muted-foreground">{scene ? detail : 'This 3D scene cannot be shown.'}</span>
       </div>
@@ -97,7 +98,7 @@ export const SceneCard = ({ spec, className, actions }: ISceneCardProps) => {
           onClick={() => setIsOpen(true)}
           onPointerEnter={preloadSceneViewer}
           onFocus={preloadSceneViewer}
-          className="shrink-0 px-3 py-1.5 text-sm print:hidden"
+          className="ml-auto shrink-0 px-3 py-1.5 text-sm print:hidden"
           leftSection={<CubeIcon weight="bold" className="h-4 w-4" />}
           text="Open in 3D"
         />

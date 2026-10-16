@@ -21,5 +21,6 @@ export type {
   IPrintSitting,
   IPrintSection,
   PrintSolutions,
+  PrintSurface,
   PrintVersion,
 } from './types';

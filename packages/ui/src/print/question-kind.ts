@@ -27,13 +27,14 @@ export const OPTION_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 /** Options this short set two to a row; anything longer, or with a picture or table, stacks. */
 const SHORT_OPTION_CHARS = 36;
-const BLOCK_NODES = new Set(['image', 'table', 'blockMath', 'codeBlock', 'bulletList', 'orderedList']);
+/** What a line of text is made of; anything else — a picture, a table, a 3D scene — needs the width. */
+const TEXT_NODES = new Set(['doc', 'paragraph', 'text', 'hardBreak', 'inlineMath']);
 
-const hasBlockNode = (node: IRichTextNode): boolean =>
-  BLOCK_NODES.has(node.type) || (node.content ?? []).some(hasBlockNode);
+const isTextOnly = (node: IRichTextNode): boolean =>
+  TEXT_NODES.has(node.type) && (node.content ?? []).every(isTextOnly);
 
 export const isShortOption = (body: IRichText | undefined): boolean =>
-  !body || (body.text.length <= SHORT_OPTION_CHARS && !hasBlockNode(body.doc));
+  !body || (body.text.length <= SHORT_OPTION_CHARS && isTextOnly(body.doc));
 
 /** Ruled lines for a written answer, scaled by its marks so a long answer gets room. */
 export const getAnswerLineCount = (marks: number): number => Math.min(14, Math.max(4, marks * 2));

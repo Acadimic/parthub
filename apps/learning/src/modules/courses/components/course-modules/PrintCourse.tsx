@@ -1,15 +1,17 @@
-import { CaretDownIcon, ClipboardTextIcon, PrinterIcon, StackIcon } from '@phosphor-icons/react';
+import { BookOpenTextIcon, CaretDownIcon, ClipboardTextIcon, PrinterIcon, StackIcon } from '@phosphor-icons/react';
 import { Button, Menu, Tooltip } from '@repo/ui/app';
 import { cn } from '@repo/ui/lib';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IMenuItem } from '@repo/ui/types';
+import { useSelectorStore } from '@stores';
 
 /** A printout opens in a tab of its own, where the print dialog opens by itself. */
 const openPrint = (path: string) => window.open(path, '_blank');
 
 /**
  * What can be printed from the lesson view: the whole course, the module on screen, or the quiz on
- * screen. `courseModuleId` is '' before a module is selected; `testPaperId` is null on a lesson.
+ * screen — after reading the whole course as pages on screen, which is the same document without
+ * the paper. `courseModuleId` is '' before a module is selected; `testPaperId` is null on a lesson.
  */
 export const getPrintMenuItems = (
   courseId: string,
@@ -18,6 +20,11 @@ export const getPrintMenuItems = (
 ): IMenuItem[] => {
   const base = `/courses/${courseId}/print`;
   return [
+    {
+      label: 'Read whole course',
+      onClick: () => useSelectorStore.getState().setIsCourseBookOpen(true),
+      icon: <BookOpenTextIcon weight="bold" className="h-4 w-4" />,
+    },
     {
       label: 'Print course',
       onClick: () => openPrint(base),

@@ -3,12 +3,12 @@ import { MaterialType } from '@repo/shared/enums';
 import { RichTextView } from '../content/RichTextView';
 import { useResolvedImageUrl } from '../content/RichTextImage';
 import { cn } from '../lib/cn';
-import { ACADIMIC_LOGO, AcadimicLink, formatPrintDate, PrintClosing } from './PrintBrand';
+import { AcadimicLink, formatPrintDate, PrintClosing, PrintLogo } from './PrintBrand';
 import { PrintDocHeader } from './PrintDocHeader';
 import { PRINT_TEXT } from './PrintQuestion';
 import { PrintSheet } from './PrintShell';
 import { PrintTestPaper } from './PrintTestPaper';
-import type { IPrintCourse, IPrintMaterial, IPrintModule, IPrintQuiz } from './types';
+import type { IPrintCourse, IPrintMaterial, IPrintModule, IPrintQuiz, PrintSurface } from './types';
 
 const moduleMinutes = ({ materials, quizzes }: IPrintModule) =>
   materials.reduce((sum, material) => sum + (material.durationMins ?? 0), 0) +
@@ -39,7 +39,10 @@ const quizEyebrow = (quiz: IPrintQuiz, moduleNumber: number) => {
   return quiz.solutions === 'shown' ? `${base} · With answers and solutions` : `${base} · With answers`;
 };
 
-/** Concentric discs and a dashed arc: the cover's one decoration, in the accent colour. */
+/**
+ * Concentric discs and a dashed arc: the cover's one decoration, in the theme's own colours, so it
+ * holds in the app's dark mode on screen and prints in the light theme the print shell forces.
+ */
 const CoverArt = () => (
   <svg
     className="absolute -right-[40mm] -top-[30mm] h-[170mm] w-[170mm] max-sm:-right-[30mm] max-sm:-top-[20mm] max-sm:h-[90mm] max-sm:w-[90mm]"
@@ -48,23 +51,23 @@ const CoverArt = () => (
   >
     <defs>
       <linearGradient id="print-cover-a" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#3b4fd0" />
-        <stop offset="1" stopColor="#7a5af5" />
+        <stop offset="0" stopColor="hsl(var(--primary-fill))" />
+        <stop offset="1" stopColor="hsl(var(--primary))" />
       </linearGradient>
     </defs>
-    <circle cx="230" cy="170" r="170" fill="#eef0fc" />
+    <circle cx="230" cy="170" r="170" className="fill-primary/10" />
     <circle cx="270" cy="150" r="104" fill="url(#print-cover-a)" />
-    <circle cx="150" cy="268" r="40" fill="#3b4fd0" opacity=".14" />
+    <circle cx="150" cy="268" r="40" className="fill-primary/15" />
     <path
       d="M40 300 Q 160 120 330 80"
-      stroke="#fff"
+      className="stroke-primary-fill-foreground"
       strokeWidth="3"
       fill="none"
       strokeDasharray="2 9"
       strokeLinecap="round"
       opacity=".9"
     />
-    <circle cx="330" cy="80" r="7" fill="#fff" />
+    <circle cx="330" cy="80" r="7" className="fill-primary-fill-foreground" />
   </svg>
 );
 
@@ -88,7 +91,7 @@ const Thumbnail = ({ src }: { src: string }) => {
   );
 };
 
-const Cover = ({ data, eyebrow }: { data: IPrintCourse; eyebrow: string }) => {
+const Cover = ({ data, eyebrow, surface }: { data: IPrintCourse; eyebrow: string; surface: PrintSurface }) => {
   const { course, modules } = data;
   const lessons = modules.reduce((sum, item) => sum + item.materials.length, 0);
   const quizzes = modules.reduce((sum, item) => sum + item.quizzes.length, 0);
@@ -99,7 +102,7 @@ const Cover = ({ data, eyebrow }: { data: IPrintCourse; eyebrow: string }) => {
     <section className="print-cover relative flex h-[297mm] flex-col overflow-hidden rounded-md bg-card px-[20mm] pb-[18mm] pt-[22mm] shadow-sm max-sm:h-auto max-sm:px-5 max-sm:pb-6 max-sm:pt-8 print:break-after-page print:rounded-none print:shadow-none">
       <CoverArt />
       {course.thumbnail ? <Thumbnail src={course.thumbnail} /> : null}
-      <img src={ACADIMIC_LOGO} alt="Acadimic" className="relative h-[11mm] w-auto self-start max-sm:h-8" />
+      <PrintLogo surface={surface} className="relative h-[11mm] w-auto self-start max-sm:h-8" />
       <p className="relative mt-[48mm] max-sm:mt-24 text-[9pt] font-bold uppercase tracking-[0.14em] text-primary">
         {eyebrow}
       </p>
@@ -137,7 +140,7 @@ const Cover = ({ data, eyebrow }: { data: IPrintCourse; eyebrow: string }) => {
           <div>Made with Acadimic</div>
           <AcadimicLink className="text-[10pt] font-bold text-primary" />
         </div>
-        <div className="text-right">Printed {formatPrintDate(new Date())}</div>
+        {surface === 'print' ? <div className="text-right">Printed {formatPrintDate(new Date())}</div> : null}
       </div>
     </section>
   );
@@ -246,16 +249,19 @@ const ModuleOpening = ({ item, courseName, scope }: { item: IPrintModule; course
 const ModuleBand = ({ item }: { item: IPrintModule }) => (
   <div
     id={`module-${item.module._id}`}
-    className="relative mb-9 overflow-hidden rounded-xl bg-gradient-to-br from-primary to-[#5a3fd0] px-8 py-7 text-primary-foreground break-inside-avoid max-sm:px-5 max-sm:py-5"
+    // The solid fill token: in dark mode `primary` is pale and carries dark text, which a band should not.
+    className="relative mb-9 overflow-hidden rounded-xl bg-gradient-to-br from-primary-fill to-primary px-8 py-7 text-primary-fill-foreground break-inside-avoid max-sm:px-5 max-sm:py-5"
   >
-    <span className="absolute -right-[14mm] -top-[18mm] h-[60mm] w-[60mm] rounded-full bg-primary-foreground/10" />
-    <p className="relative text-[8.5pt] font-bold uppercase tracking-[0.14em] text-primary-foreground/80">
+    <span className="absolute -right-[14mm] -top-[18mm] h-[60mm] w-[60mm] rounded-full bg-primary-fill-foreground/10" />
+    <p className="relative text-[8.5pt] font-bold uppercase tracking-[0.14em] text-primary-fill-foreground/80">
       Module {pad(item.number)}
       {item.module.week ? ` · Week ${item.module.week}` : ''}
     </p>
     <h2 className="relative mt-2 text-[21pt] font-extrabold leading-tight max-sm:text-[17pt]">{item.module.name}</h2>
     {item.module.description ? (
-      <p className="relative mt-2 max-w-[140mm] text-[10pt] text-primary-foreground/90">{item.module.description}</p>
+      <p className="relative mt-2 max-w-[140mm] text-[10pt] text-primary-fill-foreground/90">
+        {item.module.description}
+      </p>
     ) : null}
   </div>
 );
@@ -297,14 +303,15 @@ export interface IPrintCourseProps {
    * under the course's name, for a single module printed on its own.
    */
   scope: PrintScope;
+  surface: PrintSurface;
 }
 
-/** A whole course, or one module of it: lessons and quizzes, then the closing panel. */
-export const PrintCourse = ({ data, eyebrow, scope }: IPrintCourseProps) => (
+/** A whole course, or one module of it: lessons and quizzes, then — in print — the closing panel. */
+export const PrintCourse = ({ data, eyebrow, scope, surface }: IPrintCourseProps) => (
   <>
     {scope === 'course' ? (
       <>
-        <Cover data={data} eyebrow={eyebrow} />
+        <Cover data={data} eyebrow={eyebrow} surface={surface} />
         <Contents modules={data.modules} />
       </>
     ) : null}
@@ -317,8 +324,10 @@ export const PrintCourse = ({ data, eyebrow, scope }: IPrintCourseProps) => (
         isNewPage={scope === 'course' || index > 0}
       />
     ))}
-    <PrintSheet isNewPage={false}>
-      <PrintClosing courseUrl={data.courseUrl} />
-    </PrintSheet>
+    {surface === 'print' ? (
+      <PrintSheet isNewPage={false}>
+        <PrintClosing courseUrl={data.courseUrl} />
+      </PrintSheet>
+    ) : null}
   </>
 );

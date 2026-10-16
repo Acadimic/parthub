@@ -126,6 +126,7 @@ export const CoursePrint = ({ courseId, moduleId }: IProps) => {
           data={withQuizVersion(snapshot.data, quizVersion)}
           eyebrow={snapshot.eyebrow}
           scope={moduleId ? 'module' : 'course'}
+          surface="print"
         />
       ) : null}
     </PrintShell>

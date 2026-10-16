@@ -1,5 +1,24 @@
+import { cn } from '../lib/cn';
+import type { PrintSurface } from './types';
+
 /** The wordmark every app serves from `public/images`, as `FullLogo` does. */
 export const ACADIMIC_LOGO = '/images/acadimic-light.svg';
+const ACADIMIC_DARK_LOGO = '/images/acadimic-dark.svg';
+
+/**
+ * The wordmark for the surface: on paper always the one for a white page, since the print shell
+ * forces light colours while the app's `dark` class is still on the root; on screen the one for
+ * the theme in force, swapped the way `FullLogo` does it.
+ */
+export const PrintLogo = ({ surface, className }: { surface: PrintSurface; className: string }) => {
+  if (surface === 'print') return <img src={ACADIMIC_LOGO} alt="Acadimic" className={className} />;
+  return (
+    <>
+      <img src={ACADIMIC_LOGO} alt="Acadimic" className={cn(className, 'dark:hidden')} />
+      <img src={ACADIMIC_DARK_LOGO} alt="Acadimic" className={cn(className, 'hidden dark:block')} />
+    </>
+  );
+};
 
 /** A real link in the saved PDF: Chrome keeps an anchor's target when it prints to a file. */
 export const AcadimicLink = ({ className }: { className: string }) => (

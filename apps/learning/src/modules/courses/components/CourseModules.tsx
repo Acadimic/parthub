@@ -14,7 +14,7 @@ import {
 } from '@phosphor-icons/react';
 import { type ICourse, useSelectedCourse, useSelectorLookups } from '@stores';
 import { getCoursePath } from '@utils/helpers';
-import { CourseCompleteBanner, CourseModuleContent, PrintButton } from './course-modules';
+import { CourseBook, CourseCompleteBanner, CourseModuleContent, PrintButton } from './course-modules';
 import { CourseOutline } from './CourseOutline';
 
 /** The outline's header: the course name, a way back to its overview, and how far through it is. */
@@ -191,6 +191,7 @@ export const CourseModules = () => {
           <div className="flex min-h-0 flex-1 flex-col">{outline}</div>
         </div>
       </aside>
+      <CourseBook course={selectedCourse} />
       <Modal
         title="Course contents"
         position={PositionType.RIGHT}

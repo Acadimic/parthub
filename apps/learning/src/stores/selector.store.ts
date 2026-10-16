@@ -40,6 +40,8 @@ export interface ISelectorState {
   isCourseMenuOpen: boolean;
   /** The outline pane folded away from `lg` up, from the toggle at the end of the learning view's top bar. */
   isCourseOutlineHidden: boolean;
+  /** The whole course as pages in a modal over the learning view, from the Print menu or the view pill. */
+  isCourseBookOpen: boolean;
   /** The course page's Reviews accordion; opened by its header, the hero's stars and a `#reviews` hash. */
   isCourseReviewsOpen: boolean;
   /** The Explore sheet on a small screen; opened from the tab bar and the header's search icon. */
@@ -74,6 +76,7 @@ export interface ISelectorState {
   setSelectedUpsertQuestionStep: (value: number) => void;
   setIsCourseMenuOpen: (value: boolean) => void;
   setIsCourseOutlineHidden: (value: boolean) => void;
+  setIsCourseBookOpen: (value: boolean) => void;
   setIsCourseReviewsOpen: (value: boolean) => void;
   setIsExploreOpen: (value: boolean) => void;
   setSelectedContent: (value: IRichText | null) => void;
@@ -120,6 +123,7 @@ const INITIAL = {
   selectedUpsertQuestionStep: 0,
   isCourseMenuOpen: false,
   isCourseOutlineHidden: false,
+  isCourseBookOpen: false,
   isCourseReviewsOpen: false,
   isExploreOpen: false,
   selectedContent: null,
@@ -192,6 +196,9 @@ export const useSelectorStore = create<ISelectorState>()((set) => ({
   },
   setIsCourseOutlineHidden: (value) => {
     set({ isCourseOutlineHidden: value });
+  },
+  setIsCourseBookOpen: (value) => {
+    set({ isCourseBookOpen: value });
   },
   setIsCourseReviewsOpen: (value) => {
     set({ isCourseReviewsOpen: value });

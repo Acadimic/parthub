@@ -15,6 +15,12 @@ import type {
 export type PrintVersion = 'questions' | 'answers' | 'key';
 
 /**
+ * Where the pages are read: `print` is the printout, with its date and closing panel; `screen` is
+ * the same pages read in the app, in its own theme, where those two would only say "printed".
+ */
+export type PrintSurface = 'print' | 'screen';
+
+/**
  * Whether the `answers` version also prints each worked solution. A teacher always gets them; a
  * learner gets the correct answers at once and the solutions only after submitting the quiz.
  */
