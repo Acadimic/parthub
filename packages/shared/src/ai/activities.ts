@@ -16,6 +16,7 @@ const NEEDS: Record<string, string> = {
   sentence:
     'one "- role word :: meaning" line per tile (roles: doer, action, object, place, time, with, for, from, whose), sentences separated by "---"',
   picture: 'src= on the fence line and one "- x,y word :: meaning" line per point',
+  concept: 'the explanation (any text, tables or lists); give it a title="…" on the fence line',
 };
 
 /**

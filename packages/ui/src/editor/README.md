@@ -240,6 +240,13 @@ should see rather than read:
 - **Dialogue as a comic**: a `listening` dialogue whose every line opens with "**Name:**" renders as
   speech bubbles beside coloured initials, the line being spoken lit up. No schema change.
 
+**Concept (2026-10-17).** `concept` holds any blocks (paragraphs, a pipe table, lists) under
+`attrs.title`: a short reading that teaches one idea before the learner practises it. The reader
+shows it as a tinted panel with a rule down its left edge and a "Concept" label (`ConceptBlock`), so
+reading screens look different from the interactive frames. `::: concept title="The past of -ar
+verbs"` … `:::`; it cannot hold another `:::` block. Lessons alternate a few concepts with playable
+blocks and end with a `::: concept title="Key points"` that lists the key items of every concept.
+
 ### Not supported, deliberately
 
 Raw HTML, footnotes, task lists, callouts, toggles, nested tables, headings 4–6, colours

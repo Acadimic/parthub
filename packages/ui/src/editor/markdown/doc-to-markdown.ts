@@ -23,6 +23,7 @@ import {
   PICTURE_LABEL_NODE,
   PICTURE_NODE,
   SAY_NODE,
+  CONCEPT_NODE,
   SENTENCE_NODE,
   SENTENCE_TILE_NODE,
   SOUNDBOARD_NODE,
@@ -311,6 +312,11 @@ const serializeWrapped =
   (node: IRichTextNode): string =>
     `::: ${name}\n${(node.content ?? []).map((child) => serializeBlock(child)).join('\n\n')}\n:::`;
 
+const serializeConcept = (node: IRichTextNode): string => {
+  const attrs = formatMarkdownAttrs([['title', String(node.attrs?.title ?? '')]]);
+  return `::: concept${attrs ? ` ${attrs}` : ''}\n${(node.content ?? []).map((child) => serializeBlock(child)).join('\n\n')}\n:::`;
+};
+
 /** The blocks with no attributes to read and no nesting to flatten. */
 const SIMPLE_BLOCKS: Record<string, (node: IRichTextNode) => string> = {
   table: serializeTable,
@@ -334,6 +340,7 @@ const SIMPLE_BLOCKS: Record<string, (node: IRichTextNode) => string> = {
   [PICTURE_NODE]: serializePicture,
   [SOUNDMAP_NODE]: serializeWrapped('soundmap'),
   [SENTENCE_NODE]: serializeSentence,
+  [CONCEPT_NODE]: serializeConcept,
 };
 
 function serializeBlock(node: IRichTextNode): string {

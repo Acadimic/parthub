@@ -5,6 +5,7 @@ import {
   CHECK_OPTION_NODE,
   CHECK_PROMPT_NODE,
   CHECK_WHY_NODE,
+  CONCEPT_NODE,
   FLASHCARD_BACK_NODE,
   FLASHCARD_FRONT_NODE,
   FLASHCARD_NODE,
@@ -163,6 +164,10 @@ const ACTIVITY_BUILDERS: Record<ActivityFence, (body: string[], p: IActivityPars
       })
       .filter((variant): variant is IRichTextNode => !!variant);
     return variants.length ? { type: SENTENCE_NODE, content: variants } : null;
+  },
+  concept: (body, p) => {
+    if (!body.some((line) => line.trim())) return null;
+    return { type: CONCEPT_NODE, attrs: { title: p.attrs.title ?? '' }, content: blocksOf(body.join('\n'), p) };
   },
   say: (body, p) => {
     const lines = p

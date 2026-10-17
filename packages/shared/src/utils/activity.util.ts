@@ -55,6 +55,12 @@ export const SENTENCE_TILE_NODE = 'sentenceTile';
 export const SENTENCE_ROLES = ['doer', 'action', 'object', 'place', 'time', 'with', 'for', 'from', 'whose'] as const;
 export type SentenceRole = (typeof SENTENCE_ROLES)[number];
 
+/**
+ * Concept: a short reading that teaches one idea before the learner practises it — the rule in plain
+ * words, a few examples, a small table, a common mistake. Holds any blocks; `title` names the idea.
+ */
+export const CONCEPT_NODE = 'concept';
+
 /** The Markdown fence name of each block: `::: check` … `:::`. */
 export const ACTIVITY_FENCES = {
   reveal: REVEAL_NODE,
@@ -66,6 +72,7 @@ export const ACTIVITY_FENCES = {
   picture: PICTURE_NODE,
   soundmap: SOUNDMAP_NODE,
   sentence: SENTENCE_NODE,
+  concept: CONCEPT_NODE,
 } as const;
 
 export type ActivityFence = keyof typeof ACTIVITY_FENCES;

@@ -22,6 +22,7 @@ import {
   SOUNDMAP_NODE,
   type MouthPlace,
   STEPS_NODE,
+  CONCEPT_NODE,
   graphAttrsOfNode,
   isSamePronunciation,
   LISTENING_NODE,
@@ -38,6 +39,7 @@ import { FlashcardDeck } from './activities/FlashcardDeck';
 import { RevealBlock } from './activities/RevealBlock';
 import { PictureLabels } from './activities/PictureLabels';
 import { SayItBlock } from './activities/SayItBlock';
+import { ConceptBlock } from './activities/ConceptBlock';
 import { SentenceBlock } from './activities/SentenceBlock';
 import { SoundBoard } from './activities/SoundBoard';
 import { type IManner, SoundMap } from './activities/SoundMap';
@@ -361,6 +363,11 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
         };
       })}
     />
+  ),
+  [CONCEPT_NODE]: (node, children, key) => (
+    <ConceptBlock key={key} title={stringAttr(node.attrs, 'title')}>
+      {children}
+    </ConceptBlock>
   ),
   [SAY_NODE]: (node, _children, key) => (
     <SayItBlock

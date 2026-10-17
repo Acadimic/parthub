@@ -1,4 +1,5 @@
 import {
+  BookOpenTextIcon,
   CardsIcon,
   FootprintsIcon,
   HandTapIcon,
@@ -180,6 +181,11 @@ const INITIAL_STATE: IToolbarState = {
 };
 
 const ACTIVITIES: { kind: ActivityKind; label: string; icon: React.ReactNode }[] = [
+  {
+    kind: 'concept',
+    label: 'Concept — a short reading that teaches one idea before practice',
+    icon: <BookOpenTextIcon className={ICON} />,
+  },
   { kind: 'check', label: 'Quick check — a question answered on the spot', icon: <QuestionIcon className={ICON} /> },
   {
     kind: 'reveal',

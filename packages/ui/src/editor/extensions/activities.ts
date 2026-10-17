@@ -1,6 +1,7 @@
 import { mergeAttributes, Node, type JSONContent } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import {
+  CONCEPT_NODE,
   CHECK_NODE,
   CHECK_OPTION_NODE,
   CHECK_PROMPT_NODE,
@@ -25,7 +26,7 @@ import {
 } from '@repo/shared/utils';
 import { CheckOptionNodeView } from './CheckOptionNodeView';
 
-export type ActivityKind = 'reveal' | 'check' | 'soundboard' | 'cards' | 'say' | 'steps';
+export type ActivityKind = 'reveal' | 'check' | 'soundboard' | 'cards' | 'say' | 'steps' | 'concept';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -125,6 +126,11 @@ const TEMPLATES: Record<ActivityKind, JSONContent> = {
     })),
   },
   say: { type: SAY_NODE, content: [paragraph('A line to say aloud (mark it as pronounced)')] },
+  concept: {
+    type: CONCEPT_NODE,
+    attrs: { title: 'The idea' },
+    content: [paragraph('Explain the idea in plain words, with two or three examples and one common mistake.')],
+  },
   steps: {
     type: STEPS_NODE,
     content: [
@@ -241,6 +247,32 @@ const CheckOption = Node.create({
     }),
 });
 
+/** A concept to read: any blocks, under a title kept as an attribute (`::: concept title="…"`). */
+const Concept = Node.create({
+  name: CONCEPT_NODE,
+  group: 'block',
+  content: 'block+',
+  defining: true,
+  isolating: true,
+  addAttributes: () => ({
+    title: {
+      default: '',
+      parseHTML: (element) => element.getAttribute('data-title') ?? '',
+      renderHTML: (attrs) => ({ 'data-title': attrs.title }),
+    },
+  }),
+  parseHTML: () => [{ tag: `div[data-activity="${CONCEPT_NODE}"]` }],
+  renderHTML: ({ node, HTMLAttributes }) => [
+    'div',
+    mergeAttributes(HTMLAttributes, {
+      'data-activity': CONCEPT_NODE,
+      'data-label': `Concept: ${String(node.attrs.title || 'untitled')}`,
+      class: FRAME,
+    }),
+    0,
+  ],
+});
+
 /**
  * The interactive blocks of `@repo/shared/utils` activity.util: show answer, quick check, sound
  * board, flashcards and say it. Without these a lesson holding one would lose it on the first save.
@@ -307,6 +339,7 @@ export const ActivityExtensions = [
     isPart: true,
   }),
   SentenceTile,
+  Concept,
   frameNode({
     name: SAY_NODE,
     content: 'paragraph+',
