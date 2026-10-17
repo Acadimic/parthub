@@ -103,12 +103,22 @@ const headers = (org) => ({
   ...(org ? { organization: org } : {}),
 });
 let orgId = '';
+// Every write is an upsert, so a dropped connection is retried; the route is named if it keeps failing.
+const send = async (route, body, attempt = 1) => {
+  try {
+    return await fetch(`${base}/${route}`, {
+      method: body === undefined ? 'GET' : 'POST',
+      headers: headers(orgId),
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch (error) {
+    if (attempt >= 3 || !(error instanceof TypeError)) throw new Error(`${route}: ${error.cause?.message ?? error.message}`);
+    await new Promise((resolve) => setTimeout(resolve, 3000 * attempt));
+    return send(route, body, attempt + 1);
+  }
+};
 const api = async (route, body) => {
-  const response = await fetch(`${base}/${route}`, {
-    method: body === undefined ? 'GET' : 'POST',
-    headers: headers(orgId),
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  const response = await send(route, body);
   const text = await response.text();
   const json = text ? JSON.parse(text) : {};
   if (!response.ok) {
