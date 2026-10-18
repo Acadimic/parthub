@@ -41,8 +41,8 @@ export enum AccountSettingsType {
   ACCOUNT_SETTINGS = 'Account Settings',
   PROFILE = 'Profile',
   SECURITY = 'Security',
-  /** Learning app only: the issues the learner has reported, and the replies to them. */
-  REPORTS = 'My Reports',
+  /** Learning app only: the learner's doubts, reports and support messages, and the replies to them. */
+  REPORTS = 'Help & support',
   /** Learning app only: what the learner has bought, with a way to report a payment problem. */
   PURCHASES = 'Purchases',
 }

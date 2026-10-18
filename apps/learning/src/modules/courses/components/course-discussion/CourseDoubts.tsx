@@ -21,7 +21,7 @@ import { useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { type IOpenItem, useOpenItem } from './useOpenItem';
 
-/** How many doubts the tab lists before pointing at My Reports for the rest. */
+/** How many doubts the tab lists before pointing at Help & support for the rest. */
 const VISIBLE_DOUBTS = 8;
 
 /** What a doubt asked from here is about, for the box's heading. */
@@ -153,7 +153,7 @@ const DoubtRow = ({ ticket, onOpen }: { ticket: TicketDto; onOpen: () => void })
   );
 };
 
-/** The learner's doubts on this course, newest first; each opens its thread under My Reports. */
+/** The learner's doubts on this course, newest first; each opens its thread under Help & support. */
 const DoubtList = ({ courseId }: { courseId: string }) => {
   const { push } = useRouter();
   const { isLoading } = useLoadOnce(useTicketStore, 'tickets', (state) => state.loadMyTickets);
@@ -206,7 +206,7 @@ const DoubtList = ({ courseId }: { courseId: string }) => {
 
 /**
  * The outline pane's Doubts tab: a box to ask the course team about the lesson in the frame, and
- * the learner's doubts so far. Doubts are private tickets, so their threads live under My Reports;
+ * the learner's doubts so far. Doubts are private tickets, so their threads live under Help & support;
  * the public conversation is the Discussion tab beside this one.
  */
 export const CourseDoubts = ({ courseId }: { courseId: string }) => {

@@ -129,7 +129,7 @@ export const HelpCenter = () => {
             <SectionHeading
               eyebrow="Still stuck?"
               title="Report a problem or write to us"
-              subtitle={`Send support a message from the contact page and follow the reply under My Reports, or email ${COMPANY.supportEmail} from the address on your account.`}
+              subtitle={`Send support a message from the contact page and follow the reply under Help & support, or email ${COMPANY.supportEmail} from the address on your account.`}
               action={{ label: 'Contact us', href: '/contact' }}
             />
           </div>

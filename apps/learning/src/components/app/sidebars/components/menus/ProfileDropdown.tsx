@@ -44,7 +44,7 @@ export const ProfileDropdown = ({ isCompact }: IProps) => {
   const loggedInUsers = userStore.getLoggedInUsers();
   const { isSmallScreen } = useWindowDimensions();
   const { isDark, toggleColorMode } = useColorMode();
-  // Staff replies the learner has not opened, so a reply is noticed without visiting My Reports.
+  // Staff replies the learner has not opened, so a reply is noticed without visiting Help & support.
   useLoadOnce(useTicketStore, 'unread', (state) => state.loadUnreadCount);
   const unreadReports = useTicketStore((state) => state.unreadCount);
 
@@ -70,7 +70,7 @@ export const ProfileDropdown = ({ isCompact }: IProps) => {
       onClick: () => push('/activity'),
     },
     {
-      label: unreadReports ? `My reports (${unreadReports} new)` : 'My reports',
+      label: unreadReports ? `Help & support (${unreadReports} new)` : 'Help & support',
       icon: <FlagIcon className="w-4 h-4" />,
       onClick: () => push(AccountSettingsRoutes[AccountSettingsType.REPORTS]),
     },

@@ -79,7 +79,7 @@ const QuestionTickets = ({ courseId, courseModuleId, testPaperId, questionId, ca
           isLabelled={false}
           className="h-8 w-8 p-0"
           title="Ask a doubt about this question"
-          description="Only you and the course team see it. The reply shows under My Reports."
+          description="Only you and the course team see it. The reply shows under Help & support."
           target={{ ...target, category: TicketCategory.DOUBT }}
         />
       ) : null}
@@ -87,7 +87,7 @@ const QuestionTickets = ({ courseId, courseModuleId, testPaperId, questionId, ca
         isLabelled={false}
         className="h-8 w-8 p-0"
         title="Report this question"
-        description="Your teacher sees the report and can correct the question or its answer. You can follow it under My Reports."
+        description="Your teacher sees the report and can correct the question or its answer. You can follow it under Help & support."
         target={{ ...target, category: TicketCategory.QUESTION }}
       />
     </>

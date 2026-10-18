@@ -52,7 +52,7 @@ export class TicketMailService {
         '',
         ticket.messages[ticket.messages.length - 1]?.body ?? '',
         '',
-        'Sign in and open Account settings → My reports to read it and reply.',
+        'Sign in and open Account settings → Help & support to read it and reply.',
       ].join('\n'),
     );
   }
@@ -64,7 +64,7 @@ export class TicketMailService {
       [
         `Your ${TICKET_CATEGORY_LABELS[ticket.category].toLowerCase()} report${this.about(ticket)} is now marked ${TICKET_STATUS_LABELS[ticket.status].toLowerCase()}.`,
         '',
-        'If something is still wrong, reply to it from Account settings → My reports within two weeks and it reopens.',
+        'If something is still wrong, reply to it from Account settings → Help & support within two weeks and it reopens.',
       ].join('\n'),
     );
   }

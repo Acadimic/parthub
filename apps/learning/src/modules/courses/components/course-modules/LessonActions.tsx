@@ -31,7 +31,7 @@ const ReportLessonDialog = ({ isOpen, onClose, ...props }: IProps & { isOpen: bo
     onClose={onClose}
     target={{ ...getWhere(props), category: TicketCategory.CONTENT }}
     title={`Report a problem with this ${props.material ? 'lesson' : 'test'}`}
-    description="Your teacher sees the report and can fix the content. You can follow it under My Reports."
+    description="Your teacher sees the report and can fix the content. You can follow it under Help & support."
   />
 );
 

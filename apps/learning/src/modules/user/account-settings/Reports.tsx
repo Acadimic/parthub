@@ -106,7 +106,7 @@ export const Reports = () => {
       <Loader isLoading={isLoading && !tickets.length} />
       {!isLoading && !tickets.length ? (
         <BlankState
-          label="No reports yet"
+          label="Nothing here yet"
           description="Ask a doubt or use the flag on a question or lesson, or Report a problem above, and it will show up here."
         />
       ) : null}

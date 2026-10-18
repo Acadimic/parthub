@@ -30,7 +30,7 @@ const ORDER_TONE: Record<OrderStatus, BadgeTone> = {
 };
 
 const REPORT_DESCRIPTION =
-  'Charged but no access, charged twice, a refund or an invoice: platform support replies under My Reports.';
+  'Charged but no access, charged twice, a refund or an invoice: platform support replies under Help & support.';
 
 interface IRowProps {
   title: ReactNode;

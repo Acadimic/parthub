@@ -76,7 +76,7 @@ export const ReportDialog = ({ isOpen, onClose, target, title, description }: IP
       pageUrl: window.location.href,
     });
     if (!ticket) return false;
-    successToast({ message: `${copy.noun} ${ticket.code} sent. Follow it under Account settings → My Reports.` });
+    successToast({ message: `${copy.noun} ${ticket.code} sent. Follow it under Account settings → Help & support.` });
     close();
     return true;
   };
