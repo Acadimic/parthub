@@ -86,11 +86,23 @@ export const Course = ({ courseId, isPreview }: IProps) => {
     if (getSelectedItemIndex(courseId) === -1) selectResumeItem(courseId);
   }, [isLoading, isPreview, selectedCourse?._id]);
 
-  // The lesson bodies of the module on screen, fetched when the learner opens it. A module already
-  // loaded is skipped by the store.
+  // The lesson bodies of the module on screen, fetched when the learner opens it, then the next
+  // module's, so Next across a module boundary does not wait for it. A module already loaded is
+  // skipped by the store.
   useEffect(() => {
     if (isLoading || isPreview || !selectedCourseModuleId) return;
-    useCourseStore.getState().loadModuleContents(courseId, selectedCourseModuleId);
+    useCourseStore
+      .getState()
+      .loadModuleContents(courseId, selectedCourseModuleId)
+      .then(() => {
+        const courses = useCourseStore.getState();
+        // Only after the module on screen arrived: the request slice keeps one status for every
+        // module's fetch, and a prefetch started now would hide its failure behind a fresh load.
+        if (!courses.getCourseModuleById(selectedCourseModuleId)?.isLoadedContents) return;
+        const modules = [...courses.getCourseModuleByCourseId(courseId)].sort((a, b) => a.day - b.day);
+        const next = modules[modules.findIndex((row) => row._id === selectedCourseModuleId) + 1];
+        if (next) courses.loadModuleContents(courseId, next._id);
+      });
   }, [isLoading, isPreview, courseId, selectedCourseModuleId]);
 
   if (isLoading) return isPreview ? <CoursePreviewSkeleton /> : <CourseModulesSkeleton />;
