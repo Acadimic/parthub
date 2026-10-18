@@ -1,5 +1,6 @@
 import { useAttachment } from '@hooks/attachment.hook';
 import { ImageIcon as Img } from '@phosphor-icons/react';
+import { cn } from '@repo/ui/lib';
 import React, { useEffect, useState } from 'react';
 
 interface IProps {
@@ -15,8 +16,9 @@ interface IProps {
 }
 
 const PresignedImageComponent = ({ url, className, isStatic, noOpen, fallback }: IProps) => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [presignedUrl, setPresignedUrl] = useState<string>('');
+  // Downloaded, not just signed: until then a shimmer holds the frame and the picture fades in after.
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
   // A signed URL can still point at nothing — an object removed from the bucket, or one whose row
   // predates the current key layout. Without this the browser draws its own broken-image box.
   const [hasFailed, setHasFailed] = useState<boolean>(false);
@@ -24,11 +26,9 @@ const PresignedImageComponent = ({ url, className, isStatic, noOpen, fallback }:
 
   const fetchAndSetPresignedUrl = async () => {
     if (!url) return;
-    setIsLoading(true);
-    const urls = await getPresignedUrls([url]);
-    urls.length > 0 && setPresignedUrl(urls[0]);
-    // setTimeout(() => setIsLoading(false), 1000);
-    setIsLoading(false);
+    const [signed] = await getPresignedUrls([url]);
+    if (signed) setPresignedUrl(signed);
+    else setHasFailed(true);
   };
 
   const onClick = () => {
@@ -41,6 +41,7 @@ const PresignedImageComponent = ({ url, className, isStatic, noOpen, fallback }:
   // sort, filter or search; the old guard (`!presignedUrl`) kept the previous row's image on it.
   useEffect(() => {
     setHasFailed(false);
+    setIsLoaded(false);
     if (!url) {
       setPresignedUrl('');
       return;
@@ -55,20 +56,34 @@ const PresignedImageComponent = ({ url, className, isStatic, noOpen, fallback }:
 
   return (
     <div
-      className={`flex items-center justify-center w-full h-full text-muted-foreground ${noOpen ? '' : 'cursor-pointer'}`}
+      className={cn(
+        'relative flex h-full w-full items-center justify-center text-muted-foreground',
+        !noOpen && 'cursor-pointer',
+      )}
       onClick={onClick}
     >
-      {isLoading || !url || !presignedUrl || hasFailed ? (
+      {!url || hasFailed ? (
         <div className="flex h-full w-full items-center justify-center bg-muted">
           {fallback ?? <Img weight="light" className={`w-full h-full ${className ? className : ''}`} />}
         </div>
       ) : (
-        <img
-          src={presignedUrl}
-          alt=""
-          onError={() => setHasFailed(true)}
-          className={`w-full h-full ${className ? className : ''}`}
-        />
+        <>
+          {isLoaded ? null : <div className="absolute inset-0 animate-pulse bg-muted" />}
+          {/* The fade is on a wrapper, so it does not override a transition the caller gives the image. */}
+          {presignedUrl ? (
+            <div
+              className={cn('h-full w-full transition-opacity duration-300', isLoaded ? 'opacity-100' : 'opacity-0')}
+            >
+              <img
+                src={presignedUrl}
+                alt=""
+                onLoad={() => setIsLoaded(true)}
+                onError={() => setHasFailed(true)}
+                className={`w-full h-full ${className ? className : ''}`}
+              />
+            </div>
+          ) : null}
+        </>
       )}
     </div>
   );

@@ -9,7 +9,7 @@ import { type PictureMode, WORD_GENDER_NAMES } from '@repo/shared/utils';
 import { type ReactNode, useId, useState } from 'react';
 import { cn } from '../../lib/cn';
 import { GENDER_FILL, GENDER_TEXT } from '../gender';
-import { useResolvedImageUrl } from '../RichTextImage';
+import { REVEAL_FRAME_CLASS, getRevealImageClass, useImageReveal, useResolvedImageUrl } from '../RichTextImage';
 import { SPEECH_RATES } from '../speech/player';
 import { useSpeech } from '../speech/use-speech';
 import { ActivityFrame, type ISpoken, OUTLINE_PILL } from './ActivityFrame';
@@ -107,6 +107,7 @@ const LabelCard = ({ label, number }: { label: IPictureLabel; number: number }) 
  */
 export const PictureLabels = ({ src, alt, mode, labels }: IPictureLabelsProps) => {
   const { url } = useResolvedImageUrl(src);
+  const { imageRef, isLoaded, onLoad, frameStyle, onFrameTransitionEnd } = useImageReveal(url);
   const [selected, setSelected] = useState(-1);
   const [target, setTarget] = useState(0);
   const [found, setFound] = useState<number[]>([]);
@@ -161,32 +162,43 @@ export const PictureLabels = ({ src, alt, mode, labels }: IPictureLabelsProps) =
           onHear={() => playSpoken(labels[target]?.spoken ?? null)}
         />
       ) : null}
-      <div className="relative mx-auto w-fit max-w-full">
-        {url ? (
-          <img
-            src={url}
-            alt={alt}
-            className={cn(
-              'block h-auto max-h-[min(60vh,28rem)] w-auto max-w-full',
-              // A drawn figure inverts in dark mode like any other; a photo stays as it is.
-              /\.svg(\?|#|$)/i.test(src) && 'dark:hue-rotate-180 dark:invert',
-            )}
-          />
-        ) : (
-          <div className="h-48 w-80 max-w-full animate-pulse bg-muted" aria-label={alt} />
+      <div className={REVEAL_FRAME_CLASS} style={frameStyle} onTransitionEnd={onFrameTransitionEnd}>
+        {isLoaded ? null : (
+          <div className="absolute inset-0 mx-auto w-80 max-w-full animate-pulse bg-muted" aria-label={alt} />
         )}
-        {labels.map((label, index) => (
-          <PicturePoint
-            key={index}
-            label={label}
-            number={index + 1}
-            isRevealed={!isFind || found.includes(index)}
-            isFound={found.includes(index)}
-            isSelected={selected === index}
-            isMissed={missed === index}
-            onTap={() => tap(index)}
-          />
-        ))}
+        <div className="relative mx-auto w-fit max-w-full">
+          {url ? (
+            <img
+              ref={imageRef}
+              src={url}
+              alt={alt}
+              onLoad={onLoad}
+              // A picture that will not load still settles the frame, so the points stay usable.
+              onError={onLoad}
+              className={cn(
+                'block h-auto max-h-[min(60vh,28rem)] w-auto max-w-full',
+                // A drawn figure inverts in dark mode like any other; a photo stays as it is.
+                /\.svg(\?|#|$)/i.test(src) && 'dark:hue-rotate-180 dark:invert',
+                getRevealImageClass(isLoaded),
+              )}
+            />
+          ) : null}
+          {/* The points sit on the picture by percentage, so they wait for it. */}
+          {isLoaded
+            ? labels.map((label, index) => (
+                <PicturePoint
+                  key={index}
+                  label={label}
+                  number={index + 1}
+                  isRevealed={!isFind || found.includes(index)}
+                  isFound={found.includes(index)}
+                  isSelected={selected === index}
+                  isMissed={missed === index}
+                  onTap={() => tap(index)}
+                />
+              ))
+            : null}
+        </div>
       </div>
       <div className="mt-3 print:hidden">
         {selected >= 0 && labels[selected] ? (

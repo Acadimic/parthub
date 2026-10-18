@@ -2,6 +2,7 @@ import { useAttachment } from '@hooks/attachment.hook';
 import { getRandomColor } from '@utils/helpers';
 import { useEffect, useState } from 'react';
 import { Tooltip } from '@repo/ui/app';
+import { cn } from '@repo/ui/lib';
 
 interface IProps {
   id: string;
@@ -21,6 +22,9 @@ export const Avatar = ({ id, name, avatar, size = 32, bg: bgProp, color: colorPr
   const splitNames = name.split(' ');
   const { getPresignedUrls } = useAttachment();
   const [presignedUrl, setPresignedUrl] = useState<string>('');
+  // The initials stay underneath, and the photo fades in over them once it has downloaded.
+  const [isLoaded, setIsLoaded] = useState(false);
+  useEffect(() => setIsLoaded(false), [presignedUrl]);
 
   const fetchAndSetPresignedUrl = async () => {
     if (!avatar) return;
@@ -37,26 +41,29 @@ export const Avatar = ({ id, name, avatar, size = 32, bg: bgProp, color: colorPr
 
   return (
     <div
-      className={`uppercase text-sm font-medium border border-border rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 ${className || ''}`}
+      className={`relative uppercase text-sm font-medium border border-border rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 ${className || ''}`}
       style={{
         width: size,
         height: size,
-        backgroundColor: presignedUrl ? 'transparent' : bg,
+        backgroundColor: bg,
         color,
       }}
     >
+      <Tooltip title={name}>{initials}</Tooltip>
       {presignedUrl ? (
         <img
           src={presignedUrl}
           alt={name}
-          className="w-full h-full object-cover"
+          className={cn(
+            'absolute inset-0 h-full w-full object-cover transition-opacity duration-300',
+            isLoaded ? 'opacity-100' : 'opacity-0',
+          )}
+          onLoad={() => setIsLoaded(true)}
           // A dead address — an object removed from the bucket, a provider photo that no longer
           // resolves — shows the initials rather than the browser's broken-image box.
           onError={() => setPresignedUrl('')}
         />
-      ) : (
-        <Tooltip title={name}>{initials}</Tooltip>
-      )}
+      ) : null}
     </div>
   );
 };
