@@ -41,7 +41,7 @@ export const MarkCompleteButton = ({ testPaper, material }: IProps) => {
     return (
       // The same room as the swipe it replaces, so the line does not shift when a lesson is done.
       <div className="flex h-9 min-w-0 flex-1 items-center justify-between gap-1 rounded-full border border-success/30 bg-success/10 pl-1 pr-1 sm:w-[212px] sm:flex-none">
-        <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-success">
+        <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-success sm:text-sm">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success text-success-foreground">
             <CheckIcon weight="bold" className="h-4 w-4" />
           </span>

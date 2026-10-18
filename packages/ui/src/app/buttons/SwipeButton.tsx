@@ -150,12 +150,12 @@ const SwipeTrack = ({
     />
     <div
       className={cn(
-        'absolute inset-0 flex items-center justify-center text-sm font-medium',
+        'absolute inset-0 flex items-center justify-center pr-2 text-xs font-medium sm:text-sm',
         isCompleted ? 'text-success' : 'text-primary',
       )}
       style={{ paddingLeft: knobSize }}
     >
-      {label}
+      <span className="truncate">{label}</span>
     </div>
   </>
 );
