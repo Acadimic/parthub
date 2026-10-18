@@ -120,15 +120,19 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect, moduleName }: IRowPr
         isSelected ? 'border-primary bg-accent' : 'border-transparent',
       )}
     >
-      {/* The slot matches the module number's width, so the item marks centre under it. */}
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center">
-        <span
-          className={cn(
-            'flex h-6 w-6 items-center justify-center rounded-full transition-colors',
-            getMarkClass(type, isCompleted, isSelected, isLocked),
-          )}
-        >
-          <RowIcon weight="bold" className="h-3.5 w-3.5" />
+      {/* The slot matches the module number's width, and steps back over the row's 2px selection
+          border, so the item marks centre under the number and on the module's rail. */}
+      <span className="-ml-0.5 flex h-7 w-7 shrink-0 items-center justify-center">
+        {/* An opaque backing under the tinted mark, so the module's rail stops at it rather than showing through. */}
+        <span className="rounded-full bg-background">
+          <span
+            className={cn(
+              'flex h-6 w-6 items-center justify-center rounded-full transition-colors',
+              getMarkClass(type, isCompleted, isSelected, isLocked),
+            )}
+          >
+            <RowIcon weight="bold" className="h-3.5 w-3.5" />
+          </span>
         </span>
       </span>
       <span className="min-w-0 flex-1">
@@ -150,14 +154,11 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect, moduleName }: IRowPr
   );
 };
 
-/** An open module's mark fills solid, so the expanded panels stand out from the folded ones; a done
-    module keeps its number and turns green, so the order still reads down the list. */
-const getModuleMarkClass = (isDone: boolean, isOpen: boolean) => {
-  if (isDone) {
-    return isOpen ? 'bg-success-fill text-success-fill-foreground' : 'bg-success/15 text-success';
-  }
-  return isOpen ? 'bg-primary-fill text-primary-fill-foreground' : 'bg-primary/10 text-primary';
-};
+/** A module's mark is always solid, open or folded, so a module never reads as an item; the rail
+    under an open one ties its items to it. A done module keeps its number and turns green, so the
+    order still reads down the list. */
+const getModuleMarkClass = (isDone: boolean) =>
+  isDone ? 'bg-success-fill text-success-fill-foreground' : 'bg-primary-fill text-primary-fill-foreground';
 
 /** One module's title, with its position and its own completion summary. */
 const ModuleTitle = ({
@@ -165,13 +166,11 @@ const ModuleTitle = ({
   index,
   itemCount,
   completedCount,
-  isOpen,
 }: {
   courseModule: ICourseModule;
   index: number;
   itemCount: number;
   completedCount: number;
-  isOpen: boolean;
 }) => {
   const isDone = itemCount > 0 && completedCount === itemCount;
   return (
@@ -179,7 +178,7 @@ const ModuleTitle = ({
       <span
         className={cn(
           'flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-xs font-semibold transition-colors',
-          getModuleMarkClass(isDone, isOpen),
+          getModuleMarkClass(isDone),
         )}
       >
         {index + 1}
@@ -214,6 +213,13 @@ const ListToolbar = ({
     {action}
   </div>
 );
+
+/**
+ * A rail through an open module's item marks ties them to it. It is centred on the module's number:
+ * the header's 16px padding (`[&_button]:px-4` below) plus half the 28px mark, less half the line.
+ */
+const MODULE_RAIL_CLASS =
+  'relative flex flex-col before:absolute before:inset-y-0 before:left-[29.5px] before:border-l before:border-border';
 
 /** The syllabus: one folding panel per module, with its lessons and tests inside. */
 const ModuleList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem }: IListProps) => {
@@ -292,7 +298,6 @@ const ModuleList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem
                 index={index}
                 itemCount={items.length}
                 completedCount={completedCount}
-                isOpen={isExpanded(courseModule._id)}
               />
             ),
             component: (
@@ -300,7 +305,7 @@ const ModuleList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem
                 {isPreview && courseModule.description ? (
                   <p className="px-4 pb-2 pt-1 text-sm text-muted-foreground">{courseModule.description}</p>
                 ) : null}
-                <div className="flex flex-col">
+                <div className={MODULE_RAIL_CLASS}>
                   {/* The divider sits on a wrapper, inset, so it neither recolours the selection bar nor spans the row. */}
                   {items.map((item) => (
                     <div
