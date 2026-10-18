@@ -28,6 +28,10 @@ export class CourseModule extends BaseSchema {
   @Prop({ type: String })
   description: string;
 
+  /** The situation the module is about, shown under its grammar-first name (LESSON_DESIGN.md §11). */
+  @Prop({ type: String, trim: true })
+  subtitle: string;
+
   @Prop({ type: Number, required: true })
   day: number;
 

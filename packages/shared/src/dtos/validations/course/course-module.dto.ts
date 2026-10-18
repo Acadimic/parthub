@@ -71,6 +71,11 @@ export class CourseModuleDto extends BaseOwnedDto {
   @IsString()
   description?: string;
 
+  /** The situation the module is about, shown under its grammar-first name (LESSON_DESIGN.md §11). */
+  @IsOptional()
+  @IsString()
+  subtitle?: string;
+
   @IsNumber()
   day: number;
 

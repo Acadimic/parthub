@@ -166,7 +166,7 @@ const Contents = ({ modules }: { modules: IPrintModule[] }) => (
               {item.module.name}
             </a>
             {item.module.description ? (
-              <p className="mt-0.5 text-[9pt] text-muted-foreground">{item.module.description}</p>
+              <p className="mt-0.5 whitespace-pre-line text-[9pt] text-muted-foreground">{item.module.description}</p>
             ) : null}
           </div>
           <span className="whitespace-nowrap text-[8.5pt] font-semibold text-muted-foreground max-sm:col-start-2 max-sm:row-start-2 max-sm:mt-1">

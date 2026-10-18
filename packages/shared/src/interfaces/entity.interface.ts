@@ -48,6 +48,7 @@ export interface ICourseModuleFields {
   name: string;
   slug?: string;
   description?: string | null;
+  subtitle?: string;
   day: number;
   materials?: string[];
   testPapers?: string[];

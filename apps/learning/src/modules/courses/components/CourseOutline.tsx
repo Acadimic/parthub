@@ -160,17 +160,19 @@ const OutlineItem = ({ item, isPreview, isLocked, onSelect, moduleName }: IRowPr
 const getModuleMarkClass = (isDone: boolean) =>
   isDone ? 'bg-success-fill text-success-fill-foreground' : 'bg-primary-fill text-primary-fill-foreground';
 
-/** One module's title, with its position and its own completion summary. */
+/** One module's title, with its position and a caption: its subtitle in the preview, progress while learning. */
 const ModuleTitle = ({
   courseModule,
   index,
   itemCount,
   completedCount,
+  caption,
 }: {
   courseModule: ICourseModule;
   index: number;
   itemCount: number;
   completedCount: number;
+  caption: string;
 }) => {
   const isDone = itemCount > 0 && completedCount === itemCount;
   return (
@@ -185,9 +187,7 @@ const ModuleTitle = ({
       </span>
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold">{courseModule.name}</span>
-        <span className="block text-xxs font-normal text-muted-foreground/70">
-          {itemCount ? `${completedCount} of ${itemCount} ${getPlural(itemCount, 'item')} done` : 'No items yet'}
-        </span>
+        <span className="block text-xxs font-normal text-muted-foreground/70">{caption}</span>
       </span>
     </span>
   );
@@ -290,6 +290,9 @@ const ModuleList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem
         items={courseModules.map((courseModule, index) => {
           const items = getModuleItems(courseModule);
           const completedCount = items.filter(isItemCompleted).length;
+          const progress = items.length
+            ? `${completedCount} of ${items.length} ${getPlural(items.length, 'item')} done`
+            : 'No items yet';
           return {
             id: courseModule._id,
             title: (
@@ -298,12 +301,15 @@ const ModuleList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem
                 index={index}
                 itemCount={items.length}
                 completedCount={completedCount}
+                caption={isPreview && courseModule.subtitle ? courseModule.subtitle : progress}
               />
             ),
             component: (
               <div>
                 {isPreview && courseModule.description ? (
-                  <p className="px-4 pb-2 pt-1 text-sm text-muted-foreground">{courseModule.description}</p>
+                  <p className="whitespace-pre-line px-4 pb-2 pt-1 text-sm text-muted-foreground">
+                    {courseModule.description}
+                  </p>
                 ) : null}
                 <div className={MODULE_RAIL_CLASS}>
                   {/* The divider sits on a wrapper, inset, so it neither recolours the selection bar nor spans the row. */}
