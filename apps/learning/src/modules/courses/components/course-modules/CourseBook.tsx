@@ -4,6 +4,7 @@ import { BlankState } from '@components/others';
 import { type IPrintCourseSnapshot, loadPrintCourse, toErrorMessage } from '@modules/print/print-data';
 import { BookOpenTextIcon, PrinterIcon, XIcon } from '@phosphor-icons/react';
 import { type ICourse, useSelectorLookups } from '@stores';
+import { closeCourseBook } from '@utils/course-book';
 import { getPlural } from '@utils/helpers';
 import { useEffect, useState } from 'react';
 
@@ -25,10 +26,18 @@ const describe = ({ data }: IPrintCourseSnapshot) => {
  * is not held in memory while the learner reads a lesson at a time.
  */
 export const CourseBook = ({ course }: { course: ICourse }) => {
-  const { isCourseBookOpen, setIsCourseBookOpen } = useSelectorLookups();
+  const { isCourseBookOpen } = useSelectorLookups();
   const [snapshot, setSnapshot] = useState<IPrintCourseSnapshot | null>(null);
   const [error, setError] = useState('');
-  const close = () => setIsCourseBookOpen(false);
+  const close = closeCourseBook;
+
+  // Leaving the browser's full screen by its own means (Escape, its control) closes the book.
+  useEffect(() => {
+    if (!isCourseBookOpen) return undefined;
+    const onChange = () => !document.fullscreenElement && closeCourseBook();
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, [isCourseBookOpen]);
 
   useEffect(() => {
     if (!isCourseBookOpen) {

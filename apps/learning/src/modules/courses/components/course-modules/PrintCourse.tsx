@@ -3,28 +3,36 @@ import { Button, Menu, Tooltip } from '@repo/ui/app';
 import { cn } from '@repo/ui/lib';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IMenuItem } from '@repo/ui/types';
-import { useSelectorStore } from '@stores';
+import { openCourseBook } from '@utils/course-book';
+import { type ReactNode } from 'react';
+
+/** A lesson action with a fixed label and icon, so it can be drawn as a button as well as a menu entry. */
+export interface ILessonMenuItem extends IMenuItem {
+  label: string;
+  icon: ReactNode;
+}
 
 /** A printout opens in a tab of its own, where the print dialog opens by itself. */
 const openPrint = (path: string) => window.open(path, '_blank');
 
+/** Reading the whole course as pages: the printout's document on screen, without the paper. */
+export const READ_COURSE_ITEM: ILessonMenuItem = {
+  label: 'Read whole course',
+  onClick: openCourseBook,
+  icon: <BookOpenTextIcon weight="bold" className="h-4 w-4" />,
+};
+
 /**
  * What can be printed from the lesson view: the whole course, the module on screen, or the quiz on
- * screen — after reading the whole course as pages on screen, which is the same document without
- * the paper. `courseModuleId` is '' before a module is selected; `testPaperId` is null on a lesson.
+ * screen. `courseModuleId` is '' before a module is selected; `testPaperId` is null on a lesson.
  */
-export const getPrintMenuItems = (
+export const getPrintOnlyItems = (
   courseId: string,
   courseModuleId: string,
   testPaperId: string | null,
-): IMenuItem[] => {
+): ILessonMenuItem[] => {
   const base = `/courses/${courseId}/print`;
   return [
-    {
-      label: 'Read whole course',
-      onClick: () => useSelectorStore.getState().setIsCourseBookOpen(true),
-      icon: <BookOpenTextIcon weight="bold" className="h-4 w-4" />,
-    },
     {
       label: 'Print course',
       onClick: () => openPrint(base),
@@ -50,6 +58,13 @@ export const getPrintMenuItems = (
       : []),
   ];
 };
+
+/** The print choices led by reading the whole course, for a menu that holds them all. */
+export const getPrintMenuItems = (
+  courseId: string,
+  courseModuleId: string,
+  testPaperId: string | null,
+): ILessonMenuItem[] => [READ_COURSE_ITEM, ...getPrintOnlyItems(courseId, courseModuleId, testPaperId)];
 
 /**
  * A visible way to print from the learning view's top bar: a soft pill in the primary tone with

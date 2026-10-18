@@ -1,11 +1,12 @@
 import { type ReportTarget, ReportDialog } from '@components/app/report';
 import { CourseOutlineTab, TicketCategory } from '@enums';
-import { ChatCircleDotsIcon, DotsThreeIcon, FlagIcon, ShareFatIcon } from '@phosphor-icons/react';
+import { ChatCircleDotsIcon, DotsThreeIcon, FlagIcon, PrinterIcon, ShareFatIcon } from '@phosphor-icons/react';
 import { Button, Menu, Tooltip } from '@repo/ui/app';
+import { cn } from '@repo/ui/lib';
 import { useWindowDimensions } from '@hooks/dimensions.hook';
 import { type IMaterial, type ITestPaper, useSelectorLookups } from '@stores';
 import { useState } from 'react';
-import { getPrintMenuItems } from './PrintCourse';
+import { type ILessonMenuItem, READ_COURSE_ITEM, getPrintOnlyItems } from './PrintCourse';
 import { shareCourse } from './ShareCourse';
 
 interface IProps {
@@ -67,27 +68,83 @@ export const AskDoubtButton = () => {
   );
 };
 
-/** The less frequent lesson actions behind one ⋯ button: share, print and report, plus the doubt on a phone. */
+/** A round icon button the size of the reactions beside it. */
+const ICON_BUTTON_CLASS =
+  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground';
+
+/** One lesson action as an icon button, named by its tooltip. */
+const LessonActionButton = ({ item }: { item: ILessonMenuItem }) => (
+  <Tooltip title={item.label}>
+    <Button
+      isRound
+      isSubtle
+      aria-label={item.label}
+      className={cn(ICON_BUTTON_CLASS, 'p-0')}
+      onClick={() => item.onClick()}
+      leftsection={item.icon}
+    />
+  </Tooltip>
+);
+
+/**
+ * The less frequent lesson actions: share, read, print and report. Where the toolbar has room they
+ * are icon buttons beside the reactions; otherwise they sit behind one ⋯ button, and on a phone the
+ * doubt joins them.
+ */
 export const LessonMoreMenu = (props: IProps) => {
-  const { isSmallScreen } = useWindowDimensions();
+  const { isSmallScreen, width } = useWindowDimensions();
+  const { isCourseOutlineHidden } = useSelectorLookups();
+  // From `lg` the outline pane takes 360px beside the lesson, and below 1200 the buttons would push
+  // full screen off the toolbar; folding the pane, or a wider screen, makes the room again.
+  const hasRoom = !isSmallScreen && (width < 1024 || width >= 1200 || isCourseOutlineHidden);
   const openDoubts = useOpenDoubts();
   const [isReporting, setIsReporting] = useState(false);
-  const menuItems = [
+  const shareItem: ILessonMenuItem = {
+    label: 'Share course',
+    onClick: () => shareCourse(props.courseId),
+    icon: <ShareFatIcon weight="bold" className="h-4 w-4" />,
+  };
+  const reportItem: ILessonMenuItem = {
+    label: 'Report a problem',
+    onClick: () => setIsReporting(true),
+    icon: <FlagIcon weight="bold" className="h-4 w-4" />,
+  };
+  const printItems = getPrintOnlyItems(props.courseId, props.courseModuleId, props.testPaper?._id ?? null);
+  const reportDialog = <ReportLessonDialog {...props} isOpen={isReporting} onClose={() => setIsReporting(false)} />;
+
+  if (hasRoom) {
+    // The print choices share one printer icon, so the toolbar holds one button per kind of action.
+    return (
+      <>
+        <LessonActionButton item={shareItem} />
+        <LessonActionButton item={READ_COURSE_ITEM} />
+        <Tooltip title="Print">
+          <Menu
+            menuItems={printItems}
+            className="px-0"
+            component={
+              <span role="button" aria-label="Print" className={ICON_BUTTON_CLASS}>
+                <PrinterIcon weight="bold" className="h-4 w-4" />
+              </span>
+            }
+          />
+        </Tooltip>
+        <LessonActionButton item={reportItem} />
+        {reportDialog}
+      </>
+    );
+  }
+
+  const menuItems: ILessonMenuItem[] = [
     ...(isSmallScreen
       ? [{ label: 'Ask a doubt', onClick: openDoubts, icon: <ChatCircleDotsIcon weight="bold" className="h-4 w-4" /> }]
       : []),
-    {
-      label: 'Share course',
-      onClick: () => shareCourse(props.courseId),
-      icon: <ShareFatIcon weight="bold" className="h-4 w-4" />,
-    },
-    ...getPrintMenuItems(props.courseId, props.courseModuleId, props.testPaper?._id ?? null),
-    {
-      label: 'Report a problem',
-      onClick: () => setIsReporting(true),
-      icon: <FlagIcon weight="bold" className="h-4 w-4" />,
-    },
+    shareItem,
+    READ_COURSE_ITEM,
+    ...printItems,
+    reportItem,
   ];
+
   return (
     <>
       <Tooltip title="More">
@@ -95,17 +152,13 @@ export const LessonMoreMenu = (props: IProps) => {
           menuItems={menuItems}
           className="px-0"
           component={
-            <span
-              role="button"
-              aria-label="More actions"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
+            <span role="button" aria-label="More actions" className={ICON_BUTTON_CLASS}>
               <DotsThreeIcon weight="bold" className="h-5 w-5" />
             </span>
           }
         />
       </Tooltip>
-      <ReportLessonDialog {...props} isOpen={isReporting} onClose={() => setIsReporting(false)} />
+      {reportDialog}
     </>
   );
 };
