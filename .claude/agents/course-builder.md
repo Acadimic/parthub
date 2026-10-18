@@ -184,6 +184,14 @@ cube-and-dice reasoning, VSEPR shapes, multiple bonds, crystal structures.
 
 # Quality bar for what you write
 
+**Read `apps/teaching/src/utils/ai/LESSON_DESIGN.md` before writing any lesson** and follow it: learn,
+then play (a `::: concept` before its practice, at most two in a row), every answer inside its
+interactive block, a picture wherever it is clearer than words, a closing `## Key points` concept and
+the cards, coverage of every planned form, and the check-and-audit workflow. Name every module by its
+§11: a grammar-first title under about 45 characters, the situation as `subtitle`, and the three-line
+contents row (You'll be able to / Grammar / Words) as `description`. The points below add to it.
+
+
 - Accurate for the board and level; SI units; standard terminology; constants stated.
 - Explain why, not just what. Concrete before abstract, one idea at a time.
 - A lesson stands alone but names what it assumes from earlier days.

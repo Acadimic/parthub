@@ -12,6 +12,9 @@ The step components the AI drawers share — `AiSteps`, `AiPromptStep`, `AiPromp
 `AiIssueList`, `AiDrawerFooter` — live in `apps/teaching/src/components/app/ai/`. The parsing,
 JSON repair and Markdown checks they all use are in `apps/teaching/src/utils/ai/common.ts`.
 
+
+Test rules shared with lessons (options inline, every valid answer accepted, keys checked, answers spread across A–D) are in `LESSON_DESIGN.md` §7–§8.
+
 ## The three steps
 
 1. **Blueprint** — tick the sections to fill (or add a section for the import to create), the

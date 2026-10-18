@@ -7,6 +7,12 @@ stored on the modules as pending work for the next phase to generate.
 
 Entry points: **Generate with AI** on `/courses`, and in its empty state.
 
+Every lesson a course generator writes follows `LESSON_DESIGN.md` (shape, concepts, practice,
+visualisation, coverage, tests, vocabulary module, and the check-and-audit workflow). Module names
+follow its §11: a grammar-first title (`Grammar (example) · situation`), the situation as the
+module's `subtitle`, and a three-line contents row in its `description`. The in-app blueprint prompt
+(`course-generator.ts`) does not ask for these yet; that is an open step, as for the lesson prompt.
+
 ## The three steps
 
 1. **Setup** — standards (one or more), subjects (optional), weeks and study days a week, pace

@@ -14,6 +14,10 @@ colour, dialogue as a comic, Build it step by step (B3), Picture with labels (B2
 and a third demo lesson using them (`This is a boy, this is a girl, this is a book`, 525 words).
 Not yet: the shared lesson prompt and writer brief on the compact rules, and the Beginner rewrite.
 
+**2026-10-18:** the rules learnt from rebuilding the Spanish and Sanskrit courses (learn, then play;
+concept blocks; visualisation; coverage; tests; vocabulary module) are collected in
+`apps/teaching/src/utils/ai/LESSON_DESIGN.md`, the reference for every generator and writer brief.
+
 ### 3b. Visual concepts (Manish, 2026-10-16)
 
 Built: **gender colour everywhere**, **dialogue as a comic**, **step by step**, **picture with

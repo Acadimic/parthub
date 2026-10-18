@@ -39,6 +39,12 @@ lessons after the subject's existing rows, and reloads the roll-up.
 
 ## What every lesson contains
 
+**The current lesson design is `LESSON_DESIGN.md`** (learn, then play: concepts before practice,
+interactive blocks with their answers inside, visualisation, a closing Key points box and cards).
+The course workspaces and the `course-builder` agent follow it. The in-app prompt below still asks
+for the earlier long, ten-section shape; moving it to `LESSON_DESIGN.md` is the open step.
+
+
 The prompt fixes the shape so the set reads as one course: title and goals, prerequisites, the
 ideas from intuition to formula, worked examples, applications, common mistakes, check-yourself
 questions with answers, **Important notes** (must-remember facts and exam tips as a blockquote
