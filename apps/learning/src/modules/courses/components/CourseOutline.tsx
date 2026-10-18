@@ -217,7 +217,7 @@ const ListToolbar = ({
 
 /** The syllabus: one folding panel per module, with its lessons and tests inside. */
 const ModuleList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem }: IListProps) => {
-  const { isItemCompleted } = useCourse();
+  const { isItemCompleted, selectItem } = useCourse();
   const { getMaterialsByIds } = useMaterialLookups();
   const { getTestPapersByIds } = useTestPaperLookups();
   const { selectedCourseModuleId } = useSelectorLookups();
@@ -233,7 +233,30 @@ const ModuleList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem
     expand(selectedCourseModuleId);
   }, [isPreview, selectedCourseModuleId, expand]);
 
+  const getModuleItems = (courseModule: ICourseModule): ICourseModuleItem[] => [
+    ...getMaterialsByIds(courseModule.materials ?? []).map((material) => ({
+      courseId,
+      courseModuleId: courseModule._id,
+      material,
+    })),
+    ...getTestPapersByIds(courseModule.testPapers ?? []).map((testPaper) => ({
+      courseId,
+      courseModuleId: courseModule._id,
+      testPaper,
+    })),
+  ];
+
   const openIndexes = courseModules.flatMap((courseModule, index) => (isExpanded(courseModule._id) ? [index] : []));
+
+  // While learning, opening a module starts its first item, so it is one tap rather than two. It
+  // calls `selectItem` rather than `onSelectItem`, which would close the phone's outline drawer.
+  const onOpenIndexesChange = (indexes: number[]) => {
+    setExpandedIds(indexes.map((index) => courseModules[index]._id));
+    const opened = courseModules[indexes.find((index) => !openIndexes.includes(index)) ?? -1];
+    if (isPreview || !opened || opened._id === selectedCourseModuleId) return;
+    const [firstItem] = getModuleItems(opened);
+    if (firstItem) selectItem(firstItem);
+  };
   const itemCount = courseModules.reduce(
     (count, courseModule) => count + (courseModule.materials?.length ?? 0) + (courseModule.testPapers?.length ?? 0),
     0,
@@ -255,22 +278,11 @@ const ModuleList = ({ courseId, courseModules, isPreview, isLocked, onSelectItem
       <Accordion
         type="multiple"
         openIndexes={openIndexes}
-        onOpenIndexesChange={(indexes) => setExpandedIds(indexes.map((index) => courseModules[index]._id))}
+        onOpenIndexesChange={onOpenIndexesChange}
         contentClassName="px-0 pb-0"
         className="[&>div:last-child]:border-b-0 [&_button]:px-4 [&_button]:py-3"
         items={courseModules.map((courseModule, index) => {
-          const items: ICourseModuleItem[] = [
-            ...getMaterialsByIds(courseModule.materials ?? []).map((material) => ({
-              courseId,
-              courseModuleId: courseModule._id,
-              material,
-            })),
-            ...getTestPapersByIds(courseModule.testPapers ?? []).map((testPaper) => ({
-              courseId,
-              courseModuleId: courseModule._id,
-              testPaper,
-            })),
-          ];
+          const items = getModuleItems(courseModule);
           const completedCount = items.filter(isItemCompleted).length;
           return {
             id: courseModule._id,
