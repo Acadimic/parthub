@@ -9,16 +9,20 @@ export const MenuList = <T,>({ menuItems, data }: { menuItems: IMenuItem<T>[]; d
     <>
       {menuItems.map((item, index) => {
         const isLastItem = index === menuItems.length - 1;
+        const label = resolve(item.label, data);
         return (
           <div key={index}>
             <button
               onClick={() => item.onClick(data)}
+              // On the whole row, so the icon names the item too; the label itself is trimmed to one line.
+              title={typeof label === 'string' ? label : undefined}
               className={`w-full flex items-center gap-2 hover:text-primary hover:bg-transparent py-3 px-4 text-sm font-medium ${
                 item.isCurrent ? 'text-primary' : ''
               } ${!isLastItem ? 'border-b border-border' : ''}`}
             >
               <span className="text-inherit w-5 flex-shrink-0">{item.icon ? resolve(item.icon, data) : null}</span>
-              {resolve(item.label, data)}
+              {/* One line, trimmed: a long lesson or file name ends in an ellipsis. */}
+              <span className="min-w-0 flex-1 truncate text-left">{label}</span>
             </button>
           </div>
         );

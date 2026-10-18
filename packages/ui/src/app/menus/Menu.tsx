@@ -100,7 +100,7 @@ export const Menu = <T,>({ component, menuItems, data, className, header }: IPro
           <div
             ref={popupRef}
             style={{ top: position.top, left: position.left }}
-            className="fixed z-[1500] border border-border rounded-sm shadow-lg min-w-[180px] bg-popover text-popover-foreground"
+            className="fixed z-[1500] border border-border rounded-sm shadow-lg min-w-[180px] max-w-[min(20rem,calc(100vw-1rem))] bg-popover text-popover-foreground"
             onClick={handleClose}
           >
             {header}
