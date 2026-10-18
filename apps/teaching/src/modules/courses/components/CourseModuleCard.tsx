@@ -205,7 +205,7 @@ export const CourseModuleCard = ({ courseModule, number, isExpanded, onToggle, o
         </span>
         <span className="block text-base font-semibold leading-6 text-foreground">{courseModule.name}</span>
         {courseModule.description ? (
-          <span className="block text-sm text-muted-foreground">{courseModule.description}</span>
+          <span className="block whitespace-pre-line text-sm text-muted-foreground">{courseModule.description}</span>
         ) : null}
         {courseModule.topics?.length ? (
           <span className="block text-xs text-muted-foreground">{courseModule.topics.join(' · ')}</span>

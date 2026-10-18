@@ -42,8 +42,11 @@ export interface IAiSessionSpec {
 export interface IAiCourseDay {
   /** Unique within the file, e.g. "W1-D2". */
   ref: string;
+  /** Grammar or topic first, then the situation: "Past tense (I did) · yesterday". */
   name: string;
-  /** One or two sentences shown on the module card. */
+  /** The situation or theme in a learner's words, shown under the name on the course page. */
+  subtitle?: string;
+  /** The contents row: "You'll be able to: …", "Grammar: …" (or "Topics: …"), "Words: …", one per line. */
   description: string;
   topics: string[];
   estimatedMins: number;

@@ -158,6 +158,7 @@ Search the web for the official ${setup.examStyle} syllabus for ${scope} and the
 ${setup.includeQuizzes ? '5. **Quizzes**: roughly every third day, and on the last day of every week, one short test: { "generate": { name, questionCount (8–15), chapters (ids), topics, durationMins (15–30) } }. Other days have "tests": [].' : '5. **No tests**: leave every "tests" array empty.'}
 ${setup.includeSessions ? '6. **Live sessions**: one per week, on the day that most needs a teacher — a hard idea, or a review before a test: { "title", "durationMins" (45–60), "agenda" (three to five lines) }. Other days omit "session".' : '6. **No live sessions**: omit "session" everywhere.'}
 7. **Week themes**: each week has a theme of a few words; the first day of a week introduces it and the last consolidates it.
+7a. **Naming a day**, the way textbooks show what a unit teaches: "name" puts the grammar or topic first with a short example, then the situation — "Past tense (I walked) · yesterday", "Newton's second law (F = ma) · pushing a cart", "Review: forces · a lab day" — under 45 characters, because a narrow sidebar cuts it on one line. "subtitle" names the situation or theme in a learner's words ("What happened yesterday"). "description" is the day's contents row: exactly three lines joined by \n — "You'll be able to: …", "Grammar: …" (or "Topics: …" outside a language), "Words: …" (or "Key terms: …") — about fifteen words each.
 8. **Description, outcomes, prerequisites**: plain prose, no Markdown. The description is two to four short paragraphs a parent or student would read on a course page: who it is for, what it covers, how it is taught. Outcomes are five to eight "can do" statements. Prerequisites are two to five lines.
 9. **Plans**: ${setup.isPaid ? `a monthly plan around ₹${setup.monthlyAmount} and a yearly plan around ₹${setup.yearlyAmount}, in INR, with "realAmount" the list price before discount (at least the amount)` : 'one free monthly plan with amount 0 and realAmount 0'}. Names a buyer would understand.
 ${setup.instructions.trim() ? `\n### Additional instructions from the teacher\n${setup.instructions.trim()}\n` : ''}
@@ -183,8 +184,9 @@ interface Output {
     theme: string;
     days: Array<{
       ref: string;                  // "W1-D1" …
-      name: string;
-      description: string;          // one or two sentences
+      name: string;                 // grammar or topic first, then the situation; under 45 characters
+      subtitle: string;             // the situation or theme, in a learner's words
+      description: string;          // three lines: You'll be able to / Grammar (or Topics) / Words (or Key terms)
       topics: string[];
       estimatedMins: number;
       lessons: Array<{ use: string } | { generate: { name: string; level: ${Object.values(LevelType)
@@ -244,8 +246,16 @@ interface IDayCheck {
   usedLessons: Set<string>;
 }
 
+/** A day needs a name, short enough for the one-line sidebar (LESSON_DESIGN.md §11). */
+const checkDayName = (name: string | undefined, path: string, issues: IAiIssue[]) => {
+  if (!name?.trim()) issues.push({ level: 'error', path, message: 'The day has no name.' });
+  else if (name.trim().length > 48) {
+    issues.push({ level: 'warning', path, message: 'The day name is long; the sidebar shows about 45 characters.' });
+  }
+};
+
 const checkDay = ({ day, path, setup, context, issues, usedLessons }: IDayCheck) => {
-  if (!day.name?.trim()) issues.push({ level: 'error', path, message: 'The day has no name.' });
+  checkDayName(day.name, path, issues);
   const lessons = day.lessons ?? [];
   const tests = day.tests ?? [];
   if (!lessons.length && !tests.length && !day.session) {
@@ -411,6 +421,8 @@ export interface IImportedCourse {
   course: CourseDto;
   plans: PlanDto[];
   modules: CourseModuleDto[];
+  /** Each week's theme, by week number from 1; the modules no longer carry it in their description. */
+  weekThemes: Record<number, string>;
   /** How many lessons and tests the modules still owe. */
   pendingLessons: number;
   pendingTests: number;
@@ -513,9 +525,9 @@ export const toImportedCourse = (
         course: courseId,
         name: item.name.trim(),
         slug: slugify(item.name.trim()),
-        description: [theme ? `Week ${weekIndex + 1} — ${theme}` : '', item.description?.trim()]
-          .filter(Boolean)
-          .join(': '),
+        // The situation sits under the grammar-first name; without one, the week's theme does.
+        subtitle: item.subtitle?.trim() || (theme ? `Week ${weekIndex + 1} — ${theme}` : undefined),
+        description: item.description?.trim() ?? '',
         day,
         week: weekIndex + 1,
         topics: (item.topics ?? []).map((topic) => topic.trim()).filter(Boolean),
@@ -526,5 +538,6 @@ export const toImportedCourse = (
       };
     }),
   );
-  return { course, plans: toPlans(file, setup, courseId), modules, pendingLessons, pendingTests };
+  const weekThemes = Object.fromEntries(file.weeks.map((week, index) => [index + 1, week.theme?.trim() ?? '']));
+  return { course, plans: toPlans(file, setup, courseId), modules, weekThemes, pendingLessons, pendingTests };
 };

@@ -5,6 +5,7 @@ import { GRAPH_RULES } from './graphs';
 import { SCENE_RULES } from './scenes';
 import { FIGURE_RULES } from './figures';
 import { pronunciationRules } from './pronunciation';
+import { ACTIVITY_RULES } from './activities';
 import {
   type IAiMaterialContext,
   type IAiMaterialSetup,
@@ -93,7 +94,7 @@ const examPrepSection = (includeExamPrep: boolean, examStyle: string): string =>
 Name it "Exam preparation: <scope>". Its "content" has, in order:
 - **## Key terms A–Z** — every key term from every lesson, alphabetised, one-line definitions.
 - **## Important concepts** — the ten to twenty ideas an examiner tests most, each in three to five lines with the lesson (M-ref) that teaches it.
-- **## Important notes** — every "Important notes" point from every lesson, merged and de-duplicated, grouped by topic.
+- **## Key points** — every "Key points" bullet from every lesson, merged and de-duplicated, grouped by topic.
 - **## Formula sheet** — a pipe table: formula (LaTeX), what each symbol means, when to use it.
 - **## Typical questions and how to approach them** — the recurring question patterns for the ${examStyle} and a method for each.
 - **## Traps and misconceptions** — the mistakes that cost marks.
@@ -170,20 +171,20 @@ ${includeExamPrep ? `- M${lessonCount + 1}: kind "examPrep", level "hard" — th
 
 ${coverageClause(isPlanned, scope)} When chapters are given, set each lesson's "chapter" to the id of the chapter it mainly covers.
 
-# What every lesson contains, in this order (as Markdown in "content")
+# What every lesson contains (as Markdown in "content"): learn, then play
 
-1. **# Title** — then one short paragraph on what the lesson is for and what the student will be able to do afterwards.
-2. **## Before you start** — the two to four ideas assumed, each in one line, with the lesson (M-ref) where it was taught when it is in this set.
-3. **## The ideas** — the core teaching. Sub-headings (###) per topic. Each topic: a plain-language definition, the intuition or a real-life picture, then the formal statement, law or formula with every symbol named and its unit. Build up gradually; never introduce two new ideas in one sentence.
-4. **## Worked examples** — two to four, fully worked, each labelled with the idea it exercises; at least one numerical and one conceptual where the subject allows. Show units at every step.
-5. **## Where this shows up** — real-life applications and connections to other chapters.
-6. **## Common mistakes** — the misconceptions students really have, each with why it is wrong and the correct thinking.
-7. **## Check yourself** — four to six short questions of rising difficulty with answers in a separate "**Answers**" list.
-8. **## Important notes** — the must-remember facts, exam tips, sign conventions, units, special cases and "examiners look for" points for this lesson, as a blockquote list. This is what a student re-reads the night before.
-9. **## Key terms** — every term introduced in this lesson, as "**term** — one-sentence definition". The same list goes in "keyTerms".
-10. **## Summary** — five to eight bullet points a student could revise from.
+A lesson alternates a few ideas, each explained, with practice that uses exactly those ideas, again and again until every idea of the lesson is covered, and closes with the key points of all of them. Nothing is answered in a list at the end: every question carries its answer inside its block.
 
-Depth follows the level: easy lessons use everyday language and short steps; hard lessons use exam-style reasoning and combine ideas. Formulas in LaTeX, always. Aim for 900 to 1600 words per lesson.
+1. **# Title** — then one or two lines on what the student will be able to do afterwards, and the ideas it assumes (with the M-ref where they were taught, when it is in this set).
+2. **One "##" topic per idea**, each one screen: about 30–150 words of prose, or one block or picture with a few lines. A topic opens with a **::: concept** block that teaches the idea: a plain-language definition, the intuition or a real-life picture, then the formal statement, law or formula with every symbol named and its unit, two to four examples, and one common mistake as "**Watch out:** …". A concept's title is given only when the heading does not already name the idea.
+3. **Practice straight after each concept**, using exactly that idea: a **::: check** or **::: reveal** for questions (rising difficulty across the lesson), **::: steps** for a worked example built one step at a time (two to four worked examples per lesson, at least one numerical and one conceptual where the subject allows, units at every step), and a **::: picture** or figure where a picture is clearer than words. Never more than two concepts in a row without practice between them.
+4. **Applications** belong in the concept or in a question ("where this shows up"), not in a section of their own.
+5. **## Key points** — near the end, one **::: concept title="Key points"** holding one bullet per idea of the lesson: the rule in a few words and one example. Every concept of the lesson appears there. This is what a student re-reads the night before.
+6. **## Remember** — last, one **::: cards** block with every term introduced in the lesson as "- term :: one-sentence definition". The same terms go in "keyTerms".
+
+There are no separate "Check yourself", "Answers", "Important notes", "Key terms" or "Summary" sections: the blocks above replace them.
+
+Depth follows the level: easy lessons use everyday language and short steps; hard lessons use exam-style reasoning and combine ideas. Formulas in LaTeX, always. A lesson is as long as its ideas need, usually 900 to 2000 words; coverage comes before brevity, but prose that does not teach is cut.
 ${examPrepSection(includeExamPrep, setup.examStyle)}
 ${resourceRules}${continuation}
 # Quality rules
@@ -193,10 +194,16 @@ ${resourceRules}${continuation}
 3. Original prose. Do not copy passages from any source; cite by linking in the resources instead.
 4. "tag" is a 1–4 word snake_case topic such as "newtons_second_law". "durationMins" is how long a student needs to work through the lesson properly, typically 25 to 60.
 5. "topics" lists the lesson's topics in order, three to eight short phrases.
+6. No false "always" or "never": where a rule has exceptions, say "usually" and give the counter-example. Teach a form or law by the rule that really governs it, checked against the textbook rather than remembered.
+7. Show what is clearer seen than read: a figure, a labelled picture, a 3D graph or scene, a table. A picture, its caption and any question that uses it state the same numbers, names and positions; a map is drawn from an authoritative boundary, never freehand.
+8. A question has exactly the answers that are right: an option marked wrong must really be wrong (not another valid form, unit or method).
 ${instructionsSection(setup.instructions)}
 # Formatting rules for "content"
 
 Markdown, restricted to:${MARKDOWN_RULES}
+
+# Interactive blocks
+${ACTIVITY_RULES}
 
 # Figures
 ${FIGURE_RULES}
@@ -260,7 +267,8 @@ interface Output {
 # Before you answer, check
 
 - ${countChecklist(isPlanned, lessonCount, includeExamPrep, setup)}
-- Every lesson has all ten sections in order, and its "Key terms" section matches "keyTerms"; every "outline" line is taught by some lesson.
+- Every lesson is learn, then play: each idea in a ::: concept followed by practice, never more than two concepts in a row, a closing "Key points" concept naming every idea, and a ::: cards block matching "keyTerms"; every "outline" line is taught by some lesson.
+- Every ::: block is closed with ":::", every ::: check has at least one [x], and no option marked wrong is also correct.
 - No topic of ${scope} is missing; no two lessons teach the same thing.
 - Every resource address is real, public and one you have seen; every id comes from the workspace data.
 - Every backslash inside a JSON string is doubled, newlines are \\n, and the JSON parses.`;

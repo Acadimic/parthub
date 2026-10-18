@@ -16,9 +16,10 @@ Entry points: **Generate with AI** in a subject's Contents header on
    exam-preparation sheet, and free-text instructions. The ladder of levels is decided from the
    count: about two-fifths easy, two-fifths medium, the rest hard.
 2. **Prompt** — written from the setup and the workspace's ids by `buildStudyMaterialPrompt` in
-   `study-material-generator.ts`. It asks the model to research first, then write each lesson in a
-   fixed nine-section shape (goals, prerequisites, ideas, worked examples, applications, common
-   mistakes, check yourself, key terms, summary), and to cite only addresses it has actually seen.
+   `study-material-prompt.ts`. It asks the model to research first, then write each lesson in the
+   learn-then-play shape of `LESSON_DESIGN.md` (a `::: concept` per idea, practice in interactive
+   blocks straight after it, a closing Key points box and cards), and to cite only addresses it has
+   actually seen.
 3. **Import** — paste or upload the reply. It is parsed, checked (ids, the ladder, per-lesson rules,
    resource shapes), then every resource address is verified through `POST common/verify-links`
    (YouTube via oEmbed, everything else by HEAD then GET). Unreachable references are shown struck
@@ -39,17 +40,20 @@ lessons after the subject's existing rows, and reloads the roll-up.
 
 ## What every lesson contains
 
-**The current lesson design is `LESSON_DESIGN.md`** (learn, then play: concepts before practice,
-interactive blocks with their answers inside, visualisation, a closing Key points box and cards).
-The course workspaces and the `course-builder` agent follow it. The in-app prompt below still asks
-for the earlier long, ten-section shape; moving it to `LESSON_DESIGN.md` is the open step.
+**The lesson design is `LESSON_DESIGN.md`**, and the prompt follows it (2026-10-18): learn, then
+play — a title and what the student will be able to do; one `##` topic per idea, opening with a
+`::: concept` (definition, intuition, the formal statement, examples, one "Watch out"); practice
+straight after it in `::: check`, `::: reveal`, `::: steps` (worked examples) and `::: picture`
+blocks, never more than two concepts in a row; a `## Key points` concept naming every idea; and a
+`::: cards` block that matches `keyTerms`. The prompt's "Interactive blocks" section
+(`ACTIVITY_RULES` in `packages/shared/src/ai/activities.ts`) gives the syntax, and its quality rules
+add "usually" over false absolutes, pictures that agree with their questions, and no valid answer
+marked wrong. On import `checkLessonShape` warns on a lesson without concepts, Key points or cards,
+and `checkActivities` errors on a block that does not parse.
 
 
-The prompt fixes the shape so the set reads as one course: title and goals, prerequisites, the
-ideas from intuition to formula, worked examples, applications, common mistakes, check-yourself
-questions with answers, **Important notes** (must-remember facts and exam tips as a blockquote
-list), **Key terms**, and a summary. The exam-preparation sheet gathers every key term A–Z, the
-most-tested concepts, all important notes merged by topic, a formula table, question patterns,
+The prompt fixes that shape so the set reads as one course. The exam-preparation sheet gathers every key term A–Z, the
+most-tested concepts, all Key points merged by topic, a formula table, question patterns,
 traps and a last-day checklist. Research is ordered: the official syllabus first, then the
 prescribed textbook and an open university text, then teaching sites and channels; the reply's
 `outline` is the syllabus the model worked from, shown in the preview.

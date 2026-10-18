@@ -12,7 +12,7 @@ import { createObjectId } from '../utils/object-id.util';
 import { checkMarkdownMath, type IAiIssue, parseJsonObject, repairIssue } from './common';
 import { checkFigures } from './figures';
 import { checkPronunciation } from './pronunciation';
-import { checkActivities } from './activities';
+import { checkActivities, checkLessonShape } from './activities';
 import { buildStudyMaterialPrompt } from './study-material-prompt';
 import { type IAiMaterialContext, type IAiMaterialSetup } from './study-material-setup';
 
@@ -106,12 +106,7 @@ const checkContent = (material: IAiMaterial, path: string, issues: IAiIssue[]) =
       message: 'No "##" sections; the lesson structure was not followed.',
     });
   }
-  if (material.kind === 'lesson' && !/^##\s+key terms/im.test(content)) {
-    issues.push({ level: 'warning', path: `${path}.content`, message: 'No "Key terms" section.' });
-  }
-  if (material.kind === 'lesson' && !/^##\s+important notes/im.test(content)) {
-    issues.push({ level: 'warning', path: `${path}.content`, message: 'No "Important notes" section.' });
-  }
+  if (material.kind === 'lesson') checkLessonShape(content, `${path}.content`, issues);
   if (/<(?!br\s*\/?>)[a-z][^>]*>/i.test(content)) {
     issues.push({ level: 'warning', path: `${path}.content`, message: 'Contains HTML tags, which the editor drops.' });
   }

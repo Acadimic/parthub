@@ -63,7 +63,8 @@ phase.
 1. `cli.mjs course:prompts --course <id> --out <dir>` writes one lesson prompt per day and one
    quiz prompt per planned quiz, with a manifest.
 2. Answer each prompt yourself, one file per reply. For lessons: research the topic (WebSearch,
-   WebFetch), write the ten-section lesson the prompt specifies, 900–1600 words, LaTeX for every
+   WebFetch), write the learn-then-play lesson the prompt specifies (concepts, practice blocks, Key points, cards;
+   usually 900–2000 words), LaTeX for every
    formula, `20\%` inside maths, `\$` for money, figures wherever a picture helps (see "Figures"),
    3D graphs on every equation whose shape is the point (see "3D graphs"), 3D scenes for solids,
    nets, dice, molecules and unit cells (see "3D scenes"), and **cite only resources you have

@@ -10,8 +10,11 @@ Entry points: **Generate with AI** on `/courses`, and in its empty state.
 Every lesson a course generator writes follows `LESSON_DESIGN.md` (shape, concepts, practice,
 visualisation, coverage, tests, vocabulary module, and the check-and-audit workflow). Module names
 follow its §11: a grammar-first title (`Grammar (example) · situation`), the situation as the
-module's `subtitle`, and a three-line contents row in its `description`. The in-app blueprint prompt
-(`course-generator.ts`) does not ask for these yet; that is an open step, as for the lesson prompt.
+module's `subtitle`, and a three-line contents row in its `description`. The blueprint prompt
+(`course-generator.ts`) asks for all three on every day, the validator warns on a name over 48
+characters, and the import writes them to the module (falling back to "Week n — theme" as the
+subtitle when a reply has none). The week themes travel separately in the import result
+(`weekThemes`) for the preview.
 
 ## The three steps
 

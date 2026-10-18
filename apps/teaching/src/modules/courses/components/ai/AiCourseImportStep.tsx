@@ -125,13 +125,6 @@ const groupByWeek = (modules: CourseModuleDto[]) =>
     modules: modules.filter((courseModule) => (courseModule.week ?? 1) === week),
   }));
 
-/** The theme the importer wrote into the week's first description, if any. */
-const weekTheme = (modules: CourseModuleDto[], week: number): string => {
-  const prefix = `Week ${week} — `;
-  const description = modules[0]?.description ?? '';
-  return description.startsWith(prefix) ? description.slice(prefix.length).split(':')[0] : '';
-};
-
 /** The course as the import will create it: name, description, counts, plans, outcomes. */
 const CourseSummary = ({ imported }: { imported: IImportedCourse }) => (
   <div className="rounded-lg border border-border bg-muted/30 p-3">
@@ -247,8 +240,8 @@ export const AiCourseImportStep = ({ text, onChangeText, issues, imported, sessi
               <div key={week} className="flex flex-col gap-2">
                 <p className="text-xs font-semibold text-foreground">
                   Week {week}
-                  {weekTheme(modules, week) ? (
-                    <span className="ml-1.5 font-normal text-muted-foreground">{weekTheme(modules, week)}</span>
+                  {imported.weekThemes[week] ? (
+                    <span className="ml-1.5 font-normal text-muted-foreground">{imported.weekThemes[week]}</span>
                   ) : null}
                 </p>
                 <ul className="flex flex-col gap-1.5">

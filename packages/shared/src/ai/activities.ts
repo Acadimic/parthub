@@ -49,3 +49,96 @@ export const checkActivities = (markdown: string, path: string, issues: IAiIssue
     }
   });
 };
+
+/** The blocks that let a learner act; a concept counts as practised once one of these follows it. */
+const PLAYABLE = new Set([
+  'check',
+  'reveal',
+  'steps',
+  'soundboard',
+  'soundmap',
+  'picture',
+  'sentence',
+  'say',
+  'listening',
+]);
+const KEY_POINTS = /title="?key points/i;
+
+/**
+ * The learn-then-play shape (`apps/teaching/src/utils/ai/LESSON_DESIGN.md` §1): concepts before
+ * their practice, never more than two in a row, a closing "Key points" concept and a set of cards.
+ * Warnings only: a lesson that misses the shape still imports.
+ */
+export const checkLessonShape = (markdown: string, path: string, issues: IAiIssue[]) => {
+  const warn = (message: string) => issues.push({ level: 'warning', path, message });
+  const fences = (markdown ?? '')
+    .split('\n')
+    .map((line) => /^:::\s*([a-z]+)\b(.*)$/.exec(line.trim()))
+    .filter((match): match is RegExpExecArray => !!match)
+    .map((match) => ({ kind: match[1], attrs: match[2] }));
+  const isKeyPoints = (fence: { kind: string; attrs: string }) =>
+    fence.kind === 'concept' && KEY_POINTS.test(fence.attrs);
+  const concepts = fences.filter((fence) => fence.kind === 'concept' && !isKeyPoints(fence));
+  if (concepts.length < 2) {
+    warn(`Only ${concepts.length} "::: concept" block(s); teach each idea in a concept before its practice.`);
+  }
+  if (!fences.some(isKeyPoints)) {
+    warn('No closing ::: concept title="Key points" listing the key items of every concept.');
+  }
+  if (!fences.some((fence) => fence.kind === 'cards')) warn("No ::: cards block with the lesson's new terms.");
+  let run = 0;
+  for (const fence of fences) {
+    if (fence.kind === 'concept' && !isKeyPoints(fence)) run += 1;
+    else if (PLAYABLE.has(fence.kind)) run = 0;
+    if (run > 2) {
+      warn('More than two concepts in a row: put practice between them.');
+      break;
+    }
+  }
+};
+
+/** How to write the interactive blocks, for a prompt (the syntax `checkActivities` accepts). */
+export const ACTIVITY_RULES = `
+Interactive blocks are fenced with ":::" on their own lines. Every question carries its answer inside its block.
+
+\`\`\`
+::: concept title="The idea, only if the heading does not already name it"
+80–150 words: what it is, when it is used, how it is formed (a small pipe table may help), two to four examples, and one "**Watch out:**" common mistake. No questions inside, and no other ::: block.
+:::
+
+::: check
+The question.
+- [ ] a wrong option that is a real misconception
+- [x] the right option (any number may be [x])
+---
+Why the right option is right, in one or two lines.
+:::
+
+::: reveal
+An open question: explain, calculate, translate.
+---
+The answer, with the working.
+:::
+
+::: steps
+The first form or line, with the part that changes in **bold**
+What this step does, in one line
+---
+The next form or line
+What changed
+:::
+
+::: picture src=figure:F1 alt="what the picture shows" mode=find
+- 24,40 word or label :: meaning
+- 70,55 another label :: meaning
+:::
+
+::: cards
+- term :: one-line meaning
+- another term :: its meaning
+:::
+\`\`\`
+
+- "steps" builds a result one change at a time (a derivation, a worked example, a form). "picture" labels points on a figure by x,y percent; mode=find makes the learner tap them, so its figure must have no words on it.
+- Language courses also have "::: soundboard" (a pipe table of words to tap and hear), "::: say" (lines to say aloud, one per paragraph) and "::: sentence" (one "- role word :: meaning" line per tile, roles doer, action, object, place, time, with, for, from, whose; sentences separated by "---").
+`;

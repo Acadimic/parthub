@@ -1,7 +1,8 @@
 # How a lesson is built
 
-The rules every generated lesson follows, whoever writes it: the teaching app's prompt, the
-`course-builder` agent, or a course workspace's writer brief. They come from rebuilding the Spanish
+The rules every generated lesson follows, whoever writes it: the teaching app's prompts
+(`packages/shared/src/ai/study-material-prompt.ts`, `course-generator.ts`, which follow this guide
+since 2026-10-18), the `course-builder` agent, or a course workspace's writer brief. They come from rebuilding the Spanish
 (A1–C2) and Sanskrit courses in October 2026 and from what learners and Manish said about them. A
 course brief adds only what is particular to its subject; it does not restate these.
 
