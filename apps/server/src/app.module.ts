@@ -43,6 +43,7 @@ import { RequestContextService } from './context/request-context.service';
 import { IndexSyncService } from './database/index-sync.service';
 import { registerGlobalPlugins } from './database/plugins/register-plugins';
 import { AccessGuard } from './guards/access.guard';
+import { RateLimitGuard } from './guards/rate-limit.guard';
 import { AuthGuard } from './guards/auth.guard';
 import { ActivityLogCoreModule } from './modules/activity-log/activity-log-core.module';
 import { ActivityLogCoreService } from './modules/activity-log/activity-log-core.service';
@@ -158,6 +159,11 @@ const CLOUD_LOGGING_SEVERITY: Record<string, string> = { trace: 'DEBUG', warn: '
       // Registered second so it runs after AuthGuard has populated the request context.
       provide: APP_GUARD,
       useClass: AccessGuard,
+    },
+    {
+      // Third, so only a call AccessGuard allowed counts against the learner's limit.
+      provide: APP_GUARD,
+      useClass: RateLimitGuard,
     },
     AppService,
     IndexSyncService,

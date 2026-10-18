@@ -19,6 +19,49 @@ const DISALLOWED_PATHS = [
   '/sign-up',
 ];
 
+/**
+ * AI crawlers, refused the whole site: those that gather training data, and those that fetch a page
+ * for an assistant's answer. Search engines keep the rules above, so ranking is unaffected. This
+ * binds only crawlers that honour robots.txt; the server's rate limits are what stop the rest.
+ */
+const AI_CRAWLERS = [
+  'GPTBot',
+  'ChatGPT-User',
+  'OAI-SearchBot',
+  'ClaudeBot',
+  'Claude-User',
+  'Claude-SearchBot',
+  'Claude-Web',
+  'anthropic-ai',
+  'Google-Extended',
+  'GoogleOther',
+  'Applebot-Extended',
+  'CCBot',
+  'PerplexityBot',
+  'Perplexity-User',
+  'Bytespider',
+  'meta-externalagent',
+  'meta-externalfetcher',
+  'FacebookBot',
+  'Amazonbot',
+  'cohere-ai',
+  'cohere-training-data-crawler',
+  'MistralAI-User',
+  'DuckAssistBot',
+  'AI2Bot',
+  'Ai2Bot-Dolma',
+  'Diffbot',
+  'ImagesiftBot',
+  'Omgilibot',
+  'Omgili',
+  'YouBot',
+  'Timpibot',
+  'PanguBot',
+  'Kangaroo Bot',
+  'Webzio-Extended',
+  'img2dataset',
+];
+
 /** An hour at the CDN: a new or renamed course reaches the sitemap within that. */
 const CACHE_CONTROL = 'public, s-maxage=3600, stale-while-revalidate=86400';
 
@@ -46,7 +89,15 @@ export const getSitemapProps: GetServerSideProps = async ({ res }) => {
 
 /** `/robots.txt`, a route rather than a file so the sitemap address follows `NEXT_PUBLIC_APP_URL`. */
 export const getRobotsProps: GetServerSideProps = async ({ res }) => {
-  const lines = ['User-agent: *', 'Allow: /', ...DISALLOWED_PATHS.map((path) => `Disallow: ${path}`), ''];
+  const lines = [
+    ...AI_CRAWLERS.map((agent) => `User-agent: ${agent}`),
+    'Disallow: /',
+    '',
+    'User-agent: *',
+    'Allow: /',
+    ...DISALLOWED_PATHS.map((path) => `Disallow: ${path}`),
+    '',
+  ];
   lines.push(`Sitemap: ${getAbsoluteUrl('/sitemap.xml')}`, '');
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   res.setHeader('Cache-Control', CACHE_CONTROL);

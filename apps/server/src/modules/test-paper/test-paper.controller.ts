@@ -1,6 +1,7 @@
 import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
+import { RateLimit } from '@decorators/rate-limit.decorator';
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { TestPaperSectionService } from './test-paper-section.service';
 import { TestPaperTotalsService } from './test-paper-totals.service';
@@ -67,6 +68,7 @@ export class TestPaperController {
   }
 
   @Get('sections-with-questions/:testPaperId')
+  @RateLimit('quiz')
   @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
   @Permissions(PermissionItem.VIEW_TEST_PAPER)
   async getSectionsWithQuestions(@Param('testPaperId') testPaperId: string) {
