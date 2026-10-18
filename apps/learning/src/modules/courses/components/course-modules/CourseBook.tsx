@@ -1,7 +1,12 @@
 import { Button, FullScreenModal, Spinner, ToggleTheme, Tooltip } from '@repo/ui/app';
-import { PrintCourse } from '@repo/ui/print';
+import { PrintCourseOnScroll } from '@repo/ui/print';
 import { BlankState } from '@components/others';
-import { type IPrintCourseSnapshot, loadPrintCourse, toErrorMessage } from '@modules/print/print-data';
+import {
+  type IPrintCourseSnapshot,
+  loadCourseBookModule,
+  loadCourseBookOutline,
+  toErrorMessage,
+} from '@modules/print/print-data';
 import { BookOpenTextIcon, PrinterIcon, XIcon } from '@phosphor-icons/react';
 import { type ICourse, useSelectorLookups } from '@stores';
 import { closeCourseBook } from '@utils/course-book';
@@ -22,8 +27,8 @@ const describe = ({ data }: IPrintCourseSnapshot) => {
 /**
  * The whole course read as pages in a modal over the learning view: the same cover, contents and
  * module pages as the printout, in the app's own theme and with its content live rather than
- * stilled for paper. The lesson bodies load when it opens, and go when it closes, so a long course
- * is not held in memory while the learner reads a lesson at a time.
+ * stilled for paper. It opens on the syllabus alone, and each module's lessons and quizzes load as
+ * the reader scrolls to it, so a long course opens at once rather than after every lesson arrives.
  */
 export const CourseBook = ({ course }: { course: ICourse }) => {
   const { isCourseBookOpen } = useSelectorLookups();
@@ -46,7 +51,7 @@ export const CourseBook = ({ course }: { course: ICourse }) => {
       return undefined;
     }
     let isCurrent = true;
-    loadPrintCourse(course._id, null)
+    loadCourseBookOutline(course._id)
       .then((loaded) => isCurrent && setSnapshot(loaded))
       .catch((reason: unknown) => isCurrent && setError(toErrorMessage(reason)));
     return () => {
@@ -103,12 +108,15 @@ export const CourseBook = ({ course }: { course: ICourse }) => {
               <div className="mt-24 flex flex-col items-center gap-3 text-center text-sm text-muted-foreground">
                 <Spinner className="h-8 w-8" />
                 <p>Opening the whole course…</p>
-                <p className="text-xs">A long course can take a little while.</p>
               </div>
             ) : null}
             {snapshot ? (
               <div className="mx-auto flex max-w-[210mm] flex-col gap-8 px-4 py-8 text-[10.5pt] leading-[1.55] max-sm:gap-4 max-sm:px-2 max-sm:py-4 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden">
-                <PrintCourse data={snapshot.data} eyebrow={snapshot.eyebrow} scope="course" surface="screen" />
+                <PrintCourseOnScroll
+                  data={snapshot.data}
+                  eyebrow={snapshot.eyebrow}
+                  loadModule={(item) => loadCourseBookModule(course._id, item)}
+                />
               </div>
             ) : null}
           </div>

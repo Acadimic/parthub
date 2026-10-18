@@ -1,5 +1,7 @@
 import { PlayCircleIcon } from '@phosphor-icons/react';
 import { MaterialType } from '@repo/shared/enums';
+import { useEffect, useRef, useState } from 'react';
+import { Button } from '../app/buttons/Buttons';
 import { RichTextView } from '../content/RichTextView';
 import { useResolvedImageUrl } from '../content/RichTextImage';
 import { cn } from '../lib/cn';
@@ -329,5 +331,118 @@ export const PrintCourse = ({ data, eyebrow, scope, surface }: IPrintCourseProps
         <PrintClosing courseUrl={data.courseUrl} />
       </PrintSheet>
     ) : null}
+  </>
+);
+
+/** The nearest ancestor that scrolls vertically: the book's own scroller, not the window. */
+const getScroller = (element: HTMLElement): HTMLElement | null => {
+  let node = element.parentElement;
+  while (node) {
+    const { overflowY } = getComputedStyle(node);
+    if (overflowY === 'auto' || overflowY === 'scroll') return node;
+    node = node.parentElement;
+  }
+  return null;
+};
+
+/** Stand-in lines while a module's lessons load, roughly a page of text. */
+const ModulePlaceholder = () => (
+  <div className="flex min-h-[60vh] flex-col gap-3" aria-hidden="true">
+    {[92, 100, 86, 97, 74, 0, 88, 100, 93, 61].map((width, index) =>
+      width ? (
+        <div key={index} className="h-3.5 animate-pulse rounded bg-muted" style={{ width: `${width}%` }} />
+      ) : (
+        <div key={index} className="h-4" />
+      ),
+    )}
+  </div>
+);
+
+interface ILazyModuleSheetProps {
+  item: IPrintModule;
+  courseName: string;
+  loadModule: (item: IPrintModule) => Promise<IPrintModule>;
+}
+
+/**
+ * A module that loads its lessons and quizzes when it comes within a screen of view. Until then it
+ * is its band over stand-in lines, so the contents' links still land on it.
+ */
+const LazyModuleSheet = ({ item, courseName, loadModule }: ILazyModuleSheetProps) => {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [loaded, setLoaded] = useState<IPrintModule | null>(null);
+  const [error, setError] = useState('');
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet || loaded) return undefined;
+    let isCurrent = true;
+    // The margin counts against the book's scroller, which clips the module, not against the window.
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        observer.disconnect();
+        loadModule(item)
+          .then((next) => isCurrent && setLoaded(next))
+          .catch(
+            (reason: unknown) => isCurrent && setError(reason instanceof Error ? reason.message : 'Could not load.'),
+          );
+      },
+      { root: getScroller(sheet), rootMargin: '100% 0px' },
+    );
+    observer.observe(sheet);
+    return () => {
+      isCurrent = false;
+      observer.disconnect();
+    };
+  }, [item.module._id, attempt]);
+
+  if (loaded) return <ModuleSheet item={loaded} courseName={courseName} scope="course" isNewPage />;
+  return (
+    <div ref={sheetRef}>
+      <PrintSheet isNewPage>
+        <ModuleBand item={item} />
+        {error ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-center text-sm text-muted-foreground">
+            <p>{error}</p>
+            <Button
+              isSecondary
+              text="Try again"
+              onClick={() => {
+                setError('');
+                setAttempt((count) => count + 1);
+              }}
+            />
+          </div>
+        ) : (
+          <ModulePlaceholder />
+        )}
+      </PrintSheet>
+    </div>
+  );
+};
+
+export interface IPrintCourseOnScrollProps {
+  /** The course and its syllabus: names and durations, without lesson bodies or questions. */
+  data: IPrintCourse;
+  /** The line above the title on the cover: "Course · Class 11 · Physics". */
+  eyebrow: string;
+  /** One module with its lesson bodies and quizzes in, fetched when the reader nears it. */
+  loadModule: (item: IPrintModule) => Promise<IPrintModule>;
+}
+
+/**
+ * A whole course read on screen, opened from its syllabus alone: the cover and contents at once,
+ * then each module's lessons and quizzes as the reader scrolls to it. The printout uses
+ * `PrintCourse`, which needs every module in before the print dialog opens.
+ */
+export const PrintCourseOnScroll = ({ data, eyebrow, loadModule }: IPrintCourseOnScrollProps) => (
+  <>
+    <Cover data={data} eyebrow={eyebrow} surface="screen" />
+    <Contents modules={data.modules} />
+    {data.modules.map((item) => (
+      <LazyModuleSheet key={item.module._id} item={item} courseName={data.course.name} loadModule={loadModule} />
+    ))}
   </>
 );

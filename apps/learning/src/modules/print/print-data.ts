@@ -1,4 +1,4 @@
-import { type IPrintCourse, type IPrintQuiz } from '@repo/ui/print';
+import { type IPrintCourse, type IPrintModule, type IPrintQuiz } from '@repo/ui/print';
 import { CourseService } from '@services';
 import {
   type ICourse,
@@ -104,9 +104,17 @@ const loadLessons = async (courseId: string, moduleId: string | null) => {
   useMaterialStore.getState().addMaterials(data.materials);
 };
 
+/** One module as the printout and the book read it, from whatever the stores hold for it now. */
+const readPrintModule = (row: ICourseModule, number: number): IPrintModule => ({
+  module: row,
+  number,
+  materials: useMaterialStore.getState().getMaterialsByIds(row.materials ?? []),
+  quizzes: (row.testPapers ?? []).flatMap((paperId) => readQuiz(paperId) ?? []),
+});
+
 /**
  * A course the learner can open, or one module of it, with every lesson body and quiz in: what a
- * printout or the book shows.
+ * printout shows.
  */
 export const loadPrintCourse = async (courseId: string, moduleId: string | null): Promise<IPrintCourseSnapshot> => {
   const { course, modules } = await loadEnrolledCourse(courseId);
@@ -121,14 +129,40 @@ export const loadPrintCourse = async (courseId: string, moduleId: string | null)
     data: {
       course,
       courseUrl: getPrintCourseUrl(course),
-      modules: picked.map(({ row, number }) => ({
-        module: row,
-        number,
-        materials: useMaterialStore.getState().getMaterialsByIds(row.materials ?? []),
-        quizzes: (row.testPapers ?? []).flatMap((paperId) => readQuiz(paperId) ?? []),
-      })),
+      modules: picked.map(({ row, number }) => readPrintModule(row, number)),
     },
   };
+};
+
+/**
+ * The course book's first view: the course and its syllabus, with lesson and quiz names but no
+ * lesson bodies or questions. Each module's contents load as the reader scrolls to it.
+ */
+export const loadCourseBookOutline = async (courseId: string): Promise<IPrintCourseSnapshot> => {
+  const { course, modules } = await loadEnrolledCourse(courseId);
+  return {
+    eyebrow: buildEyebrow('Course', course),
+    title: course.name,
+    data: {
+      course,
+      courseUrl: getPrintCourseUrl(course),
+      modules: modules.map((row, index) => readPrintModule(row, index + 1)),
+    },
+  };
+};
+
+/**
+ * One module of the course book with its lesson bodies and quizzes in. Lessons come through the
+ * learning view's own module fetch, so a module already opened there is not fetched again.
+ */
+export const loadCourseBookModule = async (courseId: string, item: IPrintModule): Promise<IPrintModule> => {
+  const courses = useCourseStore.getState();
+  const paperIds = courses.getCourseModuleById(item.module._id)?.testPapers ?? [];
+  await Promise.all([courses.loadModuleContents(courseId, item.module._id), loadQuizzes(paperIds)]);
+  // The request slice keeps one error for every module's fetch, so the module's own flag decides.
+  const row = useCourseStore.getState().getCourseModuleById(item.module._id);
+  if (!row?.isLoadedContents) throw new Error('This module could not be loaded.');
+  return readPrintModule(row, item.number);
 };
 
 /** The print page opens in a tab of its own, so Close closes it; opened directly, it goes back. */

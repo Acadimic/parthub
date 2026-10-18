@@ -4,8 +4,8 @@ export { PrintOptionPicker, PrintShell, PrintSheet } from './PrintShell';
 export type { IPrintOption, IPrintShellProps } from './PrintShell';
 export { PrintTestPaper } from './PrintTestPaper';
 export type { IPrintTestPaperProps } from './PrintTestPaper';
-export { PrintCourse } from './PrintCourse';
-export type { IPrintCourseProps } from './PrintCourse';
+export { PrintCourse, PrintCourseOnScroll } from './PrintCourse';
+export type { IPrintCourseOnScrollProps, IPrintCourseProps } from './PrintCourse';
 export { PrintClosing } from './PrintBrand';
 export type {
   IPrintCourse,
