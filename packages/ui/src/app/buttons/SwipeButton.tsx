@@ -128,7 +128,10 @@ const useSwipe = ({ isCompleted, disabled, getTravel, onComplete }: ISwipeOption
   };
 };
 
-/** The tint that follows the knob, and the instruction it slides over. */
+/** The space between the knob's edge and the label, past the knob's own 4px inset. */
+const LABEL_GAP = 6;
+
+/** The tint that follows the knob, and the instruction it slides over, trimmed when the track is short. */
 const SwipeTrack = ({
   isCompleted,
   isDragging,
@@ -150,10 +153,10 @@ const SwipeTrack = ({
     />
     <div
       className={cn(
-        'absolute inset-0 flex items-center justify-center pr-2 text-xs font-medium sm:text-sm',
+        'absolute inset-0 flex items-center justify-center pr-3 text-xs font-medium sm:text-sm',
         isCompleted ? 'text-success' : 'text-primary',
       )}
-      style={{ paddingLeft: knobSize }}
+      style={{ paddingLeft: 4 + knobSize + LABEL_GAP }}
     >
       <span className="truncate">{label}</span>
     </div>
