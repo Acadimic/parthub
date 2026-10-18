@@ -155,6 +155,24 @@ export const CourseModuleContent = () => {
   const topRef = useRef<HTMLDivElement>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+  // The lesson's full screen takes the browser's too. Browsers allow that only from a tap, so it is
+  // asked for here rather than in an effect, and a phone without the API keeps the in-page view.
+  const changeFullScreen = (next: boolean) => {
+    setIsFullScreen(next);
+    if (next) document.documentElement.requestFullscreen?.().catch(() => undefined);
+    else if (document.fullscreenElement) document.exitFullscreen().catch(() => undefined);
+  };
+
+  // Leaving the browser's full screen by its own means (Escape, its control) leaves the lesson's.
+  useEffect(() => {
+    const onChange = () => !document.fullscreenElement && setIsFullScreen(false);
+    document.addEventListener('fullscreenchange', onChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onChange);
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => undefined);
+    };
+  }, []);
+
   // A new lesson starts at its top. The column scrolls, not the page, so the nearest scroller is
   // the one to reset.
   useEffect(() => {
@@ -218,13 +236,13 @@ export const CourseModuleContent = () => {
               courseId={selectedCourseId}
               courseModuleId={selectedCourseModuleId}
               isFullScreen={isFullScreen}
-              onFullScreenChange={setIsFullScreen}
+              onFullScreenChange={changeFullScreen}
             />
           </div>
         </div>
         <FrameToolbar
           material={selectedMaterial}
-          onFullScreen={() => setIsFullScreen(true)}
+          onFullScreen={() => changeFullScreen(true)}
           actions={
             <>
               <MarkCompleteButton testPaper={selectedTestPaper} material={selectedMaterial} />
