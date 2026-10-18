@@ -1,6 +1,7 @@
 import { PositionType } from '@repo/shared/enums';
 import { XIcon } from '@phosphor-icons/react';
 import * as React from 'react';
+import { useCloseOnBack } from '../../hooks/use-close-on-back.hook';
 import { cn } from '../../lib/cn';
 
 interface IProps {
@@ -57,8 +58,8 @@ const FRAMES: Record<PositionType, { wrapper: string; panel: string; defaultWidt
  *
  * Renders nothing while closed, so a caller may keep it mounted and toggle `isOpen`. While open it
  * owns the page: the backdrop blocks and blurs, the body cannot scroll behind it, Escape closes it
- * (unless a save is in flight or the caller made it modal with `withoutClose`), and it announces
- * itself as a dialog labelled by its title.
+ * (unless a save is in flight or the caller made it modal with `withoutClose`), so does the back
+ * button, and it announces itself as a dialog labelled by its title.
  */
 export function Modal({
   isOpen,
@@ -81,6 +82,8 @@ export function Modal({
     () => typeof window !== 'undefined' && window.innerWidth <= MOBILE_MAX_WIDTH,
   );
   const canClose = !isLoading && !withoutClose;
+  // Back is still caught when the modal cannot close, so it never leaves the page mid-save.
+  useCloseOnBack(isOpen, () => canClose && onClose());
 
   React.useEffect(() => {
     const update = () => setIsMobile(window.innerWidth <= MOBILE_MAX_WIDTH);

@@ -1,4 +1,4 @@
-import { useRouter } from 'next/router';
+import Router from 'next/router';
 import { useEffect, useRef } from 'react';
 
 /**
@@ -8,31 +8,42 @@ import { useEffect, useRef } from 'react';
  */
 const openOverlays: { current: () => void }[] = [];
 
+/** Set while stepping forward again after a back that closed an overlay, so that step is ignored. */
+let isReturning = false;
+
+/**
+ * By the time Next asks, the browser has already gone back one entry. Closing the overlay and
+ * stepping forward returns to the entry the page was on, so the history keeps every page.
+ */
+const onPopState = () => {
+  if (isReturning) return false;
+  const newest = openOverlays[openOverlays.length - 1];
+  if (!newest) return true;
+  newest.current();
+  isReturning = true;
+  // Cleared after Next's own listener, which may skip this handler for that step altogether.
+  window.addEventListener('popstate', () => (isReturning = false), { once: true });
+  window.history.forward();
+  return false;
+};
+
 /**
  * While `isOpen`, the browser or device back button calls `onClose` and keeps the page where it
- * is instead of leaving it. With several open, back closes the newest first. Nothing is registered
- * while closed, so back behaves normally then.
+ * is instead of leaving it. With several open, back closes the newest first. With none open, back
+ * behaves normally.
  */
 export const useCloseOnBack = (isOpen: boolean, onClose: () => void) => {
-  const router = useRouter();
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!isOpen) return;
+    Router.beforePopState(onPopState);
     const entry = { current: () => onCloseRef.current() };
     openOverlays.push(entry);
-    router.beforePopState(() => {
-      const newest = openOverlays[openOverlays.length - 1];
-      if (!newest) return true;
-      newest.current();
-      router.push(router.asPath, undefined, { shallow: true });
-      return false;
-    });
     return () => {
       const index = openOverlays.indexOf(entry);
       if (index >= 0) openOverlays.splice(index, 1);
-      if (!openOverlays.length) router.beforePopState(() => true);
     };
-  }, [isOpen, router]);
+  }, [isOpen]);
 };
