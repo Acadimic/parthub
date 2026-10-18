@@ -96,6 +96,10 @@ These are `error` in ESLint, not advice — `no-restricted-imports` fails the li
   following "Moving an app component in" in `packages/ui/README.md`.
 - A component in `packages/ui` that reads app state. No `@stores`, no `@services`, no `zustand`.
   Everything arrives through props. That is why some components deliberately stay in the apps.
+- A bare `<img>` for a stored or remote picture, or a picture that pops in. Use `PresignedImage`,
+  the app's `Avatar` or `RichTextImage`, or `useImageReveal` for a new content block: a shimmer
+  holds the space, the picture fades in once downloaded, and the fallback is only for a missing or
+  failed file. See "Loading images" in `packages/ui/README.md`.
 
 ## After you add to the library
 

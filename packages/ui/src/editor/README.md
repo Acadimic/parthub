@@ -111,6 +111,11 @@ The file is never inlined into the document. Uploads go through the host app: `R
 Without a provider only plain external `https:` images can be shown, and the editor offers no image
 button.
 
+On display, `RichTextImage` shows a shimmer of fixed height until the file has downloaded, then
+grows its frame to the picture's height while the picture fades in, so the text below glides
+rather than jumps. A new block that shows a picture (as `PictureLabels` does) uses the same
+`useImageReveal` hook; the rules are under "Loading images" in `packages/ui/README.md`.
+
 An image is uploaded **the moment it is inserted**, into the organization's `content/` folder, unlike
 attachments, which upload when their form saves. That is what lets the document hold a real
 address straight away. A picture deleted before the record is saved stays in the bucket with
@@ -233,7 +238,7 @@ should see rather than read:
 - `sentence` (`sentenceVariant`, `sentenceTile`): **Sentence picture.** Each variant is a sentence
   of role tiles (`attrs.role`: doer, action, object, place, time, with, for, from, whose) plus a
   caption; switching variants lights the tiles that changed. `::: sentence`, `- doer word ::
-  meaning` per tile, variants separated by `---`.
+meaning` per tile, variants separated by `---`.
 - **Gender colour**: a pronunciation mark may carry `gender` (`m` | `f` | `n`; Markdown `g=m`). The
   word is coloured with a categorical chart token everywhere it appears (text, tiles, cards,
   options, picture points) and its card names the gender. Set it in the editor's pronunciation row.

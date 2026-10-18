@@ -93,6 +93,39 @@ Rules 2, 3 and 6 are enforced: `no-restricted-imports` in `eslint.config.js`
 `@repo/ui` subpath and on `from '..'`. Rule 1 is enforced from the other side —
 an app may not import `@repo/ui/ui/*`.
 
+## Loading images
+
+Every remote picture loads the same way: **a shimmer holds its space, and the picture fades in
+once it has downloaded**, not merely once its address is signed. Nothing pops in and nothing
+below it jumps.
+
+- **Never render a bare `<img>` for a stored or remote picture.** Use the component that owns it:
+
+  | Picture                                  | Component                                                    |
+  | ---------------------------------------- | ------------------------------------------------------------ |
+  | a cover, logo or attachment (learning)   | `PresignedImage` (`src/components/app/attachments`)          |
+  | a person                                 | the app's `Avatar` (`src/components/app/avatars`)            |
+  | a picture in authored content            | `RichTextImage` (`./content`)                                |
+  | a new content block that shows a picture | `useImageReveal` + `REVEAL_FRAME_CLASS` from `RichTextImage` |
+
+- **The fallback is for no picture, not for a slow one.** A course's coloured cover, an avatar's
+  initials or the broken-image box shows only when there is no address or the file failed. While
+  it loads, show the shimmer (an avatar keeps its initials under the fading photo instead).
+- **Reserve the space.** A fixed frame (`PresignedImage` fills its parent's) shows the shimmer at
+  its final size. A picture whose height is unknown — authored content — uses `useImageReveal`,
+  which holds the shimmer's height and grows the frame to the picture's over 300ms.
+- **Fade a wrapper, not the image**, when the caller styles the image: one `transition-*` class
+  replaces another, so a fade on the `<img>` would cancel a caller's hover zoom.
+- **Handle `onError`.** A picture that fails must end the shimmer, or it shimmers forever.
+- **Do not fade a server-rendered `<img>`** (the home banner): it can finish loading before
+  hydration, `onLoad` never runs, and it stays invisible. Give it `width`/`height` instead.
+- **Print shows pictures whole.** `REVEAL_FRAME_CLASS` and `getRevealImageClass` carry
+  `print:h-auto` and `print:opacity-100`; print readiness waits on `data-pending` and `img.complete`
+  (`print/use-print-ready.ts`).
+
+The teaching and support apps keep their own `PresignedImage` and avatar, which do not follow this
+yet.
+
 ## Adding a component
 
 - **A new wrapper over a primitive**: run `/create-core-component`. It puts the
