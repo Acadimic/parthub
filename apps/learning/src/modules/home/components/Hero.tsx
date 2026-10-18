@@ -9,6 +9,9 @@ import banner from '../assets/banner.webp';
 /** How many standards to offer as one-tap searches under the box. */
 const QUICK_PICKS = 4;
 
+/** Close to the widths of the chips that replace them, so the row wraps the same way on a phone. */
+const QUICK_PICK_PLACEHOLDER_WIDTHS = [124, 88, 76, 72];
+
 const Stat = ({ value, label, isLoading }: { value: number; label: string; isLoading: boolean }) => (
   <div className="flex flex-col">
     {isLoading ? (
@@ -32,6 +35,7 @@ export const Hero = () => {
   const { getStandards } = useStandardLookups();
   const courses = courseStore.getCourses();
   const isLoading = courseStore.isLoading('courses');
+  const isQuickPicksLoading = isLoading || !getStandards().length;
 
   const countByStandard = courses.reduce<Record<string, number>>((counts, course) => {
     (course.standards ?? []).forEach((id) => (counts[id] = (counts[id] ?? 0) + 1));
@@ -84,17 +88,24 @@ export const Hero = () => {
               onChange={(event) => setQuery(event.target.value)}
             />
           </form>
-          {quickPicks.length ? (
+          {/* Placeholders hold the row's height while it loads, so the copy below does not jump. */}
+          {isQuickPicksLoading || quickPicks.length ? (
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span>Popular:</span>
-              {quickPicks.map((standard) => (
-                <Chip
-                  key={standard._id}
-                  label={standard.name}
-                  className="px-3 py-1 text-xs"
-                  onClick={() => push({ pathname: '/courses', query: { standard: standard._id } })}
-                />
-              ))}
+              {isQuickPicksLoading
+                ? QUICK_PICK_PLACEHOLDER_WIDTHS.map((width) => (
+                    <div key={width} className="h-[26px] overflow-hidden rounded-full" style={{ width }}>
+                      <RectangleSkeleton />
+                    </div>
+                  ))
+                : quickPicks.map((standard) => (
+                    <Chip
+                      key={standard._id}
+                      label={standard.name}
+                      className="px-3 py-1 text-xs"
+                      onClick={() => push({ pathname: '/courses', query: { standard: standard._id } })}
+                    />
+                  ))}
             </div>
           ) : null}
           <div className="mt-8 flex flex-wrap gap-3">
