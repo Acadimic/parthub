@@ -4,3 +4,4 @@ export * from './permissions.decorator';
 export * from './subdomains.decorator';
 export * from './user.decorator';
 export * from './log.decorator';
+export * from './rate-limit.decorator';

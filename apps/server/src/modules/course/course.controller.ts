@@ -1,6 +1,7 @@
 import { PermissionItem, Subdomain } from '@repo/shared/enums';
 import { Subdomains } from '@decorators/subdomains.decorator';
 import { Permissions } from '@decorators/permissions.decorator';
+import { RateLimit } from '@decorators/rate-limit.decorator';
 import { Public } from '@decorators/public.decorator';
 import { S3Service } from '@modules/s3/s3.service';
 import { TestPaperResultService } from '@modules/test-paper/test-paper-result.service';
@@ -103,6 +104,7 @@ export class CourseController {
 
   /** A course's modules with their materials, test papers and meets embedded. */
   @Get('course/modules/contents/:courseId')
+  @RateLimit('course')
   @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
   @Permissions(PermissionItem.VIEW_COURSE)
   async getCourseModulesWithContents(@Param('courseId') courseId: string): Promise<ICourseModuleContents[]> {
@@ -117,6 +119,7 @@ export class CourseController {
    * printout of a single module asks for that module alone.
    */
   @Get('course/module/contents/:courseId/:moduleId')
+  @RateLimit('module')
   @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
   @Permissions(PermissionItem.VIEW_COURSE)
   async getCourseModuleWithContents(
@@ -149,6 +152,7 @@ export class CourseController {
    * answers with an empty paper rather than an error, so the exam simply opened blank.
    */
   @Get('test-paper/sections/:courseId/:testPaperId')
+  @RateLimit('quiz')
   @Subdomains(Subdomain.TEACH, Subdomain.LEARN)
   @Permissions(PermissionItem.VIEW_TEST_PAPER)
   async getCourseTestPaperSections(
