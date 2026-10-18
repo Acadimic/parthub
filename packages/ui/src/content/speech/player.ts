@@ -1,4 +1,10 @@
-import { cancelDeviceSpeech, findDeviceVoice, speakWithDevice } from './device-voice';
+import {
+  cancelDeviceSpeech,
+  findDeviceVoice,
+  findDeviceVoiceNow,
+  speakWithDevice,
+  unlockDeviceSpeech,
+} from './device-voice';
 
 export type SpeechStatus = 'idle' | 'loading' | 'playing';
 
@@ -61,11 +67,22 @@ export const stopSpeech = () => {
   setState(IDLE);
 };
 
-/** Plays a stored file. Resolves false when it could not be loaded, so the caller can fall back. */
-const playFile = async (request: ISpeechRequest, isCurrent: () => boolean): Promise<boolean> => {
+/** A few silent samples: played inside the tap, they unlock the element for the real file on iOS. */
+const SILENCE = 'data:audio/wav;base64,UklGRiwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQgAAACAgICAgICAgA==';
+
+/**
+ * Plays a stored file on `audio`, an element already started inside the tap (the address is signed
+ * first, and Safari blocks a play() that starts after an await). Resolves false when it could not
+ * be loaded, so the caller can fall back.
+ */
+const playFile = async (
+  request: ISpeechRequest,
+  audio: HTMLAudioElement,
+  isCurrent: () => boolean,
+): Promise<boolean> => {
   const url = await request.resolveUrl(request.audio).catch(() => '');
   if (!url || !isCurrent()) return false;
-  const audio = new Audio(url);
+  audio.src = url;
   audio.playbackRate = request.rate;
   audio.preservesPitch = true;
   audioElement = audio;
@@ -75,6 +92,22 @@ const playFile = async (request: ISpeechRequest, isCurrent: () => boolean): Prom
     audio.onplaying = () => isCurrent() && setState({ activeId: request.id, status: 'playing', segment: -1 });
     audio.play().catch(() => resolve(false));
   });
+};
+
+/**
+ * What must happen inside the tap, before any await (phone browsers block playback that starts
+ * later): a file gets its element started on silence; the device voice is looked up without
+ * waiting, and speech is unlocked if the voices are still loading.
+ */
+const startInTap = (request: ISpeechRequest) => {
+  if (request.audio) {
+    const element = new Audio(SILENCE);
+    element.play().catch(() => undefined);
+    return { element, voice: null };
+  }
+  const voice = findDeviceVoiceNow(request.lang);
+  if (voice === null) unlockDeviceSpeech();
+  return { element: null, voice };
 };
 
 /**
@@ -88,13 +121,15 @@ export const playSpeech = async (request: ISpeechRequest): Promise<boolean> => {
   const isCurrent = () => current === generation;
   setState({ activeId: request.id, status: 'loading', segment: 0 });
 
-  if (request.audio && (await playFile(request, isCurrent))) {
+  const { element, voice: ready } = startInTap(request);
+
+  if (element && (await playFile(request, element, isCurrent))) {
     if (isCurrent()) setState(IDLE);
     return true;
   }
   if (!isCurrent()) return true;
 
-  const voice = await findDeviceVoice(request.lang);
+  const voice = ready ?? (await findDeviceVoice(request.lang));
   if (!voice || !isCurrent()) {
     if (isCurrent()) setState(IDLE);
     return Boolean(voice);

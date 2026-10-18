@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useRichTextMedia } from '../../contexts/rich-text-media-context';
-import { findDeviceVoice } from './device-voice';
+import { findDeviceVoice, onDeviceVoicesChanged } from './device-voice';
 import {
   getIdleSpeechState,
   getSpeechState,
@@ -47,9 +47,15 @@ export const useVoiceAvailability = (lang: string, hasAudio: boolean): VoiceAvai
       return undefined;
     }
     let isCurrent = true;
-    findDeviceVoice(lang).then((voice) => isCurrent && setAvailability(voice ? 'available' : 'unavailable'));
+    const check = () => {
+      findDeviceVoice(lang).then((voice) => isCurrent && setAvailability(voice ? 'available' : 'unavailable'));
+    };
+    check();
+    // A phone may list its voices after the first check; ask again when it does.
+    const unsubscribe = onDeviceVoicesChanged(check);
     return () => {
       isCurrent = false;
+      unsubscribe();
     };
   }, [lang, hasAudio]);
   return availability;

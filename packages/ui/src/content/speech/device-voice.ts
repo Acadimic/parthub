@@ -3,6 +3,8 @@ import { findSpeechLanguage } from '@repo/shared/utils';
 const hasSpeech = (): boolean => typeof window !== 'undefined' && 'speechSynthesis' in window;
 
 let voicesPromise: Promise<SpeechSynthesisVoice[]> | null = null;
+/** The loaded list, once known, so a tap can find its voice without waiting. */
+let loadedVoices: SpeechSynthesisVoice[] | null = null;
 
 /**
  * The device's voices. Chrome returns none until `voiceschanged` fires, and some browsers never
@@ -14,14 +16,37 @@ const loadVoices = (): Promise<SpeechSynthesisVoice[]> => {
   voicesPromise = new Promise((resolve) => {
     const ready = window.speechSynthesis.getVoices();
     if (ready.length) {
+      loadedVoices = ready;
       resolve(ready);
       return;
     }
-    const finish = () => resolve(window.speechSynthesis.getVoices());
+    const finish = () => {
+      const voices = window.speechSynthesis.getVoices();
+      // Phones often list their voices later than the wait; an empty answer is not kept, so the next
+      // call asks again, and a late voiceschanged (below) fills the list in.
+      if (voices.length) loadedVoices = voices;
+      else voicesPromise = null;
+      resolve(voices);
+    };
     window.speechSynthesis.addEventListener('voiceschanged', finish, { once: true });
     window.setTimeout(finish, 1500);
   });
   return voicesPromise;
+};
+
+/** Calls `listener` whenever the device's voice list changes; returns the unsubscribe. */
+export const onDeviceVoicesChanged = (listener: () => void): (() => void) => {
+  if (!hasSpeech()) return () => undefined;
+  const handle = () => {
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length) {
+      loadedVoices = voices;
+      voicesPromise = Promise.resolve(voices);
+    }
+    listener();
+  };
+  window.speechSynthesis.addEventListener('voiceschanged', handle);
+  return () => window.speechSynthesis.removeEventListener('voiceschanged', handle);
 };
 
 const normalise = (locale: string): string => locale.replace('_', '-').toLowerCase();
@@ -37,8 +62,25 @@ const pickBest = (voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefi
  * locales is tried in order, an exact match before a language-only one, so `es-ES` prefers a voice
  * from Spain and falls back to any Spanish voice.
  */
-export const findDeviceVoice = async (lang: string): Promise<SpeechSynthesisVoice | undefined> => {
-  const voices = await loadVoices();
+export const findDeviceVoice = async (lang: string): Promise<SpeechSynthesisVoice | undefined> =>
+  matchVoice(await loadVoices(), lang);
+
+/**
+ * The same answer without waiting, or `null` while the voices are still loading. Phone browsers,
+ * Safari above all, only let a tap start speech synchronously, so a click must not await first.
+ */
+export const findDeviceVoiceNow = (lang: string): SpeechSynthesisVoice | undefined | null =>
+  loadedVoices ? matchVoice(loadedVoices, lang) : null;
+
+/**
+ * Speaks nothing, inside the tap: on iOS the first utterance must come from a user gesture, and once
+ * one has, later ones (after the voices load) are allowed.
+ */
+export const unlockDeviceSpeech = () => {
+  if (hasSpeech()) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+};
+
+const matchVoice = (voices: SpeechSynthesisVoice[], lang: string): SpeechSynthesisVoice | undefined => {
   const locales = findSpeechLanguage(lang)?.speechLocales ?? [lang];
   for (const locale of locales.map(normalise)) {
     const exact = voices.filter((voice) => normalise(voice.lang) === locale);
@@ -81,6 +123,9 @@ export const speakWithDevice = async (
   }
 };
 
+// Only when something is queued: Chrome on Android can drop an utterance spoken right after cancel().
 export const cancelDeviceSpeech = () => {
-  if (hasSpeech()) window.speechSynthesis.cancel();
+  if (hasSpeech() && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) {
+    window.speechSynthesis.cancel();
+  }
 };
