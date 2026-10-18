@@ -144,7 +144,6 @@ export const ExploreSheet = () => {
                 name="q"
                 type="search"
                 className="[&::-webkit-search-cancel-button]:hidden"
-                autoFocus
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search courses, classes, subjects"
