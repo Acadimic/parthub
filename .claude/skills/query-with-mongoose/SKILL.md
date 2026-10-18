@@ -48,8 +48,8 @@ which is why the filter is the thing to get right.
    `bulkWrite` hooks still fire at runtime but were dropped from Mongoose 9's exported middleware
    unions, so `change-tracking.plugin.ts` registers those two through a small documented shim.
 
-5. **Only use operations the plugins hook.** `registerGlobalPlugins` attaches change tracking and
-   activity logging to the connection, covering `save`, `updateOne`, `updateMany`,
+5. **Only use operations the plugins hook.** `registerGlobalPlugins` attaches change tracking (activity
+   logging is paused) to the connection, covering `save`, `updateOne`, `updateMany`,
    `findOneAndUpdate` (and `findByIdAndUpdate`, which routes to the same middleware), `replaceOne`,
    `findOneAndReplace`, `insertMany` and `bulkWrite`. An operation outside that list writes rows
    with no `org`, no `createdBy`, no `updatedBy` and no audit entry.

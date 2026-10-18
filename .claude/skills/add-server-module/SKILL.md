@@ -128,7 +128,7 @@ elsewhere.
 | Errors           | `HttpExceptionFilter`                 | Renders an `HttpException` as `{ error: { code, message } }`                                  |
 | Duplicate keys   | `MongoDuplicateKeyFilter`             | Renders a Mongo duplicate-key error as a 409 naming the field                                 |
 | Ownership fields | `change-tracking.plugin`              | Stamps `org`, `createdBy`, `updatedBy` on every write                                         |
-| Audit trail      | `activity-logging.plugin`             | Records the change, per model                                                                 |
+| Audit trail      | `activity-logging.plugin`             | Paused: kept but not registered, so no change is recorded                                     |
 | Request state    | `ClsModule` + `RequestContextService` | Makes the user, org, role and subdomain available anywhere                                    |
 | Config           | `SecretsService`                      | Loads and validates secrets at boot                                                           |
 | Logging          | nestjs-pino                           | Structured logs, authorization redacted                                                       |

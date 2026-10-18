@@ -44,8 +44,6 @@ import { IndexSyncService } from './database/index-sync.service';
 import { registerGlobalPlugins } from './database/plugins/register-plugins';
 import { AccessGuard } from './guards/access.guard';
 import { AuthGuard } from './guards/auth.guard';
-import { ActivityLogCoreModule } from './modules/activity-log/activity-log-core.module';
-import { ActivityLogCoreService } from './modules/activity-log/activity-log-core.service';
 import { SecretsModule } from './secrets/secrets.module';
 import { SecretsService } from './secrets/secrets.service';
 
@@ -62,17 +60,12 @@ const CLOUD_LOGGING_SEVERITY: Record<string, string> = { trace: 'DEBUG', warn: '
       middleware: { mount: true },
     }),
     ContextModule,
-    ActivityLogCoreModule,
     MongooseModule.forRootAsync({
-      inject: [SecretsService, RequestContextService, ActivityLogCoreService],
-      useFactory: (
-        secretsService: SecretsService,
-        contextService: RequestContextService,
-        activityLogCoreService: ActivityLogCoreService,
-      ) => ({
+      inject: [SecretsService, RequestContextService],
+      useFactory: (secretsService: SecretsService, contextService: RequestContextService) => ({
         uri: secretsService.get(Secrets.DB_URL) as string,
         connectionFactory: (connection: Connection): Connection => {
-          registerGlobalPlugins(connection, contextService, activityLogCoreService);
+          registerGlobalPlugins(connection, contextService);
           return connection;
         },
       }),
