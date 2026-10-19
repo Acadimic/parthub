@@ -21,11 +21,14 @@ export const createObjectId = (): string => {
   return `${seconds}${PROCESS_RANDOM}${counter.toString(16).padStart(6, '0')}`;
 };
 
-/** "Laws of Motion!" → "laws-of-motion": the slug the entities store beside their name. */
+/** "Laws of Motion!" → "laws-of-motion", "The Gītā" → "the-gita": the slug the entities store beside their name. */
 export const slugify = (value: string): string =>
   value
     .trim()
     .toLowerCase()
+    // Accented Latin letters keep their base letter (ī → i) instead of being dropped with the rest.
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9 ]/g, '')
     .replace(/\s+/g, ' ')
     .split(' ')
