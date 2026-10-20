@@ -103,6 +103,17 @@ const headers = (org) => ({
   ...(org ? { organization: org } : {}),
 });
 let orgId = '';
+// Thousands of files go straight to storage; a reset connection or a 5xx is retried the same way.
+const putFile = async (url, init, attempt = 1) => {
+  try {
+    const response = await fetch(url, init);
+    if (response.status < 500 || attempt >= 3) return response;
+  } catch (error) {
+    if (attempt >= 3 || !(error instanceof TypeError)) throw error;
+  }
+  await new Promise((resolve) => setTimeout(resolve, 3000 * attempt));
+  return putFile(url, init, attempt + 1);
+};
 // Every write is an upsert, so a dropped connection is retried; the route is named if it keeps failing.
 const send = async (route, body, attempt = 1) => {
   try {
@@ -152,7 +163,7 @@ for (const file of manifest.files) {
     const [signed] = await api('common/presigned-PUT-urls', {
       files: [{ key: file.key, contentType: file.contentType }],
     });
-    const put = await fetch(signed.url, {
+    const put = await putFile(signed.url, {
       method: 'PUT',
       headers: { 'Content-Type': file.contentType },
       body: readFileSync(join(from, file.path)),
@@ -173,7 +184,7 @@ for (const image of manifest.contentImages ?? []) {
   }
   const key = `content/${image.name}`;
   const [signed] = await api('common/presigned-PUT-urls', { files: [{ key, contentType: image.contentType }] });
-  const put = await fetch(signed.url, {
+  const put = await putFile(signed.url, {
     method: 'PUT',
     headers: { 'Content-Type': image.contentType },
     body: readFileSync(join(from, image.path)),
@@ -192,7 +203,7 @@ for (const audio of manifest.contentAudio ?? []) {
     continue;
   }
   const [signed] = await api('common/presigned-PUT-urls', { files: [{ key: audio.key, contentType: audio.contentType }] });
-  const put = await fetch(signed.url, {
+  const put = await putFile(signed.url, {
     method: 'PUT',
     headers: { 'Content-Type': audio.contentType },
     body: readFileSync(join(from, audio.path)),
