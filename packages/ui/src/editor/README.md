@@ -172,9 +172,12 @@ A `scene3d` block holds one scene: `spec` is its JSON (`IScene`, checked by `par
 `@repo/shared/utils`), `template` the editor template and form values it came from (`''` for a
 scene written by hand or imported). Both are strings, as node attributes must be.
 
-- **Reading view**: `content/SceneCard.tsx` — a card with the scene's title and what it offers, and
-  "Open in 3D", which opens the shared 3D popup and plays the scene's steps. In print the card holds
-  a still of the first step (`scene/ScenePrintStill.tsx`).
+- **Reading view**: `content/SceneCard.tsx` — the scene plays inline (title, scene, step bar) once it
+  scrolls near and is let go when it scrolls far off, so only nearby scenes hold a WebGL context;
+  the wheel scrolls the page and a vertical swipe scrolls it on a phone. The toolbar, read-out,
+  sliders and downloads are only in the full-screen popup. Where the content is narrower than 320px
+  (a two-up answer option) it falls back to a card with "Open in 3D". In print the card holds a
+  still of the first step (`scene/ScenePrintStill.tsx`).
 - **Editor**: "3D scene" in the toolbar opens `scene/SceneDialog.tsx` — the template gallery, a form
   beside a live preview, the JSON behind "Advanced"; Edit on a scene's card reopens it. Only a scene
   the parser accepts is saved. Every editor offers it, answer options included.

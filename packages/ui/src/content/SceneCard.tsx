@@ -1,9 +1,11 @@
-import { CubeIcon } from '@phosphor-icons/react';
+import { ArrowsOutIcon, CubeIcon } from '@phosphor-icons/react';
 import type { IScene } from '@repo/shared/interfaces';
 import { parseScene } from '@repo/shared/utils';
-import { lazy, type ReactNode, Suspense, useMemo, useState } from 'react';
+import { lazy, type ReactNode, type RefObject, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useIsPrint } from '../contexts/print-context';
 import { Button } from '../core/Button';
+import { Spinner } from '../core/Spinner';
+import { Tooltip } from '../core/Tooltip';
 import { cn } from '../lib/cn';
 import { Viewer3DModal } from './Viewer3DModal';
 
@@ -32,6 +34,19 @@ const sceneDetail = (scene: IScene): string => {
     .join(' · ');
 };
 
+/** Holds the inline scene's place, at its height, while it loads or while it is far off screen. */
+const InlinePlaceholder = ({ isLoading }: { isLoading: boolean }) => (
+  <div className="flex h-72 items-center justify-center gap-2 border border-border bg-muted/40 text-sm text-muted-foreground sm:h-96">
+    {isLoading ? (
+      <>
+        <Spinner size="sm" /> Loading the 3D scene…
+      </>
+    ) : (
+      <CubeIcon weight="duotone" className="h-8 w-8 opacity-40" />
+    )}
+  </div>
+);
+
 /** On paper: the title, then the scene as a picture, kept together on one page. */
 const PrintedScene = ({
   spec,
@@ -57,67 +72,147 @@ const PrintedScene = ({
   </div>
 );
 
+/** Narrower than this (a two-up answer option), a scene shows as the card and opens in the popup. */
+const INLINE_MIN_WIDTH = 320;
+
+/** True while `ref` is within a screen of the viewport, so only nearby scenes hold a WebGL context. */
+const useIsNearViewport = (ref: RefObject<HTMLElement | null>): boolean => {
+  const [isNear, setIsNear] = useState(false);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return undefined;
+    const observer = new IntersectionObserver(([entry]) => setIsNear(entry.isIntersecting), {
+      rootMargin: '100% 0px',
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref]);
+  return isNear;
+};
+
+/** The element's width, followed as it changes; 0 until measured. */
+const useWidth = (ref: RefObject<HTMLElement | null>): number => {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return undefined;
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref]);
+  return width;
+};
+
 export interface ISceneCardProps {
   /** The scene's JSON, as stored on the `scene3d` node. */
   spec: string;
+  /**
+   * `inline`: the scene itself in the flow of the content, with a full-screen button (the reader).
+   * `card`: a title and "Open in 3D" (the editor, where the author also needs Edit).
+   */
+  display: SceneDisplay;
   className?: string;
   /** More buttons beside "Open in 3D": the editor adds Edit. */
   actions?: ReactNode;
 }
 
+export type SceneDisplay = 'inline' | 'card';
+
 /**
- * A 3D scene in the flow of a lesson, question or solution: a card with its title and what the
- * reader can do, and a button that opens it in the 3D popup. Nothing three.js loads until then.
+ * A 3D scene in the flow of a lesson, question or solution. Inline, the scene and its steps play in
+ * place once it scrolls near and are let go when it scrolls far away; everything else (the toolbar,
+ * sliders, downloads) is in the full-screen popup; as a card, it opens in the 3D popup. Either
+ * way three.js is fetched only when a scene is first shown.
  */
-export const SceneCard = ({ spec, className, actions }: ISceneCardProps) => {
+export const SceneCard = ({ spec, display, className, actions }: ISceneCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const isPrint = useIsPrint();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const isNear = useIsNearViewport(rootRef);
+  const width = useWidth(rootRef);
   const parsed = useMemo(() => parseScene(spec), [spec]);
   const scene = parsed.isValid ? parsed.scene : null;
   const title = scene?.title ?? '3D scene';
   const detail = scene ? sceneDetail(scene) : '';
   if (isPrint) return <PrintedScene spec={spec} title={title} isValid={!!scene} className={className} />;
 
+  const popup = (
+    <Viewer3DModal
+      title="3D scene"
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      loadingText="Loading the 3D scene…"
+      summary={
+        <>
+          <span className="truncate text-base font-semibold">{title}</span>
+          <span className="truncate text-xs text-muted-foreground">{detail}</span>
+        </>
+      }
+    >
+      <Scene3DViewer spec={spec} autoPlay layout="fill" />
+    </Viewer3DModal>
+  );
+
+  // Unmeasured counts as wide, so a lesson does not flash the card before the scene.
+  const isInline = !!scene && display === 'inline' && (width === 0 || width >= INLINE_MIN_WIDTH);
+
   return (
     <div
-      // Wraps, with the button dropping under the text, where the card is narrow: a two-up option.
-      className={cn('my-4 flex flex-wrap items-center gap-3 border border-border bg-card p-3', className)}
-      // A scene inside a clickable card or question: opening it must not also act on what holds it.
+      ref={rootRef}
+      className={cn('my-4', className)}
+      // A scene inside a clickable card or question: using it must not also act on what holds it.
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center bg-primary/10 text-primary">
-        <CubeIcon weight="duotone" className="h-6 w-6" />
-      </span>
-      <div className="flex min-w-[8rem] flex-1 flex-col">
-        <span className="font-semibold text-foreground">{title}</span>
-        <span className="text-xs text-muted-foreground">{scene ? detail : 'This 3D scene cannot be shown.'}</span>
-      </div>
-      {scene ? (
-        <Button
-          onClick={() => setIsOpen(true)}
-          onPointerEnter={preloadSceneViewer}
-          onFocus={preloadSceneViewer}
-          className="ml-auto shrink-0 px-3 py-1.5 text-sm print:hidden"
-          leftSection={<CubeIcon weight="bold" className="h-4 w-4" />}
-          text="Open in 3D"
-        />
-      ) : null}
-      {actions}
-      <Viewer3DModal
-        title="3D scene"
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        loadingText="Loading the 3D scene…"
-        summary={
-          <>
-            <span className="truncate text-base font-semibold">{title}</span>
-            <span className="truncate text-xs text-muted-foreground">{detail}</span>
-          </>
-        }
-      >
-        <Scene3DViewer spec={spec} autoPlay />
-      </Viewer3DModal>
+      {isInline ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <CubeIcon weight="duotone" className="h-5 w-5 shrink-0 text-primary" />
+            <span className="min-w-0 flex-1 truncate font-semibold text-foreground">{title}</span>
+            <Tooltip title="Full screen: turn, zoom, sliders and downloads">
+              <Button
+                isSubtle
+                aria-label="Open in full screen"
+                onClick={() => setIsOpen(true)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center p-0"
+              >
+                <ArrowsOutIcon weight="bold" className="h-5 w-5" />
+              </Button>
+            </Tooltip>
+          </div>
+          {/* One live view at a time: the inline one stands aside while the popup is open. */}
+          {isNear && !isOpen ? (
+            <Suspense fallback={<InlinePlaceholder isLoading />}>
+              <Scene3DViewer spec={spec} autoPlay layout="inline" />
+            </Suspense>
+          ) : (
+            <InlinePlaceholder isLoading={false} />
+          )}
+        </div>
+      ) : (
+        // Wraps, with the button dropping under the text, where the card is narrow: a two-up option.
+        <div className="flex flex-wrap items-center gap-3 border border-border bg-card p-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center bg-primary/10 text-primary">
+            <CubeIcon weight="duotone" className="h-6 w-6" />
+          </span>
+          <div className="flex min-w-[8rem] flex-1 flex-col">
+            <span className="font-semibold text-foreground">{title}</span>
+            <span className="text-xs text-muted-foreground">{scene ? detail : 'This 3D scene cannot be shown.'}</span>
+          </div>
+          {scene ? (
+            <Button
+              onClick={() => setIsOpen(true)}
+              onPointerEnter={preloadSceneViewer}
+              onFocus={preloadSceneViewer}
+              className="ml-auto shrink-0 px-3 py-1.5 text-sm print:hidden"
+              leftSection={<CubeIcon weight="bold" className="h-4 w-4" />}
+              text="Open in 3D"
+            />
+          ) : null}
+          {actions}
+        </div>
+      )}
+      {popup}
     </div>
   );
 };

@@ -18,6 +18,7 @@ export const Scene3DNodeView = ({ node, selected, editor, updateAttributes }: No
     <NodeViewWrapper data-scene3d="" contentEditable={false}>
       <SceneCard
         spec={spec}
+        display="card"
         className={cn(selected && 'ring-2 ring-primary/60 ring-offset-2 ring-offset-background')}
         actions={
           editor.isEditable ? (

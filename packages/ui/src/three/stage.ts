@@ -131,6 +131,16 @@ export abstract class Stage {
   /** A point in the cube, in the content's own units. */
   protected abstract readPoint(point: Vector3): IStagePoint;
 
+  /**
+   * For a stage in the flow of a page: the wheel scrolls the page rather than zooming, and a
+   * vertical swipe scrolls it on a phone while a sideways drag still turns the view.
+   */
+  embedInPage(): void {
+    this.controls.enableZoom = false;
+    // OrbitControls sets `none` when it connects, which would trap the page's scroll on a phone.
+    this.renderer.domElement.style.touchAction = 'pan-y';
+  }
+
   /** Call at the end of a subclass constructor, once its labels exist: frames the view at its real size. */
   protected start(): void {
     this.resize();

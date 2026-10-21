@@ -19,7 +19,15 @@ export interface IScene3DViewerProps {
   spec: string;
   /** Start playing the steps as soon as it opens: yes for a reader, no for a teacher's preview. */
   autoPlay: boolean;
+  /**
+   * `fill`: takes the height it is given, steps listed beside it (the popup, the editor's preview).
+   * `inline`: a fixed-height block in the flow of a lesson: the scene and its step bar only; the
+   * toolbar, read-out, sliders and notes are left to the full-screen view.
+   */
+  layout: SceneViewerLayout;
 }
+
+export type SceneViewerLayout = 'fill' | 'inline';
 
 interface ISceneSidebarProps {
   sliders: ISceneSlider[];
@@ -113,6 +121,20 @@ const SceneSidebar = ({
   );
 };
 
+/** The popup fills its body with the scene beside its panel; inline, the scene is a fixed block. */
+const LAYOUT_CLASSES: Record<SceneViewerLayout, { root: string; stage: string }> = {
+  fill: { root: 'h-full gap-4 md:flex-row', stage: 'min-h-[55vh] flex-1 md:min-h-0' },
+  inline: { root: 'gap-3', stage: 'h-72 sm:h-96' },
+};
+
+/** Over the stage when the scene cannot be drawn: a bad spec, or no WebGL on this device. */
+const SceneUnavailable = ({ message }: { message: string }) => (
+  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center">
+    <WarningCircleIcon weight="bold" className="h-6 w-6 text-muted-foreground" />
+    <p className="max-w-sm text-sm text-muted-foreground">{message}</p>
+  </div>
+);
+
 /** Object types as a reader would name them, for the "drawn in a later update" note. */
 const TYPE_NAMES: Partial<Record<SceneObjectType, string>> = {
   die: 'dice',
@@ -131,7 +153,7 @@ const TYPE_NAMES: Partial<Record<SceneObjectType, string>> = {
  * Loaded on demand (see `SceneCard` and `SceneDialog`), so three.js reaches a reader only when they
  * open a scene.
  */
-const Scene3DViewer = ({ spec, autoPlay }: IScene3DViewerProps) => {
+const Scene3DViewer = ({ spec, autoPlay, layout }: IScene3DViewerProps) => {
   const parsed = useMemo(() => parseScene(spec), [spec]);
   const scene = parsed.isValid ? parsed.scene : null;
   const [values, setValues] = useState<Record<string, number>>(() => (scene ? sceneSliderValues(scene) : {}));
@@ -163,6 +185,7 @@ const Scene3DViewer = ({ spec, autoPlay }: IScene3DViewerProps) => {
       return undefined;
     }
     stage.current = created;
+    if (layout === 'inline') created.embedInPage();
     const applyTheme = () => {
       const { colours, line, accent } = readTheme();
       created.setTheme({ colours, line, accent });
@@ -178,7 +201,7 @@ const Scene3DViewer = ({ spec, autoPlay }: IScene3DViewerProps) => {
       created.dispose();
       stage.current = null;
     };
-  }, [scene]);
+  }, [scene, layout]);
 
   useEffect(() => stage.current?.setSpin(isSpinning), [isSpinning]);
   useEffect(() => {
@@ -237,25 +260,26 @@ const Scene3DViewer = ({ spec, autoPlay }: IScene3DViewerProps) => {
 
   const sliders = scene?.sliders ?? [];
   const later = [...new Set(skipped.map((type) => TYPE_NAMES[type] ?? type))];
+  const canDraw = !!scene && !isUnsupported;
+  const unavailable = scene
+    ? 'This device cannot draw 3D graphics, so the scene cannot be shown here.'
+    : `This scene cannot be shown: ${parsed.isValid ? '' : parsed.errors[0]}`;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 text-foreground md:flex-row">
+    <div className={cn('flex min-h-0 flex-col text-foreground', LAYOUT_CLASSES[layout].root)}>
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="relative min-h-[55vh] flex-1 overflow-hidden border border-border bg-gradient-to-br from-muted via-background to-muted md:min-h-0">
+        <div
+          className={cn(
+            'relative overflow-hidden border border-border bg-gradient-to-br from-muted via-background to-muted',
+            LAYOUT_CLASSES[layout].stage,
+          )}
+        >
           <div className="pointer-events-none absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent" />
           <SceneThemeProbes probesRef={probesRef} />
           <div ref={stageRef} className="absolute inset-0" />
           <div ref={labelRef} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true" />
-          {isUnsupported || !scene ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center">
-              <WarningCircleIcon weight="bold" className="h-6 w-6 text-muted-foreground" />
-              <p className="max-w-sm text-sm text-muted-foreground">
-                {scene
-                  ? 'This device cannot draw 3D graphics, so the scene cannot be shown here.'
-                  : `This scene cannot be shown: ${parsed.isValid ? '' : parsed.errors[0]}`}
-              </p>
-            </div>
-          ) : (
+          {canDraw ? null : <SceneUnavailable message={unavailable} />}
+          {canDraw && layout === 'fill' ? (
             <>
               <StageToolbar
                 isSpinning={isSpinning}
@@ -267,9 +291,9 @@ const Scene3DViewer = ({ spec, autoPlay }: IScene3DViewerProps) => {
               />
               {saving === 'gif' ? <GifProgress fraction={gifProgress} /> : <Readout point={hover} />}
             </>
-          )}
+          ) : null}
         </div>
-        {scene && !isUnsupported && stepLabels.length > 1 ? (
+        {canDraw && stepLabels.length > 1 ? (
           <StepBar
             labels={stepLabels}
             index={steps.index}
@@ -281,16 +305,18 @@ const Scene3DViewer = ({ spec, autoPlay }: IScene3DViewerProps) => {
         ) : null}
       </div>
 
-      <SceneSidebar
-        sliders={sliders}
-        values={values}
-        onValue={(name, value) => setValues((current) => ({ ...current, [name]: value }))}
-        onReset={() => scene && setValues(sceneSliderValues(scene))}
-        later={later}
-        stepLabels={stepLabels}
-        stepIndex={steps.index}
-        onStep={steps.choose}
-      />
+      {layout === 'fill' ? (
+        <SceneSidebar
+          sliders={sliders}
+          values={values}
+          onValue={(name, value) => setValues((current) => ({ ...current, [name]: value }))}
+          onReset={() => scene && setValues(sceneSliderValues(scene))}
+          later={later}
+          stepLabels={stepLabels}
+          stepIndex={steps.index}
+          onStep={steps.choose}
+        />
+      ) : null}
     </div>
   );
 };

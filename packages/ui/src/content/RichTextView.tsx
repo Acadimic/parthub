@@ -228,7 +228,9 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
       {Array.isArray(children) ? children : [children]}
     </ListeningBlock>
   ),
-  [SCENE3D_NODE]: (node, _children, key) => <SceneCard key={key} spec={stringAttr(node.attrs, 'spec')} />,
+  [SCENE3D_NODE]: (node, _children, key) => (
+    <SceneCard key={key} spec={stringAttr(node.attrs, 'spec')} display="inline" />
+  ),
   [REVEAL_NODE]: (node, _children, key) => (
     <RevealBlock
       key={key}

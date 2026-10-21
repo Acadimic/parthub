@@ -164,7 +164,7 @@ const ScenePreview = ({ spec }: { spec: string }) => (
           </div>
         }
       >
-        <Scene3DViewer key={spec} spec={spec} autoPlay={false} />
+        <Scene3DViewer key={spec} spec={spec} autoPlay={false} layout="fill" />
       </Suspense>
     ) : (
       <div className="flex h-full items-center justify-center border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
