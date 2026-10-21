@@ -31,7 +31,7 @@ import {
   pronunciationAttrsOf,
   SCENE3D_NODE,
 } from '@repo/shared/utils';
-import { createElement, type ReactNode } from 'react';
+import { createElement, Fragment, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
 import { spokenOf } from './activities/ActivityFrame';
 import { CheckBlock } from './activities/CheckBlock';
@@ -44,7 +44,7 @@ import { SentenceBlock } from './activities/SentenceBlock';
 import { SoundBoard } from './activities/SoundBoard';
 import { type IManner, SoundMap } from './activities/SoundMap';
 import { StepsBlock } from './activities/StepsBlock';
-import { GraphButton } from './GraphButton';
+import { GraphBlock, GraphButton } from './GraphButton';
 import { type IDialogueBubble, ListeningBlock } from './ListeningBlock';
 import { MathRender } from './MathRender';
 import { PronouncedText } from './PronouncedText';
@@ -122,6 +122,9 @@ const HEADING_CLASSES: Record<number, string> = {
   3: 'text-lg font-semibold mt-4 mb-2',
 };
 
+/** Set while rendering on an inline equation whose graph its paragraph plays below it; never stored. */
+const GRAPH_BELOW = '__graphBelow';
+
 /**
  * Renders one node and its children.
  *
@@ -130,11 +133,34 @@ const HEADING_CLASSES: Record<number, string> = {
  * rendering blank.
  */
 const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, key: string) => ReactNode> = {
-  paragraph: (_node, children, key) => (
-    <p key={key} className="my-3">
-      {children}
-    </p>
-  ),
+  paragraph: (node, children, key) => {
+    const graphs = (node.content ?? []).flatMap((child) => {
+      const graph = child.type === 'inlineMath' ? graphAttrsOfNode(child.attrs) : null;
+      return graph ? [{ child, graph }] : [];
+    });
+    if (!graphs.length) {
+      return (
+        <p key={key} className="my-3">
+          {children}
+        </p>
+      );
+    }
+    // An equation's graph cannot sit inside the line, so it plays under the paragraph and the
+    // equation drops its cube button.
+    const marked = (node.content ?? []).map((child) =>
+      graphs.some((entry) => entry.child === child)
+        ? { ...child, attrs: { ...child.attrs, [GRAPH_BELOW]: true } }
+        : child,
+    );
+    return (
+      <Fragment key={key}>
+        <p className="my-3">{renderChildren(marked, key)}</p>
+        {graphs.map(({ child, graph }, index) => (
+          <GraphBlock key={`${key}.g${index}`} latex={stringAttr(child.attrs, 'latex')} {...graph} />
+        ))}
+      </Fragment>
+    );
+  },
   heading: (node, children, key) => {
     const level = Math.min(Math.max(numberAttr(node.attrs, 'level', 1), 1), 3);
     return createElement(`h${level}`, { key, className: HEADING_CLASSES[level] }, children);
@@ -205,7 +231,7 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
   inlineMath: (node, _children, key) => {
     const latex = stringAttr(node.attrs, 'latex');
     const graph = graphAttrsOfNode(node.attrs);
-    if (!graph) return <MathRender key={key} latex={latex} />;
+    if (!graph || node.attrs?.[GRAPH_BELOW]) return <MathRender key={key} latex={latex} />;
     // Kept on one line, so the cube never wraps away from its equation.
     return (
       <span key={key} className="whitespace-nowrap">
@@ -392,12 +418,12 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
       );
     }
     return (
-      <div key={key} className="my-4 flex items-center gap-2">
-        <div className="min-w-0 flex-1 overflow-x-auto">
+      <Fragment key={key}>
+        <div className="my-4 overflow-x-auto">
           <MathRender latex={latex} displayMode />
         </div>
-        <GraphButton latex={latex} {...graph} className="shrink-0" />
-      </div>
+        <GraphBlock latex={latex} {...graph} />
+      </Fragment>
     );
   },
 };

@@ -30,7 +30,20 @@ export interface IGraph3DViewerProps {
   /** The expression that is plotted. */
   graph: string;
   graphView: string | null;
+  /**
+   * `fill`: takes the height it is given, with the sliders, colours and toolbar (the popup, the
+   * editor). `inline`: a fixed-height block in the flow of a lesson, the graph alone.
+   */
+  layout: GraphViewerLayout;
 }
+
+export type GraphViewerLayout = 'fill' | 'inline';
+
+/** The popup fills its body with the graph beside its panel; inline, the graph is a fixed block. */
+const LAYOUT_CLASSES: Record<GraphViewerLayout, { root: string; stage: string }> = {
+  fill: { root: 'h-full gap-4 md:flex-row', stage: 'min-h-[55vh] flex-1 md:min-h-0' },
+  inline: { root: '', stage: 'h-72 sm:h-96' },
+};
 
 /** Points per side of a surface grid; a curve takes six times as many points along its length. */
 const GRID_SIZE = 80;
@@ -71,13 +84,91 @@ const PalettePicker = ({ value, onChange }: IPalettePickerProps) => (
   </div>
 );
 
+interface IGraphSidebarProps {
+  params: GraphParam[];
+  view: IGraphView;
+  values: Record<GraphParam, number>;
+  onValues: (update: (current: Record<GraphParam, number>) => Record<GraphParam, number>) => void;
+  palette: IGraphPalette;
+  onPalette: (palette: IGraphPalette) => void;
+  /** A surface can show its grid lines; a curve has none. */
+  hasWire: boolean;
+  showWire: boolean;
+  onWire: (showWire: boolean) => void;
+}
+
+/** The panel beside the graph in the popup: its sliders, colour ramps and grid toggle. */
+const GraphSidebar = ({
+  params,
+  view,
+  values,
+  onValues,
+  palette,
+  onPalette,
+  hasWire,
+  showWire,
+  onWire,
+}: IGraphSidebarProps) => (
+  <aside className="flex w-full shrink-0 flex-col gap-5 overflow-y-auto md:w-72">
+    {params.length ? (
+      <section className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <SectionTitle>Change the shape</SectionTitle>
+          <Button
+            isSubtle
+            className="px-2 py-0.5 text-xs text-primary"
+            onClick={() => onValues(() => graphParamValues(view))}
+          >
+            Reset
+          </Button>
+        </div>
+        {params.map((param) => {
+          const setting = view.params[param];
+          return (
+            <Slider
+              key={param}
+              label={<span className="font-serif text-sm italic">{param}</span>}
+              value={values[param]}
+              min={setting.min}
+              max={setting.max}
+              step={(setting.max - setting.min) / 200}
+              formatValue={formatGraphNumber}
+              onChange={(value) => onValues((current) => ({ ...current, [param]: value }))}
+            />
+          );
+        })}
+      </section>
+    ) : null}
+
+    <section className="flex flex-col gap-2">
+      <SectionTitle>Colours</SectionTitle>
+      <PalettePicker value={palette} onChange={onPalette} />
+    </section>
+
+    {hasWire ? (
+      <section className="flex flex-col gap-2">
+        <SectionTitle>Display</SectionTitle>
+        <div className="flex flex-wrap gap-2">
+          <Chip
+            label="Grid lines"
+            isSelected={showWire}
+            onClick={() => onWire(!showWire)}
+            leftSection={<GridFourIcon weight="bold" className="h-3.5 w-3.5" />}
+          />
+        </div>
+      </section>
+    ) : null}
+  </aside>
+);
+
 /**
  * The interactive 3D view of one equation: the graph on a canvas, with sliders for the parameters it
  * uses, a colour ramp to pick, and a read-out of the point under the pointer.
  *
- * Loaded on demand (see `GraphModal`), so three.js reaches a reader only when they open a graph.
+ * Loaded on demand (see `GraphBlock` and `GraphModal`), so three.js reaches a reader only when a graph
+ * comes near the screen or is opened.
  */
-const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
+const Graph3DViewer = ({ latex, graph, graphView, layout }: IGraph3DViewerProps) => {
   const compiled = useMemo(() => compileGraph(graph), [graph]);
   const view = useMemo(() => parseGraphView(graphView), [graphView]);
   const [values, setValues] = useState<Record<GraphParam, number>>(() => graphParamValues(view));
@@ -116,6 +207,7 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
       return undefined;
     }
     sceneRef.current = scene;
+    if (layout === 'inline') scene.embedInPage();
     const applyTheme = () =>
       scene.setTheme({ line: readColour(lineProbe.current), accent: readColour(accentProbe.current) });
     applyTheme();
@@ -129,7 +221,7 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
       scene.dispose();
       sceneRef.current = null;
     };
-  }, []);
+  }, [layout]);
 
   useEffect(() => sceneRef.current?.setPalette(palette), [palette]);
   useEffect(() => sceneRef.current?.setWire(showWire), [showWire]);
@@ -196,9 +288,19 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
       if (blob) saveBlob(blob, '3d-graph.gif');
     });
 
+  const canDraw = compiled.isValid && !isUnsupported;
+  const unavailable = compiled.isValid
+    ? 'This device cannot draw 3D graphics, so the graph cannot be shown here.'
+    : `This graph cannot be drawn: ${compiled.message}`;
+
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 text-foreground md:flex-row">
-      <div className="relative min-h-[55vh] flex-1 overflow-hidden border border-border bg-gradient-to-br from-muted via-background to-muted md:min-h-0">
+    <div className={cn('flex min-h-0 flex-col text-foreground', LAYOUT_CLASSES[layout].root)}>
+      <div
+        className={cn(
+          'relative overflow-hidden border border-border bg-gradient-to-br from-muted via-background to-muted',
+          LAYOUT_CLASSES[layout].stage,
+        )}
+      >
         <div className="pointer-events-none absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent" />
         <span ref={lineProbe} className="hidden text-muted-foreground" aria-hidden="true" />
         <span ref={accentProbe} className="hidden text-primary" aria-hidden="true" />
@@ -206,16 +308,13 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
         <span ref={foregroundProbe} className="hidden text-foreground" aria-hidden="true" />
         <div ref={stageRef} className="absolute inset-0" />
         <div ref={labelRef} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true" />
-        {isUnsupported || !compiled.isValid ? (
+        {canDraw ? null : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center">
             <WarningCircleIcon weight="bold" className="h-6 w-6 text-muted-foreground" />
-            <p className="max-w-sm text-sm text-muted-foreground">
-              {compiled.isValid
-                ? 'This device cannot draw 3D graphics, so the graph cannot be shown here.'
-                : `This graph cannot be drawn: ${compiled.message}`}
-            </p>
+            <p className="max-w-sm text-sm text-muted-foreground">{unavailable}</p>
           </div>
-        ) : (
+        )}
+        {canDraw && layout === 'fill' ? (
           <>
             <StageToolbar
               isSpinning={isSpinning}
@@ -227,59 +326,22 @@ const Graph3DViewer = ({ latex, graph, graphView }: IGraph3DViewerProps) => {
             />
             {saving === 'gif' ? <GifProgress fraction={gifProgress} /> : <Readout point={hover} />}
           </>
-        )}
+        ) : null}
       </div>
 
-      <aside className="flex w-full shrink-0 flex-col gap-5 overflow-y-auto md:w-72">
-        {params.length ? (
-          <section className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <SectionTitle>Change the shape</SectionTitle>
-              <Button
-                isSubtle
-                className="px-2 py-0.5 text-xs text-primary"
-                onClick={() => setValues(graphParamValues(view))}
-              >
-                Reset
-              </Button>
-            </div>
-            {params.map((param) => {
-              const setting = view.params[param];
-              return (
-                <Slider
-                  key={param}
-                  label={<span className="font-serif text-sm italic">{param}</span>}
-                  value={values[param]}
-                  min={setting.min}
-                  max={setting.max}
-                  step={(setting.max - setting.min) / 200}
-                  formatValue={formatGraphNumber}
-                  onChange={(value) => setValues((current) => ({ ...current, [param]: value }))}
-                />
-              );
-            })}
-          </section>
-        ) : null}
-
-        <section className="flex flex-col gap-2">
-          <SectionTitle>Colours</SectionTitle>
-          <PalettePicker value={palette} onChange={setPalette} />
-        </section>
-
-        {compiled.isValid && compiled.graph.kind !== 'curve' ? (
-          <section className="flex flex-col gap-2">
-            <SectionTitle>Display</SectionTitle>
-            <div className="flex flex-wrap gap-2">
-              <Chip
-                label="Grid lines"
-                isSelected={showWire}
-                onClick={() => setShowWire(!showWire)}
-                leftSection={<GridFourIcon weight="bold" className="h-3.5 w-3.5" />}
-              />
-            </div>
-          </section>
-        ) : null}
-      </aside>
+      {layout === 'fill' ? (
+        <GraphSidebar
+          params={params}
+          view={view}
+          values={values}
+          onValues={setValues}
+          palette={palette}
+          onPalette={setPalette}
+          hasWire={compiled.isValid && compiled.graph.kind !== 'curve'}
+          showWire={showWire}
+          onWire={setShowWire}
+        />
+      ) : null}
     </div>
   );
 };

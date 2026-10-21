@@ -33,7 +33,8 @@ any of them needs a migration of that content; everything else here can be renam
   `scene-reasoning.ts` (die, cubeGrid, net), `scene-chemistry.ts` (molecule, atom, bond, lattice);
   `scene-steps.ts` (each step's state and the blend between two), `scene-labels.ts`,
   `scene-theme.tsx`; `Scene3DViewer.tsx` with `StepBar.tsx`, and `ScenePrintStill.tsx` for print.
-- `content/` — `GraphButton.tsx` (opens `Viewer3DModal.tsx`) and `SceneCard.tsx` (what `RichTextView`
+- `content/` — `GraphButton.tsx` (`GraphBlock`, the inline graph `RichTextView` renders, and the
+  cube `GraphButton` the editor and narrow spots use) and `SceneCard.tsx` (what `RichTextView`
   renders: the scene inline, its full-screen popup in `Viewer3DModal.tsx`; the editor shows it as a card); `RichTextImage.tsx` shows figures and **inverts drawn (SVG) figures in dark
   mode**. Only `RichTextView` is public: graphs and scenes are drawn by it, never imported by apps.
 - `editor/` — `equation/GraphPanel.tsx` (a graph on an equation), `extensions/scene3d.ts` +

@@ -155,9 +155,13 @@ from the defaults (`x=-2..2 t=0..4pi a=1[0.1..5]`). Both are null on an ordinary
 compiler (closures over a fixed list of functions, never `eval`), the view format and sampling live
 in `@repo/shared/utils` (`utils/graph/expression.util.ts`, `sample.util.ts`).
 
-- **Reading view**: an equation with a graph shows a cube (`content/GraphButton.tsx`) that opens
-  `GraphModal`. The viewer (`src/graph/` on the shared engine in `src/three/`, three.js) is a lazy
-  chunk, fetched on first open; the cube stops click and key events so it never selects an answer option, and is hidden in print.
+- **Reading view**: the graph plays inline (`GraphBlock` in `content/GraphButton.tsx`): under a
+  display equation, or under the paragraph that holds an inline one, since a canvas cannot sit in
+  a line. It shows the equation, the graph and a full-screen button; the popup (`GraphModal`) has
+  the sliders, colours and downloads. Like a scene, it is drawn only near the screen, falls back
+  to the cube button (`GraphButton`) under 320px, stops click and key events so it never selects
+  an answer option, and is left out of print. The viewer (`src/graph/` on the shared engine in
+  `src/three/`, three.js) is a lazy chunk.
 - **Editor**: the cube in the equation panel's header opens `equation/GraphPanel.tsx`, pre-filled by
   `graphExpressionFromLatex`. Only an expression that compiles and draws is written to the node.
 - **Markdown**: `$z = x^2${graph="x^2" x=-2..2}` and `$$ … $${graph="…"}`, read before the marks

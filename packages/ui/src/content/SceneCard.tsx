@@ -1,12 +1,12 @@
 import { ArrowsOutIcon, CubeIcon } from '@phosphor-icons/react';
 import type { IScene } from '@repo/shared/interfaces';
 import { parseScene } from '@repo/shared/utils';
-import { lazy, type ReactNode, type RefObject, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, type ReactNode, Suspense, useMemo, useRef, useState } from 'react';
 import { useIsPrint } from '../contexts/print-context';
 import { Button } from '../core/Button';
-import { Spinner } from '../core/Spinner';
 import { Tooltip } from '../core/Tooltip';
 import { cn } from '../lib/cn';
+import { INLINE_MIN_WIDTH, InlinePlaceholder, useIsNearViewport, useWidth } from './inline-3d';
 import { Viewer3DModal } from './Viewer3DModal';
 
 /** Three.js and the scene viewer arrive as their own chunk, fetched the first time a scene is opened. */
@@ -34,19 +34,6 @@ const sceneDetail = (scene: IScene): string => {
     .join(' · ');
 };
 
-/** Holds the inline scene's place, at its height, while it loads or while it is far off screen. */
-const InlinePlaceholder = ({ isLoading }: { isLoading: boolean }) => (
-  <div className="flex h-72 items-center justify-center gap-2 border border-border bg-muted/40 text-sm text-muted-foreground sm:h-96">
-    {isLoading ? (
-      <>
-        <Spinner size="sm" /> Loading the 3D scene…
-      </>
-    ) : (
-      <CubeIcon weight="duotone" className="h-8 w-8 opacity-40" />
-    )}
-  </div>
-);
-
 /** On paper: the title, then the scene as a picture, kept together on one page. */
 const PrintedScene = ({
   spec,
@@ -71,37 +58,6 @@ const PrintedScene = ({
     ) : null}
   </div>
 );
-
-/** Narrower than this (a two-up answer option), a scene shows as the card and opens in the popup. */
-const INLINE_MIN_WIDTH = 320;
-
-/** True while `ref` is within a screen of the viewport, so only nearby scenes hold a WebGL context. */
-const useIsNearViewport = (ref: RefObject<HTMLElement | null>): boolean => {
-  const [isNear, setIsNear] = useState(false);
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return undefined;
-    const observer = new IntersectionObserver(([entry]) => setIsNear(entry.isIntersecting), {
-      rootMargin: '100% 0px',
-    });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [ref]);
-  return isNear;
-};
-
-/** The element's width, followed as it changes; 0 until measured. */
-const useWidth = (ref: RefObject<HTMLElement | null>): number => {
-  const [width, setWidth] = useState(0);
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return undefined;
-    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [ref]);
-  return width;
-};
 
 export interface ISceneCardProps {
   /** The scene's JSON, as stored on the `scene3d` node. */
@@ -182,11 +138,11 @@ export const SceneCard = ({ spec, display, className, actions }: ISceneCardProps
           </div>
           {/* One live view at a time: the inline one stands aside while the popup is open. */}
           {isNear && !isOpen ? (
-            <Suspense fallback={<InlinePlaceholder isLoading />}>
+            <Suspense fallback={<InlinePlaceholder loadingText="Loading the 3D scene…" />}>
               <Scene3DViewer spec={spec} autoPlay layout="inline" />
             </Suspense>
           ) : (
-            <InlinePlaceholder isLoading={false} />
+            <InlinePlaceholder loadingText={null} />
           )}
         </div>
       ) : (
