@@ -3,6 +3,11 @@
 Plan, 2026-10-16, after customer feedback on the new Sanskrit Beginner course. **Features first,
 content after**: we decide and build the interactive features, then rewrite lessons to use them.
 
+**Status 2026-10-21: built, committed and in use.** The blocks below, plus the `concept` block
+(2026-10-17), are in the reader, the editor, Markdown and print; the Spanish and Sanskrit courses are
+written with them; the in-app lesson prompt follows `apps/teaching/src/utils/ai/LESSON_DESIGN.md`.
+History:
+
 **Status 2026-10-16: the first set is built (uncommitted) and shown in a demo course.** A1 Show
 answer, A2 Quick check, B1 Sound board, C3 Flashcards, C4 Say it, D1 centred short topics, D2 figure
 height cap — reader, editor, Markdown both ways, import check, print. Demo course "Sanskrit Beginner:

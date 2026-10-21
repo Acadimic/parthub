@@ -1,7 +1,10 @@
 # Spanish series: quality audit and the compact, interactive rewrite
 
-Status: plan, 2026-10-16. Nothing built. The audit reports are in the git-ignored workspace,
-`.course-agent/work/spanish/audit/` (`a1a2.md`, `b1b2.md`, `c1c2.md`, with sources and every finding).
+Status 2026-10-21: **done and in production.** All three courses (A1–A2, B1–B2, C1–C2) are 8 weeks /
+40 days in the learn-then-play form (§7), each with a 10-topic vocabulary module (§8), rewritten tests,
+grammar-first module names with subtitles and contents rows (`LESSON_DESIGN.md` §11) and new covers.
+The plan below is kept as the record of why. (Originally: plan, 2026-10-16, nothing built.)
+The audit reports are in the git-ignored workspace, `.course-agent/work/spanish/audit/` (`a1a2.md`, `b1b2.md`, `c1c2.md`, with sources and every finding).
 
 The three Spanish courses (A1–A2, B1–B2, C1–C2; 60 days, 84 lessons and 24 tests each, live in
 production) are to get the treatment the Sanskrit Beginner course got: compact, interactive lessons

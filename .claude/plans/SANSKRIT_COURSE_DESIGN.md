@@ -319,7 +319,7 @@ week's weakest section.
 
 **Decision (Manish, 2026-10-15): four new courses.** The published three stay untouched and
 published while the new ones are written in dev; once the new series is in production, the old
-three are deleted (a separate step, after his yes). Content from the old courses is reused where
+three are deleted (a separate step, after his yes). _Done 2026-10-21 (soft delete, dev and production)._ Content from the old courses is reused where
 it fits the new blueprint, by copying and editing the local files, never by sharing ids.
 
 ## 10. Decisions (Manish, 2026-10-15)
@@ -333,6 +333,28 @@ it fits the new blueprint, by copying and editing the local files, never by shar
 6. A fifth level is not planned now.
 
 ## 11. Tasks
+
+**Status 2026-10-21: done.** All four new courses are published in production, each with concepts and
+Key points in every lesson (`apps/teaching/src/utils/ai/LESSON_DESIGN.md`), a dictionary-checked
+"Vocabulary by topic" module as its last module, full generated audio, grammar-first module names with
+subtitles and contents rows, and a cover; the three 2026-10-06 courses are soft-deleted in dev and
+production (backups in the workspace, `backup-old-series-*.json`).
+
+| Course | Course id | Weeks | Notes |
+| --- | --- | --- | --- |
+| Beginner: Sounds, Script and First Sentences | `6acfda1a6b436b8190828d61` | 6 + vocab | audit 2026-10-17 (46 findings) fixed |
+| Intermediate: Tenses, Cases and First Stories | `6ad46fca43a141e21b996567` | 8 + vocab | |
+| Advanced: Sandhi, Compounds and Real Texts | `6ad4d8c61a4ec2e3d2bb2945` | 8 + vocab | week 7 day 4 recognises dvandva and bahuvrīhi (Manish) |
+| Expert: The Gītā, Kāvya and Writing Your Own | `6ad50f4ad56d786ad728fd3e` | 8 + vocab | new **Expert** subject `6ad4ffac9cbca7eeccf360a7`, mapped to Sanskrit (order 3), in dev and production |
+
+How each was made (`.course-agent/work/sanskrit/<level>/`): a blueprint (`weeks.mjs`) approved by
+Manish → course created in dev → one writer per week (`WEEK_WRITER.md`) → check, coverage and key check →
+the writers' corrections folded back into the blueprint → import → vocabulary module (`vocab/`) → module
+names (`module-names.json`) → cover → audio (`.course-agent/audio/<level>-all.sh`, then `verify-short`)
+→ published in dev → production. At Advanced and Expert every quotation was checked in a named source
+(GRETIL, sanskritdocuments.org, Sanskrit Wikisource) and every metre scanned.
+
+The original task list:
 
 1. **Expert subject** in the support catalogue, mapped to the Sanskrit standard (dev, then prod).
 2. **Blueprints** per course in `.course-agent/work/sanskrit/<course>/weeks.mjs`; course titles

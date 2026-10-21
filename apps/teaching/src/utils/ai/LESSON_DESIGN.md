@@ -120,6 +120,10 @@ is neither. Coverage is checked again after every rewrite.
 - **State the standard a course follows**, and note where another valid standard differs. Sanskrit
   follows spoken (Samskrita Bharati) usage with a one-line note where classical usage differs; Spanish
   labels Spain and Latin American forms rather than hiding either.
+- **Real texts**: a verse or passage is quoted only after it is found in a named source and cited
+  (text, chapter.verse, and the edition where numbering or readings differ); a metre is scanned
+  syllable by syllable against its pattern, with any licence named. If a line cannot be confirmed, use
+  another or label it "teacher-created".
 - **Check facts, quotations and verses against a source** (DLE/RAE, Wiktionary, Monier-Williams/Apte
   via the Cologne dictionaries, GRETIL), and say "from memory, unchecked" when one cannot be found.
 - **Label modern words** ("(spoken Sanskrit)", "(modern usage)") and regional ones ("Spain", "Mexico").
@@ -144,6 +148,14 @@ Key points and cards with every word. It **adds** words the lessons did not teac
 already" line at most), its examples use only grammar the course taught, and every word is checked
 in a dictionary. Never copy a dictionary's wording: choose the words and write the examples.
 
+- **Look every word up**, not from memory (for Sanskrit, Monier-Williams or Apte through the Cologne
+  dictionaries; for Spanish, the DLE or Wiktionary), and label a modern coinage ("spoken Sanskrit") or a
+  modern sense ("modern usage").
+- **No word twice**: a word taught on one topic, at any level of the series, is not taught again on
+  another; check every topic's `forms` before importing (writers in parallel cannot see each other).
+- An independent dictionary check of the finished topics still finds errors (gender counts, a group
+  rule with an exception, a modern sense unlabelled); run it before import.
+
 ## 10. The workflow that catches mistakes
 
 1. **Plan** (blueprint: each lesson's name, can-do, teach, practice, `forms`), reviewed by Manish.
@@ -152,9 +164,11 @@ in a dictionary. Never copy a dictionary's wording: choose the words and write t
    (`concept-rules.mjs`: at least two concepts, at most two in a row, a closing Key points).
 4. **Audit**: an independent read-only reviewer per week for accuracy, keys and facts; a dictionary
    check for vocabulary. Fix every finding, then check again.
-5. **Import to dev**, add audio (and regenerate it after an update that drops it), look at it in the
+5. **Fold the writers' findings back into the plan**: writers find errors in the blueprint itself
+   (a wrong form, a wrong source, a misattributed verse); the plan is corrected to match the lessons.
+6. **Import to dev**, add audio (and regenerate it after an update that drops it), look at it in the
    learning app at phone width, then hand it over for review.
-6. **Production** only after Manish's yes.
+7. **Production** only after Manish's yes.
 
 ## 11. Naming modules (Manish, 2026-10-18)
 
