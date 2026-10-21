@@ -48,6 +48,8 @@ export const checkPronunciation = (markdown: string, path: string, issues: IAiIs
   const text = markdown ?? '';
   const spans = new RegExp(SPAN.source, 'g');
   for (let match = spans.exec(text); match; match = spans.exec(text)) {
+    // A LaTeX optional argument such as \sqrt[3]{x} has the same shape, and is not a span.
+    if (/\\[a-zA-Z]+$/.test(text.slice(0, match.index))) continue;
     const lang = /\blang=("?)([^\s"}]+)\1/.exec(match[2])?.[2];
     if (!lang) {
       issues.push({ level: 'warning', path, message: `"[${match[1]}]{…}" has no lang=, so it stays plain text.` });
