@@ -165,9 +165,18 @@ const readFence: BlockReader = (lines, index) => {
     cursor += 1;
   }
   const text = body.join('\n');
-  const scene = sceneFenceNode(lines[index].trim().slice(3).trim(), text);
+  const info = lines[index].trim().slice(3).trim();
+  const scene = sceneFenceNode(info, text);
+  const language = codeLanguageOf(info);
+  const code: IRichTextNode = { type: 'codeBlock', content: [{ type: 'text', text }] };
   // `next` steps past the closing fence.
-  return { node: scene ?? { type: 'codeBlock', content: [{ type: 'text', text }] }, next: cursor + 1 };
+  return { node: scene ?? (language ? { ...code, attrs: { language } } : code), next: cursor + 1 };
+};
+
+/** The language named after an opening fence (```python), lower-cased; empty when there is none. */
+export const codeLanguageOf = (info: string): string => {
+  const word = info.split(/\s+/)[0] ?? '';
+  return /^[a-z][a-z0-9+#-]*$/i.test(word) ? word.toLowerCase() : '';
 };
 
 const readRule: BlockReader = (lines, index) =>

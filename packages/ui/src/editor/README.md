@@ -70,7 +70,7 @@ exported to Markdown and imported from Markdown — all four, or it would be los
 | `heading`                                                     | levels **1–3 only**; deeper headings are not admitted                                                                                |
 | `bulletList`, `orderedList`, `listItem`                       | list items hold paragraphs                                                                                                           |
 | `blockquote`                                                  |                                                                                                                                      |
-| `codeBlock`                                                   | fenced; contents are literal                                                                                                         |
+| `codeBlock`                                                   | fenced, with its language (```python, ```text for output); contents are literal; the reader colours it                               |
 | `horizontalRule`                                              |                                                                                                                                      |
 | `hardBreak`                                                   | Shift+Enter                                                                                                                          |
 | `table`, `tableRow`, `tableHeader`, `tableCell`               | `bordered` flag on the table; cells hold **inline content only** (no blocks in cells); optional header row                           |

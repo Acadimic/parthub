@@ -33,6 +33,7 @@ import {
 } from '@repo/shared/utils';
 import { createElement, Fragment, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
+import { CodeBlock } from './CodeBlock';
 import { spokenOf } from './activities/ActivityFrame';
 import { CheckBlock } from './activities/CheckBlock';
 import { FlashcardDeck } from './activities/FlashcardDeck';
@@ -181,10 +182,8 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
       {children}
     </blockquote>
   ),
-  codeBlock: (_node, children, key) => (
-    <pre key={key} className="my-3 overflow-x-auto bg-muted p-3 font-mono text-xs">
-      <code>{children}</code>
-    </pre>
+  codeBlock: (node, _children, key) => (
+    <CodeBlock key={key} code={docToPlainText(node)} language={stringAttr(node.attrs, 'language')} />
   ),
   horizontalRule: (_node, _children, key) => <hr key={key} className="my-6 border-border" />,
   hardBreak: (_node, _children, key) => <br key={key} />,

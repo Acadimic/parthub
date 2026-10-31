@@ -137,7 +137,8 @@ export const checkMarkdownMath = (markdown: string, path: string, issues: IAiIss
 export const MARKDOWN_RULES = `
 - Headings with #, ## or ### only (never deeper). Paragraphs separated by a blank line.
 - **bold**, _italic_, ~~strike~~, \`code\`; links as [text](https://…).
-- Bullet lists with "- ", ordered lists with "1. ", blockquotes with "> ", fenced code with triple backticks, rules with ---.
+- Bullet lists with "- ", ordered lists with "1. ", blockquotes with "> ", rules with ---.
+- Fenced code with triple backticks naming its language: \`\`\`python, \`\`\`javascript, \`\`\`java, \`\`\`c, \`\`\`cpp, \`\`\`sql, \`\`\`bash, \`\`\`html, \`\`\`css or \`\`\`json; \`\`\`text for what a program prints, \`\`\`python-repl for a >>> session. A code block is shown exactly as written: keep its indentation, and no maths, escapes or formatting inside it.
 - Inline maths as $...$ and display maths on its own line as $$...$$, in LaTeX — never \\( \\) or \\[ \\]. Chemistry with \\ce{...} inside maths, e.g. $\\ce{H2SO4}$.
 - Inside maths a percent sign is \\%, e.g. $20\\%$; units go in \\text{}, e.g. $60\\ \\text{km h}^{-1}$.
 - Money is never a bare dollar sign: write \\$5000 in prose, or use ₹ or "Rs". A bare $ before a number would be read as the start of an equation.
