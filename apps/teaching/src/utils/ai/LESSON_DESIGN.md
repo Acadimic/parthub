@@ -23,7 +23,7 @@ day is covered, and ends with the key items of all of them.
 ## Topic                 ::: concept  →  ::: concept (at most two in a row)  →  practice
 …
 ## Listen / Say it       a hidden listening with its check; a ::: say block
-## Key points            ::: concept title="Key points": one line per concept + one example
+## Key points            ::: concept title="Key points": a table per group, one row per concept
 ## Remember              ::: cards: every new word or term, once
 ```
 
@@ -100,8 +100,33 @@ Use a picture wherever it is clearer than words, and make every picture carry th
 
 ## 5. Closing every lesson
 
-- **`## Key points`** holding `::: concept title="Key points"`: one bullet per concept of the lesson,
-  the rule in a few words plus one example. Every concept appears there.
+- **`## Key points`** holding `::: concept title="Key points"`: every concept of the lesson, grouped
+  under 2–5 `###` headings named after its topics, one two-column table per group. A lesson with only
+  a few concepts uses one table and no heading.
+
+  ```
+  ### Divisibility and remainders
+
+  | # | Rule |
+  | --- | --- |
+  | F3 | **Divisibility tests**<br>• $2, 5$: last digit · $4$: last two digits<br>• $3, 9$: digit sum<br>_e.g._ by $72$ means by $8$ and by $9$ |
+  | F4 | **Division identity**<br>Dividend $=$ divisor $\times$ quotient $+$ remainder<br>_e.g._ $13 \times 9 + 5 = 122$ |
+  ```
+
+  - **Left cell: only the number** the tests cite (`F3`, `R3`), or empty for a concept with no number.
+    The reader shrinks a first column of short labels to fit, so the right cell gets most of a phone's
+    width; a name in the left cell made it take about 40%. A group with no numbers is a one-column table.
+  - **Right cell**: the name in bold on the first line, then one rule per line (`<br>` between lines),
+    each starting with `• ` when there are two or more, and last an `_e.g._` line with an example that
+    shows its step (`$8^{43}$: $43 = 4 \times 10 + 3$, so as $8^3$: $2$`), never a bare `input → answer`.
+  - Never join rules with semicolons, and never put a literal `|` in a cell (escape it as `\|`).
+  - Cell text is inline only: no lists, headings or blocks inside a cell.
+  - Never head a column "Formula" (or "Rule" in the verbal and reasoning workspaces): their `build.mjs`
+    collapses such a table as a formula sheet. Those workspaces use `| # | Key point |`.
+  - A revision lesson has one group per topic of the course and one row per number: the name in bold,
+    then the formula (or rule), no example. Keep any name or number the revision tests cite.
+  - The aptitude and verbal-reasoning workspaces write the box as a grouped list and convert it with
+    `kp-table.mjs`; see their `KEY_POINTS_BRIEF.md`.
 - **`::: cards`** after it: every new word, term or form, front = the item (marked, with gender),
   back = the meaning; `keyTerms` match the cards.
 
