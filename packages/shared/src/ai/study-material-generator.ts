@@ -107,7 +107,9 @@ const checkContent = (material: IAiMaterial, path: string, issues: IAiIssue[]) =
     });
   }
   if (material.kind === 'lesson') checkLessonShape(content, `${path}.content`, issues);
-  if (/<(?!br\s*\/?>)[a-z][^>]*>/i.test(content)) {
+  // Code is shown literally, so `<class 'int'>` in a code block or inline code is not a tag.
+  const prose = content.replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]*`/g, '');
+  if (/<(?!br\s*\/?>)[a-z][^>]*>/i.test(prose)) {
     issues.push({ level: 'warning', path: `${path}.content`, message: 'Contains HTML tags, which the editor drops.' });
   }
   checkMarkdownMath(content, `${path}.content`, issues);
