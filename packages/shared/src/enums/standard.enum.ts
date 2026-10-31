@@ -14,4 +14,6 @@ export enum StandardGroup {
   LEARNING_TRACKS = 'learning tracks',
   /** Language tracks: one standard per language (Spanish, Sanskrit, ...), its levels are the subjects. */
   LANGUAGES = 'languages',
+  /** Coding: one standard (Programming), its languages (Python, ...) are the subjects. */
+  PROGRAMMING = 'programming',
 }

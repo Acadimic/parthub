@@ -79,6 +79,7 @@ export const STANDARD_GROUP_ORDER: IDynamicObject = {
   [StandardGroup.POST_GRADUATE]: 1600,
   [StandardGroup.LEARNING_TRACKS]: 1700,
   [StandardGroup.LANGUAGES]: 1800,
+  [StandardGroup.PROGRAMMING]: 1900,
 };
 
 export const AccountSettingsRoutes: Record<AccountSettingsType, string> = {
