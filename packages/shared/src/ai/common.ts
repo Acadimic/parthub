@@ -87,13 +87,15 @@ export const repairIssue = (repairs: number): IAiIssue[] =>
 /**
  * Every `$` a reader would still see once the field is imported — an equation the importer could not
  * close, or a price — as a few words round it. Escaped `\$` is meant as money and is set aside first;
- * code blocks keep their text as written.
+ * code blocks and inline code keep their text as written.
  */
 const strayDollars = (markdown: string): string[] => {
   const found: string[] = [];
   const walk = (node: IRichTextNode) => {
     if (node.type === 'codeBlock') return;
-    if (node.type === 'text' && node.text?.includes('$')) found.push(node.text.trim().slice(0, 40));
+    // Inline code shows `$` literally too: `${name}` in a JavaScript lesson is not an equation.
+    const isCode = node.marks?.some((mark) => mark.type === 'code');
+    if (node.type === 'text' && !isCode && node.text?.includes('$')) found.push(node.text.trim().slice(0, 40));
     node.content?.forEach(walk);
   };
   walk(richTextFromMarkdown(markdown.replace(/\\\$/g, '¤')).doc);
