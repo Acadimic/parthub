@@ -17,6 +17,7 @@ import { useIsPrint } from '../contexts/print-context';
 import { Button } from '../core/Button';
 import { Tooltip } from '../core/Tooltip';
 import { cn } from '../lib/cn';
+import { codeLanguageLabel } from './code-languages';
 
 // Only the languages a course teaches are registered: the full highlight.js bundle is ~1 MB.
 const LANGUAGES = {
@@ -34,30 +35,6 @@ const LANGUAGES = {
   xml,
 };
 Object.entries(LANGUAGES).forEach(([name, language]) => hljs.registerLanguage(name, language));
-
-/** The label above a block, by the name the fence used; otherwise highlight.js's own name for it. */
-const LANGUAGE_LABELS: Record<string, string> = {
-  bash: 'Shell',
-  sh: 'Shell',
-  shell: 'Shell',
-  py: 'Python',
-  js: 'JavaScript',
-  ts: 'TypeScript',
-  html: 'HTML',
-  c: 'C',
-  cpp: 'C++',
-  css: 'CSS',
-  java: 'Java',
-  javascript: 'JavaScript',
-  json: 'JSON',
-  python: 'Python',
-  'python-repl': 'Python shell',
-  sql: 'SQL',
-  typescript: 'TypeScript',
-  xml: 'HTML',
-  text: 'Output',
-  output: 'Output',
-};
 
 /** highlight.js token classes on the theme's chart colours, so light and dark follow the theme. */
 const TOKEN_CLASSES = [
@@ -89,7 +66,7 @@ export const CodeBlock = ({ code, language }: ICodeBlockProps) => {
     () => (registered ? hljs.highlight(code, { language: registered, ignoreIllegals: true }).value : ''),
     [code, registered],
   );
-  const label = LANGUAGE_LABELS[language] ?? hljs.getLanguage(language)?.name ?? (language || 'Code');
+  const label = codeLanguageLabel(language);
 
   const copy = async () => {
     try {

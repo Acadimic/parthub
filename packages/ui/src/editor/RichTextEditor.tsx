@@ -8,6 +8,7 @@ import { docToPlainText } from '@repo/shared/utils';
 import { useRichTextMedia } from '../contexts/rich-text-media-context';
 import { Label } from '../core/Label';
 import { cn } from '../lib/cn';
+import { CodeBlockWithLanguage } from './extensions/code-block';
 import { IMAGE_ACCEPT, ImageBlock } from './extensions/image';
 import { ActivityExtensions } from './extensions/activities';
 import { ListeningNode } from './extensions/listening';
@@ -116,7 +117,10 @@ export const RichTextEditor = ({
         heading: { levels: [1, 2, 3] },
         // A pasted URL becomes a link, but a typed one is left alone until the author means it.
         link: { openOnClick: false, autolink: true, linkOnPaste: true },
+        // Replaced below by the same node with a language picker.
+        codeBlock: false,
       }),
+      CodeBlockWithLanguage,
       Placeholder.configure({ placeholder }),
       ...MathExtensions,
       ...TableExtensions,
