@@ -106,6 +106,21 @@ export const light = {
     'chart-4': '#be123c',
     'chart-5': '#7c3aed',
 
+    // A code block is a dark editor surface in both themes, so one syntax palette serves both and
+    // every hue is measured against `code` (contrast.mjs, "code surface"), not against the page.
+    code: '#1b1f2b',
+    'code-foreground': '#e4e8f1',
+    'code-header': '#252a38',
+    'code-header-foreground': '#a9b2c8',
+    'code-comment': '#8c96ad',
+    'code-keyword': '#c792ea',
+    'code-string': '#a6da7a',
+    'code-number': '#f9a07a',
+    'code-function': '#82aaff',
+    'code-builtin': '#7fdbca',
+    'code-type': '#ffcb6b',
+    'code-meta': '#ff8fa8',
+
     // What a course item is: read, watch or be tested. Three hues spread around the wheel and away
     // from `primary`, so the kind reads at a glance without looking like the selected row.
     'content-reading': '#0e7490',

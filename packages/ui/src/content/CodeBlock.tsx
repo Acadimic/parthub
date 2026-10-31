@@ -1,4 +1,4 @@
-import { CheckIcon, CopyIcon } from '@phosphor-icons/react';
+import { CheckIcon, CopyIcon, TerminalWindowIcon } from '@phosphor-icons/react';
 import hljs from 'highlight.js/lib/core';
 import bash from 'highlight.js/lib/languages/bash';
 import c from 'highlight.js/lib/languages/c';
@@ -36,15 +36,23 @@ const LANGUAGES = {
 };
 Object.entries(LANGUAGES).forEach(([name, language]) => hljs.registerLanguage(name, language));
 
-/** highlight.js token classes on the theme's chart colours, so light and dark follow the theme. */
+/**
+ * highlight.js token classes on the code palette (light.ts / dark.ts, measured against `code`). In an
+ * arbitrary variant Tailwind reads `_` as a space, so `built_in` and `class_` are escaped as `\_`, inside
+ * String.raw so the source Tailwind scans and the class the browser gets carry the same single backslash.
+ */
 const TOKEN_CLASSES = [
-  '[&_.hljs-keyword]:text-chart-5 [&_.hljs-meta_.hljs-keyword]:text-chart-5',
-  '[&_.hljs-string]:text-chart-2 [&_.hljs-regexp]:text-chart-2',
-  '[&_.hljs-number]:text-chart-3 [&_.hljs-literal]:text-chart-3',
-  '[&_.hljs-title]:text-chart-1 [&_.hljs-built_in]:text-chart-1 [&_.hljs-type]:text-chart-1',
-  '[&_.hljs-meta]:text-chart-4 [&_.hljs-tag]:text-chart-4 [&_.hljs-attr]:text-chart-3',
-  '[&_.hljs-comment]:italic [&_.hljs-comment]:text-muted-foreground',
+  '[&_.hljs-keyword]:text-code-keyword [&_.hljs-name]:text-code-keyword [&_.hljs-selector-tag]:text-code-keyword',
+  '[&_.hljs-string]:text-code-string [&_.hljs-regexp]:text-code-string [&_.hljs-subst]:text-code-foreground',
+  '[&_.hljs-number]:text-code-number [&_.hljs-literal]:text-code-number [&_.hljs-attr]:text-code-number',
+  String.raw`[&_.hljs-title]:text-code-function [&_.hljs-built\_in]:text-code-builtin [&_.hljs-attribute]:text-code-builtin`,
+  String.raw`[&_.hljs-type]:text-code-type [&_.hljs-title.class\_]:text-code-type [&_.hljs-selector-class]:text-code-type`,
+  '[&_.hljs-meta]:text-code-meta [&_.hljs-tag]:text-code-meta [&_.hljs-symbol]:text-code-meta',
+  '[&_.hljs-comment]:italic [&_.hljs-comment]:text-code-comment',
 ].join(' ');
+
+/** Short snippets read fine without line numbers; from this many lines a number helps point at one. */
+const NUMBERED_FROM = 3;
 
 interface ICodeBlockProps {
   code: string;
@@ -53,9 +61,10 @@ interface ICodeBlockProps {
 }
 
 /**
- * A fenced code block as a learner reads it: the language on top, a copy button, and the code
- * coloured by highlight.js. Lines never wrap, because indentation is meaning in Python; a long line
- * scrolls inside the block instead of widening the page.
+ * A fenced code block as a learner reads it: a dark editor surface with the language on top, line
+ * numbers, a copy button and highlight.js colours; a program's output (`text`) as a terminal panel.
+ * Lines never wrap, because indentation is meaning in Python: a long line scrolls inside the block
+ * while the numbers stay put. A printout gets plain light text instead.
  */
 export const CodeBlock = ({ code, language }: ICodeBlockProps) => {
   const isPrint = useIsPrint();
@@ -66,7 +75,11 @@ export const CodeBlock = ({ code, language }: ICodeBlockProps) => {
     () => (registered ? hljs.highlight(code, { language: registered, ignoreIllegals: true }).value : ''),
     [code, registered],
   );
+  const isOutput = language === 'text' || language === 'output';
   const label = codeLanguageLabel(language);
+  const lineCount = code.split('\n').length;
+  // A >>> session is read prompt by prompt, so numbering its lines only adds noise.
+  const isNumbered = !isOutput && language !== 'python-repl' && lineCount >= NUMBERED_FROM;
 
   const copy = async () => {
     try {
@@ -78,36 +91,57 @@ export const CodeBlock = ({ code, language }: ICodeBlockProps) => {
     }
   };
 
-  return (
-    <figure className="my-4 overflow-hidden rounded-md border border-border bg-muted/50">
-      {!isPrint ? (
-        <figcaption className="flex items-center justify-between gap-2 border-b border-border px-3 py-1">
-          <span className="text-xs font-semibold uppercase tracking-caps text-muted-foreground">{label}</span>
-          <Tooltip title={isCopied ? 'Copied' : 'Copy code'}>
-            <Button
-              isSubtle
-              aria-label={isCopied ? 'Copied' : 'Copy code'}
-              onClick={copy}
-              className="flex h-7 w-7 shrink-0 items-center justify-center p-0"
-            >
-              {isCopied ? (
-                <CheckIcon weight="bold" className="h-4 w-4 text-primary" />
-              ) : (
-                <CopyIcon className="h-4 w-4" />
-              )}
-            </Button>
-          </Tooltip>
-        </figcaption>
-      ) : null}
-      <pre
-        className={cn(
-          'overflow-x-auto p-3 font-mono text-xs leading-relaxed text-foreground sm:text-sm',
-          isPrint ? 'whitespace-pre-wrap' : 'whitespace-pre',
-          TOKEN_CLASSES,
-        )}
-      >
-        {html ? <code dangerouslySetInnerHTML={{ __html: html }} /> : <code>{code}</code>}
+  if (isPrint) {
+    return (
+      <pre className="my-4 whitespace-pre-wrap rounded-md border border-border bg-muted p-3 font-mono text-xs leading-relaxed text-foreground">
+        <code>{code}</code>
       </pre>
+    );
+  }
+
+  return (
+    <figure className="my-4 overflow-hidden rounded-lg border border-code-header bg-code text-code-foreground shadow-sm">
+      <figcaption className="flex items-center justify-between gap-2 bg-code-header px-3 py-1.5 text-code-header-foreground">
+        <span className="flex min-w-0 items-center gap-2">
+          {isOutput ? (
+            <TerminalWindowIcon className="h-4 w-4 shrink-0" />
+          ) : (
+            <span aria-hidden className="flex shrink-0 gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-code-meta/80" />
+              <span className="h-2.5 w-2.5 rounded-full bg-code-type/80" />
+              <span className="h-2.5 w-2.5 rounded-full bg-code-string/80" />
+            </span>
+          )}
+          <span className="truncate text-xs font-semibold uppercase tracking-caps">{label}</span>
+        </span>
+        <Tooltip title={isCopied ? 'Copied' : 'Copy code'}>
+          <Button
+            isSubtle
+            aria-label={isCopied ? 'Copied' : 'Copy code'}
+            onClick={copy}
+            className="flex h-7 w-7 shrink-0 items-center justify-center bg-transparent p-0 text-code-header-foreground hover:bg-code hover:text-code-foreground"
+          >
+            {isCopied ? (
+              <CheckIcon weight="bold" className="h-4 w-4 text-code-string" />
+            ) : (
+              <CopyIcon className="h-4 w-4" />
+            )}
+          </Button>
+        </Tooltip>
+      </figcaption>
+      <div className="flex font-mono text-xs leading-relaxed sm:text-sm">
+        {isNumbered ? (
+          <pre
+            aria-hidden
+            className="shrink-0 select-none border-r border-code-header py-3 pl-3 pr-2.5 text-right text-code-comment"
+          >
+            {Array.from({ length: lineCount }, (_, index) => index + 1).join('\n')}
+          </pre>
+        ) : null}
+        <pre className={cn('min-w-0 flex-1 overflow-x-auto whitespace-pre p-3', TOKEN_CLASSES)}>
+          {html ? <code dangerouslySetInnerHTML={{ __html: html }} /> : <code>{code}</code>}
+        </pre>
+      </div>
     </figure>
   );
 };

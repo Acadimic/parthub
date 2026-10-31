@@ -23,15 +23,18 @@ export const CodeBlockNodeView = ({ node, updateAttributes }: NodeViewProps) => 
   };
 
   return (
-    <NodeViewWrapper className="my-3 overflow-hidden rounded-md border border-border bg-muted/50">
-      <div contentEditable={false} className="flex items-center border-b border-border px-2 py-1">
+    <NodeViewWrapper className="my-3 overflow-hidden rounded-lg border border-code-header bg-code text-code-foreground">
+      <div contentEditable={false} className="flex items-center bg-code-header px-2 py-1">
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
             <button
               type="button"
               onMouseDown={keepSelection}
               aria-label={`Code language: ${codeLanguageLabel(language)}`}
-              className={cn(CONTROL_CLASS, 'gap-1.5 px-2 text-muted-foreground hover:bg-accent hover:text-foreground')}
+              className={cn(
+                CONTROL_CLASS,
+                'gap-1.5 px-2 text-code-header-foreground hover:bg-code hover:text-code-foreground',
+              )}
             >
               <CodeIcon className="h-3.5 w-3.5" />
               <span className="uppercase tracking-caps">{codeLanguageLabel(language)}</span>
@@ -54,7 +57,7 @@ export const CodeBlockNodeView = ({ node, updateAttributes }: NodeViewProps) => 
           </PopoverContent>
         </Popover>
       </div>
-      <pre className="m-0 overflow-x-auto bg-transparent p-3 font-mono text-xs leading-relaxed">
+      <pre className="m-0 overflow-x-auto p-3 font-mono text-xs leading-relaxed [&&]:bg-transparent [&&]:text-code-foreground">
         <NodeViewContent<'code'> as="code" className="block" />
       </pre>
     </NodeViewWrapper>

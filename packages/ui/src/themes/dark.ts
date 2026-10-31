@@ -80,6 +80,21 @@ export const dark = {
     'chart-4': '#fb7185',
     'chart-5': '#b79cf5',
 
+    // A code block is a dark editor surface in both themes, so one syntax palette serves both and
+    // every hue is measured against `code` (contrast.mjs, "code surface"), not against the page.
+    code: '#22263a',
+    'code-foreground': '#e4e8f1',
+    'code-header': '#2b3047',
+    'code-header-foreground': '#a9b2c8',
+    'code-comment': '#8c96ad',
+    'code-keyword': '#c792ea',
+    'code-string': '#a6da7a',
+    'code-number': '#f9a07a',
+    'code-function': '#82aaff',
+    'code-builtin': '#7fdbca',
+    'code-type': '#ffcb6b',
+    'code-meta': '#ff8fa8',
+
     'content-reading': '#22d3ee',
     'content-reading-foreground': '#0a0b0f',
     'content-video': '#e879f9',

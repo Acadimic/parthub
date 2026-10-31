@@ -111,6 +111,20 @@ for (const name of ['destructive', 'success', 'info', 'primary']) {
   }
 }
 
+// A code block is its own dark surface: its syntax hues only ever sit on `code`, so they are
+// measured there, and the block itself must stand apart from the page it is placed on.
+if (tokens.code) {
+  console.log('\ncode surface');
+  for (const name of names.filter((n) => n.startsWith('code-') && n !== 'code-header' && n !== 'code-header-foreground')) {
+    const r = contrast(tokens[name], tokens.code);
+    row(r >= AA, `text-${name} on bg-code`, `${r.toFixed(2)}  (need ${AA})`);
+  }
+  for (const s of ['background', 'card'].filter((x) => tokens[x])) {
+    const r = contrast(tokens.code, tokens[s]);
+    row(r >= SURFACE_SEPARATION, `bg-code vs bg-${s}`, `${r.toFixed(3)}  (need ${SURFACE_SEPARATION})`);
+  }
+}
+
 console.log('\nsurfaces must stay distinguishable');
 for (let i = 0; i < surfaces.length; i++) {
   for (let j = i + 1; j < surfaces.length; j++) {
