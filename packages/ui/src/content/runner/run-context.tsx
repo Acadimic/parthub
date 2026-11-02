@@ -19,6 +19,4 @@ export const AnsweredRunScope = ({ isAnswered, children }: { isAnswered: boolean
   <CodeRunScope isEnabled={useCanRunCode() && isAnswered}>{children}</CodeRunScope>
 );
 
-/** The languages the browser can run, and code that needs nothing it cannot supply. */
-export const isRunnable = (language: string, code: string) =>
-  language === 'python' || (language === 'javascript' && !/^\s*(import\s|export\s)/m.test(code));
+export { isRunnable } from './runnable';

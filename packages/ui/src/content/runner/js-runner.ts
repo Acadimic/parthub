@@ -105,9 +105,6 @@ window.__watch = () => {
 };
 `;
 
-/** Code with import or export needs its module files, which a lesson shows as separate blocks. */
-export const isRunnableJavaScript = (code: string) => !/^\s*(import\s|export\s)/m.test(code);
-
 /** A closing script tag inside the learner's code would end the script element early. */
 const safeScript = (code: string) => code.replace(/<\/script/gi, '<\\/script');
 
