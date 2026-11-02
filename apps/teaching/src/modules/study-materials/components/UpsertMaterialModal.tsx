@@ -5,7 +5,7 @@ import { Attachments, UploadFiles } from '@components/app/attachments';
 import { Select } from '@components/app/selects';
 import { Button, Label, Modal, ModalFooter, SimpleAccordions, TextInput } from '@repo/ui/app';
 import { PlusIcon } from '@phosphor-icons/react';
-import { type AttachmentDto } from '@repo/shared/contracts';
+import { type AttachmentDto, type MaterialDto } from '@repo/shared/contracts';
 import { PositionType } from '@enums';
 import { type UploadProgress, useAttachment } from '@hooks/attachment.hook';
 import { type ISelectItem } from '@interfaces';
@@ -27,6 +27,36 @@ interface IProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+/** What shows in the editor's place until the full material, with its body, has loaded. */
+const ContentLoadState = ({ isFailed }: { isFailed: boolean }) => (
+  <p className="text-sm text-muted-foreground">
+    {isFailed ? 'Could not load this content. Close and open it again to retry.' : 'Loading content…'}
+  </p>
+);
+
+/** The learner's view of the material, once it has a body or an attachment to show. */
+const MaterialPreview = ({ material }: { material: MaterialDto }) => {
+  if (!material.content && !(material.attachments ?? []).length) return null;
+  return (
+    <div className="mt-12 flex flex-col gap-2 items-center justify-center">
+      <SimpleAccordions
+        items={[
+          {
+            title: <Label label="Content Preview" />,
+            component: (
+              <div className="w-full">
+                <div className="border border-border py-2 px-2 w-full flex flex-col gap-2">
+                  <StudyMaterialView material={material} />
+                </div>
+              </div>
+            ),
+          },
+        ]}
+      />
+    </div>
+  );
+};
 
 export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
   const selectorStore = useSelectorLookups();
@@ -176,11 +206,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                       editorClassName="min-h-[18rem]"
                     />
                   ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {isLoadFailed
-                        ? 'Could not load this content. Close and open it again to retry.'
-                        : 'Loading content…'}
-                    </p>
+                    <ContentLoadState isFailed={isLoadFailed} />
                   )}
                 </div>
                 <div className="flex flex-col gap-3">
@@ -229,24 +255,7 @@ export const UpsertMaterialModal = ({ isOpen, onClose }: IProps) => {
                     <AddChapterButton standard={selectedStandardId} subject={selectedSubjectId} />
                   </div>
                 </div>
-                {selectedMaterial.content || (selectedMaterial.attachments ?? []).length ? (
-                  <div className="mt-12 flex flex-col gap-2 items-center justify-center">
-                    <SimpleAccordions
-                      items={[
-                        {
-                          title: <Label label="Content Preview" />,
-                          component: (
-                            <div className="w-full">
-                              <div className="border border-border py-2 px-2 w-full flex flex-col gap-2">
-                                <StudyMaterialView material={selectedMaterial} />
-                              </div>
-                            </div>
-                          ),
-                        },
-                      ]}
-                    />
-                  </div>
-                ) : null}
+                <MaterialPreview material={selectedMaterial} />
               </div>
             </div>
           )
