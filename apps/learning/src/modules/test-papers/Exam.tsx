@@ -1,4 +1,4 @@
-import { RichTextView } from '@repo/ui/content';
+import { CodeRunScope, RichTextView } from '@repo/ui/content';
 import { Badge } from '@repo/ui/core';
 import { cn } from '@repo/ui/lib';
 import { type MarkingType } from '@repo/shared/interfaces';
@@ -210,30 +210,34 @@ export const Exam = ({ isResultPage, openExamSummary, toggleTimer, openInstructi
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-auto px-4 py-4 md:px-6 md:py-5">
-          <div className="text-base leading-relaxed">
-            <RichTextView value={selectedQuestion.body} />
-          </div>
-          <div className="mt-5">
-            <Options
-              question={selectedQuestion}
-              selectedValues={getResponsesByQuestionId(selectedQuestion._id)}
-              handleResponses={handleResponses}
-              isDisabled={isCompleted}
-              answers={isCompleted ? getAnswersByQuestionId(selectedQuestion._id) : []}
-            />
-          </div>
-          <div className={cn('mt-6 transition-opacity duration-500', isCompleted ? 'opacity-100' : 'opacity-0')}>
-            {isCompleted ? (
-              <Answer
-                correctOptionIndexes={getCorrectOptionIndexes(selectedQuestion._id)}
-                solution={getSolutionByQuestionId(selectedQuestion._id)}
-                answers={getQuestionOptions(selectedQuestion._id)
-                  .filter((option) => getAnswersByQuestionId(selectedQuestion._id).includes(option._id))
-                  .map((option) => option.body)}
-                isAnswer={isTypedAnswer}
+          {/* Running the code would answer the question, so Run appears only once the answer is shown. Keyed
+              by question so a run (its result, edits, input) never carries over to the next one. */}
+          <CodeRunScope key={selectedQuestion._id} isEnabled={isCompleted}>
+            <div className="text-base leading-relaxed">
+              <RichTextView value={selectedQuestion.body} />
+            </div>
+            <div className="mt-5">
+              <Options
+                question={selectedQuestion}
+                selectedValues={getResponsesByQuestionId(selectedQuestion._id)}
+                handleResponses={handleResponses}
+                isDisabled={isCompleted}
+                answers={isCompleted ? getAnswersByQuestionId(selectedQuestion._id) : []}
               />
-            ) : null}
-          </div>
+            </div>
+            <div className={cn('mt-6 transition-opacity duration-500', isCompleted ? 'opacity-100' : 'opacity-0')}>
+              {isCompleted ? (
+                <Answer
+                  correctOptionIndexes={getCorrectOptionIndexes(selectedQuestion._id)}
+                  solution={getSolutionByQuestionId(selectedQuestion._id)}
+                  answers={getQuestionOptions(selectedQuestion._id)
+                    .filter((option) => getAnswersByQuestionId(selectedQuestion._id).includes(option._id))
+                    .map((option) => option.body)}
+                  isAnswer={isTypedAnswer}
+                />
+              ) : null}
+            </div>
+          </CodeRunScope>
         </div>
       </div>
     </div>

@@ -256,6 +256,7 @@ const NODE_RENDERERS: Record<string, (node: IRichTextNode, children: ReactNode, 
   [SCENE3D_NODE]: (node, _children, key) => (
     <SceneCard key={key} spec={stringAttr(node.attrs, 'spec')} display="inline" />
   ),
+  // Running the code inside a reveal or a check would answer it, so each block keeps Run off until answered.
   [REVEAL_NODE]: (node, _children, key) => (
     <RevealBlock
       key={key}

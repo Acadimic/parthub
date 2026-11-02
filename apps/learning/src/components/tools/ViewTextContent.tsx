@@ -1,5 +1,5 @@
 import { FullScreenModal } from '@repo/ui/app';
-import { RichTextView } from '@repo/ui/content';
+import { CodeRunScope, RichTextView } from '@repo/ui/content';
 import { type IRichText } from '@repo/shared/interfaces';
 import { useMemo } from 'react';
 import { CenteredOnce } from './CenteredOnce';
@@ -20,7 +20,9 @@ export const ViewTextContent = ({ content, isFullScreen, onFullScreenChange }: I
       // one fills the frame and scrolls as before.
       <CenteredOnce key={content?.text ?? ''} className="px-4 pb-10 pt-6 md:px-8">
         <div className="mx-auto w-full max-w-4xl">
-          <RichTextView value={content} fallback="No content available. Please check next tab." />
+          <CodeRunScope>
+            <RichTextView value={content} fallback="No content available. Please check next tab." />
+          </CodeRunScope>
         </div>
       </CenteredOnce>
     ),

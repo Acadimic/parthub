@@ -1,4 +1,4 @@
-import { MathRender, RichTextView, renderLatex } from '@repo/ui/content';
+import { CodeRunScope, MathRender, RichTextView, renderLatex } from '@repo/ui/content';
 import { collectEquations, docToMarkdown, toRichText } from '@repo/ui/editor';
 import { docToPlainText } from '@repo/shared/utils';
 import { CheckCircleIcon, WarningCircleIcon } from '@phosphor-icons/react';
@@ -106,7 +106,9 @@ export const OutputPanel = ({ doc }: IProps) => {
           label: 'Reading',
           component: (
             <div className="p-4">
-              <RichTextView value={doc ? toRichText(doc) : null} />
+              <CodeRunScope>
+                <RichTextView value={doc ? toRichText(doc) : null} />
+              </CodeRunScope>
             </div>
           ),
         },

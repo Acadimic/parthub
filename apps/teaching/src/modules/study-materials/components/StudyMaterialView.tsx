@@ -1,4 +1,4 @@
-import { RichTextView } from '@repo/ui/content';
+import { CodeRunScope, RichTextView } from '@repo/ui/content';
 import { type AttachmentDto, type MaterialDto } from '@repo/shared/contracts';
 import { Attachments } from '@components/app/attachments';
 import { Label } from '@repo/ui/app';
@@ -18,10 +18,12 @@ export const StudyMaterialView = ({ material, otherAttachments }: IProps) => {
   const renderBody = () => {
     if (isFull) {
       return (
-        <RichTextView
-          value={material.content}
-          fallback={<p className="text-sm text-muted-foreground">No written content.</p>}
-        />
+        <CodeRunScope>
+          <RichTextView
+            value={material.content}
+            fallback={<p className="text-sm text-muted-foreground">No written content.</p>}
+          />
+        </CodeRunScope>
       );
     }
     return (

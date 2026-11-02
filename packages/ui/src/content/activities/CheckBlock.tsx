@@ -9,6 +9,7 @@ import {
 import { type ReactNode, useId, useState } from 'react';
 import { cn } from '../../lib/cn';
 import { GENDER_TEXT } from '../gender';
+import { AnsweredRunScope } from '../runner/run-context';
 import { SPEECH_RATES } from '../speech/player';
 import { useSpeech } from '../speech/use-speech';
 import { ActivityFrame, type ISpoken, OUTLINE_PILL } from './ActivityFrame';
@@ -121,10 +122,12 @@ interface ICheckBlockProps {
 /**
  * A question answered on the spot: a tap marks the option right or wrong at once, the explanation
  * opens beside it, and a wrong pick can be tried again. Any option marked correct counts, so a
- * question with two valid answers accepts both. Nothing is scored or stored.
+ * question with two valid answers accepts both. Nothing is scored or stored. Code inside can be run
+ * once a right answer has been found, and stays runnable after "Again".
  */
 export const CheckBlock = ({ prompt, options, why }: ICheckBlockProps) => {
   const [picked, setPicked] = useState<number[]>([]);
+  const [isAnswered, setIsAnswered] = useState(false);
   const last = picked[picked.length - 1];
   const isSolved = last !== undefined && options[last]?.isCorrect;
   const isWrong = last !== undefined && !options[last]?.isCorrect;
@@ -132,48 +135,51 @@ export const CheckBlock = ({ prompt, options, why }: ICheckBlockProps) => {
   const pick = (index: number) => {
     if (isSolved || picked.includes(index)) return;
     setPicked((current) => [...current, index]);
+    if (options[index]?.isCorrect) setIsAnswered(true);
   };
 
   return (
-    <ActivityFrame
-      icon={QuestionIcon}
-      title="Quick check"
-      actions={
-        picked.length ? (
-          <button type="button" onClick={() => setPicked([])} className={OUTLINE_PILL}>
-            <ArrowCounterClockwiseIcon className="h-3.5 w-3.5" weight="bold" />
-            Again
-          </button>
-        ) : null
-      }
-    >
-      <div className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0">{prompt}</div>
-      <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        {options.map((option, index) => (
-          <OptionRow
-            key={index}
-            option={option}
-            isPicked={picked.includes(index)}
-            isSolved={!!isSolved}
-            onPick={() => pick(index)}
-          />
-        ))}
-      </div>
-      {/* Always there, so the card does not change height when a wrong answer is picked. */}
-      <p className="mt-3 min-h-5 text-sm text-muted-foreground print:hidden" aria-live="polite">
-        {isWrong ? 'Not this one. Try another.' : ''}
-      </p>
-      {why ? (
-        <div
-          aria-live="polite"
-          className={cn(
-            'mt-3 border-l-2 border-success bg-success/10 px-3 py-2 text-sm animate-fade-in [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
-            !isSolved && 'hidden print:block',
-          )}
-        >
-          {why}
+    <AnsweredRunScope isAnswered={isAnswered}>
+      <ActivityFrame
+        icon={QuestionIcon}
+        title="Quick check"
+        actions={
+          picked.length ? (
+            <button type="button" onClick={() => setPicked([])} className={OUTLINE_PILL}>
+              <ArrowCounterClockwiseIcon className="h-3.5 w-3.5" weight="bold" />
+              Again
+            </button>
+          ) : null
+        }
+      >
+        <div className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0">{prompt}</div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {options.map((option, index) => (
+            <OptionRow
+              key={index}
+              option={option}
+              isPicked={picked.includes(index)}
+              isSolved={!!isSolved}
+              onPick={() => pick(index)}
+            />
+          ))}
         </div>
-      ) : null}
-    </ActivityFrame>
+        {/* Always there, so the card does not change height when a wrong answer is picked. */}
+        <p className="mt-3 min-h-5 text-sm text-muted-foreground print:hidden" aria-live="polite">
+          {isWrong ? 'Not this one. Try another.' : ''}
+        </p>
+        {why ? (
+          <div
+            aria-live="polite"
+            className={cn(
+              'mt-3 border-l-2 border-success bg-success/10 px-3 py-2 text-sm animate-fade-in [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
+              !isSolved && 'hidden print:block',
+            )}
+          >
+            {why}
+          </div>
+        ) : null}
+      </ActivityFrame>
+    </AnsweredRunScope>
   );
 };

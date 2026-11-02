@@ -5,6 +5,7 @@
 export { MathRender, renderLatex } from './MathRender';
 export type { IMathRenderProps } from './MathRender';
 export { RichTextView } from './RichTextView';
+export { CodeRunScope } from './runner/run-context';
 export type { IRichTextViewProps } from './RichTextView';
 export { RichTextImage, useResolvedImageUrl, IMAGE_WIDTH_CLASSES } from './RichTextImage';
 export type { IRichTextImageProps } from './RichTextImage';
