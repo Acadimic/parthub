@@ -33,3 +33,6 @@ export const slugify = (value: string): string =>
     .replace(/\s+/g, ' ')
     .split(' ')
     .join('-');
+
+/** Whether a string is an ObjectId's 24 hex characters, as against a slug or a name in its place. */
+export const isObjectId = (value: string): boolean => /^[0-9a-f]{24}$/i.test(value);

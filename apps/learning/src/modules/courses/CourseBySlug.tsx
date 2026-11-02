@@ -4,17 +4,19 @@ import { BlankState } from '@components/others';
 import { ArrowClockwiseIcon } from '@phosphor-icons/react';
 import { useCourseStore } from '@stores';
 import { Course, CourseNotFound } from './Course';
-import { CoursePreviewSkeleton } from './components';
+import { CourseModulesSkeleton, CoursePreviewSkeleton } from './components';
 
 interface IProps {
   slug: string;
+  isPreview: boolean;
 }
 
 /**
- * The course preview at its public address. The slug is resolved against the catalogue, which
- * holds every published course and which the preview loads anyway, so no extra request is made.
+ * A course at its public address: the preview, or its lessons. The slug is resolved against the
+ * catalogue, which holds every published course and which the preview loads anyway, so no extra
+ * request is made.
  */
-export const CourseBySlug = ({ slug }: IProps) => {
+export const CourseBySlug = ({ slug, isPreview }: IProps) => {
   const { isLoaded, isFailed, error } = useLoadOnce(useCourseStore, 'courses', (state) => state.loadCourses);
   const course = useCourseStore((state) => state.getCourseBySlug(slug));
 
@@ -37,7 +39,7 @@ export const CourseBySlug = ({ slug }: IProps) => {
     );
   }
   // Not `isLoading`: that is false before the first load starts, which would flash "not found".
-  if (!isLoaded || !slug) return <CoursePreviewSkeleton />;
+  if (!isLoaded || !slug) return isPreview ? <CoursePreviewSkeleton /> : <CourseModulesSkeleton />;
   if (!course) return <CourseNotFound />;
-  return <Course courseId={course._id} isPreview={true} />;
+  return <Course courseId={course._id} isPreview={isPreview} />;
 };

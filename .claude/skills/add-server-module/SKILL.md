@@ -127,6 +127,7 @@ elsewhere.
 | Response         | `TransformInterceptor`                | Wraps the return value as `{ data }`                                                          |
 | Errors           | `HttpExceptionFilter`                 | Renders an `HttpException` as `{ error: { code, message } }`                                  |
 | Duplicate keys   | `MongoDuplicateKeyFilter`             | Renders a Mongo duplicate-key error as a 409 naming the field                                 |
+| Malformed ids    | `MongoCastFilter`                     | Renders a Mongoose cast error (a slug where an id belongs) as a 400 naming the value          |
 | Ownership fields | `change-tracking.plugin`              | Stamps `org`, `createdBy`, `updatedBy` on every write                                         |
 | Audit trail      | `activity-logging.plugin`             | Paused: kept but not registered, so no change is recorded                                     |
 | Request state    | `ClsModule` + `RequestContextService` | Makes the user, org, role and subdomain available anywhere                                    |
@@ -176,7 +177,7 @@ src/database/     base.schema.ts and plugins/ (change tracking, activity logging
 src/decorators/   @Public, @Private, @Permissions, @Subdomains, @User
 src/guards/       AuthGuard, AccessGuard
 src/interceptors/ TransformInterceptor
-src/filters/      HttpExceptionFilter, MongoDuplicateKeyFilter
+src/filters/      HttpExceptionFilter, MongoDuplicateKeyFilter, MongoCastFilter
 src/secrets/      SecretsService and the Secrets enum
 src/utils/        helpers with no Nest dependency
 ```

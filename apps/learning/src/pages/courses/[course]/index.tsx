@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 const CoursePage = () => {
   const { query } = useRouter();
 
-  return <CourseBySlug slug={query.course as string} />;
+  return <CourseBySlug slug={query.course as string} isPreview={true} />;
 };
 
 CoursePage.layout = Layout.PUBLIC;

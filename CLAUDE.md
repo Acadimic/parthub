@@ -148,8 +148,9 @@ pnpm --filter @repo/ui <script>
   `GET sync-indexes` (`@Private()` on `AppController`, so it needs the `api-key`, `app`, `timezone`
   and `timezone-offset` headers) rather than at boot — no module has a `syncIndexes()` hook, and
   the route has no preview mode.
-- **Errors:** `HttpExceptionFilter` renders Nest exceptions as `{ error: { code, message } }`, and
-  `MongoDuplicateKeyFilter` turns a duplicate-key error into a 409 that names the colliding field.
+- **Errors:** `HttpExceptionFilter` renders Nest exceptions as `{ error: { code, message } }`,
+  `MongoDuplicateKeyFilter` turns a duplicate-key error into a 409 that names the colliding field, and
+  `MongoCastFilter` turns a malformed id (a Mongoose cast error) into a 400.
 - **Auth:** Firebase Admin SDK validates JWTs via `passport-firebase-jwt`. Global `FirebaseAuthGuard` applied via `APP_GUARD`. Use `@Public()` decorator to exempt endpoints.
 - **Request context:** `AuthGuard` writes one complete `IRequestContext` into CLS on every route —
   no optional fields — and `RequestContextService` reads it with getters that **throw rather than
