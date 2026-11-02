@@ -19,6 +19,7 @@ import {
 } from '../interfaces';
 import { CurrencyType, LevelType, PeriodType } from '../enums';
 import { createObjectId, slugify } from '../utils/object-id.util';
+import { checkTestSections } from './course-test-sections';
 import { type IAiIssue, parseJsonObject, repairIssue } from './common';
 import { EXAM_STYLES, LANGUAGES } from './test-paper-generator';
 
@@ -155,7 +156,7 @@ Search the web for the official ${setup.examStyle} syllabus for ${scope} and the
 2. **Ladder**: within each week the lesson levels climb from easy to medium to hard and never fall back; the course as a whole climbs the same way. Each day names in its description what it assumes from earlier days.
 3. **Reuse first**: where an existing lesson (from "existingLessons") teaches a day's topic at the right level, put its id in "lessons" as { "use": id } rather than asking for a new one. Likewise a fitting existing test as { "use": id } in "tests". Never invent an id; every "use" must come from the workspace data. Do not use the same lesson on two days.
 4. **New lessons**: a day has one to three lessons. For a lesson that does not exist, give { "generate": { name, level, topics, durationMins, chapter } } — a name a student would recognise, the level from the ladder, three to six topic phrases, a realistic duration (20–60 minutes), and the chapter id when chapters are listed.
-${setup.includeQuizzes ? '5. **Quizzes**: roughly every third day, and on the last day of every week, one short test: { "generate": { name, questionCount (8–15), chapters (ids), topics, durationMins (15–30) } }. Other days have "tests": [].' : '5. **No tests**: leave every "tests" array empty.'}
+${setup.includeQuizzes ? '5. **Quizzes**: roughly every third day, and on the last day of every week, one short test: { "generate": { name, questionCount (8–15), chapters (ids), topics, durationMins (15–30) } }. Other days have "tests": []. Only when a test is better taken in named parts (the teacher asks for it, or the exam style has them, such as "Section A: objective" and "Section B: short answer", or easy, medium and hard rounds), add "sections": [{ name, questionCount, level }] whose counts add up to questionCount, with level ("easy", "medium" or "hard") only when every question in that part is at one level; otherwise leave "sections" out.' : '5. **No tests**: leave every "tests" array empty.'}
 ${setup.includeSessions ? '6. **Live sessions**: one per week, on the day that most needs a teacher — a hard idea, or a review before a test: { "title", "durationMins" (45–60), "agenda" (three to five lines) }. Other days omit "session".' : '6. **No live sessions**: omit "session" everywhere.'}
 7. **Week themes**: each week has a theme of a few words; the first day of a week introduces it and the last consolidates it.
 7a. **Naming a day**, the way textbooks show what a unit teaches: "name" puts the grammar or topic first with a short example, then the situation — "Past tense (I walked) · yesterday", "Newton's second law (F = ma) · pushing a cart", "Review: forces · a lab day" — under 45 characters, because a narrow sidebar cuts it on one line. "subtitle" names the situation or theme in a learner's words ("What happened yesterday"). "description" is the day's contents row: exactly three lines joined by \n — "You'll be able to: …", "Grammar: …" (or "Topics: …" outside a language), "Words: …" (or "Key terms: …") — about fifteen words each.
@@ -192,7 +193,11 @@ interface Output {
       lessons: Array<{ use: string } | { generate: { name: string; level: ${Object.values(LevelType)
         .map((level) => `"${level}"`)
         .join(' | ')}; topics: string[]; durationMins: number; chapter?: string } }>;
-      tests: Array<{ use: string } | { generate: { name: string; questionCount: number; chapters: string[]; topics: string[]; durationMins: number } }>;
+      tests: Array<{ use: string } | { generate: { name: string; questionCount: number; chapters: string[]; topics: string[]; durationMins: number; sections?: Array<{ name: string; questionCount: number; level?: ${Object.values(
+        LevelType,
+      )
+        .map((level) => `"${level}"`)
+        .join(' | ')} }> } }>;
       session?: { title: string; durationMins: number; agenda: string[] };
     }>;
   }>;
@@ -312,6 +317,7 @@ const checkDay = ({ day, path, setup, context, issues, usedLessons }: IDayCheck)
         issues.push({ level: 'error', path: `${at}.chapters`, message: 'A chapter id is not in the workspace.' });
       }
     });
+    if (spec?.sections) issues.push(...checkTestSections(spec, `${at}.sections`));
   });
   if (day.session && (!day.session.title?.trim() || typeof day.session.durationMins !== 'number')) {
     issues.push({

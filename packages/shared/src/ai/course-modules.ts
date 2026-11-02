@@ -6,11 +6,13 @@ import {
   type StandardDto,
   type SubjectDto,
 } from '../contracts';
+import { LevelType } from '../enums';
 import {
   AI_STUDY_MATERIAL_FORMAT,
   AI_TEST_PAPER_FORMAT,
   type IAiLessonSpec,
   type IAiPendingWork,
+  type IAiTestPaper,
   type IAiTestSpec,
 } from '../interfaces';
 import { createObjectId } from '../utils/object-id.util';
@@ -29,6 +31,8 @@ import {
   DEFAULT_DIFFICULTY,
   EXAM_STYLES,
   type IAiBlueprint,
+  type IAiSectionPlan,
+  type IDifficultyMix,
   type IImportedQuestion,
   LANGUAGES,
   parseAiPaper,
@@ -137,6 +141,32 @@ const lessonPackFor = (courseModule: CourseModuleDto, context: ICourseModuleCont
   };
 };
 
+/** Every question at one level, for a section planned as "Easy", "Medium" or "Hard". */
+const mixAt = (level: LevelType): IDifficultyMix => ({
+  [LevelType.EASY]: level === LevelType.EASY ? 100 : 0,
+  [LevelType.MEDIUM]: level === LevelType.MEDIUM ? 100 : 0,
+  [LevelType.HARD]: level === LevelType.HARD ? 100 : 0,
+});
+
+/** The sections a planned test is written in: its own, or one named after the test. */
+const sectionPlansFor = (spec: IAiTestSpec): IAiSectionPlan[] => {
+  const shared = {
+    chapterIds: spec.chapters ?? [],
+    topics: (spec.topics ?? []).join(', '),
+    defaultMarkings: APP_DEFAULT_MARKINGS,
+  };
+  if (!spec.sections?.length) {
+    return [{ key: 'S1', name: spec.name, counts: defaultCounts(spec.questionCount), ...shared }];
+  }
+  return spec.sections.map((section, index) => ({
+    key: `S${index + 1}`,
+    name: section.name,
+    counts: defaultCounts(section.questionCount),
+    ...shared,
+    ...(section.level ? { difficulty: mixAt(section.level) } : {}),
+  }));
+};
+
 const quizPacksFor = (
   courseModule: CourseModuleDto,
   context: ICourseModuleContext,
@@ -154,16 +184,7 @@ const quizPacksFor = (
       const blueprint: IAiBlueprint = {
         testPaperId,
         paperName: spec.name,
-        sections: [
-          {
-            key: 'S1',
-            name: spec.name,
-            counts: defaultCounts(spec.questionCount),
-            chapterIds: spec.chapters ?? [],
-            topics: (spec.topics ?? []).join(', '),
-            defaultMarkings: APP_DEFAULT_MARKINGS,
-          },
-        ],
+        sections: sectionPlansFor(spec),
         difficulty: DEFAULT_DIFFICULTY,
         examStyle: EXAM_STYLES[0],
         language: LANGUAGES[0],
@@ -277,6 +298,29 @@ const readLessonReply = (text: string, prompts: ICoursePrompts, context: ICourse
   return { kind: 'lessons', pack, imported, issues };
 };
 
+/** A test planned in sections comes back in those sections, in order. */
+const checkQuizSections = (paper: IAiTestPaper, spec: IAiTestSpec): IAiIssue[] => {
+  const planned = spec.sections ?? [];
+  if (!planned.length) return [];
+  const got = paper.sections ?? [];
+  if (got.length !== planned.length) {
+    const names = planned.map((section) => `"${section.name}"`).join(', ');
+    return [
+      {
+        level: 'error',
+        path: 'sections',
+        message: `The plan has ${planned.length} sections (${names}); the reply has ${got.length}.`,
+      },
+    ];
+  }
+  return planned.flatMap((section, index) => {
+    const count = got[index].questions?.length ?? 0;
+    if (count === section.questionCount) return [];
+    const message = `"${section.name}" was planned with ${section.questionCount} questions; the reply has ${count}.`;
+    return [{ level: 'warning' as const, path: `sections[${index}]`, message }];
+  });
+};
+
 const readQuizReply = (text: string, prompts: ICoursePrompts, context: ICourseModuleContext): IContentReply => {
   const parsed = parseAiPaper(text);
   if (!parsed.paper) return { kind: 'unknown', issues: parsed.issues };
@@ -300,6 +344,7 @@ const readQuizReply = (text: string, prompts: ICoursePrompts, context: ICourseMo
       chapters: context.chapters,
       courseModule: pack.moduleId,
     }),
+    ...checkQuizSections(parsed.paper, pack.spec),
   ];
   const imported = hasErrors(issues)
     ? []

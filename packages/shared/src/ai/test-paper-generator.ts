@@ -39,6 +39,8 @@ export interface IAiSectionPlan {
   /** Free text: topics or sub-topics to concentrate on. */
   topics: string;
   defaultMarkings?: DefaultMarkingType;
+  /** This section's own easy/medium/hard mix; absent, the paper's. */
+  difficulty?: IDifficultyMix;
 }
 
 export interface IAiBlueprint {
@@ -142,6 +144,7 @@ export const buildTestPaperPrompt = (blueprint: IAiBlueprint, context: IAiContex
   const sectionsText = blueprint.sections
     .map((section, index) => {
       const count = totalCount(section.counts);
+      const mix = section.difficulty ?? blueprint.difficulty;
       const marks = section.defaultMarkings
         ? Object.entries(section.counts)
             .filter(([, n]) => n > 0)
@@ -158,7 +161,7 @@ export const buildTestPaperPrompt = (blueprint: IAiBlueprint, context: IAiContex
 - name: "${section.name}"
 - questions: ${count}
     - ${describeCounts(section.counts) || 'none'}
-- difficulty: ${percent(count, blueprint.difficulty.easy)} easy, ${percent(count, blueprint.difficulty.medium)} medium, ${count - percent(count, blueprint.difficulty.easy) - percent(count, blueprint.difficulty.medium)} hard
+- difficulty: ${percent(count, mix.easy)} easy, ${percent(count, mix.medium)} medium, ${count - percent(count, mix.easy) - percent(count, mix.medium)} hard
 - chapters to cover: ${sectionChapters}
 - marks: ${marks}${section.topics.trim() ? `\n- focus: ${section.topics.trim()}` : ''}`;
     })

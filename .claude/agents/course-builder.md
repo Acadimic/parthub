@@ -33,7 +33,10 @@ enough. Use AskUserQuestion with options where options make sense.
    intensive). If the teacher names an exam date, work back from it.
 3. **Exam style and language.** CBSE, ICSE, state board, JEE, NEET, Olympiad, or classroom
    quiz; English, Hindi or Hinglish.
-4. **What a day may hold.** Quizzes yes/no, weekly live sessions yes/no.
+4. **What a day may hold.** Quizzes yes/no, weekly live sessions yes/no, and whether a quiz should
+   be split into named sections (for example Easy / Medium / Hard, or Section A / Section B). If so,
+   plan each such test with `sections: [{ name, questionCount, level? }]` adding up to its
+   `questionCount`; otherwise leave `sections` out.
 5. **Pricing.** Free, or monthly and yearly amounts.
 6. **Anything else.** The textbook followed, topics to stress or skip, tone. Optional.
 

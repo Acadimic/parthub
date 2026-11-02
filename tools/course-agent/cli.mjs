@@ -372,15 +372,26 @@ commands['course:prompts'] = async (options) => {
 };
 
 /** A quiz paper, its section and questions, written in that order and undone if a later step fails. */
+/** One section per section of the reply, in its order, each holding its own questions. */
+const sectionsOf = (pack, imported) => {
+  const byRef = new Map();
+  for (const item of imported) {
+    const ref = item.section.ref;
+    if (!byRef.has(ref)) byRef.set(ref, { _id: utils.createObjectId(), name: item.section.name || pack.spec.name, items: [] });
+    byRef.get(ref).items.push(item);
+  }
+  return byRef.size ? [...byRef.values()] : [{ _id: utils.createObjectId(), name: pack.spec.name, items: [] }];
+};
+
 const createPaper = async (pack, imported) => {
-  const sectionId = utils.createObjectId();
+  const sections = sectionsOf(pack, imported);
   const paper = {
     _id: pack.testPaperId,
     name: pack.spec.name,
     slug: utils.slugify(pack.spec.name),
     standards: pack.standardIds,
     subjects: pack.subjectIds,
-    sections: [sectionId],
+    sections: sections.map((section) => section._id),
     paperType: enums.PaperType.QUIZ,
     paperCategory: enums.PaperCategoryType.CUSTOM,
     totalQuestions: 0,
@@ -394,17 +405,21 @@ const createPaper = async (pack, imported) => {
   };
   await api('test-paper/upsert', { method: 'POST', body: paper });
   try {
-    await api('test-paper/section/upsert', {
-      method: 'POST',
-      body: { _id: sectionId, name: imported[0]?.section.name ?? pack.spec.name, sectionType: enums.SectionType.SECTION, sectionCategory: enums.SectionCategoryType.CUSTOM, defaultMarkings: ai.DEFAULT_MARKINGS },
-    });
-    const questions = imported.map((item, index) => ({
-      _id: utils.createObjectId(),
-      ...item.dto,
-      section: sectionId,
-      order: index + 1,
-      markings: item.dto.markings ?? ai.DEFAULT_MARKINGS[item.dto.questionType],
-    }));
+    for (const section of sections) {
+      await api('test-paper/section/upsert', {
+        method: 'POST',
+        body: { _id: section._id, name: section.name, sectionType: enums.SectionType.SECTION, sectionCategory: enums.SectionCategoryType.CUSTOM, defaultMarkings: ai.DEFAULT_MARKINGS },
+      });
+    }
+    const questions = sections.flatMap((section) =>
+      section.items.map((item, index) => ({
+        _id: utils.createObjectId(),
+        ...item.dto,
+        section: section._id,
+        order: index + 1,
+        markings: item.dto.markings ?? ai.DEFAULT_MARKINGS[item.dto.questionType],
+      })),
+    );
     await api('question/bulk-upsert', { method: 'POST', body: { questions } });
   } catch (error) {
     await api('test-paper/upsert', { method: 'POST', body: { ...paper, _deleted: true } }).catch(() => undefined);

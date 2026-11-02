@@ -69,8 +69,13 @@ lessons as an explicit list with refs `L1…`, `courseModule` echoed — and one
 planned quiz, each quiz its own paper with a minted id. Import: add any number of replies, files or
 pasted; each is read by its `format`, matched to the day or quiz it answers (`courseModule`,
 `testPaperId`), checked as the generators check any reply, and imported: lessons through
-`material/bulk-upsert`, quizzes as a paper, a section and questions (`createPaperFromImport`,
-shared with the test paper generator). Each import then calls `POST course/link-module`, which
+`material/bulk-upsert`, quizzes as a paper, its sections and questions (`createPaperFromImport`,
+shared with the test paper generator). A quiz is one section named after it unless the plan splits
+it: `tests[].generate.sections` lists named parts (`{ name, questionCount, level? }`, counts adding
+up to `questionCount`; `level` pins every question in that part to one difficulty), each becomes a
+section of the prompt and of the paper, and a reply that does not return those sections in order is
+refused. Sections are labels inside one sitting: one timer, one submit, a per-section breakdown on
+the result page. Each import then calls `POST course/link-module`, which
 appends the ids to the module and marks the pending items done with what was created. The
 builders and the reply reader are in `course-modules.ts`.
 

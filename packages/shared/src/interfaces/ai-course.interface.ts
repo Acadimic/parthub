@@ -20,6 +20,14 @@ export interface IAiLessonSpec {
   chapter?: string;
 }
 
+/** One named part of a planned test, such as "Easy" or "Section A: MCQ". */
+export interface IAiTestSectionSpec {
+  name: string;
+  questionCount: number;
+  /** Every question in the section is at this level; absent, the section gets the usual mix. */
+  level?: LevelType;
+}
+
 export interface IAiTestSpec {
   name: string;
   questionCount: number;
@@ -27,6 +35,8 @@ export interface IAiTestSpec {
   chapters: string[];
   topics: string[];
   durationMins: number;
+  /** The test split into named sections, whose counts add up to questionCount; absent, one section named after the test. */
+  sections?: IAiTestSectionSpec[];
 }
 
 /** An existing lesson or test by id, or a spec for one to generate. */
